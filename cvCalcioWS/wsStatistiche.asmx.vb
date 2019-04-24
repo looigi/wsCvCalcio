@@ -925,6 +925,18 @@ Public Class wsStatistiche
                 Dim PartiteTorneiDove As New List(Of String)
                 Dim PartiteTorneiIN As String = ""
 
+                Dim GiocateCampionatoCasa As Integer = 0
+                Dim GiocateCampionatoFuori As Integer = 0
+                Dim GiocateCampionatoCampoEsterno As Integer = 0
+
+                Dim GiocateAmichevoliCasa As Integer = 0
+                Dim GiocateAmichevoliFuori As Integer = 0
+                Dim GiocateAmichevoliCampoEsterno As Integer = 0
+
+                Dim GiocateTorneiCasa As Integer = 0
+                Dim GiocateTorneiFuori As Integer = 0
+                Dim GiocateTorneiCampoEsterno As Integer = 0
+
                 Dim GoalCampionatoCasa As Integer = 0
                 Dim GoalCampionatoFuori As Integer = 0
                 Dim GoalCampionatoCampoEsterno As Integer = 0
@@ -936,6 +948,10 @@ Public Class wsStatistiche
                 Dim GoalTorneiCasa As Integer = 0
                 Dim GoalTorneiFuori As Integer = 0
                 Dim GoalTorneiCampoEsterno As Integer = 0
+
+                Dim NomiMarcatoriGeneraliCasa As New List(Of String)
+                Dim NomiMarcatoriGeneraliFuori As New List(Of String)
+                Dim NomiMarcatoriGeneraliCampoEsterno As New List(Of String)
 
                 Dim NomiMarcatoriCampionatoCasa As New List(Of String)
                 Dim NomiMarcatoriCampionatoFuori As New List(Of String)
@@ -1017,6 +1033,9 @@ Public Class wsStatistiche
                 Dim VittorieTorneiCampoEsterno As Integer = 0
                 Dim PareggiTorneiCampoEsterno As Integer = 0
                 Dim SconfitteTorneiCampoEsterno As Integer = 0
+
+                Dim SquadreIncontrate As New List(Of String)
+                Dim MarcatoriGenerali As New List(Of String)
 
                 Dim TipologiaPartitePerAnno As String = ""
 
@@ -1222,19 +1241,19 @@ Public Class wsStatistiche
                     "FROM(RisultatiAggiuntiviMarcatori Left Join Partite On Partite.idPartita = RisultatiAggiuntiviMarcatori.idPartita) " &
                     "Left Join Giocatori On RisultatiAggiuntiviMarcatori.idGiocatore = Giocatori.idGiocatore " &
                     "Where RisultatiAggiuntiviMarcatori.idPartita In (" & PartiteCampionatoIN & ") And Partite.Casa = 'S' " &
-                    "Group By Giocatori.Cognome, Giocatori.Nome " &
+                    "Group By Giocatori.Cognome, Giocatori.Nome, Giocatori.idGiocatore " &
                     "Union All " &
                     "Select 'MarcatoriFuoriCampionato' As Cosa, Giocatori.Cognome, Giocatori.Nome, Count(*) As Goal, Giocatori.idGiocatore " &
                     "FROM(RisultatiAggiuntiviMarcatori Left Join Partite On Partite.idPartita = RisultatiAggiuntiviMarcatori.idPartita) " &
                     "Left Join Giocatori On RisultatiAggiuntiviMarcatori.idGiocatore = Giocatori.idGiocatore " &
                     "Where RisultatiAggiuntiviMarcatori.idPartita In (" & PartiteCampionatoIN & ") And Partite.Casa = 'N' " &
-                    "Group By Giocatori.Cognome, Giocatori.Nome " &
+                    "Group By Giocatori.Cognome, Giocatori.Nome, Giocatori.idGiocatore " &
                     "Union All " &
                     "Select 'MarcatoriCampoEsternoCampionato' As Cosa, Giocatori.Cognome, Giocatori.Nome, Count(*) As Goal, Giocatori.idGiocatore " &
                     "FROM(RisultatiAggiuntiviMarcatori Left Join Partite On Partite.idPartita = RisultatiAggiuntiviMarcatori.idPartita) " &
                     "Left Join Giocatori On RisultatiAggiuntiviMarcatori.idGiocatore = Giocatori.idGiocatore " &
                     "Where RisultatiAggiuntiviMarcatori.idPartita In (" & PartiteCampionatoIN & ") And Partite.Casa = 'E' " &
-                    "Group By Giocatori.Cognome, Giocatori.Nome"
+                    "Group By Giocatori.Cognome, Giocatori.Nome, Giocatori.idGiocatore"
                 Try
                     Rec = LeggeQuery(Conn, Sql, Connessione)
                     If TypeOf (Rec) Is String Then
@@ -1243,13 +1262,25 @@ Public Class wsStatistiche
                         Do Until Rec.Eof
                             Select Case Rec("Cosa").Value
                                 Case "MarcatoriCasaCampionato"
-                                    NomiMarcatoriCampionatoCasa.Add(Rec(4).Value & "-" & Rec(1).Value & " " & Rec(2).Value)
+                                    If "" & Rec(1).Value = "" Or "" & Rec(2).Value = "" Then
+                                        NomiMarcatoriCampionatoCasa.Add(Rec(4).Value & "-Autorete-" & Rec(3).Value)
+                                    Else
+                                        NomiMarcatoriCampionatoCasa.Add(Rec(4).Value & "-" & Rec(1).Value & " " & Rec(2).Value & "-" & Rec(3).Value)
+                                    End If
                                     MarcatoriCampionatoCasa = Rec(3).Value
                                 Case "MarcatoriFuoriCampionato"
-                                    NomiMarcatoriCampionatoFuori.Add(Rec(4).Value & "-" & Rec(1).Value & " " & Rec(2).Value)
+                                    If "" & Rec(1).Value = "" Or "" & Rec(2).Value = "" Then
+                                        NomiMarcatoriCampionatoFuori.Add(Rec(4).Value & "-Autorete-" & Rec(3).Value)
+                                    Else
+                                        NomiMarcatoriCampionatoFuori.Add(Rec(4).Value & "-" & Rec(1).Value & " " & Rec(2).Value & "-" & Rec(3).Value)
+                                    End If
                                     MarcatoriCampionatoFuori = Rec(3).Value
                                 Case "MarcatoriCampoEsternoCampionato"
-                                    NomiMarcatoriCampionatoCampoEsterno.Add(Rec(4).Value & "-" & Rec(1).Value & " " & Rec(2).Value)
+                                    If "" & Rec(1).Value = "" Or "" & Rec(2).Value = "" Then
+                                        NomiMarcatoriCampionatoCampoEsterno.Add(Rec(4).Value & "-Autorete-" & Rec(3).Value)
+                                    Else
+                                        NomiMarcatoriCampionatoCampoEsterno.Add(Rec(4).Value & "-" & Rec(1).Value & " " & Rec(2).Value & "-" & Rec(3).Value)
+                                    End If
                                     MarcatoriCampionatoCampoEsterno = Rec(3).Value
                             End Select
 
@@ -1265,19 +1296,19 @@ Public Class wsStatistiche
                     "FROM(RisultatiAggiuntiviMarcatori Left Join Partite On Partite.idPartita = RisultatiAggiuntiviMarcatori.idPartita) " &
                     "Left Join Giocatori On RisultatiAggiuntiviMarcatori.idGiocatore = Giocatori.idGiocatore " &
                     "Where RisultatiAggiuntiviMarcatori.idPartita In (" & PartiteAmichevoliIN & ") And Partite.Casa = 'S' " &
-                    "Group By Giocatori.Cognome, Giocatori.Nome " &
+                    "Group By Giocatori.Cognome, Giocatori.Nome, Giocatori.idGiocatore " &
                     "Union All " &
                     "Select 'MarcatoriFuoriAmichevoli' As Cosa, Giocatori.Cognome, Giocatori.Nome, Count(*) As Goal, Giocatori.idGiocatore " &
                     "FROM(RisultatiAggiuntiviMarcatori Left Join Partite On Partite.idPartita = RisultatiAggiuntiviMarcatori.idPartita) " &
                     "Left Join Giocatori On RisultatiAggiuntiviMarcatori.idGiocatore = Giocatori.idGiocatore " &
                     "Where RisultatiAggiuntiviMarcatori.idPartita In (" & PartiteAmichevoliIN & ") And Partite.Casa = 'N' " &
-                    "Group By Giocatori.Cognome, Giocatori.Nome " &
+                    "Group By Giocatori.Cognome, Giocatori.Nome, Giocatori.idGiocatore " &
                     "Union All " &
                     "Select 'MarcatoriCampoEsternoAmichevoli' As Cosa, Giocatori.Cognome, Giocatori.Nome, Count(*) As Goal, Giocatori.idGiocatore " &
                     "FROM(RisultatiAggiuntiviMarcatori Left Join Partite On Partite.idPartita = RisultatiAggiuntiviMarcatori.idPartita) " &
                     "Left Join Giocatori On RisultatiAggiuntiviMarcatori.idGiocatore = Giocatori.idGiocatore " &
                     "Where RisultatiAggiuntiviMarcatori.idPartita In (" & PartiteAmichevoliIN & ") And Partite.Casa = 'E' " &
-                    "Group By Giocatori.Cognome, Giocatori.Nome"
+                    "Group By Giocatori.Cognome, Giocatori.Nome, Giocatori.idGiocatore"
                 Try
                     Rec = LeggeQuery(Conn, Sql, Connessione)
                     If TypeOf (Rec) Is String Then
@@ -1286,13 +1317,25 @@ Public Class wsStatistiche
                         Do Until Rec.Eof
                             Select Case Rec("Cosa").Value
                                 Case "MarcatoriCasaAmichevoli"
-                                    NomiMarcatoriAmichevoliCasa.Add(Rec(4).Value & "-" & Rec(1).Value & " " & Rec(2).Value)
+                                    If "" & Rec(1).Value = "" Or "" & Rec(2).Value = "" Then
+                                        NomiMarcatoriAmichevoliCasa.Add(Rec(4).Value & "-Autorete-" & Rec(3).Value)
+                                    Else
+                                        NomiMarcatoriAmichevoliCasa.Add(Rec(4).Value & "-" & Rec(1).Value & " " & Rec(2).Value & "-" & Rec(3).Value)
+                                    End If
                                     MarcatoriAmichevoliCasa = Rec(3).Value
                                 Case "MarcatoriFuoriAmichevoli"
-                                    NomiMarcatoriAmichevoliFuori.Add(Rec(4).Value & "-" & Rec(1).Value & " " & Rec(2).Value)
+                                    If "" & Rec(1).Value = "" Or "" & Rec(2).Value = "" Then
+                                        NomiMarcatoriAmichevoliFuori.Add(Rec(4).Value & "-Autorete-" & Rec(3).Value)
+                                    Else
+                                        NomiMarcatoriAmichevoliFuori.Add(Rec(4).Value & "-" & Rec(1).Value & " " & Rec(2).Value & "-" & Rec(3).Value)
+                                    End If
                                     MarcatoriAmichevoliFuori = Rec(3).Value
                                 Case "MarcatoriCampoEsternoAmichevoli"
-                                    NomiMarcatoriAmichevoliCampoEsterno.Add(Rec(4).Value & "-" & Rec(1).Value & " " & Rec(2).Value)
+                                    If "" & Rec(1).Value = "" Or "" & Rec(2).Value = "" Then
+                                        NomiMarcatoriAmichevoliCampoEsterno.Add(Rec(4).Value & "-Autorete-" & Rec(3).Value)
+                                    Else
+                                        NomiMarcatoriAmichevoliCampoEsterno.Add(Rec(4).Value & "-" & Rec(1).Value & " " & Rec(2).Value & "-" & Rec(3).Value)
+                                    End If
                                     MarcatoriAmichevoliCampoEsterno = Rec(3).Value
                             End Select
 
@@ -1308,19 +1351,19 @@ Public Class wsStatistiche
                     "FROM(RisultatiAggiuntiviMarcatori Left Join Partite On Partite.idPartita = RisultatiAggiuntiviMarcatori.idPartita) " &
                     "Left Join Giocatori On RisultatiAggiuntiviMarcatori.idGiocatore = Giocatori.idGiocatore " &
                     "Where RisultatiAggiuntiviMarcatori.idPartita In (" & PartiteTorneiIN & ") And Partite.Casa = 'S' " &
-                    "Group By Giocatori.Cognome, Giocatori.Nome " &
+                    "Group By Giocatori.Cognome, Giocatori.Nome, Giocatori.idGiocatore " &
                     "Union All " &
                     "Select 'MarcatoriFuoriTornei' As Cosa, Giocatori.Cognome, Giocatori.Nome, Count(*) As Goal, Giocatori.idGiocatore " &
                     "FROM(RisultatiAggiuntiviMarcatori Left Join Partite On Partite.idPartita = RisultatiAggiuntiviMarcatori.idPartita) " &
                     "Left Join Giocatori On RisultatiAggiuntiviMarcatori.idGiocatore = Giocatori.idGiocatore " &
                     "Where RisultatiAggiuntiviMarcatori.idPartita In (" & PartiteTorneiIN & ") And Partite.Casa = 'N' " &
-                    "Group By Giocatori.Cognome, Giocatori.Nome " &
+                    "Group By Giocatori.Cognome, Giocatori.Nome, Giocatori.idGiocatore " &
                     "Union All " &
                     "Select 'MarcatoriCampoEsternoTornei' As Cosa, Giocatori.Cognome, Giocatori.Nome, Count(*) As Goal, Giocatori.idGiocatore " &
                     "FROM(RisultatiAggiuntiviMarcatori Left Join Partite On Partite.idPartita = RisultatiAggiuntiviMarcatori.idPartita) " &
                     "Left Join Giocatori On RisultatiAggiuntiviMarcatori.idGiocatore = Giocatori.idGiocatore " &
                     "Where RisultatiAggiuntiviMarcatori.idPartita In (" & PartiteTorneiIN & ") And Partite.Casa = 'E' " &
-                    "Group By Giocatori.Cognome, Giocatori.Nome"
+                    "Group By Giocatori.Cognome, Giocatori.Nome, Giocatori.idGiocatore"
                 Try
                     Rec = LeggeQuery(Conn, Sql, Connessione)
                     If TypeOf (Rec) Is String Then
@@ -1329,13 +1372,25 @@ Public Class wsStatistiche
                         Do Until Rec.Eof
                             Select Case Rec("Cosa").Value
                                 Case "MarcatoriCasaTornei"
-                                    NomiMarcatoriTorneiCasa.Add(Rec(4).Value & "-" & Rec(1).Value & " " & Rec(2).Value)
+                                    If "" & Rec(1).Value = "" Or "" & Rec(2).Value = "" Then
+                                        NomiMarcatoriTorneiCasa.Add(Rec(4).Value & "-Autorete-" & Rec(3).Value)
+                                    Else
+                                        NomiMarcatoriTorneiCasa.Add(Rec(4).Value & "-" & Rec(1).Value & " " & Rec(2).Value & "-" & Rec(3).Value)
+                                    End If
                                     MarcatoriTorneiCasa = Rec(3).Value
                                 Case "MarcatoriFuoriTornei"
-                                    NomiMarcatoriTorneiFuori.Add(Rec(4).Value & "-" & Rec(1).Value & " " & Rec(2).Value)
+                                    If "" & Rec(1).Value = "" Or "" & Rec(2).Value = "" Then
+                                        NomiMarcatoriTorneiFuori.Add(Rec(4).Value & "-Autorete-" & Rec(3).Value)
+                                    Else
+                                        NomiMarcatoriTorneiFuori.Add(Rec(4).Value & "-" & Rec(1).Value & " " & Rec(2).Value & "-" & Rec(3).Value)
+                                    End If
                                     MarcatoriTorneiFuori = Rec(3).Value
                                 Case "MarcatoriCampoEsternoTornei"
-                                    NomiMarcatoriTorneiCampoEsterno.Add(Rec(4).Value & "-" & Rec(1).Value & " " & Rec(2).Value)
+                                    If "" & Rec(1).Value = "" Or "" & Rec(2).Value = "" Then
+                                        NomiMarcatoriTorneiCampoEsterno.Add(Rec(4).Value & "-Autorete-" & Rec(3).Value)
+                                    Else
+                                        NomiMarcatoriTorneiCampoEsterno.Add(Rec(4).Value & "-" & Rec(1).Value & " " & Rec(2).Value & "-" & Rec(3).Value)
+                                    End If
                                     MarcatoriTorneiCampoEsterno = Rec(3).Value
                             End Select
 
@@ -1366,17 +1421,17 @@ Public Class wsStatistiche
                         Do Until Rec.Eof
                             Select Case Rec("Cosa").Value
                                 Case "AvversariCasa"
-                                    GoalAvvCampionatoCasa1Tempo = Rec(1).Value
-                                    GoalAvvCampionatoCasa2Tempo = Rec(2).Value
-                                    GoalAvvCampionatoCasa3Tempo = Rec(3).Value
+                                    GoalAvvCampionatoCasa1Tempo = Val("" & Rec(1).Value)
+                                    GoalAvvCampionatoCasa2Tempo = Val("" & Rec(2).Value)
+                                    GoalAvvCampionatoCasa3Tempo = Val("" & Rec(3).Value)
                                 Case "AvversariFuori"
-                                    GoalAvvCampionatoFuori1Tempo = Rec(1).Value
-                                    GoalAvvCampionatoFuori2Tempo = Rec(2).Value
-                                    GoalAvvCampionatoFuori3Tempo = Rec(3).Value
+                                    GoalAvvCampionatoFuori1Tempo = Val("" & Rec(1).Value)
+                                    GoalAvvCampionatoFuori2Tempo = Val("" & Rec(2).Value)
+                                    GoalAvvCampionatoFuori3Tempo = Val("" & Rec(3).Value)
                                 Case "AvversariCampoEsterno"
-                                    GoalAvvCampionatoCampoEsterno1Tempo = Rec(1).Value
-                                    GoalAvvCampionatoCampoEsterno2Tempo = Rec(2).Value
-                                    GoalAvvCampionatoCampoEsterno3Tempo = Rec(3).Value
+                                    GoalAvvCampionatoCampoEsterno1Tempo = Val("" & Rec(1).Value)
+                                    GoalAvvCampionatoCampoEsterno2Tempo = Val("" & Rec(2).Value)
+                                    GoalAvvCampionatoCampoEsterno3Tempo = Val("" & Rec(3).Value)
                             End Select
 
                             Rec.MoveNext
@@ -1406,17 +1461,17 @@ Public Class wsStatistiche
                         Do Until Rec.Eof
                             Select Case Rec("Cosa").Value
                                 Case "AvversariCasa"
-                                    GoalAvvAmichevoliCasa1Tempo = Rec(1).Value
-                                    GoalAvvAmichevoliCasa2Tempo = Rec(2).Value
-                                    GoalAvvAmichevoliCasa3Tempo = Rec(3).Value
+                                    GoalAvvAmichevoliCasa1Tempo = Val("" & Rec(1).Value)
+                                    GoalAvvAmichevoliCasa2Tempo = Val("" & Rec(2).Value)
+                                    GoalAvvAmichevoliCasa3Tempo = Val("" & Rec(3).Value)
                                 Case "AvversariFuori"
-                                    GoalAvvAmichevoliFuori1Tempo = Rec(1).Value
-                                    GoalAvvAmichevoliFuori2Tempo = Rec(2).Value
-                                    GoalAvvAmichevoliFuori3Tempo = Rec(3).Value
+                                    GoalAvvAmichevoliFuori1Tempo = Val("" & Rec(1).Value)
+                                    GoalAvvAmichevoliFuori2Tempo = Val("" & Rec(2).Value)
+                                    GoalAvvAmichevoliFuori3Tempo = Val("" & Rec(3).Value)
                                 Case "AvversariCampoEsterno"
-                                    GoalAvvAmichevoliCampoEsterno1Tempo = Rec(1).Value
-                                    GoalAvvAmichevoliCampoEsterno2Tempo = Rec(2).Value
-                                    GoalAvvAmichevoliCampoEsterno3Tempo = Rec(3).Value
+                                    GoalAvvAmichevoliCampoEsterno1Tempo = Val("" & Rec(1).Value)
+                                    GoalAvvAmichevoliCampoEsterno2Tempo = Val("" & Rec(2).Value)
+                                    GoalAvvAmichevoliCampoEsterno3Tempo = Val("" & Rec(3).Value)
                             End Select
 
                             Rec.MoveNext
@@ -1446,18 +1501,65 @@ Public Class wsStatistiche
                         Do Until Rec.Eof
                             Select Case Rec("Cosa").Value
                                 Case "AvversariCasa"
-                                    GoalAvvTorneiCasa1Tempo = Rec(1).Value
-                                    GoalAvvTorneiCasa2Tempo = Rec(2).Value
-                                    GoalAvvTorneiCasa3Tempo = Rec(3).Value
+                                    GoalAvvTorneiCasa1Tempo = Val("" & Rec(1).Value)
+                                    GoalAvvTorneiCasa2Tempo = Val("" & Rec(2).Value)
+                                    GoalAvvTorneiCasa3Tempo = Val("" & Rec(3).Value)
                                 Case "AvversariFuori"
-                                    GoalAvvTorneiFuori1Tempo = Rec(1).Value
-                                    GoalAvvTorneiFuori2Tempo = Rec(2).Value
-                                    GoalAvvTorneiFuori3Tempo = Rec(3).Value
+                                    GoalAvvTorneiFuori1Tempo = Val("" & Rec(1).Value)
+                                    GoalAvvTorneiFuori2Tempo = Val("" & Rec(2).Value)
+                                    GoalAvvTorneiFuori3Tempo = Val("" & Rec(3).Value)
                                 Case "AvversariCampoEsterno"
-                                    GoalAvvTorneiCampoEsterno1Tempo = Rec(1).Value
-                                    GoalAvvTorneiCampoEsterno2Tempo = Rec(2).Value
-                                    GoalAvvTorneiCampoEsterno3Tempo = Rec(3).Value
+                                    GoalAvvTorneiCampoEsterno1Tempo = Val("" & Rec(1).Value)
+                                    GoalAvvTorneiCampoEsterno2Tempo = Val("" & Rec(2).Value)
+                                    GoalAvvTorneiCampoEsterno3Tempo = Val("" & Rec(3).Value)
                             End Select
+
+                            Rec.MoveNext
+                        Loop
+                        Rec.Close()
+                    End If
+                Catch ex As Exception
+                    Ritorno = StringaErrore & " " & ex.Message
+                End Try
+
+                Sql = "SELECT Partite.idAvversario, Descrizione, Count(*) As Quante From " &
+                    "Partite Left Join SquadreAvversarie On Partite.idAvversario = SquadreAvversarie.idAvversario " &
+                    "Where idAnno=" & idAnno & " And idCategoria=" & idCategoria & " " &
+                    "Group By Partite.idAvversario, Descrizione " &
+                    "Order By 3 Desc"
+                Try
+                    Rec = LeggeQuery(Conn, Sql, Connessione)
+                    If TypeOf (Rec) Is String Then
+                        Ritorno = Rec
+                    Else
+                        Do Until Rec.Eof
+                            SquadreIncontrate.Add(Rec("idAvversario").Value & ";" & Rec("Descrizione").Value & ";" & Rec("Quante").Value)
+
+                            Rec.MoveNext
+                        Loop
+                        Rec.Close()
+                    End If
+                Catch ex As Exception
+                    Ritorno = StringaErrore & " " & ex.Message
+                End Try
+
+
+                Sql = "SELECT Giocatori.idGiocatore, Giocatori.Cognome, Giocatori.Nome, Count(*) As Quanti " &
+                    "FROM (RisultatiAggiuntiviMarcatori INNER JOIN Partite ON RisultatiAggiuntiviMarcatori.idPartita = Partite.idPartita) Left Join Giocatori On RisultatiAggiuntiviMarcatori.idGiocatore = Giocatori.idGiocatore " &
+                    "WHERE Partite.idAnno=" & idAnno & " AND Partite.idCategoria=" & idCategoria & " " &
+                    "Group By Giocatori.idGiocatore, Giocatori.Cognome, Giocatori.Nome " &
+                    "Order By 4 Desc"
+                Try
+                    Rec = LeggeQuery(Conn, Sql, Connessione)
+                    If TypeOf (Rec) Is String Then
+                        Ritorno = Rec
+                    Else
+                        Do Until Rec.Eof
+                            If "" & Rec("Cognome").Value = "" Or "" & Rec("Nome").Value = "" Then
+                                MarcatoriGenerali.Add(Rec("idGiocatore").Value & ";Autorete;" & Rec("Quanti").Value)
+                            Else
+                                MarcatoriGenerali.Add(Rec("idGiocatore").Value & ";" & Rec("Cognome").Value & " " & Rec("Nome").Value & ";" & Rec("Quanti").Value)
+                            End If
 
                             Rec.MoveNext
                         Loop
@@ -1762,6 +1864,696 @@ Public Class wsStatistiche
                         End Try
                     Next
                 Next
+
+                Dim gf As New GestioneFilesDirectory
+                Dim PathBaseImmagini As String = "http://looigi.no-ip.biz:12345/CVCalcio/App_Themes/Standard/Images"
+                Dim PathBaseImmScon As String = "http://looigi.no-ip.biz:12345/CVCalcio/App_Themes/Standard/Images/Sconosciuto.png"
+
+                Dim Filone As String = gf.LeggeFileIntero(HttpContext.Current.Server.MapPath(".") & "\base_statistiche.txt")
+                gf.CreaDirectoryDaPercorso(HttpContext.Current.Server.MapPath(".") & "\Statistiche\")
+                Dim NomeFileFinale As String = HttpContext.Current.Server.MapPath(".") & "\Statistiche\" & idAnno & "_" & idCategoria & ".html"
+
+                Filone = Filone.Replace("***SFONDO***", PathBaseImmagini & "/bg.jpg")
+                Filone = Filone.Replace("***ANNO***", idAnno)
+                Filone = Filone.Replace("***CATEGORIA***", idCategoria)
+
+                Dim Stringona As String = ""
+
+                For Each Giocatore As String In NomiMarcatoriCampionatoCasa
+                    Dim Giocatore2 As String = ""
+                    Dim c1() As String = Giocatore.Split("-")
+                    Dim i As Integer = 0
+                    For Each Gioc2 As String In NomiMarcatoriGeneraliCasa
+                        Dim c2() As String = Gioc2.Split("-")
+                        If c1(1) = c2(1) Then
+                            c2(2) = (Val(c2(2)) + Val(c1(2))).ToString
+                            Giocatore2 = c1(0) + "-" + c1(1) + "-" + (c2(2))
+                            NomiMarcatoriGeneraliCasa.Item(i) = Giocatore2
+                            Exit For
+                        End If
+                        i += 1
+                    Next
+                    If Giocatore2 = "" Then
+                        NomiMarcatoriGeneraliCasa.Add(Giocatore)
+                    End If
+                Next
+                For Each Giocatore As String In NomiMarcatoriAmichevoliCasa
+                    Dim Giocatore2 As String = ""
+                    Dim c1() As String = Giocatore.Split("-")
+                    Dim i As Integer = 0
+                    For Each Gioc2 As String In NomiMarcatoriGeneraliCasa
+                        Dim c2() As String = Gioc2.Split("-")
+                        If c1(1) = c2(1) Then
+                            c2(2) = (Val(c2(2)) + Val(c1(2))).ToString.Trim
+                            Giocatore2 = c1(0) + "-" + c1(1) + "-" + (c2(2))
+                            NomiMarcatoriGeneraliCasa.Item(i) = Giocatore2
+                            Exit For
+                        End If
+                        i += 1
+                    Next
+                    If Giocatore2 = "" Then
+                        NomiMarcatoriGeneraliCasa.Add(Giocatore)
+                    End If
+                Next
+                For Each Giocatore As String In NomiMarcatoriTorneiCasa
+                    Dim Giocatore2 As String = ""
+                    Dim c1() As String = Giocatore.Split("-")
+                    Dim i As Integer = 0
+                    For Each Gioc2 As String In NomiMarcatoriGeneraliCasa
+                        Dim c2() As String = Gioc2.Split("-")
+                        If c1(1) = c2(1) Then
+                            c2(2) = (Val(c2(2)) + Val(c1(2))).ToString
+                            Giocatore2 = c1(0) + "-" + c1(1) + "-" + (c2(2))
+                            NomiMarcatoriGeneraliCasa.Item(i) = Giocatore2
+                            Exit For
+                        End If
+                        i += 1
+                    Next
+                    If Giocatore2 = "" Then
+                        NomiMarcatoriGeneraliCasa.Add(Giocatore)
+                    End If
+                Next
+
+                For Each Giocatore As String In NomiMarcatoriCampionatoFuori
+                    Dim Giocatore2 As String = ""
+                    Dim c1() As String = Giocatore.Split("-")
+                    Dim i As Integer = 0
+                    For Each Gioc2 As String In NomiMarcatoriGeneraliFuori
+                        Dim c2() As String = Gioc2.Split("-")
+                        If c1(1) = c2(1) Then
+                            c2(2) = (Val(c2(2)) + Val(c1(2))).ToString
+                            Giocatore2 = c1(0) + "-" + c1(1) + "-" + (c2(2))
+                            NomiMarcatoriGeneraliFuori.Item(i) = Giocatore2
+                            Exit For
+                        End If
+                        i += 1
+                    Next
+                    If Giocatore2 = "" Then
+                        NomiMarcatoriGeneraliFuori.Add(Giocatore)
+                    End If
+                Next
+                For Each Giocatore As String In NomiMarcatoriAmichevoliFuori
+                    Dim Giocatore2 As String = ""
+                    Dim c1() As String = Giocatore.Split("-")
+                    Dim i As Integer = 0
+                    For Each Gioc2 As String In NomiMarcatoriGeneraliFuori
+                        Dim c2() As String = Gioc2.Split("-")
+                        If c1(1) = c2(1) Then
+                            c2(2) = (Val(c2(2)) + Val(c1(2))).ToString
+                            Giocatore2 = c1(0) + "-" + c1(1) + "-" + (c2(2))
+                            NomiMarcatoriGeneraliFuori.Item(i) = Giocatore2
+                            Exit For
+                        End If
+                        i += 1
+                    Next
+                    If Giocatore2 = "" Then
+                        NomiMarcatoriGeneraliFuori.Add(Giocatore)
+                    End If
+                Next
+                For Each Giocatore As String In NomiMarcatoriTorneiFuori
+                    Dim Giocatore2 As String = ""
+                    Dim c1() As String = Giocatore.Split("-")
+                    Dim i As Integer = 0
+                    For Each Gioc2 As String In NomiMarcatoriGeneraliFuori
+                        Dim c2() As String = Gioc2.Split("-")
+                        If c1(1) = c2(1) Then
+                            c2(2) = (Val(c2(2)) + Val(c1(2))).ToString
+                            Giocatore2 = c1(0) + "-" + c1(1) + "-" + (c2(2))
+                            NomiMarcatoriGeneraliFuori.Item(i) = Giocatore2
+                            Exit For
+                        End If
+                        i += 1
+                    Next
+                    If Giocatore2 = "" Then
+                        NomiMarcatoriGeneraliFuori.Add(Giocatore)
+                    End If
+                Next
+
+                For Each Giocatore As String In NomiMarcatoriCampionatoCampoEsterno
+                    Dim Giocatore2 As String = ""
+                    Dim c1() As String = Giocatore.Split("-")
+                    Dim i As Integer = 0
+                    For Each Gioc2 As String In NomiMarcatoriGeneraliCampoEsterno
+                        Dim c2() As String = Gioc2.Split("-")
+                        If c1(1) = c2(1) Then
+                            c2(2) = (Val(c2(2)) + Val(c1(2))).ToString
+                            Giocatore2 = c1(0) + "-" + c1(1) + "-" + (c2(2))
+                            NomiMarcatoriGeneraliCampoEsterno.Item(i) = Giocatore2
+                            Exit For
+                        End If
+                        i += 1
+                    Next
+                    If Giocatore2 = "" Then
+                        NomiMarcatoriGeneraliCampoEsterno.Add(Giocatore)
+                    End If
+                Next
+                For Each Giocatore As String In NomiMarcatoriAmichevoliCampoEsterno
+                    Dim Giocatore2 As String = ""
+                    Dim c1() As String = Giocatore.Split("-")
+                    Dim i As Integer = 0
+                    For Each Gioc2 As String In NomiMarcatoriGeneraliCampoEsterno
+                        Dim c2() As String = Gioc2.Split("-")
+                        If c1(1) = c2(1) Then
+                            c2(2) = (Val(c2(2)) + Val(c1(2))).ToString
+                            Giocatore2 = c1(0) + "-" + c1(1) + "-" + (c2(2))
+                            NomiMarcatoriGeneraliCampoEsterno.Item(i) = Giocatore2
+                            Exit For
+                        End If
+                        i += 1
+                    Next
+                    If Giocatore2 = "" Then
+                        NomiMarcatoriGeneraliCampoEsterno.Add(Giocatore)
+                    End If
+                Next
+                For Each Giocatore As String In NomiMarcatoriTorneiCampoEsterno
+                    Dim Giocatore2 As String = ""
+                    Dim c1() As String = Giocatore.Split("-")
+                    Dim i As Integer = 0
+                    For Each Gioc2 As String In NomiMarcatoriGeneraliCampoEsterno
+                        Dim c2() As String = Gioc2.Split("-")
+                        If c1(1) = c2(1) Then
+                            c2(2) = (Val(c2(2)) + Val(c1(2))).ToString
+                            Giocatore2 = c1(0) + "-" + c1(1) + "-" + (c2(2))
+                            NomiMarcatoriGeneraliCampoEsterno.Item(i) = Giocatore2
+                            Exit For
+                        End If
+                        i += 1
+                    Next
+                    If Giocatore2 = "" Then
+                        NomiMarcatoriGeneraliCampoEsterno.Add(Giocatore)
+                    End If
+                Next
+
+                For Each Dove As String In PartiteCampionatoDove
+                    Select Case Dove
+                        Case "S"
+                            GiocateCampionatoCasa += 1
+                        Case "N"
+                            GiocateCampionatoFuori += 1
+                        Case "E"
+                            GiocateCampionatoCampoEsterno += 1
+                    End Select
+                Next
+
+                For Each Dove As String In PartiteAmichevoliDove
+                    Select Case Dove
+                        Case "S"
+                            GiocateAmichevoliCasa += 1
+                        Case "N"
+                            GiocateAmichevoliFuori += 1
+                        Case "E"
+                            GiocateAmichevoliCampoEsterno += 1
+                    End Select
+                Next
+
+                For Each Dove As String In PartiteTorneiDove
+                    Select Case Dove
+                        Case "S"
+                            GiocateTorneiCasa += 1
+                        Case "N"
+                            GiocateTorneiFuori += 1
+                        Case "E"
+                            GiocateTorneiCampoEsterno += 1
+                    End Select
+                Next
+
+                For i As Integer = 0 To NomiMarcatoriGeneraliCasa.Count - 1
+                    Dim c1() As String = NomiMarcatoriGeneraliCasa.Item(i).Split("-")
+                    For k As Integer = 0 To NomiMarcatoriGeneraliCasa.Count - 1
+                        Dim c2() As String = NomiMarcatoriGeneraliCasa.Item(k).Split("-")
+                        If Val(c1(2) > Val(c2(2))) Then
+                            Dim Appoggio As String = NomiMarcatoriGeneraliCasa.Item(i)
+                            NomiMarcatoriGeneraliCasa.Item(i) = NomiMarcatoriGeneraliCasa.Item(k)
+                            NomiMarcatoriGeneraliCasa.Item(k) = Appoggio
+                        End If
+                    Next
+                Next
+
+                For i As Integer = 0 To NomiMarcatoriGeneraliFuori.Count - 1
+                    Dim c1() As String = NomiMarcatoriGeneraliFuori.Item(i).Split("-")
+                    For k As Integer = 0 To NomiMarcatoriGeneraliFuori.Count - 1
+                        Dim c2() As String = NomiMarcatoriGeneraliFuori.Item(k).Split("-")
+                        If Val(c1(2) > Val(c2(2))) Then
+                            Dim Appoggio As String = NomiMarcatoriGeneraliFuori.Item(i)
+                            NomiMarcatoriGeneraliFuori.Item(i) = NomiMarcatoriGeneraliFuori.Item(k)
+                            NomiMarcatoriGeneraliFuori.Item(k) = Appoggio
+                        End If
+                    Next
+                Next
+
+                For i As Integer = 0 To NomiMarcatoriGeneraliCampoEsterno.Count - 1
+                    Dim c1() As String = NomiMarcatoriGeneraliCampoEsterno.Item(i).Split("-")
+                    For k As Integer = 0 To NomiMarcatoriGeneraliCampoEsterno.Count - 1
+                        Dim c2() As String = NomiMarcatoriGeneraliCampoEsterno.Item(k).Split("-")
+                        If Val(c1(2) > Val(c2(2))) Then
+                            Dim Appoggio As String = NomiMarcatoriGeneraliCampoEsterno.Item(i)
+                            NomiMarcatoriGeneraliCampoEsterno.Item(i) = NomiMarcatoriGeneraliCampoEsterno.Item(k)
+                            NomiMarcatoriGeneraliCampoEsterno.Item(k) = Appoggio
+                        End If
+                    Next
+                Next
+
+                For i As Integer = 0 To NomiMarcatoriCampionatoCasa.Count - 1
+                    Dim c1() As String = NomiMarcatoriCampionatoCasa.Item(i).Split("-")
+                    For k As Integer = 0 To NomiMarcatoriCampionatoCasa.Count - 1
+                        Dim c2() As String = NomiMarcatoriCampionatoCasa.Item(k).Split("-")
+                        If Val(c1(2) > Val(c2(2))) Then
+                            Dim Appoggio As String = NomiMarcatoriCampionatoCasa.Item(i)
+                            NomiMarcatoriCampionatoCasa.Item(i) = NomiMarcatoriCampionatoCasa.Item(k)
+                            NomiMarcatoriCampionatoCasa.Item(k) = Appoggio
+                        End If
+                    Next
+                Next
+
+                For i As Integer = 0 To NomiMarcatoriCampionatoFuori.Count - 1
+                    Dim c1() As String = NomiMarcatoriCampionatoFuori.Item(i).Split("-")
+                    For k As Integer = 0 To NomiMarcatoriCampionatoFuori.Count - 1
+                        Dim c2() As String = NomiMarcatoriCampionatoFuori.Item(k).Split("-")
+                        If Val(c1(2) > Val(c2(2))) Then
+                            Dim Appoggio As String = NomiMarcatoriCampionatoFuori.Item(i)
+                            NomiMarcatoriCampionatoFuori.Item(i) = NomiMarcatoriCampionatoFuori.Item(k)
+                            NomiMarcatoriCampionatoFuori.Item(k) = Appoggio
+                        End If
+                    Next
+                Next
+
+                For i As Integer = 0 To NomiMarcatoriCampionatoCampoEsterno.Count - 1
+                    Dim c1() As String = NomiMarcatoriCampionatoCampoEsterno.Item(i).Split("-")
+                    For k As Integer = 0 To NomiMarcatoriCampionatoCampoEsterno.Count - 1
+                        Dim c2() As String = NomiMarcatoriCampionatoCampoEsterno.Item(k).Split("-")
+                        If Val(c1(2) > Val(c2(2))) Then
+                            Dim Appoggio As String = NomiMarcatoriCampionatoCampoEsterno.Item(i)
+                            NomiMarcatoriCampionatoCampoEsterno.Item(i) = NomiMarcatoriCampionatoCampoEsterno.Item(k)
+                            NomiMarcatoriCampionatoCampoEsterno.Item(k) = Appoggio
+                        End If
+                    Next
+                Next
+
+                For i As Integer = 0 To NomiMarcatoriAmichevoliCasa.Count - 1
+                    Dim c1() As String = NomiMarcatoriAmichevoliCasa.Item(i).Split("-")
+                    For k As Integer = 0 To NomiMarcatoriAmichevoliCasa.Count - 1
+                        Dim c2() As String = NomiMarcatoriAmichevoliCasa.Item(k).Split("-")
+                        If Val(c1(2) > Val(c2(2))) Then
+                            Dim Appoggio As String = NomiMarcatoriAmichevoliCasa.Item(i)
+                            NomiMarcatoriAmichevoliCasa.Item(i) = NomiMarcatoriAmichevoliCasa.Item(k)
+                            NomiMarcatoriAmichevoliCasa.Item(k) = Appoggio
+                        End If
+                    Next
+                Next
+
+                For i As Integer = 0 To NomiMarcatoriAmichevoliFuori.Count - 1
+                    Dim c1() As String = NomiMarcatoriAmichevoliFuori.Item(i).Split("-")
+                    For k As Integer = 0 To NomiMarcatoriAmichevoliFuori.Count - 1
+                        Dim c2() As String = NomiMarcatoriAmichevoliFuori.Item(k).Split("-")
+                        If Val(c1(2) > Val(c2(2))) Then
+                            Dim Appoggio As String = NomiMarcatoriAmichevoliFuori.Item(i)
+                            NomiMarcatoriAmichevoliFuori.Item(i) = NomiMarcatoriAmichevoliFuori.Item(k)
+                            NomiMarcatoriAmichevoliFuori.Item(k) = Appoggio
+                        End If
+                    Next
+                Next
+
+                For i As Integer = 0 To NomiMarcatoriAmichevoliCampoEsterno.Count - 1
+                    Dim c1() As String = NomiMarcatoriAmichevoliCampoEsterno.Item(i).Split("-")
+                    For k As Integer = 0 To NomiMarcatoriAmichevoliCampoEsterno.Count - 1
+                        Dim c2() As String = NomiMarcatoriAmichevoliCampoEsterno.Item(k).Split("-")
+                        If Val(c1(2) > Val(c2(2))) Then
+                            Dim Appoggio As String = NomiMarcatoriAmichevoliCampoEsterno.Item(i)
+                            NomiMarcatoriAmichevoliCampoEsterno.Item(i) = NomiMarcatoriAmichevoliCampoEsterno.Item(k)
+                            NomiMarcatoriAmichevoliCampoEsterno.Item(k) = Appoggio
+                        End If
+                    Next
+                Next
+
+                For i As Integer = 0 To NomiMarcatoriTorneiCasa.Count - 1
+                    Dim c1() As String = NomiMarcatoriTorneiCasa.Item(i).Split("-")
+                    For k As Integer = 0 To NomiMarcatoriTorneiCasa.Count - 1
+                        Dim c2() As String = NomiMarcatoriTorneiCasa.Item(k).Split("-")
+                        If Val(c1(2) > Val(c2(2))) Then
+                            Dim Appoggio As String = NomiMarcatoriTorneiCasa.Item(i)
+                            NomiMarcatoriTorneiCasa.Item(i) = NomiMarcatoriTorneiCasa.Item(k)
+                            NomiMarcatoriTorneiCasa.Item(k) = Appoggio
+                        End If
+                    Next
+                Next
+
+                For i As Integer = 0 To NomiMarcatoriTorneiFuori.Count - 1
+                    Dim c1() As String = NomiMarcatoriTorneiFuori.Item(i).Split("-")
+                    For k As Integer = 0 To NomiMarcatoriTorneiFuori.Count - 1
+                        Dim c2() As String = NomiMarcatoriTorneiFuori.Item(k).Split("-")
+                        If Val(c1(2) > Val(c2(2))) Then
+                            Dim Appoggio As String = NomiMarcatoriTorneiFuori.Item(i)
+                            NomiMarcatoriTorneiFuori.Item(i) = NomiMarcatoriTorneiFuori.Item(k)
+                            NomiMarcatoriTorneiFuori.Item(k) = Appoggio
+                        End If
+                    Next
+                Next
+
+                For i As Integer = 0 To NomiMarcatoriTorneiCampoEsterno.Count - 1
+                    Dim c1() As String = NomiMarcatoriTorneiCampoEsterno.Item(i).Split("-")
+                    For k As Integer = 0 To NomiMarcatoriTorneiCampoEsterno.Count - 1
+                        Dim c2() As String = NomiMarcatoriTorneiCampoEsterno.Item(k).Split("-")
+                        If Val(c1(2) > Val(c2(2))) Then
+                            Dim Appoggio As String = NomiMarcatoriTorneiCampoEsterno.Item(i)
+                            NomiMarcatoriTorneiCampoEsterno.Item(i) = NomiMarcatoriTorneiCampoEsterno.Item(k)
+                            NomiMarcatoriTorneiCampoEsterno.Item(k) = Appoggio
+                        End If
+                    Next
+                Next
+
+                ' Generali casa
+                Stringona = ""
+                Stringona &= "Giocate: " & (GiocateCampionatoCasa + GiocateAmichevoliCasa + GiocateTorneiCasa).ToString & "<br /><br />"
+
+                Stringona &= "Vittorie: " & (VittorieCampionatoCasa + VittorieAmichevoliCampoEsterno + VittorieAmichevoliCasa).ToString & "<br />"
+                Stringona &= "Pareggi: " & (PareggiCampionatoCasa + PareggiAmichevoliCasa + PareggiTorneiCasa).ToString & "<br />"
+                Stringona &= "Sconfitte: " & (SconfitteCampionatoCasa + SconfitteAmichevoliCasa + SconfitteTorneiCasa).ToString & "<br /><br />"
+
+                Stringona &= "Goal segnati: " & (GoalCampionatoCasa + GoalAmichevoliCasa + GoalTorneiCasa).ToString & "<br />"
+                Stringona &= "Goal subiti: " & (GoalAvvCampionatoCasa1Tempo + GoalAvvCampionatoCasa2Tempo + GoalAvvCampionatoCasa3Tempo +
+                    GoalAvvAmichevoliCasa1Tempo + GoalAvvAmichevoliCasa2Tempo + GoalAvvAmichevoliCasa3Tempo +
+                    GoalAvvTorneiCasa1Tempo + GoalAvvTorneiCasa2Tempo + GoalAvvTorneiCasa3Tempo).ToString & "<br />"
+                Filone = Filone.Replace("***DATI_GENERALI_CASA***", Stringona)
+
+                ' Marcatori generali casa
+                Stringona = ""
+                For Each Giocatore As String In NomiMarcatoriGeneraliCasa
+                    Dim c() As String = Giocatore.Split("-")
+                    Dim Path As String = PathBaseImmagini & "/Giocatori/" & idAnno & "_" & c(0) & ".jpg"
+                    Dim gg As String = c(2).Trim
+                    If gg.Length = 1 Then gg = "&nbsp;" & gg
+
+                    Stringona &= gg.ToString & "&nbsp;<img src=""" & Path & """ style=""width: 50px; height: 50px;"" onerror=""this.src='http://looigi.no-ip.biz:12345/CVCalcio/App_Themes/Standard/Images/Sconosciuto.png'"" />"
+                    Stringona &= "&nbsp;" & c(1) & "<br />"
+                Next
+                Filone = Filone.Replace("***DATI_GENERALI_MARCATORI_CASA***", Stringona)
+
+                ' Generali fuori
+                Stringona = ""
+                Stringona &= "Giocate: " & (GiocateCampionatoFuori + GiocateAmichevoliFuori + GiocateTorneiFuori).ToString & "<br /><br />"
+
+                Stringona &= "Vittorie: " & (VittorieCampionatoFuori + VittorieAmichevoliCampoEsterno + VittorieAmichevoliFuori).ToString & "<br />"
+                Stringona &= "Pareggi: " & (PareggiCampionatoFuori + PareggiAmichevoliFuori + PareggiTorneiFuori).ToString & "<br />"
+                Stringona &= "Sconfitte: " & (SconfitteCampionatoFuori + SconfitteAmichevoliFuori + SconfitteTorneiFuori).ToString & "<br /><br />"
+
+                Stringona &= "Goal segnati: " & (GoalCampionatoFuori + GoalAmichevoliFuori + GoalTorneiFuori).ToString & "<br />"
+                Stringona &= "Goal subiti: " & (GoalAvvCampionatoFuori1Tempo + GoalAvvCampionatoFuori2Tempo + GoalAvvCampionatoFuori3Tempo +
+                    GoalAvvAmichevoliFuori1Tempo + GoalAvvAmichevoliFuori2Tempo + GoalAvvAmichevoliFuori3Tempo +
+                    GoalAvvTorneiFuori1Tempo + GoalAvvTorneiFuori2Tempo + GoalAvvTorneiFuori3Tempo).ToString & "<br />"
+                Filone = Filone.Replace("***DATI_GENERALI_FUORI***", Stringona)
+
+                ' Marcatori generali fuori
+                Stringona = ""
+                For Each Giocatore As String In NomiMarcatoriGeneraliFuori
+                    Dim c() As String = Giocatore.Split("-")
+                    Dim Path As String = PathBaseImmagini & "/Giocatori/" & idAnno & "_" & c(0) & ".jpg"
+                    Dim gg As String = c(2).Trim
+                    If gg.Length = 1 Then gg = "&nbsp;" & gg
+
+                    Stringona &= gg & "&nbsp;<img src=""" & Path & """ style=""width: 50px; height: 50px;"" onerror=""this.src='http://looigi.no-ip.biz:12345/CVCalcio/App_Themes/Standard/Images/Sconosciuto.png'"" />"
+                    Stringona &= "&nbsp;" & c(1) & "<br />"
+                Next
+                Filone = Filone.Replace("***DATI_GENERALI_MARCATORI_FUORI***", Stringona)
+
+                ' Generali campo esterno
+                Stringona = ""
+                Stringona &= "Giocate: " & (GiocateCampionatoCampoEsterno + GiocateAmichevoliCampoEsterno + GiocateTorneiCampoEsterno).ToString & "<br /><br />"
+
+                Stringona &= "Vittorie: " & (VittorieCampionatoCampoEsterno + VittorieAmichevoliCampoEsterno + VittorieAmichevoliCampoEsterno).ToString & "<br />"
+                Stringona &= "Pareggi: " & (PareggiCampionatoCampoEsterno + PareggiAmichevoliCampoEsterno + PareggiTorneiCampoEsterno).ToString & "<br />"
+                Stringona &= "Sconfitte: " & (SconfitteCampionatoCampoEsterno + SconfitteAmichevoliCampoEsterno + SconfitteTorneiCampoEsterno).ToString & "<br /><br />"
+
+                Stringona &= "Goal segnati: " & (GoalCampionatoCampoEsterno + GoalAmichevoliCampoEsterno + GoalTorneiCampoEsterno).ToString & "<br />"
+                Stringona &= "Goal subiti: " & (GoalAvvCampionatoCampoEsterno1Tempo + GoalAvvCampionatoCampoEsterno2Tempo + GoalAvvCampionatoCampoEsterno3Tempo +
+                    GoalAvvAmichevoliCampoEsterno1Tempo + GoalAvvAmichevoliCampoEsterno2Tempo + GoalAvvAmichevoliCampoEsterno3Tempo +
+                    GoalAvvTorneiCampoEsterno1Tempo + GoalAvvTorneiCampoEsterno2Tempo + GoalAvvTorneiCampoEsterno3Tempo).ToString & "<br />"
+                Filone = Filone.Replace("***DATI_GENERALI_CAMPOESTERNO***", Stringona)
+
+                ' Marcatori generali campo esterno
+                Stringona = ""
+                For Each Giocatore As String In NomiMarcatoriGeneraliCampoEsterno
+                    Dim c() As String = Giocatore.Split("-")
+                    Dim Path As String = PathBaseImmagini & "/Giocatori/" & idAnno & "_" & c(0) & ".jpg"
+                    Dim gg As String = c(2).Trim
+                    If gg.Length = 1 Then gg = "&nbsp;" & gg
+
+                    Stringona &= gg & "&nbsp;<img src=""" & Path & """ style=""width: 50px; height: 50px;"" onerror=""this.src='http://looigi.no-ip.biz:12345/CVCalcio/App_Themes/Standard/Images/Sconosciuto.png'"" />"
+                    Stringona &= "&nbsp;" & c(1) & "<br />"
+                Next
+                Filone = Filone.Replace("***DATI_GENERALI_MARCATORI_CAMPOESTERNO***", Stringona)
+
+                ' Campionato casa
+                Stringona = ""
+                Stringona &= "Giocate: " & (GiocateCampionatoCasa).ToString & "<br /><br />"
+
+                Stringona &= "Vittorie: " & (VittorieCampionatoCasa).ToString & "<br />"
+                Stringona &= "Pareggi: " & (PareggiCampionatoCasa).ToString & "<br />"
+                Stringona &= "Sconfitte: " & (SconfitteCampionatoCasa).ToString & "<br /><br />"
+
+                Stringona &= "Goal segnati: " & (GoalCampionatoCasa).ToString & "<br />"
+                Stringona &= "Goal subiti: " & (GoalAvvCampionatoCasa1Tempo + GoalAvvCampionatoCasa2Tempo + GoalAvvCampionatoCasa3Tempo).ToString & "<br />"
+                Filone = Filone.Replace("***DATI_CAMPIONATO_CASA***", Stringona)
+
+                ' Marcatori campionato casa
+                Stringona = ""
+                For Each Giocatore As String In NomiMarcatoriCampionatoCasa
+                    Dim c() As String = Giocatore.Split("-")
+                    Dim Path As String = PathBaseImmagini & "/Giocatori/" & idAnno & "_" & c(0) & ".jpg"
+                    Dim gg As String = c(2).Trim
+                    If gg.Length = 1 Then gg = "&nbsp;" & gg
+
+                    Stringona &= gg & "&nbsp;<img src=""" & Path & """ style=""width: 50px; height: 50px;"" onerror=""this.src='http://looigi.no-ip.biz:12345/CVCalcio/App_Themes/Standard/Images/Sconosciuto.png'"" />"
+                    Stringona &= "&nbsp;" & c(1) & "<br />"
+                Next
+                Filone = Filone.Replace("***DATI_CAMPIONATO_MARCATORI_CASA***", Stringona)
+
+                ' Campionato fuori
+                Stringona = ""
+                Stringona &= "Giocate: " & (GiocateCampionatoFuori).ToString & "<br /><br />"
+
+                Stringona &= "Vittorie: " & (VittorieCampionatoFuori).ToString & "<br />"
+                Stringona &= "Pareggi: " & (PareggiCampionatoFuori).ToString & "<br />"
+                Stringona &= "Sconfitte: " & (SconfitteCampionatoFuori).ToString & "<br /><br />"
+
+                Stringona &= "Goal segnati: " & (GoalCampionatoFuori).ToString & "<br />"
+                Stringona &= "Goal subiti: " & (GoalAvvCampionatoFuori1Tempo + GoalAvvCampionatoFuori2Tempo + GoalAvvCampionatoFuori3Tempo).ToString & "<br />"
+                Filone = Filone.Replace("***DATI_CAMPIONATO_FUORI***", Stringona)
+
+                ' Marcatori campionato fuori
+                Stringona = ""
+                For Each Giocatore As String In NomiMarcatoriCampionatoFuori
+                    Dim c() As String = Giocatore.Split("-")
+                    Dim Path As String = PathBaseImmagini & "/Giocatori/" & idAnno & "_" & c(0) & ".jpg"
+                    Dim gg As String = c(2).Trim
+                    If gg.Length = 1 Then gg = "&nbsp;" & gg
+
+                    Stringona &= gg & "&nbsp;<img src=""" & Path & """ style=""width: 50px; height: 50px;"" onerror=""this.src='http://looigi.no-ip.biz:12345/CVCalcio/App_Themes/Standard/Images/Sconosciuto.png'"" />"
+                    Stringona &= "&nbsp;" & c(1) & "<br />"
+                Next
+                Filone = Filone.Replace("***DATI_CAMPIONATO_MARCATORI_FUORI***", Stringona)
+
+                ' Campionato campo esterno
+                Stringona = ""
+                Stringona &= "Giocate: " & (GiocateCampionatoCampoEsterno).ToString & "<br /><br />"
+
+                Stringona &= "Vittorie: " & (VittorieCampionatoCampoEsterno).ToString & "<br />"
+                Stringona &= "Pareggi: " & (PareggiCampionatoCampoEsterno).ToString & "<br />"
+                Stringona &= "Sconfitte: " & (SconfitteCampionatoCampoEsterno).ToString & "<br /><br />"
+
+                Stringona &= "Goal segnati: " & (GoalCampionatoCampoEsterno).ToString & "<br />"
+                Stringona &= "Goal subiti: " & (GoalAvvCampionatoCampoEsterno1Tempo + GoalAvvCampionatoCampoEsterno2Tempo + GoalAvvCampionatoCampoEsterno3Tempo).ToString & "<br />"
+                Filone = Filone.Replace("***DATI_CAMPIONATO_CAMPOESTERNO***", Stringona)
+
+                ' Marcatori campionato campo esterno
+                Stringona = ""
+                For Each Giocatore As String In NomiMarcatoriCampionatoCampoEsterno
+                    Dim c() As String = Giocatore.Split("-")
+                    Dim Path As String = PathBaseImmagini & "/Giocatori/" & idAnno & "_" & c(0) & ".jpg"
+                    Dim gg As String = c(2).Trim
+                    If gg.Length = 1 Then gg = "&nbsp;" & gg
+
+                    Stringona &= gg & "&nbsp;<img src=""" & Path & """ style=""width: 50px; height: 50px;"" onerror=""this.src='http://looigi.no-ip.biz:12345/CVCalcio/App_Themes/Standard/Images/Sconosciuto.png'"" />"
+                    Stringona &= "&nbsp;" & c(1) & "<br />"
+                Next
+                Filone = Filone.Replace("***DATI_CAMPIONATO_MARCATORI_CAMPOESTERNO***", Stringona)
+
+                ' Amichevoli casa
+                Stringona = ""
+                Stringona &= "Giocate: " & (GiocateAmichevoliCasa).ToString & "<br /><br />"
+
+                Stringona &= "Vittorie: " & (VittorieAmichevoliCasa).ToString & "<br />"
+                Stringona &= "Pareggi: " & (PareggiAmichevoliCasa).ToString & "<br />"
+                Stringona &= "Sconfitte: " & (SconfitteAmichevoliCasa).ToString & "<br /><br />"
+
+                Stringona &= "Goal segnati: " & (GoalAmichevoliCasa).ToString & "<br />"
+                Stringona &= "Goal subiti: " & (GoalAvvAmichevoliCasa1Tempo + GoalAvvAmichevoliCasa2Tempo + GoalAvvAmichevoliCasa3Tempo).ToString & "<br />"
+                Filone = Filone.Replace("***DATI_AMICHEVOLI_CASA***", Stringona)
+
+                ' Marcatori amichevoli casa
+                Stringona = ""
+                For Each Giocatore As String In NomiMarcatoriAmichevoliCasa
+                    Dim c() As String = Giocatore.Split("-")
+                    Dim Path As String = PathBaseImmagini & "/Giocatori/" & idAnno & "_" & c(0) & ".jpg"
+                    Dim gg As String = c(2).Trim
+                    If gg.Length = 1 Then gg = "&nbsp;" & gg
+
+                    Stringona &= gg & "&nbsp;<img src=""" & Path & """ style=""width: 50px; height: 50px;"" onerror=""this.src='http://looigi.no-ip.biz:12345/CVCalcio/App_Themes/Standard/Images/Sconosciuto.png'"" />"
+                    Stringona &= "&nbsp;" & c(1) & "<br />"
+                Next
+                Filone = Filone.Replace("***DATI_AMICHEVOLI_MARCATORI_CASA***", Stringona)
+
+                ' Amichevoli fuori
+                Stringona = ""
+                Stringona &= "Giocate: " & (GiocateAmichevoliFuori).ToString & "<br /><br />"
+
+                Stringona &= "Vittorie: " & (VittorieAmichevoliFuori).ToString & "<br />"
+                Stringona &= "Pareggi: " & (PareggiAmichevoliFuori).ToString & "<br />"
+                Stringona &= "Sconfitte: " & (SconfitteAmichevoliFuori).ToString & "<br /><br />"
+
+                Stringona &= "Goal segnati: " & (GoalAmichevoliFuori).ToString & "<br />"
+                Stringona &= "Goal subiti: " & (GoalAvvAmichevoliFuori1Tempo + GoalAvvAmichevoliFuori2Tempo + GoalAvvAmichevoliFuori3Tempo).ToString & "<br />"
+                Filone = Filone.Replace("***DATI_AMICHEVOLI_FUORI***", Stringona)
+
+                ' Marcatori amichevoli fuori
+                Stringona = ""
+                For Each Giocatore As String In NomiMarcatoriAmichevoliFuori
+                    Dim c() As String = Giocatore.Split("-")
+                    Dim Path As String = PathBaseImmagini & "/Giocatori/" & idAnno & "_" & c(0) & ".jpg"
+                    Dim gg As String = c(2).Trim
+                    If gg.Length = 1 Then gg = "&nbsp;" & gg
+
+                    Stringona &= gg & "&nbsp;<img src=""" & Path & """ style=""width: 50px; height: 50px;"" onerror=""this.src='http://looigi.no-ip.biz:12345/CVCalcio/App_Themes/Standard/Images/Sconosciuto.png'"" />"
+                    Stringona &= "&nbsp;" & c(1) & "<br />"
+                Next
+                Filone = Filone.Replace("***DATI_AMICHEVOLI_MARCATORI_FUORI***", Stringona)
+
+                ' Amichevoli campo esterno
+                Stringona = ""
+                Stringona &= "Giocate: " & (GiocateAmichevoliCampoEsterno).ToString & "<br /><br />"
+
+                Stringona &= "Vittorie: " & (VittorieAmichevoliCampoEsterno).ToString & "<br />"
+                Stringona &= "Pareggi: " & (PareggiAmichevoliCampoEsterno).ToString & "<br />"
+                Stringona &= "Sconfitte: " & (SconfitteAmichevoliCampoEsterno).ToString & "<br /><br />"
+
+                Stringona &= "Goal segnati: " & (GoalAmichevoliCampoEsterno).ToString & "<br />"
+                Stringona &= "Goal subiti: " & (GoalAvvAmichevoliCampoEsterno1Tempo + GoalAvvAmichevoliCampoEsterno2Tempo + GoalAvvAmichevoliCampoEsterno3Tempo).ToString & "<br />"
+                Filone = Filone.Replace("***DATI_AMICHEVOLI_CAMPOESTERNO***", Stringona)
+
+                ' Marcatori amichevoli campo esterno
+                Stringona = ""
+                For Each Giocatore As String In NomiMarcatoriAmichevoliCampoEsterno
+                    Dim c() As String = Giocatore.Split("-")
+                    Dim Path As String = PathBaseImmagini & "/Giocatori/" & idAnno & "_" & c(0) & ".jpg"
+                    Dim gg As String = c(2).Trim
+                    If gg.Length = 1 Then gg = "&nbsp;" & gg
+
+                    Stringona &= gg & "&nbsp;<img src=""" & Path & """ style=""width: 50px; height: 50px;"" onerror=""this.src='http://looigi.no-ip.biz:12345/CVCalcio/App_Themes/Standard/Images/Sconosciuto.png'"" />"
+                    Stringona &= "&nbsp;" & c(1) & "<br />"
+                Next
+                Filone = Filone.Replace("***DATI_AMICHEVOLI_MARCATORI_CAMPOESTERNO***", Stringona)
+
+                ' Tornei casa
+                Stringona = ""
+                Stringona &= "Giocate: " & (GiocateTorneiCasa).ToString & "<br /><br />"
+
+                Stringona &= "Vittorie: " & (VittorieTorneiCasa).ToString & "<br />"
+                Stringona &= "Pareggi: " & (PareggiTorneiCasa).ToString & "<br />"
+                Stringona &= "Sconfitte: " & (SconfitteTorneiCasa).ToString & "<br /><br />"
+
+                Stringona &= "Goal segnati: " & (GoalTorneiCasa).ToString & "<br />"
+                Stringona &= "Goal subiti: " & (GoalAvvTorneiCasa1Tempo + GoalAvvTorneiCasa2Tempo + GoalAvvTorneiCasa3Tempo).ToString & "<br />"
+                Filone = Filone.Replace("***DATI_TORNEI_CASA***", Stringona)
+
+                ' Marcatori Tornei casa
+                Stringona = ""
+                For Each Giocatore As String In NomiMarcatoriTorneiCasa
+                    Dim c() As String = Giocatore.Split("-")
+                    Dim Path As String = PathBaseImmagini & "/Giocatori/" & idAnno & "_" & c(0) & ".jpg"
+                    Dim gg As String = c(2).Trim
+                    If gg.Length = 1 Then gg = "&nbsp;" & gg
+
+                    Stringona &= gg & "&nbsp;<img src=""" & Path & """ style=""width: 50px; height: 50px;"" onerror=""this.src='http://looigi.no-ip.biz:12345/CVCalcio/App_Themes/Standard/Images/Sconosciuto.png'"" />"
+                    Stringona &= "&nbsp;" & c(1) & "<br />"
+                Next
+                Filone = Filone.Replace("***DATI_TORNEI_MARCATORI_CASA***", Stringona)
+
+                ' Tornei fuori
+                Stringona = ""
+                Stringona &= "Giocate: " & (GiocateTorneiFuori).ToString & "<br /><br />"
+
+                Stringona &= "Vittorie: " & (VittorieTorneiFuori).ToString & "<br />"
+                Stringona &= "Pareggi: " & (PareggiTorneiFuori).ToString & "<br />"
+                Stringona &= "Sconfitte: " & (SconfitteTorneiFuori).ToString & "<br /><br />"
+
+                Stringona &= "Goal segnati: " & (GoalTorneiFuori).ToString & "<br />"
+                Stringona &= "Goal subiti: " & (GoalAvvTorneiFuori1Tempo + GoalAvvTorneiFuori2Tempo + GoalAvvTorneiFuori3Tempo).ToString & "<br />"
+                Filone = Filone.Replace("***DATI_TORNEI_FUORI***", Stringona)
+
+                ' Marcatori Tornei fuori
+                Stringona = ""
+                For Each Giocatore As String In NomiMarcatoriTorneiFuori
+                    Dim c() As String = Giocatore.Split("-")
+                    Dim Path As String = PathBaseImmagini & "/Giocatori/" & idAnno & "_" & c(0) & ".jpg"
+                    Dim gg As String = c(2).Trim
+                    If gg.Length = 1 Then gg = "&nbsp;" & gg
+
+                    Stringona &= gg & "&nbsp;<img src=""" & Path & """ style=""width: 50px; height: 50px;"" onerror=""this.src='http://looigi.no-ip.biz:12345/CVCalcio/App_Themes/Standard/Images/Sconosciuto.png'"" />"
+                    Stringona &= "&nbsp;" & c(1) & "<br />"
+                Next
+                Filone = Filone.Replace("***DATI_TORNEI_MARCATORI_FUORI***", Stringona)
+
+                ' Tornei campo esterno
+                Stringona = ""
+                Stringona &= "Giocate: " & (GiocateTorneiCampoEsterno).ToString & "<br /><br />"
+
+                Stringona &= "Vittorie: " & (VittorieTorneiCampoEsterno).ToString & "<br />"
+                Stringona &= "Pareggi: " & (PareggiTorneiCampoEsterno).ToString & "<br />"
+                Stringona &= "Sconfitte: " & (SconfitteTorneiCampoEsterno).ToString & "<br /><br />"
+
+                Stringona &= "Goal segnati: " & (GoalTorneiCampoEsterno).ToString & "<br />"
+                Stringona &= "Goal subiti: " & (GoalAvvTorneiCampoEsterno1Tempo + GoalAvvTorneiCampoEsterno2Tempo + GoalAvvTorneiCampoEsterno3Tempo).ToString & "<br />"
+                Filone = Filone.Replace("***DATI_TORNEI_CAMPOESTERNO***", Stringona)
+
+                ' Marcatori amichevoli campo esterno
+                Stringona = ""
+                For Each Giocatore As String In NomiMarcatoriTorneiCampoEsterno
+                    Dim c() As String = Giocatore.Split("-")
+                    Dim Path As String = PathBaseImmagini & "/Giocatori/" & idAnno & "_" & c(0) & ".jpg"
+                    Dim gg As String = c(2).Trim
+                    If gg.Length = 1 Then gg = "&nbsp;" & gg
+
+                    Stringona &= gg & "&nbsp;<img src=""" & Path & """ style=""width: 50px; height: 50px;"" onerror=""this.src='http://looigi.no-ip.biz:12345/CVCalcio/App_Themes/Standard/Images/Sconosciuto.png'"" />"
+                    Stringona &= "&nbsp;" & c(1) & "<br />"
+                Next
+                Filone = Filone.Replace("***DATI_TORNEI_MARCATORI_CAMPOESTERNO***", Stringona)
+
+                ' MARCATORI GENERALI
+                Stringona = ""
+                For Each Giocatore As String In MarcatoriGenerali
+                    Dim s() As String = Giocatore.Split(";")
+                    Dim Path As String = PathBaseImmagini & "/Giocatori/" & idAnno & "_" & s(0) & ".jpg"
+                    Dim gg As String = s(2).Trim
+                    If gg.Length = 1 Then gg = "&nbsp;" & gg
+
+                    Stringona &= "<span class=""testo nero"" style=""font-size: 16px;"">" & gg & "</span>&nbsp;-&nbsp;<img src=""" & Path & """ style=""width: 60px; height: 60px;"" onerror=""this.src='http://looigi.no-ip.biz:12345/CVCalcio/App_Themes/Standard/Images/Sconosciuto.png'""  />&nbsp;<span class=""testo nero"" style=""font-size: 16px;"">" & s(1) & "</span><br />"
+                Next
+                Filone = Filone.Replace("***MARCATORI_GLOBALI***", Stringona)
+
+                ' SQUADRE INCONTRATE
+                Stringona = ""
+                For Each Squadra As String In SquadreIncontrate
+                    Dim s() As String = Squadra.Split(";")
+                    Dim Imm2 As String = PathBaseImmagini & "/Avversari/" & s(0) & ".Jpg"
+                    Dim gg As String = s(2).Trim
+                    If gg.Length = 1 Then gg = "&nbsp;" & gg
+
+                    Stringona &= "<span class=""testo nero"" style=""font-size: 16px;"">" & gg & "</span>&nbsp;-&nbsp;<img src=""" & Imm2 & """ style=""width: 60px; height: 60px;"" onerror=""this.src='http://looigi.no-ip.biz:12345/CVCalcio/App_Themes/Standard/Images/Sconosciuto.png'""  />&nbsp;<span class=""testo nero"" style=""font-size: 16px;"">" & s(1) & "</span><br />"
+                Next
+                Filone = Filone.Replace("***SQUADRE_INCONTRATE***", Stringona)
+
+                gf.CreaAggiornaFile(NomeFileFinale, Filone)
+
+                If Ritorno = "" Then Ritorno = "OK"
             End If
         End If
 

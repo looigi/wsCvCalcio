@@ -2,7 +2,6 @@
     Public Const ErroreConnessioneNonValida As String = "ERRORE: Stringa di connessione non valida"
     Public Const ErroreConnessioneDBNonValida As String = "ERRORE: Connessione al db non valida"
     Public Percorso As String
-    ' Public NomeSquadra As String = "Castelverde"
     Public PercorsoSitoCV As String = "C:\inetpub\wwwroot\CVCalcio\App_Themes\Standard\Images\"
     Public PercorsoSitoURLImmagini As String = "http://looigi.no-ip.biz:12345/CvCalcio/App_Themes/Standard/Images/"
     Public StringaErrore As String = "ERROR: "
