@@ -899,4 +899,875 @@ Public Class wsStatistiche
         Return Ritorno
     End Function
 
+    <WebMethod()>
+    Public Function RitornaStatisticheStagione(idAnno As String, idCategoria As String) As String
+        Dim Ritorno As String = ""
+        Dim Connessione As String = LeggeImpostazioniDiBase(Server.MapPath("."))
+
+        If Connessione = "" Then
+            Ritorno = ErroreConnessioneNonValida
+        Else
+            Dim Conn As Object = ApreDB(Connessione)
+
+            If TypeOf (Conn) Is String Then
+                Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
+            Else
+                Dim Rec As Object = Server.CreateObject("ADODB.Recordset")
+                Dim Sql As String
+
+                Dim PartiteCampionato As New List(Of Integer)
+                Dim PartiteCampionatoDove As New List(Of String)
+                Dim PartiteCampionatoIN As String = ""
+                Dim PartiteAmichevoli As New List(Of Integer)
+                Dim PartiteAmichevoliDove As New List(Of String)
+                Dim PartiteAmichevoliIN As String = ""
+                Dim PartiteTornei As New List(Of Integer)
+                Dim PartiteTorneiDove As New List(Of String)
+                Dim PartiteTorneiIN As String = ""
+
+                Dim GoalCampionatoCasa As Integer = 0
+                Dim GoalCampionatoFuori As Integer = 0
+                Dim GoalCampionatoCampoEsterno As Integer = 0
+
+                Dim GoalAmichevoliCasa As Integer = 0
+                Dim GoalAmichevoliFuori As Integer = 0
+                Dim GoalAmichevoliCampoEsterno As Integer = 0
+
+                Dim GoalTorneiCasa As Integer = 0
+                Dim GoalTorneiFuori As Integer = 0
+                Dim GoalTorneiCampoEsterno As Integer = 0
+
+                Dim NomiMarcatoriCampionatoCasa As New List(Of String)
+                Dim NomiMarcatoriCampionatoFuori As New List(Of String)
+                Dim NomiMarcatoriCampionatoCampoEsterno As New List(Of String)
+                Dim MarcatoriCampionatoCasa As Integer = 0
+                Dim MarcatoriCampionatoFuori As Integer = 0
+                Dim MarcatoriCampionatoCampoEsterno As Integer = 0
+
+                Dim NomiMarcatoriAmichevoliCasa As New List(Of String)
+                Dim NomiMarcatoriAmichevoliFuori As New List(Of String)
+                Dim NomiMarcatoriAmichevoliCampoEsterno As New List(Of String)
+                Dim MarcatoriAmichevoliCasa As Integer = 0
+                Dim MarcatoriAmichevoliFuori As Integer = 0
+                Dim MarcatoriAmichevoliCampoEsterno As Integer = 0
+
+                Dim NomiMarcatoriTorneiCasa As New List(Of String)
+                Dim NomiMarcatoriTorneiFuori As New List(Of String)
+                Dim NomiMarcatoriTorneiCampoEsterno As New List(Of String)
+                Dim MarcatoriTorneiCasa As Integer = 0
+                Dim MarcatoriTorneiFuori As Integer = 0
+                Dim MarcatoriTorneiCampoEsterno As Integer = 0
+
+                Dim GoalAvvCampionatoCasa1Tempo As Integer = 0
+                Dim GoalAvvCampionatoCasa2Tempo As Integer = 0
+                Dim GoalAvvCampionatoCasa3Tempo As Integer = 0
+                Dim GoalAvvCampionatoFuori1Tempo As Integer = 0
+                Dim GoalAvvCampionatoFuori2Tempo As Integer = 0
+                Dim GoalAvvCampionatoFuori3Tempo As Integer = 0
+                Dim GoalAvvCampionatoCampoEsterno1Tempo As Integer = 0
+                Dim GoalAvvCampionatoCampoEsterno2Tempo As Integer = 0
+                Dim GoalAvvCampionatoCampoEsterno3Tempo As Integer = 0
+
+                Dim GoalAvvAmichevoliCasa1Tempo As Integer = 0
+                Dim GoalAvvAmichevoliCasa2Tempo As Integer = 0
+                Dim GoalAvvAmichevoliCasa3Tempo As Integer = 0
+                Dim GoalAvvAmichevoliFuori1Tempo As Integer = 0
+                Dim GoalAvvAmichevoliFuori2Tempo As Integer = 0
+                Dim GoalAvvAmichevoliFuori3Tempo As Integer = 0
+                Dim GoalAvvAmichevoliCampoEsterno1Tempo As Integer = 0
+                Dim GoalAvvAmichevoliCampoEsterno2Tempo As Integer = 0
+                Dim GoalAvvAmichevoliCampoEsterno3Tempo As Integer = 0
+
+                Dim GoalAvvTorneiCasa1Tempo As Integer = 0
+                Dim GoalAvvTorneiCasa2Tempo As Integer = 0
+                Dim GoalAvvTorneiCasa3Tempo As Integer = 0
+                Dim GoalAvvTorneiFuori1Tempo As Integer = 0
+                Dim GoalAvvTorneiFuori2Tempo As Integer = 0
+                Dim GoalAvvTorneiFuori3Tempo As Integer = 0
+                Dim GoalAvvTorneiCampoEsterno1Tempo As Integer = 0
+                Dim GoalAvvTorneiCampoEsterno2Tempo As Integer = 0
+                Dim GoalAvvTorneiCampoEsterno3Tempo As Integer = 0
+
+                Dim VittorieCampionatoCasa As Integer = 0
+                Dim PareggiCampionatoCasa As Integer = 0
+                Dim SconfitteCampionatoCasa As Integer = 0
+                Dim VittorieCampionatoFuori As Integer = 0
+                Dim PareggiCampionatoFuori As Integer = 0
+                Dim SconfitteCampionatoFuori As Integer = 0
+                Dim VittorieCampionatoCampoEsterno As Integer = 0
+                Dim PareggiCampionatoCampoEsterno As Integer = 0
+                Dim SconfitteCampionatoCampoEsterno As Integer = 0
+
+                Dim VittorieAmichevoliCasa As Integer = 0
+                Dim PareggiAmichevoliCasa As Integer = 0
+                Dim SconfitteAmichevoliCasa As Integer = 0
+                Dim VittorieAmichevoliFuori As Integer = 0
+                Dim PareggiAmichevoliFuori As Integer = 0
+                Dim SconfitteAmichevoliFuori As Integer = 0
+                Dim VittorieAmichevoliCampoEsterno As Integer = 0
+                Dim PareggiAmichevoliCampoEsterno As Integer = 0
+                Dim SconfitteAmichevoliCampoEsterno As Integer = 0
+
+                Dim VittorieTorneiCasa As Integer = 0
+                Dim PareggiTorneiCasa As Integer = 0
+                Dim SconfitteTorneiCasa As Integer = 0
+                Dim VittorieTorneiFuori As Integer = 0
+                Dim PareggiTorneiFuori As Integer = 0
+                Dim SconfitteTorneiFuori As Integer = 0
+                Dim VittorieTorneiCampoEsterno As Integer = 0
+                Dim PareggiTorneiCampoEsterno As Integer = 0
+                Dim SconfitteTorneiCampoEsterno As Integer = 0
+
+                Dim TipologiaPartitePerAnno As String = ""
+
+                Sql = "SELECT TipologiePartite.Descrizione, Count(*) As Quante " &
+                    "FROM Partite Left Join TipologiePartite On Partite.idTipologia = TipologiePartite.idTipologia " &
+                    "Where Partite.idAnno = " & idAnno & " And Partite.idCategoria = " & idCategoria & "  " &
+                    "Group By TipologiePartite.Descrizione"
+                Try
+                    Rec = LeggeQuery(Conn, Sql, Connessione)
+                    If TypeOf (Rec) Is String Then
+                        Ritorno = Rec
+                    Else
+                        Do Until Rec.Eof
+                            TipologiaPartitePerAnno &= Rec("Descrizione").Value & " " & Rec("Quante").Value & "§"
+
+                            Rec.MoveNext
+                        Loop
+                        Rec.Close()
+                    End If
+                Catch ex As Exception
+                    Ritorno = StringaErrore & " " & ex.Message
+                End Try
+
+                Sql = "SELECT Partite.idPartita, Partite.Casa " &
+                    "FROM Partite " &
+                    "WHERE Partite.idAnno=" & idAnno & " AND Partite.idCategoria=" & idCategoria & " " &
+                    "And Partite.idTipologia=1"
+                Try
+                    Rec = LeggeQuery(Conn, Sql, Connessione)
+                    If TypeOf (Rec) Is String Then
+                        Ritorno = Rec
+                    Else
+                        Do Until Rec.Eof
+                            PartiteCampionato.Add(Rec("idPartita").Value)
+                            PartiteCampionatoDove.Add(Rec("Casa").Value)
+                            PartiteCampionatoIN += Rec("idPartita").Value.ToString & ","
+
+                            Rec.MoveNext
+                        Loop
+                        Rec.Close()
+                    End If
+                Catch ex As Exception
+                    Ritorno = StringaErrore & " " & ex.Message
+                End Try
+
+                Sql = "SELECT Partite.idPartita, Partite.Casa " &
+                    "FROM Partite " &
+                    "WHERE Partite.idAnno=" & idAnno & " AND Partite.idCategoria=" & idCategoria & " " &
+                    "And Partite.idTipologia=2"
+                Try
+                    Rec = LeggeQuery(Conn, Sql, Connessione)
+                    If TypeOf (Rec) Is String Then
+                        Ritorno = Rec
+                    Else
+                        Do Until Rec.Eof
+                            PartiteAmichevoli.Add(Rec("idPartita").Value)
+                            PartiteAmichevoliDove.Add(Rec("Casa").Value)
+                            PartiteAmichevoliIN += Rec("idPartita").Value.ToString & ","
+
+                            Rec.MoveNext
+                        Loop
+                        Rec.Close()
+                    End If
+                Catch ex As Exception
+                    Ritorno = StringaErrore & " " & ex.Message
+                End Try
+
+                ' Tornei
+                Sql = "SELECT Partite.idPartita, Partite.Casa " &
+                    "FROM Partite " &
+                    "WHERE Partite.idAnno=" & idAnno & " AND Partite.idCategoria=" & idCategoria & " " &
+                    "And Partite.idTipologia=3"
+                Try
+                    Rec = LeggeQuery(Conn, Sql, Connessione)
+                    If TypeOf (Rec) Is String Then
+                        Ritorno = Rec
+                    Else
+                        Do Until Rec.Eof
+                            PartiteTornei.Add(Rec("idPartita").Value)
+                            PartiteTorneiDove.Add(Rec("Casa").Value)
+                            PartiteTorneiIN += Rec("idPartita").Value.ToString & ","
+
+                            Rec.MoveNext
+                        Loop
+                        Rec.Close()
+                    End If
+                Catch ex As Exception
+                    Ritorno = StringaErrore & " " & ex.Message
+                End Try
+
+                If PartiteCampionatoIN.Length > 0 Then
+                    PartiteCampionatoIN = Mid(PartiteCampionatoIN, 1, PartiteCampionatoIN.Length - 1)
+                End If
+                Sql = "SELECT 'GoalCampionatoCasa' As Cosa, Count(*) As GoalTotali " &
+                    "From RisultatiAggiuntiviMarcatori Left Join Partite On RisultatiAggiuntiviMarcatori.idPartita=Partite.idPartita " &
+                    "Where Partite.idPartita In (" & PartiteCampionatoIN & ") And Partite.Casa = 'S' " &
+                    "Union All " &
+                    "SELECT 'GoalCampionatoFuori' As Cosa, Count(*) As GoalTotali " &
+                    "From RisultatiAggiuntiviMarcatori Left Join Partite On RisultatiAggiuntiviMarcatori.idPartita=Partite.idPartita " &
+                    "Where Partite.idPartita In (" & PartiteCampionatoIN & ") And Partite.Casa = 'N' " &
+                    "Union All " &
+                    "SELECT 'GoalCampionatoCampoEsterno' As Cosa, Count(*) As GoalTotali " &
+                    "From RisultatiAggiuntiviMarcatori Left Join Partite On RisultatiAggiuntiviMarcatori.idPartita=Partite.idPartita " &
+                    "Where Partite.idPartita In (" & PartiteCampionatoIN & ") And Partite.Casa = 'E'"
+                Try
+                    Rec = LeggeQuery(Conn, Sql, Connessione)
+                    If TypeOf (Rec) Is String Then
+                        Ritorno = Rec
+                    Else
+                        Do Until Rec.Eof
+                            Select Case Rec("Cosa").Value
+                                Case "GoalCampionatoCasa"
+                                    GoalCampionatoCasa = Rec(1).Value
+                                Case "GoalCampionatoFuori"
+                                    GoalCampionatoFuori = Rec(1).Value
+                                Case "GoalCampionatoCasa"
+                                    GoalCampionatoCampoEsterno = Rec(1).Value
+                            End Select
+
+                            Rec.MoveNext
+                        Loop
+                        Rec.Close()
+                    End If
+                Catch ex As Exception
+                    Ritorno = StringaErrore & " " & ex.Message
+                End Try
+
+                If PartiteTorneiIN.Length > 0 Then
+                    PartiteTorneiIN = Mid(PartiteTorneiIN, 1, PartiteTorneiIN.Length - 1)
+                End If
+                Sql = "SELECT 'GoalTorneiCasa' As Cosa, Count(*) As GoalTotali " &
+                    "From RisultatiAggiuntiviMarcatori Left Join Partite On RisultatiAggiuntiviMarcatori.idPartita=Partite.idPartita " &
+                    "Where Partite.idPartita In (" & PartiteTorneiIN & ") And Partite.Casa = 'S' " &
+                    "Union All " &
+                    "SELECT 'GoalTorneiFuori' As Cosa, Count(*) As GoalTotali " &
+                    "From RisultatiAggiuntiviMarcatori Left Join Partite On RisultatiAggiuntiviMarcatori.idPartita=Partite.idPartita " &
+                    "Where Partite.idPartita In (" & PartiteTorneiIN & ") And Partite.Casa = 'N' " &
+                    "Union All " &
+                    "SELECT 'GoalTorneiCampoEsterno' As Cosa, Count(*) As GoalTotali " &
+                    "From RisultatiAggiuntiviMarcatori Left Join Partite On RisultatiAggiuntiviMarcatori.idPartita=Partite.idPartita " &
+                    "Where Partite.idPartita In (" & PartiteTorneiIN & ") And Partite.Casa = 'E'"
+                Try
+                    Rec = LeggeQuery(Conn, Sql, Connessione)
+                    If TypeOf (Rec) Is String Then
+                        Ritorno = Rec
+                    Else
+                        Do Until Rec.Eof
+                            Select Case Rec("Cosa").Value
+                                Case "GoalTorneiCasa"
+                                    GoalTorneiCasa = Rec(1).Value
+                                Case "GoalTorneiFuori"
+                                    GoalTorneiFuori = Rec(1).Value
+                                Case "GoalTorneiCampoEsterno"
+                                    GoalTorneiCampoEsterno = Rec(1).Value
+                            End Select
+
+                            Rec.MoveNext
+                        Loop
+                        Rec.Close()
+                    End If
+                Catch ex As Exception
+                    Ritorno = StringaErrore & " " & ex.Message
+                End Try
+
+                If PartiteAmichevoliIN.Length > 0 Then
+                    PartiteAmichevoliIN = Mid(PartiteAmichevoliIN, 1, PartiteAmichevoliIN.Length - 1)
+                End If
+                Sql = "SELECT 'GoalAmichevoliCasa' As Cosa, Count(*) As GoalTotali " &
+                    "From RisultatiAggiuntiviMarcatori Left Join Partite On RisultatiAggiuntiviMarcatori.idPartita=Partite.idPartita " &
+                    "Where Partite.idPartita In (" & PartiteAmichevoliIN & ") And Partite.Casa = 'S' " &
+                    "Union All " &
+                    "SELECT 'GoalAmichevoliFuori' As Cosa, Count(*) As GoalTotali " &
+                    "From RisultatiAggiuntiviMarcatori Left Join Partite On RisultatiAggiuntiviMarcatori.idPartita=Partite.idPartita " &
+                    "Where Partite.idPartita In (" & PartiteAmichevoliIN & ") And Partite.Casa = 'N' " &
+                    "Union All " &
+                    "SELECT 'GoalAmichevoliCampoEsterno' As Cosa, Count(*) As GoalTotali " &
+                    "From RisultatiAggiuntiviMarcatori Left Join Partite On RisultatiAggiuntiviMarcatori.idPartita=Partite.idPartita " &
+                    "Where Partite.idPartita In (" & PartiteAmichevoliIN & ") And Partite.Casa = 'E'"
+                Try
+                    Rec = LeggeQuery(Conn, Sql, Connessione)
+                    If TypeOf (Rec) Is String Then
+                        Ritorno = Rec
+                    Else
+                        Do Until Rec.Eof
+                            Select Case Rec("Cosa").Value
+                                Case "GoalAmichevoliCasa"
+                                    GoalAmichevoliCasa = Rec(1).Value
+                                Case "GoalAmichevoliFuori"
+                                    GoalAmichevoliFuori = Rec(1).Value
+                                Case "GoalAmichevoliCampoEsterno"
+                                    GoalAmichevoliCampoEsterno = Rec(1).Value
+                            End Select
+
+                            Rec.MoveNext
+                        Loop
+                        Rec.Close()
+                    End If
+                Catch ex As Exception
+                    Ritorno = StringaErrore & " " & ex.Message
+                End Try
+
+                Sql = "SELECT 'MarcatoriCasaCampionato' As Cosa, Giocatori.Cognome, Giocatori.Nome, Count(*) As Goal, Giocatori.idGiocatore " &
+                    "FROM(RisultatiAggiuntiviMarcatori Left Join Partite On Partite.idPartita = RisultatiAggiuntiviMarcatori.idPartita) " &
+                    "Left Join Giocatori On RisultatiAggiuntiviMarcatori.idGiocatore = Giocatori.idGiocatore " &
+                    "Where RisultatiAggiuntiviMarcatori.idPartita In (" & PartiteCampionatoIN & ") And Partite.Casa = 'S' " &
+                    "Group By Giocatori.Cognome, Giocatori.Nome " &
+                    "Union All " &
+                    "Select 'MarcatoriFuoriCampionato' As Cosa, Giocatori.Cognome, Giocatori.Nome, Count(*) As Goal, Giocatori.idGiocatore " &
+                    "FROM(RisultatiAggiuntiviMarcatori Left Join Partite On Partite.idPartita = RisultatiAggiuntiviMarcatori.idPartita) " &
+                    "Left Join Giocatori On RisultatiAggiuntiviMarcatori.idGiocatore = Giocatori.idGiocatore " &
+                    "Where RisultatiAggiuntiviMarcatori.idPartita In (" & PartiteCampionatoIN & ") And Partite.Casa = 'N' " &
+                    "Group By Giocatori.Cognome, Giocatori.Nome " &
+                    "Union All " &
+                    "Select 'MarcatoriCampoEsternoCampionato' As Cosa, Giocatori.Cognome, Giocatori.Nome, Count(*) As Goal, Giocatori.idGiocatore " &
+                    "FROM(RisultatiAggiuntiviMarcatori Left Join Partite On Partite.idPartita = RisultatiAggiuntiviMarcatori.idPartita) " &
+                    "Left Join Giocatori On RisultatiAggiuntiviMarcatori.idGiocatore = Giocatori.idGiocatore " &
+                    "Where RisultatiAggiuntiviMarcatori.idPartita In (" & PartiteCampionatoIN & ") And Partite.Casa = 'E' " &
+                    "Group By Giocatori.Cognome, Giocatori.Nome"
+                Try
+                    Rec = LeggeQuery(Conn, Sql, Connessione)
+                    If TypeOf (Rec) Is String Then
+                        Ritorno = Rec
+                    Else
+                        Do Until Rec.Eof
+                            Select Case Rec("Cosa").Value
+                                Case "MarcatoriCasaCampionato"
+                                    NomiMarcatoriCampionatoCasa.Add(Rec(4).Value & "-" & Rec(1).Value & " " & Rec(2).Value)
+                                    MarcatoriCampionatoCasa = Rec(3).Value
+                                Case "MarcatoriFuoriCampionato"
+                                    NomiMarcatoriCampionatoFuori.Add(Rec(4).Value & "-" & Rec(1).Value & " " & Rec(2).Value)
+                                    MarcatoriCampionatoFuori = Rec(3).Value
+                                Case "MarcatoriCampoEsternoCampionato"
+                                    NomiMarcatoriCampionatoCampoEsterno.Add(Rec(4).Value & "-" & Rec(1).Value & " " & Rec(2).Value)
+                                    MarcatoriCampionatoCampoEsterno = Rec(3).Value
+                            End Select
+
+                            Rec.MoveNext
+                        Loop
+                        Rec.Close()
+                    End If
+                Catch ex As Exception
+                    Ritorno = StringaErrore & " " & ex.Message
+                End Try
+
+                Sql = "SELECT 'MarcatoriCasaAmichevoli' As Cosa, Giocatori.Cognome, Giocatori.Nome, Count(*) As Goal, Giocatori.idGiocatore " &
+                    "FROM(RisultatiAggiuntiviMarcatori Left Join Partite On Partite.idPartita = RisultatiAggiuntiviMarcatori.idPartita) " &
+                    "Left Join Giocatori On RisultatiAggiuntiviMarcatori.idGiocatore = Giocatori.idGiocatore " &
+                    "Where RisultatiAggiuntiviMarcatori.idPartita In (" & PartiteAmichevoliIN & ") And Partite.Casa = 'S' " &
+                    "Group By Giocatori.Cognome, Giocatori.Nome " &
+                    "Union All " &
+                    "Select 'MarcatoriFuoriAmichevoli' As Cosa, Giocatori.Cognome, Giocatori.Nome, Count(*) As Goal, Giocatori.idGiocatore " &
+                    "FROM(RisultatiAggiuntiviMarcatori Left Join Partite On Partite.idPartita = RisultatiAggiuntiviMarcatori.idPartita) " &
+                    "Left Join Giocatori On RisultatiAggiuntiviMarcatori.idGiocatore = Giocatori.idGiocatore " &
+                    "Where RisultatiAggiuntiviMarcatori.idPartita In (" & PartiteAmichevoliIN & ") And Partite.Casa = 'N' " &
+                    "Group By Giocatori.Cognome, Giocatori.Nome " &
+                    "Union All " &
+                    "Select 'MarcatoriCampoEsternoAmichevoli' As Cosa, Giocatori.Cognome, Giocatori.Nome, Count(*) As Goal, Giocatori.idGiocatore " &
+                    "FROM(RisultatiAggiuntiviMarcatori Left Join Partite On Partite.idPartita = RisultatiAggiuntiviMarcatori.idPartita) " &
+                    "Left Join Giocatori On RisultatiAggiuntiviMarcatori.idGiocatore = Giocatori.idGiocatore " &
+                    "Where RisultatiAggiuntiviMarcatori.idPartita In (" & PartiteAmichevoliIN & ") And Partite.Casa = 'E' " &
+                    "Group By Giocatori.Cognome, Giocatori.Nome"
+                Try
+                    Rec = LeggeQuery(Conn, Sql, Connessione)
+                    If TypeOf (Rec) Is String Then
+                        Ritorno = Rec
+                    Else
+                        Do Until Rec.Eof
+                            Select Case Rec("Cosa").Value
+                                Case "MarcatoriCasaAmichevoli"
+                                    NomiMarcatoriAmichevoliCasa.Add(Rec(4).Value & "-" & Rec(1).Value & " " & Rec(2).Value)
+                                    MarcatoriAmichevoliCasa = Rec(3).Value
+                                Case "MarcatoriFuoriAmichevoli"
+                                    NomiMarcatoriAmichevoliFuori.Add(Rec(4).Value & "-" & Rec(1).Value & " " & Rec(2).Value)
+                                    MarcatoriAmichevoliFuori = Rec(3).Value
+                                Case "MarcatoriCampoEsternoAmichevoli"
+                                    NomiMarcatoriAmichevoliCampoEsterno.Add(Rec(4).Value & "-" & Rec(1).Value & " " & Rec(2).Value)
+                                    MarcatoriAmichevoliCampoEsterno = Rec(3).Value
+                            End Select
+
+                            Rec.MoveNext
+                        Loop
+                        Rec.Close()
+                    End If
+                Catch ex As Exception
+                    Ritorno = StringaErrore & " " & ex.Message
+                End Try
+
+                Sql = "SELECT 'MarcatoriCasaTornei' As Cosa, Giocatori.Cognome, Giocatori.Nome, Count(*) As Goal, Giocatori.idGiocatore " &
+                    "FROM(RisultatiAggiuntiviMarcatori Left Join Partite On Partite.idPartita = RisultatiAggiuntiviMarcatori.idPartita) " &
+                    "Left Join Giocatori On RisultatiAggiuntiviMarcatori.idGiocatore = Giocatori.idGiocatore " &
+                    "Where RisultatiAggiuntiviMarcatori.idPartita In (" & PartiteTorneiIN & ") And Partite.Casa = 'S' " &
+                    "Group By Giocatori.Cognome, Giocatori.Nome " &
+                    "Union All " &
+                    "Select 'MarcatoriFuoriTornei' As Cosa, Giocatori.Cognome, Giocatori.Nome, Count(*) As Goal, Giocatori.idGiocatore " &
+                    "FROM(RisultatiAggiuntiviMarcatori Left Join Partite On Partite.idPartita = RisultatiAggiuntiviMarcatori.idPartita) " &
+                    "Left Join Giocatori On RisultatiAggiuntiviMarcatori.idGiocatore = Giocatori.idGiocatore " &
+                    "Where RisultatiAggiuntiviMarcatori.idPartita In (" & PartiteTorneiIN & ") And Partite.Casa = 'N' " &
+                    "Group By Giocatori.Cognome, Giocatori.Nome " &
+                    "Union All " &
+                    "Select 'MarcatoriCampoEsternoTornei' As Cosa, Giocatori.Cognome, Giocatori.Nome, Count(*) As Goal, Giocatori.idGiocatore " &
+                    "FROM(RisultatiAggiuntiviMarcatori Left Join Partite On Partite.idPartita = RisultatiAggiuntiviMarcatori.idPartita) " &
+                    "Left Join Giocatori On RisultatiAggiuntiviMarcatori.idGiocatore = Giocatori.idGiocatore " &
+                    "Where RisultatiAggiuntiviMarcatori.idPartita In (" & PartiteTorneiIN & ") And Partite.Casa = 'E' " &
+                    "Group By Giocatori.Cognome, Giocatori.Nome"
+                Try
+                    Rec = LeggeQuery(Conn, Sql, Connessione)
+                    If TypeOf (Rec) Is String Then
+                        Ritorno = Rec
+                    Else
+                        Do Until Rec.Eof
+                            Select Case Rec("Cosa").Value
+                                Case "MarcatoriCasaTornei"
+                                    NomiMarcatoriTorneiCasa.Add(Rec(4).Value & "-" & Rec(1).Value & " " & Rec(2).Value)
+                                    MarcatoriTorneiCasa = Rec(3).Value
+                                Case "MarcatoriFuoriTornei"
+                                    NomiMarcatoriTorneiFuori.Add(Rec(4).Value & "-" & Rec(1).Value & " " & Rec(2).Value)
+                                    MarcatoriTorneiFuori = Rec(3).Value
+                                Case "MarcatoriCampoEsternoTornei"
+                                    NomiMarcatoriTorneiCampoEsterno.Add(Rec(4).Value & "-" & Rec(1).Value & " " & Rec(2).Value)
+                                    MarcatoriTorneiCampoEsterno = Rec(3).Value
+                            End Select
+
+                            Rec.MoveNext
+                        Loop
+                        Rec.Close()
+                    End If
+                Catch ex As Exception
+                    Ritorno = StringaErrore & " " & ex.Message
+                End Try
+
+                Sql = "SELECT 'AvversariCasa' As Cosa, Sum(GoalAvvPrimoTempo) As PrimoTempo, Sum(GoalAvvSecondoTempo) As SecondoTempo, Sum(GoalAvvTerzoTempo) As TerzoTempo " &
+                    "From RisultatiAggiuntivi Left Join Partite On RisultatiAggiuntivi.idPartita = Partite.idPartita " &
+                    "Where RisultatiAggiuntivi.idPartita In (" & PartiteCampionatoIN & ") And Partite.Casa = 'S' " &
+                    "Union All " &
+                    "SELECT 'AvversariFuori' As Cosa, Sum(GoalAvvPrimoTempo) As PrimoTempo, Sum(GoalAvvSecondoTempo) As SecondoTempo, Sum(GoalAvvTerzoTempo) As TerzoTempo " &
+                    "From RisultatiAggiuntivi Left Join Partite On RisultatiAggiuntivi.idPartita = Partite.idPartita " &
+                    "Where RisultatiAggiuntivi.idPartita In (" & PartiteCampionatoIN & ") And Partite.Casa = 'N' " &
+                    "Union All " &
+                    "SELECT 'AvversariCampoEsterno' As Cosa, Sum(GoalAvvPrimoTempo) As PrimoTempo, Sum(GoalAvvSecondoTempo) As SecondoTempo, Sum(GoalAvvTerzoTempo) As TerzoTempo " &
+                    "From RisultatiAggiuntivi Left Join Partite On RisultatiAggiuntivi.idPartita = Partite.idPartita " &
+                    "Where RisultatiAggiuntivi.idPartita In (" & PartiteCampionatoIN & ") And Partite.Casa = 'E'"
+                Try
+                    Rec = LeggeQuery(Conn, Sql, Connessione)
+                    If TypeOf (Rec) Is String Then
+                        Ritorno = Rec
+                    Else
+                        Do Until Rec.Eof
+                            Select Case Rec("Cosa").Value
+                                Case "AvversariCasa"
+                                    GoalAvvCampionatoCasa1Tempo = Rec(1).Value
+                                    GoalAvvCampionatoCasa2Tempo = Rec(2).Value
+                                    GoalAvvCampionatoCasa3Tempo = Rec(3).Value
+                                Case "AvversariFuori"
+                                    GoalAvvCampionatoFuori1Tempo = Rec(1).Value
+                                    GoalAvvCampionatoFuori2Tempo = Rec(2).Value
+                                    GoalAvvCampionatoFuori3Tempo = Rec(3).Value
+                                Case "AvversariCampoEsterno"
+                                    GoalAvvCampionatoCampoEsterno1Tempo = Rec(1).Value
+                                    GoalAvvCampionatoCampoEsterno2Tempo = Rec(2).Value
+                                    GoalAvvCampionatoCampoEsterno3Tempo = Rec(3).Value
+                            End Select
+
+                            Rec.MoveNext
+                        Loop
+                        Rec.Close()
+                    End If
+                Catch ex As Exception
+                    Ritorno = StringaErrore & " " & ex.Message
+                End Try
+
+                Sql = "SELECT 'AvversariCasa' As Cosa, Sum(GoalAvvPrimoTempo) As PrimoTempo, Sum(GoalAvvSecondoTempo) As SecondoTempo, Sum(GoalAvvTerzoTempo) As TerzoTempo " &
+                    "From RisultatiAggiuntivi Left Join Partite On RisultatiAggiuntivi.idPartita = Partite.idPartita " &
+                    "Where RisultatiAggiuntivi.idPartita In (" & PartiteAmichevoliIN & ") And Partite.Casa = 'S' " &
+                    "Union All " &
+                    "SELECT 'AvversariFuori' As Cosa, Sum(GoalAvvPrimoTempo) As PrimoTempo, Sum(GoalAvvSecondoTempo) As SecondoTempo, Sum(GoalAvvTerzoTempo) As TerzoTempo " &
+                    "From RisultatiAggiuntivi Left Join Partite On RisultatiAggiuntivi.idPartita = Partite.idPartita " &
+                    "Where RisultatiAggiuntivi.idPartita In (" & PartiteAmichevoliIN & ") And Partite.Casa = 'N' " &
+                    "Union All " &
+                    "SELECT 'AvversariCampoEsterno' As Cosa, Sum(GoalAvvPrimoTempo) As PrimoTempo, Sum(GoalAvvSecondoTempo) As SecondoTempo, Sum(GoalAvvTerzoTempo) As TerzoTempo " &
+                    "From RisultatiAggiuntivi Left Join Partite On RisultatiAggiuntivi.idPartita = Partite.idPartita " &
+                    "Where RisultatiAggiuntivi.idPartita In (" & PartiteAmichevoliIN & ") And Partite.Casa = 'E'"
+                Try
+                    Rec = LeggeQuery(Conn, Sql, Connessione)
+                    If TypeOf (Rec) Is String Then
+                        Ritorno = Rec
+                    Else
+                        Do Until Rec.Eof
+                            Select Case Rec("Cosa").Value
+                                Case "AvversariCasa"
+                                    GoalAvvAmichevoliCasa1Tempo = Rec(1).Value
+                                    GoalAvvAmichevoliCasa2Tempo = Rec(2).Value
+                                    GoalAvvAmichevoliCasa3Tempo = Rec(3).Value
+                                Case "AvversariFuori"
+                                    GoalAvvAmichevoliFuori1Tempo = Rec(1).Value
+                                    GoalAvvAmichevoliFuori2Tempo = Rec(2).Value
+                                    GoalAvvAmichevoliFuori3Tempo = Rec(3).Value
+                                Case "AvversariCampoEsterno"
+                                    GoalAvvAmichevoliCampoEsterno1Tempo = Rec(1).Value
+                                    GoalAvvAmichevoliCampoEsterno2Tempo = Rec(2).Value
+                                    GoalAvvAmichevoliCampoEsterno3Tempo = Rec(3).Value
+                            End Select
+
+                            Rec.MoveNext
+                        Loop
+                        Rec.Close()
+                    End If
+                Catch ex As Exception
+                    Ritorno = StringaErrore & " " & ex.Message
+                End Try
+
+                Sql = "SELECT 'AvversariCasa' As Cosa, Sum(GoalAvvPrimoTempo) As PrimoTempo, Sum(GoalAvvSecondoTempo) As SecondoTempo, Sum(GoalAvvTerzoTempo) As TerzoTempo " &
+                    "From RisultatiAggiuntivi Left Join Partite On RisultatiAggiuntivi.idPartita = Partite.idPartita " &
+                    "Where RisultatiAggiuntivi.idPartita In (" & PartiteTorneiIN & ") And Partite.Casa = 'S' " &
+                    "Union All " &
+                    "SELECT 'AvversariFuori' As Cosa, Sum(GoalAvvPrimoTempo) As PrimoTempo, Sum(GoalAvvSecondoTempo) As SecondoTempo, Sum(GoalAvvTerzoTempo) As TerzoTempo " &
+                    "From RisultatiAggiuntivi Left Join Partite On RisultatiAggiuntivi.idPartita = Partite.idPartita " &
+                    "Where RisultatiAggiuntivi.idPartita In (" & PartiteTorneiIN & ") And Partite.Casa = 'N' " &
+                    "Union All " &
+                    "SELECT 'AvversariCampoEsterno' As Cosa, Sum(GoalAvvPrimoTempo) As PrimoTempo, Sum(GoalAvvSecondoTempo) As SecondoTempo, Sum(GoalAvvTerzoTempo) As TerzoTempo " &
+                    "From RisultatiAggiuntivi Left Join Partite On RisultatiAggiuntivi.idPartita = Partite.idPartita " &
+                    "Where RisultatiAggiuntivi.idPartita In (" & PartiteTorneiIN & ") And Partite.Casa = 'E'"
+                Try
+                    Rec = LeggeQuery(Conn, Sql, Connessione)
+                    If TypeOf (Rec) Is String Then
+                        Ritorno = Rec
+                    Else
+                        Do Until Rec.Eof
+                            Select Case Rec("Cosa").Value
+                                Case "AvversariCasa"
+                                    GoalAvvTorneiCasa1Tempo = Rec(1).Value
+                                    GoalAvvTorneiCasa2Tempo = Rec(2).Value
+                                    GoalAvvTorneiCasa3Tempo = Rec(3).Value
+                                Case "AvversariFuori"
+                                    GoalAvvTorneiFuori1Tempo = Rec(1).Value
+                                    GoalAvvTorneiFuori2Tempo = Rec(2).Value
+                                    GoalAvvTorneiFuori3Tempo = Rec(3).Value
+                                Case "AvversariCampoEsterno"
+                                    GoalAvvTorneiCampoEsterno1Tempo = Rec(1).Value
+                                    GoalAvvTorneiCampoEsterno2Tempo = Rec(2).Value
+                                    GoalAvvTorneiCampoEsterno3Tempo = Rec(3).Value
+                            End Select
+
+                            Rec.MoveNext
+                        Loop
+                        Rec.Close()
+                    End If
+                Catch ex As Exception
+                    Ritorno = StringaErrore & " " & ex.Message
+                End Try
+
+                For i As Integer = 1 To 3
+                    Dim ListaPartite As New List(Of Integer)
+
+                    Select Case i
+                        Case 1
+                            ListaPartite = PartiteCampionato
+                        Case 2
+                            ListaPartite = PartiteAmichevoli
+                        Case 3
+                            ListaPartite = PartiteTornei
+                    End Select
+
+                    For Each Partita As Integer In ListaPartite
+                        Sql = "Select (Select RisultatoATempi From Partite Where idPartita=" & Partita & ") As RisultatoATempi, " &
+                            "(Select Casa From Partite Where idPartita=" & Partita & ") As Casa, *, " &
+                            "(Select RisGiochetti From RisultatiAggiuntivi Where idPartita =" & Partita & ") " &
+                            "From (" &
+                            "Select Sum(Goal1Tempo) As G1Tempo, Sum(Goal2Tempo) As G2Tempo, Sum(Goal3Tempo) As G3Tempo, Sum(GA1Tempo) As GoalAvv1Tempo, Sum(Ga2Tempo) As GoalAvv2Tempo, Sum(GA3Tempo) As GoalAvv3Tempo, (Select RisGiochetti From RisultatiAggiuntivi Where idPartita =859)  As RisGiochetti From (" &
+                            "Select 0 As Goal1Tempo, 0 As Goal2Tempo, 0 As Goal3Tempo, " &
+                            "IIf(GoalAvvPrimoTempo > 0, GoalAvvPrimoTempo, 0) As GA1Tempo, " &
+                            "IIf(GoalAvvSecondoTempo > 0, GoalAvvSecondoTempo, 0) As GA2Tempo, " &
+                            "IIf(GoalAvvTerzoTempo > 0, GoalAvvTerzoTempo, 0) As GA3Tempo, " &
+                            "RisultatiAggiuntivi.RisGiochetti " &
+                            "From Partite Left Join RisultatiAggiuntivi On Partite.idPartita = RisultatiAggiuntivi.idPartita " &
+                            "Where Partite.idPartita = " & Partita & " " &
+                            "Union All " &
+                            "Select Count(*) As Goal1Tempo, 0 As Goal2Tempo, 0 As Goal3Tempo, 0 As GA1Tempo, 0 As GA2Tempo, 0 As GA3Tempo, '' As RisGiochetti From RisultatiAggiuntiviMarcatori Where idPartita = " & Partita & " And idTempo=1 " &
+                            "Union All " &
+                            "Select 0 As Goal1Tempo, Count(*) As Goal2Tempo, 0 As Goal3Tempo, 0 As GA1Tempo, 0 As GA2Tempo, 0 As GA3Tempo, '' As RisGiochetti From RisultatiAggiuntiviMarcatori Where idPartita = " & Partita & " And idTempo=2 " &
+                            "Union All " &
+                            "Select 0 As Goal1Tempo, 0 As Goal2Tempo, Count(*) As Goal3Tempo, 0 As GA1Tempo, 0 As GA2Tempo, 0 As GA3Tempo, '' As RisGiochetti From RisultatiAggiuntiviMarcatori Where idPartita = " & Partita & " And idTempo=3 " &
+                            ") As A) As B"
+                        Try
+                            Rec = LeggeQuery(Conn, Sql, Connessione)
+                            If TypeOf (Rec) Is String Then
+                                Ritorno = Rec
+                            Else
+                                If Not Rec.Eof Then
+                                    If Rec("RisultatoATempi").Value = "N" Then
+                                        Dim GoalTotaliFatti As Integer = Rec("G1Tempo").Value + Rec("G2Tempo").Value + Rec("G3Tempo").Value
+                                        Dim GoalTotaliSubiti As Integer = Rec("GoalAvv1Tempo").Value + Rec("GoalAvv2Tempo").Value + Rec("GoalAvv3Tempo").Value
+                                        If GoalTotaliFatti > GoalTotaliSubiti Then
+                                            Select Case Rec("Casa").Value
+                                                Case "S"
+                                                    Select Case i
+                                                        Case 1
+                                                            VittorieCampionatoCasa += 1
+                                                        Case 2
+                                                            VittorieAmichevoliCasa += 1
+                                                        Case 3
+                                                            VittorieTorneiCasa += 1
+                                                    End Select
+                                                Case "N"
+                                                    Select Case i
+                                                        Case 1
+                                                            VittorieCampionatoFuori += 1
+                                                        Case 2
+                                                            VittorieAmichevoliFuori += 1
+                                                        Case 3
+                                                            VittorieTorneiFuori += 1
+                                                    End Select
+                                                Case "E"
+                                                    Select Case i
+                                                        Case 1
+                                                            VittorieCampionatoCampoEsterno += 1
+                                                        Case 2
+                                                            VittorieAmichevoliCampoEsterno += 1
+                                                        Case 3
+                                                            VittorieTorneiCampoEsterno += 1
+                                                    End Select
+                                            End Select
+                                        Else
+                                            If GoalTotaliFatti < GoalTotaliSubiti Then
+                                                Select Case Rec("Casa").Value
+                                                    Case "S"
+                                                        Select Case i
+                                                            Case 1
+                                                                SconfitteCampionatoCasa += 1
+                                                            Case 2
+                                                                SconfitteAmichevoliCasa += 1
+                                                            Case 3
+                                                                SconfitteTorneiCasa += 1
+                                                        End Select
+                                                    Case "N"
+                                                        Select Case i
+                                                            Case 1
+                                                                SconfitteCampionatoFuori += 1
+                                                            Case 2
+                                                                SconfitteAmichevoliFuori += 1
+                                                            Case 3
+                                                                SconfitteTorneiFuori += 1
+                                                        End Select
+                                                    Case "E"
+                                                        Select Case i
+                                                            Case 1
+                                                                SconfitteCampionatoCampoEsterno += 1
+                                                            Case 2
+                                                                SconfitteAmichevoliCampoEsterno += 1
+                                                            Case 3
+                                                                SconfitteTorneiCampoEsterno += 1
+                                                        End Select
+                                                End Select
+                                            Else
+                                                Select Case Rec("Casa").Value
+                                                    Case "S"
+                                                        Select Case i
+                                                            Case 1
+                                                                PareggiCampionatoCasa += 1
+                                                            Case 2
+                                                                PareggiAmichevoliCasa += 1
+                                                            Case 3
+                                                                PareggiTorneiCasa += 1
+                                                        End Select
+                                                    Case "N"
+                                                        Select Case i
+                                                            Case 1
+                                                                PareggiCampionatoFuori += 1
+                                                            Case 2
+                                                                PareggiAmichevoliFuori += 1
+                                                            Case 3
+                                                                PareggiTorneiFuori += 1
+                                                        End Select
+                                                    Case "E"
+                                                        Select Case i
+                                                            Case 1
+                                                                PareggiCampionatoCampoEsterno += 1
+                                                            Case 2
+                                                                PareggiAmichevoliCampoEsterno += 1
+                                                            Case 3
+                                                                PareggiTorneiCampoEsterno += 1
+                                                        End Select
+                                                End Select
+                                            End If
+                                        End If
+                                    Else
+                                        Dim Punti1 As Integer = 0
+                                        Dim Punti2 As Integer = 0
+
+                                        If Rec("G1Tempo").Value > Rec("GoalAvv1Tempo").Value Then
+                                            Punti1 += 1
+                                        Else
+                                            If Rec("G1Tempo").Value < Rec("GoalAvv1Tempo").Value Then
+                                                Punti2 += 1
+                                            Else
+                                                Punti1 += 1
+                                                Punti2 += 1
+                                            End If
+                                        End If
+
+
+                                        If Rec("G2Tempo").Value > Rec("GoalAvv2Tempo").Value Then
+                                            Punti1 += 1
+                                        Else
+                                            If Rec("G2Tempo").Value < Rec("GoalAvv2Tempo").Value Then
+                                                Punti2 += 1
+                                            Else
+                                                Punti1 += 1
+                                                Punti2 += 1
+                                            End If
+                                        End If
+
+                                        If Rec("G3Tempo").Value > Rec("GoalAvv3Tempo").Value Then
+                                            Punti1 += 1
+                                        Else
+                                            If Rec("G3Tempo").Value < Rec("GoalAvv3Tempo").Value Then
+                                                Punti2 += 1
+                                            Else
+                                                Punti1 += 1
+                                                Punti2 += 1
+                                            End If
+                                        End If
+
+                                        Dim RisGiochetti As String = Rec("RisGiochetti").Value
+
+                                        If RisGiochetti.Contains("-") Then
+                                            Dim r() As String = RisGiochetti.Split("-")
+                                            Dim ris1 As Integer = Val(r(0))
+                                            Dim ris2 As Integer = Val(r(1))
+
+                                            If ris1 > ris2 Then
+                                                Punti1 += 1
+                                            Else
+                                                If ris1 < ris2 Then
+                                                    Punti2 += 1
+                                                Else
+                                                    Punti1 += 1
+                                                    Punti2 += 1
+                                                End If
+                                            End If
+                                        End If
+
+                                        If Punti1 > Punti2 Then
+                                            Select Case Rec("Casa").Value
+                                                Case "S"
+                                                    Select Case i
+                                                        Case 1
+                                                            VittorieCampionatoCasa += 1
+                                                        Case 2
+                                                            VittorieAmichevoliCasa += 1
+                                                        Case 3
+                                                            VittorieTorneiCasa += 1
+                                                    End Select
+                                                Case "N"
+                                                    Select Case i
+                                                        Case 1
+                                                            VittorieCampionatoFuori += 1
+                                                        Case 2
+                                                            VittorieAmichevoliFuori += 1
+                                                        Case 3
+                                                            VittorieTorneiFuori += 1
+                                                    End Select
+                                                Case "E"
+                                                    Select Case i
+                                                        Case 1
+                                                            VittorieCampionatoCampoEsterno += 1
+                                                        Case 2
+                                                            VittorieAmichevoliCampoEsterno += 1
+                                                        Case 3
+                                                            VittorieTorneiCampoEsterno += 1
+                                                    End Select
+                                            End Select
+                                        Else
+                                            If Punti1 < Punti2 Then
+                                                Select Case Rec("Casa").Value
+                                                    Case "S"
+                                                        Select Case i
+                                                            Case 1
+                                                                SconfitteCampionatoCasa += 1
+                                                            Case 2
+                                                                SconfitteAmichevoliCasa += 1
+                                                            Case 3
+                                                                SconfitteTorneiCasa += 1
+                                                        End Select
+                                                    Case "N"
+                                                        Select Case i
+                                                            Case 1
+                                                                SconfitteCampionatoFuori += 1
+                                                            Case 2
+                                                                SconfitteAmichevoliFuori += 1
+                                                            Case 3
+                                                                SconfitteTorneiFuori += 1
+                                                        End Select
+                                                    Case "E"
+                                                        Select Case i
+                                                            Case 1
+                                                                SconfitteCampionatoCampoEsterno += 1
+                                                            Case 2
+                                                                SconfitteAmichevoliCampoEsterno += 1
+                                                            Case 3
+                                                                SconfitteTorneiCampoEsterno += 1
+                                                        End Select
+                                                End Select
+                                            Else
+                                                Select Case Rec("Casa").Value
+                                                    Case "S"
+                                                        Select Case i
+                                                            Case 1
+                                                                PareggiCampionatoCasa += 1
+                                                            Case 2
+                                                                PareggiAmichevoliCasa += 1
+                                                            Case 3
+                                                                PareggiTorneiCasa += 1
+                                                        End Select
+                                                    Case "N"
+                                                        Select Case i
+                                                            Case 1
+                                                                PareggiCampionatoFuori += 1
+                                                            Case 2
+                                                                PareggiAmichevoliFuori += 1
+                                                            Case 3
+                                                                PareggiTorneiFuori += 1
+                                                        End Select
+                                                    Case "E"
+                                                        Select Case i
+                                                            Case 1
+                                                                PareggiCampionatoCampoEsterno += 1
+                                                            Case 2
+                                                                PareggiAmichevoliCampoEsterno += 1
+                                                            Case 3
+                                                                PareggiTorneiCampoEsterno += 1
+                                                        End Select
+                                                End Select
+                                            End If
+                                        End If
+                                    End If
+                                End If
+
+                                Rec.Close()
+                            End If
+                        Catch ex As Exception
+                            Ritorno = StringaErrore & " " & ex.Message
+                            Exit For
+                        End Try
+                    Next
+                Next
+            End If
+        End If
+
+        If Ritorno = "" Then Ritorno = StringaErrore & " Nessun dato rilevato"
+
+        Return Ritorno
+    End Function
+
 End Class
