@@ -48,7 +48,7 @@
         <div>
 	    <table style="width: 100%;">
 	        <tr>
-		        <td class="area" style="width: 70%;">
+                <td class="area" style="width: 75%; vertical-align: top;">
                     <!-- GENERALE -->
                     <table style="width: 100%;">
                         <tr>
@@ -103,7 +103,7 @@
                     </table>
 
                     <!-- CAMPIONATO -->
-                    <table class="area" style="width: 100%; margin-top: 10px;" cellspacing="10px">
+                    <table style="width: 100%; margin-top: 10px;" cellspacing="10px">
                         <tr>
                             <td style="width: 33%; text-align: center; background-color: #aaa; border: 1px solid #999;">
                                 <span class="testo blu" style="font-size: 20px;">Campionato</span>
@@ -156,7 +156,7 @@
                     </table>
 
                     <!-- AMICHEVOLI -->
-                    <table class="area" style="width: 100%; margin-top: 10px;" cellspacing="10px">
+                    <table style="width: 100%; margin-top: 10px;" cellspacing="10px">
                         <tr>
                             <td style="width: 33%; text-align: center; background-color: #aaa; border: 1px solid #999;">
                                 <span class="testo blu" style="font-size: 20px;">Amichevoli</span>
@@ -209,7 +209,7 @@
                     </table>
 
                     <!-- TORNEI -->
-                    <table class="area" style="width: 100%; margin-top: 10px;" cellspacing="10px">
+                    <table style="width: 100%; margin-top: 10px;" cellspacing="10px">
                         <tr>
                             <td style="width: 33%; text-align: center; background-color: #aaa; border: 1px solid #999;">
                                 <span class="testo blu" style="font-size: 20px;">Tornei</span>
@@ -260,11 +260,30 @@
                             </td>
                         </tr>
                     </table>
-		        </td>
-                <td class="area" style="width: 29%; margin-left: 3px; vertical-align: top; text-align: right;">
+
+                    <table style="width: 100%; margin-top: 5px;">
+                        <tr>
+                            <td style="text-align: center;">
+                                <span class="testo blu" style="font-size: 20px;">Partita con più goals</span>
+                                ***PARTITA_CON_PIU_GOAL***
+                            </td>
+                        </tr>
+                        <tr style="margin-top: 5px;">
+                            <td style="text-align: center;">
+                                <span class="testo blu" style="font-size: 20px;">Partita con meno goals</span>
+                                ***PARTITA_CON_MENO_GOAL***
+                            </td>
+                        </tr>
+                    </table>
+                </td>
+                <td class="area" style="width: 24%; margin-left: 3px; vertical-align: top; text-align: center;">
                     <span class="testo blu" style="font-size: 20px;">Marcatori globali</span>
                     <hr />
                     ***MARCATORI_GLOBALI***
+                    <hr />
+                    <span class="testo blu" style="font-size: 20px;">Presenze</span>
+		    <hr />
+                    ***PRESENZE***
 		    <hr />
                     <span class="testo blu" style="font-size: 20px;">Squadre incontrate</span>
                     <hr />

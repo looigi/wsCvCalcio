@@ -1036,8 +1036,21 @@ Public Class wsStatistiche
 
                 Dim SquadreIncontrate As New List(Of String)
                 Dim MarcatoriGenerali As New List(Of String)
+                Dim Presenze As New List(Of String)
+
+                Dim maxGoalInUnaPartita As Integer = 0
+                Dim PartitaConPiuGoal As Integer = -1
+                Dim minGoalInUnaPartita As Integer = 999
+                Dim PartitaConMenoGoal As Integer = -1
 
                 Dim TipologiaPartitePerAnno As String = ""
+
+                Dim sPartitaConPiuGoal As String = ""
+                Dim sPartitaConMenoGoal As String = ""
+
+                Dim gf As New GestioneFilesDirectory
+                Dim PathBaseImmagini As String = "http://looigi.no-ip.biz:12345/CVCalcio/App_Themes/Standard/Images"
+                Dim PathBaseImmScon As String = "http://looigi.no-ip.biz:12345/CVCalcio/App_Themes/Standard/Images/Sconosciuto.png"
 
                 Sql = "SELECT TipologiePartite.Descrizione, Count(*) As Quante " &
                     "FROM Partite Left Join TipologiePartite On Partite.idTipologia = TipologiePartite.idTipologia " &
@@ -1543,7 +1556,6 @@ Public Class wsStatistiche
                     Ritorno = StringaErrore & " " & ex.Message
                 End Try
 
-
                 Sql = "SELECT Giocatori.idGiocatore, Giocatori.Cognome, Giocatori.Nome, Count(*) As Quanti " &
                     "FROM (RisultatiAggiuntiviMarcatori INNER JOIN Partite ON RisultatiAggiuntiviMarcatori.idPartita = Partite.idPartita) Left Join Giocatori On RisultatiAggiuntiviMarcatori.idGiocatore = Giocatori.idGiocatore " &
                     "WHERE Partite.idAnno=" & idAnno & " AND Partite.idCategoria=" & idCategoria & " " &
@@ -1560,6 +1572,27 @@ Public Class wsStatistiche
                             Else
                                 MarcatoriGenerali.Add(Rec("idGiocatore").Value & ";" & Rec("Cognome").Value & " " & Rec("Nome").Value & ";" & Rec("Quanti").Value)
                             End If
+
+                            Rec.MoveNext
+                        Loop
+                        Rec.Close()
+                    End If
+                Catch ex As Exception
+                    Ritorno = StringaErrore & " " & ex.Message
+                End Try
+
+                Sql = "SELECT Giocatori.idGiocatore, Giocatori.Cognome, Giocatori.Nome, Count(*) As Presenze " &
+                    "FROM (Partite LEFT JOIN Convocati ON Partite.idPartita = Convocati.idPartita) LEFT JOIN Giocatori ON Convocati.idGiocatore = Giocatori.idGiocatore " &
+                    "WHERE Partite.idAnno=" & idAnno & " AND Partite.idCategoria=" & idCategoria & " And Giocatori.idAnno=" & idAnno & " " &
+                    "Group By Giocatori.idGiocatore, Giocatori.Cognome, Giocatori.Nome " &
+                    "Order By 4 Desc"
+                Try
+                    Rec = LeggeQuery(Conn, Sql, Connessione)
+                    If TypeOf (Rec) Is String Then
+                        Ritorno = Rec
+                    Else
+                        Do Until Rec.Eof
+                            Presenze.Add(Rec("idGiocatore").Value & ";" & Rec("Cognome").Value & " " & Rec("Nome").Value & ";" & Rec("Presenze").Value)
 
                             Rec.MoveNext
                         Loop
@@ -1607,6 +1640,20 @@ Public Class wsStatistiche
                                 Ritorno = Rec
                             Else
                                 If Not Rec.Eof Then
+                                    Dim SommaGoal As Integer = Rec("G1Tempo").Value + Rec("G2Tempo").Value + Rec("G3Tempo").Value
+                                    Dim SommaGoalAvv As Integer = Rec("GoalAvv1Tempo").Value + Rec("GoalAvv2Tempo").Value + Rec("GoalAvv3Tempo").Value
+                                    Dim SommaTotale As Integer = SommaGoal + SommaGoalAvv
+
+                                    If SommaTotale > maxGoalInUnaPartita Then
+                                        maxGoalInUnaPartita = SommaTotale
+                                        PartitaConPiuGoal = Partita
+                                    End If
+
+                                    If SommaTotale < minGoalInUnaPartita Then
+                                        minGoalInUnaPartita = SommaTotale
+                                        PartitaConMenoGoal = Partita
+                                    End If
+
                                     If Rec("RisultatoATempi").Value = "N" Then
                                         Dim GoalTotaliFatti As Integer = Rec("G1Tempo").Value + Rec("G2Tempo").Value + Rec("G3Tempo").Value
                                         Dim GoalTotaliSubiti As Integer = Rec("GoalAvv1Tempo").Value + Rec("GoalAvv2Tempo").Value + Rec("GoalAvv3Tempo").Value
@@ -1717,7 +1764,6 @@ Public Class wsStatistiche
                                                 Punti2 += 1
                                             End If
                                         End If
-
 
                                         If Rec("G2Tempo").Value > Rec("GoalAvv2Tempo").Value Then
                                             Punti1 += 1
@@ -1865,9 +1911,155 @@ Public Class wsStatistiche
                     Next
                 Next
 
-                Dim gf As New GestioneFilesDirectory
-                Dim PathBaseImmagini As String = "http://looigi.no-ip.biz:12345/CVCalcio/App_Themes/Standard/Images"
-                Dim PathBaseImmScon As String = "http://looigi.no-ip.biz:12345/CVCalcio/App_Themes/Standard/Images/Sconosciuto.png"
+                Sql = "SELECT TipologiePartite.Descrizione As Tipologia, NomeSquadra, SquadreAvversarie.Descrizione, Partite.Casa, Partite.DataOra, Tempo, Gradi, SquadreAvversarie.idAvversario, " &
+                    "(Select Count(*) From RisultatiAggiuntiviMarcatori Where idPartita=" & PartitaConPiuGoal & ") As Goal, " &
+                    "(Select Sum(iif(GoalAvvPrimoTempo>0,GoalAvvPrimoTempo,0))+Sum(iif(GoalAvvSecondoTempo>0,GoalAvvSecondoTempo,0))+Sum(iif(GoalAvvTerzoTempo>0,GoalAvvTerzoTempo,0)) " &
+                    "From RisultatiAggiuntivi Where idPartita=" & PartitaConPiuGoal & ") As GoalAvv From " &
+                     "(((Partite Left Join SquadreAvversarie On Partite.idAvversario = SquadreAvversarie.idAvversario) " &
+                    "Left Join Anni On Partite.idAnno = Anni.idAnno) Left Join MeteoPartite On Partite.idPartita = MeteoPartite.idPartita) " &
+                    "Left Join TipologiePartite On Partite.idTipologia = TipologiePartite.idTipologia " &
+                    "Where Partite.idAnno = " & idAnno & " And Partite.idCategoria = " & idCategoria & " And Partite.idPartita = " & PartitaConPiuGoal & ""
+                Try
+                    Rec = LeggeQuery(Conn, Sql, Connessione)
+                    If TypeOf (Rec) Is String Then
+                        Ritorno = Rec
+                    Else
+                        If Not Rec.Eof Then
+                            Dim Casa As String
+                            Dim Fuori As String
+                            Dim Imm1 As String = PathBaseImmagini & "/Categorie/" & idAnno & "_" & idCategoria & ".Jpg"
+                            Dim Imm2 As String = PathBaseImmagini & "/Avversari/" & Rec("idAvversario").Value & ".Jpg"
+                            Dim ImmCasa As String
+                            Dim ImmFuori As String
+
+                            If Rec("Casa").Value = "S" Then
+                                Casa = Rec("NomeSquadra").Value
+                                Fuori = Rec("Descrizione").Value
+                                ImmCasa = "<td style ="" border: 1px solid #999; text-align: center;""><img src=""" & Imm1 & """ style=""width: 60px; height: 60px;"" onerror=""this.src='http://looigi.no-ip.biz:12345/CVCalcio/App_Themes/Standard/Images/Sconosciuto.png'""  /></td>"
+                                ImmFuori = "<td style ="" border: 1px solid #999; text-align: center;""><img src=""" & Imm2 & """ style=""width: 60px; height: 60px;"" onerror=""this.src='http://looigi.no-ip.biz:12345/CVCalcio/App_Themes/Standard/Images/Sconosciuto.png'""  /></td>"
+                            Else
+                                Fuori = Rec("NomeSquadra").Value
+                                Casa = Rec("Descrizione").Value
+                                ImmCasa = "<td style ="" border: 1px solid #999; text-align: center;""><img src=""" & Imm2 & """ style=""width: 60px; height: 60px;"" onerror=""this.src='http://looigi.no-ip.biz:12345/CVCalcio/App_Themes/Standard/Images/Sconosciuto.png'""  /></td>"
+                                ImmFuori = "<td style ="" border: 1px solid #999; text-align: center;""><img src=""" & Imm1 & """ style=""width: 60px; height: 60px;"" onerror=""this.src='http://looigi.no-ip.biz:12345/CVCalcio/App_Themes/Standard/Images/Sconosciuto.png'""  /></td>"
+                            End If
+
+                            sPartitaConPiuGoal &= "<table style =""width: 100%; border: 1px solid #999;"">"
+                            sPartitaConPiuGoal &= "<tr>"
+                            sPartitaConPiuGoal &= "<td style ="" border: 1px solid #999; text-align: center;"">"
+                            sPartitaConPiuGoal &= "<span class=""testo nero"" style=""font-size: 16px;"">" & Rec("Tipologia").Value & "</span>"
+                            sPartitaConPiuGoal &= "</td>"
+                            sPartitaConPiuGoal &= "<td style ="" border: 1px solid #999; text-align: center;"">"
+                            sPartitaConPiuGoal &= "<span class=""testo nero"" style=""font-size: 16px;"">" & Rec("DataOra").Value & "</span>"
+                            sPartitaConPiuGoal &= "</td>"
+                            sPartitaConPiuGoal &= "<td style ="" border: 1px solid #999; text-align: center;"">"
+
+                            Dim Tempo As String = ""
+
+                            If "" & Rec("Tempo").Value <> "" Then
+                                Tempo = Rec("Tempo").Value
+                            End If
+                            If "" & Rec("Gradi").Value <> "" Then
+                                Tempo &= " " & Rec("Gradi").Value & " Gradi"
+                            End If
+
+                            sPartitaConPiuGoal &= "<span class=""testo nero"" style=""font-size: 16px;"">" & Tempo & "</span>"
+                            sPartitaConPiuGoal &= "</td>"
+                            sPartitaConPiuGoal &= "<td style ="" border: 1px solid #999; text-align: center;"">"
+                            sPartitaConPiuGoal &= "<span class=""testo nero"" style=""font-size: 16px;"">" & Casa & "</span>"
+                            sPartitaConPiuGoal &= "</td>"
+                            sPartitaConPiuGoal &= ImmCasa
+                            sPartitaConPiuGoal &= "<td style ="" border: 1px solid #999; text-align: center;"">"
+                            sPartitaConPiuGoal &= "<span class=""testo nero"" style=""font-size: 16px;"">" & Rec("Goal").Value & "-" & Rec("GoalAvv").Value & "</span>"
+                            sPartitaConPiuGoal &= "</td>"
+                            sPartitaConPiuGoal &= ImmFuori
+                            sPartitaConPiuGoal &= "<td style ="" border: 1px solid #999; text-align: center;"">"
+                            sPartitaConPiuGoal &= "<span class=""testo nero"" style=""font-size: 16px;"">" & Fuori & "</span>"
+                            sPartitaConPiuGoal &= "</td>"
+                            sPartitaConPiuGoal &= "</tr>"
+                            sPartitaConPiuGoal &= "</table>"
+
+                            Rec.Close()
+                        End If
+                    End If
+                Catch ex As Exception
+                    Ritorno = StringaErrore & " " & ex.Message
+                End Try
+
+                Sql = "SELECT TipologiePartite.Descrizione As Tipologia, NomeSquadra, SquadreAvversarie.Descrizione, Partite.Casa, Partite.DataOra, Tempo, Gradi, SquadreAvversarie.idAvversario, " &
+                    "(Select Count(*) From RisultatiAggiuntiviMarcatori Where idPartita=" & PartitaConMenoGoal & ") As Goal, " &
+                    "(Select Sum(iif(GoalAvvPrimoTempo>0,GoalAvvPrimoTempo,0))+Sum(iif(GoalAvvSecondoTempo>0,GoalAvvSecondoTempo,0))+Sum(iif(GoalAvvTerzoTempo>0,GoalAvvTerzoTempo,0)) " &
+                    "From RisultatiAggiuntivi Where idPartita=" & PartitaConMenoGoal & ") As GoalAvv From " &
+                    "(((Partite Left Join SquadreAvversarie On Partite.idAvversario = SquadreAvversarie.idAvversario) " &
+                    "Left Join Anni On Partite.idAnno = Anni.idAnno) Left Join MeteoPartite On Partite.idPartita = MeteoPartite.idPartita) " &
+                    "Left Join TipologiePartite On Partite.idTipologia = TipologiePartite.idTipologia " &
+                    "Where Partite.idAnno = " & idAnno & " And Partite.idCategoria = " & idCategoria & " And Partite.idPartita = " & PartitaConMenoGoal & ""
+                Try
+                    Rec = LeggeQuery(Conn, Sql, Connessione)
+                    If TypeOf (Rec) Is String Then
+                        Ritorno = Rec
+                    Else
+                        If Not Rec.Eof Then
+                            Dim Casa As String
+                            Dim Fuori As String
+                            Dim Imm1 As String = PathBaseImmagini & "/Categorie/" & idAnno & "_" & idCategoria & ".Jpg"
+                            Dim Imm2 As String = PathBaseImmagini & "/Avversari/" & Rec("idAvversario").Value & ".Jpg"
+                            Dim ImmCasa As String
+                            Dim ImmFuori As String
+
+                            If Rec("Casa").Value = "S" Then
+                                Casa = Rec("NomeSquadra").Value
+                                Fuori = Rec("Descrizione").Value
+                                ImmCasa = "<td style ="" border: 1px solid #999; text-align: center;""><img src=""" & Imm1 & """ style=""width: 60px; height: 60px;"" onerror=""this.src='http://looigi.no-ip.biz:12345/CVCalcio/App_Themes/Standard/Images/Sconosciuto.png'""  /></td>"
+                                ImmFuori = "<td style ="" border: 1px solid #999; text-align: center;""><img src=""" & Imm2 & """ style=""width: 60px; height: 60px;"" onerror=""this.src='http://looigi.no-ip.biz:12345/CVCalcio/App_Themes/Standard/Images/Sconosciuto.png'""  /></td>"
+                            Else
+                                Fuori = Rec("NomeSquadra").Value
+                                Casa = Rec("Descrizione").Value
+                                ImmCasa = "<td style ="" border: 1px solid #999;""><img src=""" & Imm2 & """ style=""width: 60px; height: 60px;"" onerror=""this.src='http://looigi.no-ip.biz:12345/CVCalcio/App_Themes/Standard/Images/Sconosciuto.png'""  /></td>"
+                                ImmFuori = "<td style ="" border: 1px solid #999;""><img src=""" & Imm1 & """ style=""width: 60px; height: 60px;"" onerror=""this.src='http://looigi.no-ip.biz:12345/CVCalcio/App_Themes/Standard/Images/Sconosciuto.png'""  /></td>"
+                            End If
+
+                            sPartitaConMenoGoal &= "<table style =""width: 100%; border: 1px solid #999;"">"
+                            sPartitaConMenoGoal &= "<tr>"
+                            sPartitaConMenoGoal &= "<td style ="" border: 1px solid #999; text-align: center;"">"
+                            sPartitaConMenoGoal &= "<span class=""testo nero"" style=""font-size: 16px;"">" & Rec("Tipologia").Value & "</span>"
+                            sPartitaConMenoGoal &= "</td>"
+                            sPartitaConMenoGoal &= "<td style ="" border: 1px solid #999; text-align: center;"">"
+                            sPartitaConMenoGoal &= "<span class=""testo nero"" style=""font-size: 16px;"">" & Rec("DataOra").Value & "</span>"
+                            sPartitaConMenoGoal &= "</td>"
+                            sPartitaConMenoGoal &= "<td style ="" border: 1px solid #999; text-align: center;"">"
+
+                            Dim Tempo As String = ""
+
+                            If "" & Rec("Tempo").Value <> "" Then
+                                Tempo = Rec("Tempo").Value
+                            End If
+                            If "" & Rec("Gradi").Value <> "" Then
+                                Tempo &= " " & Rec("Gradi").Value & " Gradi"
+                            End If
+
+                            sPartitaConMenoGoal &= "<span class=""testo nero"" style=""font-size: 16px;"">" & Tempo & "</span>"
+                            sPartitaConMenoGoal &= "</td>"
+                            sPartitaConMenoGoal &= "<td style ="" border: 1px solid #999; text-align: center;"">"
+                            sPartitaConMenoGoal &= "<span class=""testo nero"" style=""font-size: 16px;"">" & Casa & "</span>"
+                            sPartitaConMenoGoal &= "</td>"
+                            sPartitaConMenoGoal &= ImmCasa
+                            sPartitaConMenoGoal &= "<td style ="" border: 1px solid #999; text-align: center;"">"
+                            sPartitaConMenoGoal &= "<span class=""testo nero"" style=""font-size: 16px;"">" & Rec("Goal").Value & "-" & Rec("GoalAvv").Value & "</span>"
+                            sPartitaConMenoGoal &= "</td>"
+                            sPartitaConMenoGoal &= ImmFuori
+                            sPartitaConMenoGoal &= "<td style ="" border: 1px solid #999; text-align: center;"">"
+                            sPartitaConMenoGoal &= "<span class=""testo nero"" style=""font-size: 16px;"">" & Fuori & "</span>"
+                            sPartitaConMenoGoal &= "</td>"
+                            sPartitaConMenoGoal &= "</tr>"
+                            sPartitaConMenoGoal &= "</table>"
+
+                            Rec.Close()
+                        End If
+                    End If
+                Catch ex As Exception
+                    Ritorno = StringaErrore & " " & ex.Message
+                End Try
 
                 Dim Filone As String = gf.LeggeFileIntero(HttpContext.Current.Server.MapPath(".") & "\base_statistiche.txt")
                 gf.CreaDirectoryDaPercorso(HttpContext.Current.Server.MapPath(".") & "\Statistiche\")
@@ -2236,16 +2428,20 @@ Public Class wsStatistiche
                 Filone = Filone.Replace("***DATI_GENERALI_CASA***", Stringona)
 
                 ' Marcatori generali casa
-                Stringona = ""
+                Stringona = "<table>"
                 For Each Giocatore As String In NomiMarcatoriGeneraliCasa
                     Dim c() As String = Giocatore.Split("-")
                     Dim Path As String = PathBaseImmagini & "/Giocatori/" & idAnno & "_" & c(0) & ".jpg"
                     Dim gg As String = c(2).Trim
                     If gg.Length = 1 Then gg = "&nbsp;" & gg
 
-                    Stringona &= gg.ToString & "&nbsp;<img src=""" & Path & """ style=""width: 50px; height: 50px;"" onerror=""this.src='http://looigi.no-ip.biz:12345/CVCalcio/App_Themes/Standard/Images/Sconosciuto.png'"" />"
-                    Stringona &= "&nbsp;" & c(1) & "<br />"
+                    Stringona &= "<tr>"
+                    Stringona &= "<td>" & gg.ToString & "</td>"
+                    Stringona &= "<td><img src=""" & Path & """ style=""width: 50px; height: 50px;"" onerror=""this.src='http://looigi.no-ip.biz:12345/CVCalcio/App_Themes/Standard/Images/Sconosciuto.png'"" /></td>"
+                    Stringona &= "<td>" & c(1) & "</td>"
+                    Stringona &= "</tr>"
                 Next
+                Stringona &= "</table>"
                 Filone = Filone.Replace("***DATI_GENERALI_MARCATORI_CASA***", Stringona)
 
                 ' Generali fuori
@@ -2264,15 +2460,20 @@ Public Class wsStatistiche
 
                 ' Marcatori generali fuori
                 Stringona = ""
+                Stringona = "<table>"
                 For Each Giocatore As String In NomiMarcatoriGeneraliFuori
                     Dim c() As String = Giocatore.Split("-")
                     Dim Path As String = PathBaseImmagini & "/Giocatori/" & idAnno & "_" & c(0) & ".jpg"
                     Dim gg As String = c(2).Trim
                     If gg.Length = 1 Then gg = "&nbsp;" & gg
 
-                    Stringona &= gg & "&nbsp;<img src=""" & Path & """ style=""width: 50px; height: 50px;"" onerror=""this.src='http://looigi.no-ip.biz:12345/CVCalcio/App_Themes/Standard/Images/Sconosciuto.png'"" />"
-                    Stringona &= "&nbsp;" & c(1) & "<br />"
+                    Stringona &= "<tr>"
+                    Stringona &= "<td>" & gg & "</td>"
+                    Stringona &= "<td><img src=""" & Path & """ style=""width: 50px; height: 50px;"" onerror=""this.src='http://looigi.no-ip.biz:12345/CVCalcio/App_Themes/Standard/Images/Sconosciuto.png'"" /></td>"
+                    Stringona &= "<td>" & c(1) & "</td>"
+                    Stringona &= "</tr>"
                 Next
+                Stringona &= "</table>"
                 Filone = Filone.Replace("***DATI_GENERALI_MARCATORI_FUORI***", Stringona)
 
                 ' Generali campo esterno
@@ -2291,15 +2492,20 @@ Public Class wsStatistiche
 
                 ' Marcatori generali campo esterno
                 Stringona = ""
+                Stringona &= "<table>"
                 For Each Giocatore As String In NomiMarcatoriGeneraliCampoEsterno
                     Dim c() As String = Giocatore.Split("-")
                     Dim Path As String = PathBaseImmagini & "/Giocatori/" & idAnno & "_" & c(0) & ".jpg"
                     Dim gg As String = c(2).Trim
                     If gg.Length = 1 Then gg = "&nbsp;" & gg
 
-                    Stringona &= gg & "&nbsp;<img src=""" & Path & """ style=""width: 50px; height: 50px;"" onerror=""this.src='http://looigi.no-ip.biz:12345/CVCalcio/App_Themes/Standard/Images/Sconosciuto.png'"" />"
-                    Stringona &= "&nbsp;" & c(1) & "<br />"
+                    Stringona &= "<tr>"
+                    Stringona &= "<td>" & gg & "</td>"
+                    Stringona &= "<td><img src=""" & Path & """ style=""width: 50px; height: 50px;"" onerror=""this.src='http://looigi.no-ip.biz:12345/CVCalcio/App_Themes/Standard/Images/Sconosciuto.png'"" /></td>"
+                    Stringona &= "<td>" & c(1) & "</td>"
+                    Stringona &= "</tr>"
                 Next
+                Stringona &= "</table>"
                 Filone = Filone.Replace("***DATI_GENERALI_MARCATORI_CAMPOESTERNO***", Stringona)
 
                 ' Campionato casa
@@ -2316,15 +2522,20 @@ Public Class wsStatistiche
 
                 ' Marcatori campionato casa
                 Stringona = ""
+                Stringona &= "<table>"
                 For Each Giocatore As String In NomiMarcatoriCampionatoCasa
                     Dim c() As String = Giocatore.Split("-")
                     Dim Path As String = PathBaseImmagini & "/Giocatori/" & idAnno & "_" & c(0) & ".jpg"
                     Dim gg As String = c(2).Trim
                     If gg.Length = 1 Then gg = "&nbsp;" & gg
 
-                    Stringona &= gg & "&nbsp;<img src=""" & Path & """ style=""width: 50px; height: 50px;"" onerror=""this.src='http://looigi.no-ip.biz:12345/CVCalcio/App_Themes/Standard/Images/Sconosciuto.png'"" />"
-                    Stringona &= "&nbsp;" & c(1) & "<br />"
+                    Stringona &= "<tr>"
+                    Stringona &= "<td>" & gg & "</td>"
+                    Stringona &= "<td><img src=""" & Path & """ style=""width: 50px; height: 50px;"" onerror=""this.src='http://looigi.no-ip.biz:12345/CVCalcio/App_Themes/Standard/Images/Sconosciuto.png'"" /></td>"
+                    Stringona &= "<td>" & c(1) & "</td>"
+                    Stringona &= "</tr>"
                 Next
+                Stringona &= "</table>"
                 Filone = Filone.Replace("***DATI_CAMPIONATO_MARCATORI_CASA***", Stringona)
 
                 ' Campionato fuori
@@ -2341,15 +2552,20 @@ Public Class wsStatistiche
 
                 ' Marcatori campionato fuori
                 Stringona = ""
+                Stringona &= "<table>"
                 For Each Giocatore As String In NomiMarcatoriCampionatoFuori
                     Dim c() As String = Giocatore.Split("-")
                     Dim Path As String = PathBaseImmagini & "/Giocatori/" & idAnno & "_" & c(0) & ".jpg"
                     Dim gg As String = c(2).Trim
                     If gg.Length = 1 Then gg = "&nbsp;" & gg
 
-                    Stringona &= gg & "&nbsp;<img src=""" & Path & """ style=""width: 50px; height: 50px;"" onerror=""this.src='http://looigi.no-ip.biz:12345/CVCalcio/App_Themes/Standard/Images/Sconosciuto.png'"" />"
-                    Stringona &= "&nbsp;" & c(1) & "<br />"
+                    Stringona &= "<tr>"
+                    Stringona &= "<td>" & gg & "</td>"
+                    Stringona &= "<td><img src=""" & Path & """ style=""width: 50px; height: 50px;"" onerror=""this.src='http://looigi.no-ip.biz:12345/CVCalcio/App_Themes/Standard/Images/Sconosciuto.png'"" /></td>"
+                    Stringona &= "<td>" & c(1) & "</td>"
+                    Stringona &= "</tr>"
                 Next
+                Stringona &= "</table>"
                 Filone = Filone.Replace("***DATI_CAMPIONATO_MARCATORI_FUORI***", Stringona)
 
                 ' Campionato campo esterno
@@ -2366,15 +2582,20 @@ Public Class wsStatistiche
 
                 ' Marcatori campionato campo esterno
                 Stringona = ""
+                Stringona &= "<table>"
                 For Each Giocatore As String In NomiMarcatoriCampionatoCampoEsterno
                     Dim c() As String = Giocatore.Split("-")
                     Dim Path As String = PathBaseImmagini & "/Giocatori/" & idAnno & "_" & c(0) & ".jpg"
                     Dim gg As String = c(2).Trim
                     If gg.Length = 1 Then gg = "&nbsp;" & gg
 
-                    Stringona &= gg & "&nbsp;<img src=""" & Path & """ style=""width: 50px; height: 50px;"" onerror=""this.src='http://looigi.no-ip.biz:12345/CVCalcio/App_Themes/Standard/Images/Sconosciuto.png'"" />"
-                    Stringona &= "&nbsp;" & c(1) & "<br />"
+                    Stringona &= "<tr>"
+                    Stringona &= "<td>" & gg & "</td>"
+                    Stringona &= "<td><img src=""" & Path & """ style=""width: 50px; height: 50px;"" onerror=""this.src='http://looigi.no-ip.biz:12345/CVCalcio/App_Themes/Standard/Images/Sconosciuto.png'"" /></td>"
+                    Stringona &= "<td>" & c(1) & "</td>"
+                    Stringona &= "</tr>"
                 Next
+                Stringona &= "</table>"
                 Filone = Filone.Replace("***DATI_CAMPIONATO_MARCATORI_CAMPOESTERNO***", Stringona)
 
                 ' Amichevoli casa
@@ -2391,15 +2612,20 @@ Public Class wsStatistiche
 
                 ' Marcatori amichevoli casa
                 Stringona = ""
+                Stringona &= "<table>"
                 For Each Giocatore As String In NomiMarcatoriAmichevoliCasa
                     Dim c() As String = Giocatore.Split("-")
                     Dim Path As String = PathBaseImmagini & "/Giocatori/" & idAnno & "_" & c(0) & ".jpg"
                     Dim gg As String = c(2).Trim
                     If gg.Length = 1 Then gg = "&nbsp;" & gg
 
-                    Stringona &= gg & "&nbsp;<img src=""" & Path & """ style=""width: 50px; height: 50px;"" onerror=""this.src='http://looigi.no-ip.biz:12345/CVCalcio/App_Themes/Standard/Images/Sconosciuto.png'"" />"
-                    Stringona &= "&nbsp;" & c(1) & "<br />"
+                    Stringona &= "<tr>"
+                    Stringona &= "<td>" & gg & "</td>"
+                    Stringona &= "<td><img src=""" & Path & """ style=""width: 50px; height: 50px;"" onerror=""this.src='http://looigi.no-ip.biz:12345/CVCalcio/App_Themes/Standard/Images/Sconosciuto.png'"" /></td>"
+                    Stringona &= "<td>" & c(1) & "</td>"
+                    Stringona &= "</tr>"
                 Next
+                Stringona &= "</table>"
                 Filone = Filone.Replace("***DATI_AMICHEVOLI_MARCATORI_CASA***", Stringona)
 
                 ' Amichevoli fuori
@@ -2416,15 +2642,20 @@ Public Class wsStatistiche
 
                 ' Marcatori amichevoli fuori
                 Stringona = ""
+                Stringona &= "<table>"
                 For Each Giocatore As String In NomiMarcatoriAmichevoliFuori
                     Dim c() As String = Giocatore.Split("-")
                     Dim Path As String = PathBaseImmagini & "/Giocatori/" & idAnno & "_" & c(0) & ".jpg"
                     Dim gg As String = c(2).Trim
                     If gg.Length = 1 Then gg = "&nbsp;" & gg
 
-                    Stringona &= gg & "&nbsp;<img src=""" & Path & """ style=""width: 50px; height: 50px;"" onerror=""this.src='http://looigi.no-ip.biz:12345/CVCalcio/App_Themes/Standard/Images/Sconosciuto.png'"" />"
-                    Stringona &= "&nbsp;" & c(1) & "<br />"
+                    Stringona &= "<tr>"
+                    Stringona &= "<td>" & gg & "</td>"
+                    Stringona &= "<td><img src=""" & Path & """ style=""width: 50px; height: 50px;"" onerror=""this.src='http://looigi.no-ip.biz:12345/CVCalcio/App_Themes/Standard/Images/Sconosciuto.png'"" /></td>"
+                    Stringona &= "<td>" & c(1) & "</td>"
+                    Stringona &= "</tr>"
                 Next
+                Stringona &= "</table>"
                 Filone = Filone.Replace("***DATI_AMICHEVOLI_MARCATORI_FUORI***", Stringona)
 
                 ' Amichevoli campo esterno
@@ -2441,15 +2672,20 @@ Public Class wsStatistiche
 
                 ' Marcatori amichevoli campo esterno
                 Stringona = ""
+                Stringona &= "<table>"
                 For Each Giocatore As String In NomiMarcatoriAmichevoliCampoEsterno
                     Dim c() As String = Giocatore.Split("-")
                     Dim Path As String = PathBaseImmagini & "/Giocatori/" & idAnno & "_" & c(0) & ".jpg"
                     Dim gg As String = c(2).Trim
                     If gg.Length = 1 Then gg = "&nbsp;" & gg
 
-                    Stringona &= gg & "&nbsp;<img src=""" & Path & """ style=""width: 50px; height: 50px;"" onerror=""this.src='http://looigi.no-ip.biz:12345/CVCalcio/App_Themes/Standard/Images/Sconosciuto.png'"" />"
-                    Stringona &= "&nbsp;" & c(1) & "<br />"
+                    Stringona &= "<tr>"
+                    Stringona &= "<td>" & gg & "</td>"
+                    Stringona &= "<td><img src=""" & Path & """ style=""width: 50px; height: 50px;"" onerror=""this.src='http://looigi.no-ip.biz:12345/CVCalcio/App_Themes/Standard/Images/Sconosciuto.png'"" /></td>"
+                    Stringona &= "<td>" & c(1) & "</td>"
+                    Stringona &= "</tr>"
                 Next
+                Stringona &= "</table>"
                 Filone = Filone.Replace("***DATI_AMICHEVOLI_MARCATORI_CAMPOESTERNO***", Stringona)
 
                 ' Tornei casa
@@ -2466,15 +2702,20 @@ Public Class wsStatistiche
 
                 ' Marcatori Tornei casa
                 Stringona = ""
+                Stringona &= "<table>"
                 For Each Giocatore As String In NomiMarcatoriTorneiCasa
                     Dim c() As String = Giocatore.Split("-")
                     Dim Path As String = PathBaseImmagini & "/Giocatori/" & idAnno & "_" & c(0) & ".jpg"
                     Dim gg As String = c(2).Trim
                     If gg.Length = 1 Then gg = "&nbsp;" & gg
 
-                    Stringona &= gg & "&nbsp;<img src=""" & Path & """ style=""width: 50px; height: 50px;"" onerror=""this.src='http://looigi.no-ip.biz:12345/CVCalcio/App_Themes/Standard/Images/Sconosciuto.png'"" />"
-                    Stringona &= "&nbsp;" & c(1) & "<br />"
+                    Stringona &= "<tr>"
+                    Stringona &= "<td>" & gg & "</td>"
+                    Stringona &= "<td><img src=""" & Path & """ style=""width: 50px; height: 50px;"" onerror=""this.src='http://looigi.no-ip.biz:12345/CVCalcio/App_Themes/Standard/Images/Sconosciuto.png'"" /></td>"
+                    Stringona &= "<td>" & c(1) & "</td>"
+                    Stringona &= "</tr>"
                 Next
+                Stringona &= "</table>"
                 Filone = Filone.Replace("***DATI_TORNEI_MARCATORI_CASA***", Stringona)
 
                 ' Tornei fuori
@@ -2491,15 +2732,20 @@ Public Class wsStatistiche
 
                 ' Marcatori Tornei fuori
                 Stringona = ""
+                Stringona &= "<table>"
                 For Each Giocatore As String In NomiMarcatoriTorneiFuori
                     Dim c() As String = Giocatore.Split("-")
                     Dim Path As String = PathBaseImmagini & "/Giocatori/" & idAnno & "_" & c(0) & ".jpg"
                     Dim gg As String = c(2).Trim
                     If gg.Length = 1 Then gg = "&nbsp;" & gg
 
-                    Stringona &= gg & "&nbsp;<img src=""" & Path & """ style=""width: 50px; height: 50px;"" onerror=""this.src='http://looigi.no-ip.biz:12345/CVCalcio/App_Themes/Standard/Images/Sconosciuto.png'"" />"
-                    Stringona &= "&nbsp;" & c(1) & "<br />"
+                    Stringona &= "<tr>"
+                    Stringona &= "<td>" & gg & "</td>"
+                    Stringona &= "<td><img src=""" & Path & """ style=""width: 50px; height: 50px;"" onerror=""this.src='http://looigi.no-ip.biz:12345/CVCalcio/App_Themes/Standard/Images/Sconosciuto.png'"" /></td>"
+                    Stringona &= "<td>" & c(1) & "</td>"
+                    Stringona &= "</tr>"
                 Next
+                Stringona &= "</table>"
                 Filone = Filone.Replace("***DATI_TORNEI_MARCATORI_FUORI***", Stringona)
 
                 ' Tornei campo esterno
@@ -2516,40 +2762,78 @@ Public Class wsStatistiche
 
                 ' Marcatori amichevoli campo esterno
                 Stringona = ""
+                Stringona &= "<table>"
                 For Each Giocatore As String In NomiMarcatoriTorneiCampoEsterno
                     Dim c() As String = Giocatore.Split("-")
                     Dim Path As String = PathBaseImmagini & "/Giocatori/" & idAnno & "_" & c(0) & ".jpg"
                     Dim gg As String = c(2).Trim
                     If gg.Length = 1 Then gg = "&nbsp;" & gg
 
-                    Stringona &= gg & "&nbsp;<img src=""" & Path & """ style=""width: 50px; height: 50px;"" onerror=""this.src='http://looigi.no-ip.biz:12345/CVCalcio/App_Themes/Standard/Images/Sconosciuto.png'"" />"
-                    Stringona &= "&nbsp;" & c(1) & "<br />"
+                    Stringona &= "<tr>"
+                    Stringona &= "<td>" & gg & "</td>"
+                    Stringona &= "<td><img src=""" & Path & """ style=""width: 50px; height: 50px;"" onerror=""this.src='http://looigi.no-ip.biz:12345/CVCalcio/App_Themes/Standard/Images/Sconosciuto.png'"" /></td>"
+                    Stringona &= "<td>" & c(1) & "</td>"
+                    Stringona &= "</tr>"
                 Next
+                Stringona &= "</table>"
                 Filone = Filone.Replace("***DATI_TORNEI_MARCATORI_CAMPOESTERNO***", Stringona)
 
                 ' MARCATORI GENERALI
                 Stringona = ""
+                Stringona &= "<table>"
                 For Each Giocatore As String In MarcatoriGenerali
                     Dim s() As String = Giocatore.Split(";")
                     Dim Path As String = PathBaseImmagini & "/Giocatori/" & idAnno & "_" & s(0) & ".jpg"
                     Dim gg As String = s(2).Trim
                     If gg.Length = 1 Then gg = "&nbsp;" & gg
 
-                    Stringona &= "<span class=""testo nero"" style=""font-size: 16px;"">" & gg & "</span>&nbsp;-&nbsp;<img src=""" & Path & """ style=""width: 60px; height: 60px;"" onerror=""this.src='http://looigi.no-ip.biz:12345/CVCalcio/App_Themes/Standard/Images/Sconosciuto.png'""  />&nbsp;<span class=""testo nero"" style=""font-size: 16px;"">" & s(1) & "</span><br />"
+                    Stringona &= "<tr>"
+                    Stringona &= "<td><span class=""testo nero"" style=""font-size: 16px;"">" & gg & "</span></td>"
+                    Stringona &= "<td><img src=""" & Path & """ style=""width: 60px; height: 60px;"" onerror=""this.src='http://looigi.no-ip.biz:12345/CVCalcio/App_Themes/Standard/Images/Sconosciuto.png'""  /></td>"
+                    Stringona &= "<td><span class=""testo nero"" style=""font-size: 16px;"">" & s(1) & "</span></td>"
+                    Stringona &= "</tr>"
                 Next
+                Stringona &= "</table>"
                 Filone = Filone.Replace("***MARCATORI_GLOBALI***", Stringona)
+
+                ' PRESENZE
+                Stringona = ""
+                Stringona &= "<table>"
+                For Each Giocatore As String In Presenze
+                    Dim s() As String = Giocatore.Split(";")
+                    Dim Path As String = PathBaseImmagini & "/Giocatori/" & idAnno & "_" & s(0) & ".jpg"
+                    Dim gg As String = s(2).Trim
+                    If gg.Length = 1 Then gg = "&nbsp;" & gg
+
+                    Stringona &= "<tr>"
+                    Stringona &= "<td><span class=""testo nero"" style=""font-size: 16px;"">" & gg & "</span></td>"
+                    Stringona &= "<td><img src=""" & Path & """ style=""width: 60px; height: 60px;"" onerror=""this.src='http://looigi.no-ip.biz:12345/CVCalcio/App_Themes/Standard/Images/Sconosciuto.png'""  /></td>"
+                    Stringona &= "<td><span class=""testo nero"" style=""font-size: 16px;"">" & s(1) & "</span></td>"
+                    Stringona &= "</tr>"
+                Next
+                Stringona &= "</table>"
+                Filone = Filone.Replace("***PRESENZE***", Stringona)
 
                 ' SQUADRE INCONTRATE
                 Stringona = ""
+                Stringona &= "<table>"
                 For Each Squadra As String In SquadreIncontrate
                     Dim s() As String = Squadra.Split(";")
                     Dim Imm2 As String = PathBaseImmagini & "/Avversari/" & s(0) & ".Jpg"
                     Dim gg As String = s(2).Trim
                     If gg.Length = 1 Then gg = "&nbsp;" & gg
 
-                    Stringona &= "<span class=""testo nero"" style=""font-size: 16px;"">" & gg & "</span>&nbsp;-&nbsp;<img src=""" & Imm2 & """ style=""width: 60px; height: 60px;"" onerror=""this.src='http://looigi.no-ip.biz:12345/CVCalcio/App_Themes/Standard/Images/Sconosciuto.png'""  />&nbsp;<span class=""testo nero"" style=""font-size: 16px;"">" & s(1) & "</span><br />"
+                    Stringona &= "<tr>"
+                    Stringona &= "<td><span class=""testo nero"" style=""font-size: 16px;"">" & gg & "</span></td>"
+                    Stringona &= "<td><img src=""" & Imm2 & """ style=""width: 60px; height: 60px;"" onerror=""this.src='http://looigi.no-ip.biz:12345/CVCalcio/App_Themes/Standard/Images/Sconosciuto.png'""  /></td>"
+                    Stringona &= "<td><span class=""testo nero"" style=""font-size: 16px;"">" & s(1) & "</span></td>"
+                    Stringona &= "</tr>"
                 Next
+                Stringona &= "</table>"
                 Filone = Filone.Replace("***SQUADRE_INCONTRATE***", Stringona)
+
+                Filone = Filone.Replace("***PARTITA_CON_PIU_GOAL***", sPartitaConPiuGoal)
+                Filone = Filone.Replace("***PARTITA_CON_MENO_GOAL***", sPartitaConMenoGoal)
 
                 gf.CreaAggiornaFile(NomeFileFinale, Filone)
 
