@@ -89,23 +89,28 @@
                                             <span class="testo nero" style="font-size: 16px;">***DATI_GENERALI_CAMPOESTERNO***</span>
                                         </td>
                                     </tr>
-
                                     <tr style=" vertical-align: top;">
                                         <td style="width: 33%; text-align: left; border-right: 1px solid #999;">
                                             <hr />
+<div style="width: 100%; text-align: center;">
                                             <span class="testo blu" style="font-size: 20px;">Marcatori</span>
+</div>
                                             <hr />
                                             <span class="testo nero" style="font-size: 16px;">***DATI_GENERALI_MARCATORI_CASA***</span>
                                         </td>
                                         <td style="width: 33%; min-width: 33%; max-width: 33%; text-align: left;">
                                             <hr />
+<div style="width: 100%; text-align: center;">
                                             <span class="testo blu" style="font-size: 20px;">Marcatori</span>
+</div>
                                             <hr />
                                             <span class="testo nero" style="font-size: 16px;">***DATI_GENERALI_MARCATORI_FUORI***</span>
                                         </td>
                                         <td style="width: 33%; min-width: 33%; max-width: 33%; text-align: left; border-left: 1px solid #999;">
                                             <hr />
+<div style="width: 100%; text-align: center;">
                                             <span class="testo blu" style="font-size: 20px;">Marcatori</span>
+</div>
                                             <hr />
                                             <span class="testo nero" style="font-size: 16px;">***DATI_GENERALI_MARCATORI_CAMPOESTERNO***</span>
                                         </td>
@@ -143,22 +148,34 @@
                                         </td>
                                     </tr>
 
+<tr style="width: 100%;">
+	<td colspan="3">
+		***LISTA_PARTITE_CAMPIONATO***
+	</td>
+</tr>
+
                                     <tr style=" vertical-align: top;">
                                         <td style="width: 33%; text-align: left; border-right: 1px solid #999;">
                                             <hr />
+<div style="width: 100%; text-align: center;">
                                             <span class="testo blu" style="font-size: 20px;">Marcatori</span>
+</div>
                                             <hr />
                                             <span class="testo nero" style="font-size: 16px;">***DATI_CAMPIONATO_MARCATORI_CASA***</span>
                                         </td>
                                         <td style="width: 33%; min-width: 33%; max-width: 33%; text-align: left;">
                                             <hr />
+<div style="width: 100%; text-align: center;">
                                             <span class="testo blu" style="font-size: 20px;">Marcatori</span>
+</div>
                                             <hr />
                                             <span class="testo nero" style="font-size: 16px;">***DATI_CAMPIONATO_MARCATORI_FUORI***</span>
                                         </td>
                                         <td style="width: 33%; min-width: 33%; max-width: 33%; text-align: left; border-left: 1px solid #999;">
                                             <hr />
+<div style="width: 100%; text-align: center;">
                                             <span class="testo blu" style="font-size: 20px;">Marcatori</span>
+</div>
                                             <hr />
                                             <span class="testo nero" style="font-size: 16px;">***DATI_CAMPIONATO_MARCATORI_CAMPOESTERNO***</span>
                                         </td>
@@ -195,23 +212,33 @@
                                             <span class="testo nero" style="font-size: 16px;">***DATI_AMICHEVOLI_CAMPOESTERNO***</span>
                                         </td>
                                     </tr>
-
+<tr style="width: 100%;">
+	<td colspan="3">
+		***LISTA_PARTITE_AMICHEVOLI***
+	</td>
+</tr>
                                     <tr style=" vertical-align: top;">
                                         <td style="width: 33%; text-align: left; border-right: 1px solid #999;">
                                             <hr />
+<div style="width: 100%; text-align: center;">
                                             <span class="testo blu" style="font-size: 20px;">Marcatori</span>
+</div>
                                             <hr />
                                             <span class="testo nero" style="font-size: 16px;">***DATI_AMICHEVOLI_MARCATORI_CASA***</span>
                                         </td>
                                         <td style="width: 33%; min-width: 33%; max-width: 33%; text-align: left;">
                                             <hr />
+<div style="width: 100%; text-align: center;">
                                             <span class="testo blu" style="font-size: 20px;">Marcatori</span>
+</div>
                                             <hr />
                                             <span class="testo nero" style="font-size: 16px;">***DATI_AMICHEVOLI_MARCATORI_FUORI***</span>
                                         </td>
                                         <td style="width: 33%; min-width: 33%; max-width: 33%; text-align: left; border-left: 1px solid #999;">
                                             <hr />
+<div style="width: 100%; text-align: center;">
                                             <span class="testo blu" style="font-size: 20px;">Marcatori</span>
+</div>
                                             <hr />
                                             <span class="testo nero" style="font-size: 16px;">***DATI_AMICHEVOLI_MARCATORI_CAMPOESTERNO***</span>
                                         </td>
@@ -248,23 +275,33 @@
                                             <span class="testo nero" style="font-size: 16px;">***DATI_TORNEI_CAMPOESTERNO***</span>
                                         </td>
                                     </tr>
-
+<tr style="width: 100%;">
+	<td colspan="3">
+		***LISTA_PARTITE_TORNEI***
+	</td>
+</tr>
                                     <tr style=" vertical-align: top;">
                                         <td style="width: 33%; text-align: center; border-right: 1px solid #999;">
                                             <hr />
+<div style="width: 100%; text-align: center;">
                                             <span class="testo blu" style="font-size: 20px;">Marcatori</span>
+</div>
                                             <hr />
                                             <span class="testo nero" style="font-size: 16px;">***DATI_TORNEI_MARCATORI_CASA***</span>
                                         </td>
                                         <td style="width: 33%; min-width: 33%; max-width: 33%; text-align: center;">
                                             <hr />
+<div style="width: 100%; text-align: center;">
                                             <span class="testo blu" style="font-size: 20px;">Marcatori</span>
+</div>
                                             <hr />
                                             <span class="testo nero" style="font-size: 16px;">***DATI_TORNEI_MARCATORI_FUORI***</span>
                                         </td>
                                         <td style="width: 33%; min-width: 33%; max-width: 33%; text-align: center; border-left: 1px solid #999;">
                                             <hr />
+<div style="width: 100%; text-align: center;">
                                             <span class="testo blu" style="font-size: 20px;">Marcatori</span>
+</div>
                                             <hr />
                                             <span class="testo nero" style="font-size: 16px;">***DATI_TORNEI_MARCATORI_CAMPOESTERNO***</span>
                                         </td>
