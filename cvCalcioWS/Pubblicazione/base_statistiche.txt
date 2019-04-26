@@ -1,7 +1,7 @@
 ﻿<html xmlns="http://www.w3.org/1999/xhtml">
 <head runat="server">
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
-    <title>Scheda Partita ***PARTITA***</title>
+    <title>Scheda anno ***ANNO*** categoria ***CATEGORIA***</title>
 
     <style type="text/css">
         body {
@@ -46,214 +46,282 @@
 <body>
     <form id="form1" runat="server">
         <div>
-            <!-- GENERALE -->
-            <table class="area" style="width: 100%;" cellspacing="10px">
-                <tr>
-                    <td style="width: 33%; text-align: center; background-color: #aaa; border: 1px solid #999;">
-                        <span class="testo blu" style="font-size: 20px;">Generale</span>
-                    </td>
-                </tr>
-                <tr>
-                    <td style="width: 33%; text-align: center;">
-                        <table style="width: 100%; border: 1px solid #999;">
-                            <tr>
-                                <td style="width: 33%; text-align: center; border-right: 1px solid #999;">
-                                    <span class="testo blu" style="font-size: 20px;">Casa</span>
-                                    <hr />
-                                    <span class="testo nero" style="font-size: 16px;">***DATI_GENERALI_CASA***</span>
-                                </td>
-                                <td style="width: 33%; min-width: 33%; max-width: 33%; text-align: center;">
-                                    <span class="testo blu" style="font-size: 20px;">Fuori</span>
-                                    <hr />
-                                    <span class="testo nero" style="font-size: 16px;">***DATI_GENERALI_FUORI***</span>
-                                </td>
-                                <td style="width: 33%; min-width: 33%; max-width: 33%; text-align: center; border-left: 1px solid #999;">
-                                    <span class="testo blu" style="font-size: 20px;">Campo esterno</span>
-                                    <hr />
-                                    <span class="testo nero" style="font-size: 16px;">***DATI_GENERALI_CAMPOESTERNO***</span>
-                                </td>
-                            </tr>
+	    <table style="width: 100%;">
+	        <tr>
+                <td class="area" style="width: 75%; vertical-align: top;">
+                    <!-- GENERALE -->
+                    <table style="width: 100%;">
+                        <tr>
+                            <td style="width: 100%; text-align: center;background-color: #aaa; border: 1px solid #999;">
+                                <span class="testo blu" style="font-size: 20px; ">Tempo Totale di Gioco</span>
+			    </td>
+			</tr>
+			<tr>
+			   <td style="width: 100%; text-align: center;">
+				<hr />
+				<span class="testo nero" style="font-size: 20px;">***TEMPO_TOTALE_DI_GIOCO***</span>
+				<br />
+                            </td>
+                        </tr>
+                        <tr>
+				<hr />
+                            <td style="width: 33%; text-align: center; background-color: #aaa; border: 1px solid #999;">
+                                <span class="testo blu" style="font-size: 20px;">Generale</span>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td style="width: 33%; text-align: center;">
+                                <table style="width: 100%; border: 1px solid #999;">
+                                    <tr>
+                                        <td style="width: 33%; text-align: center; border-right: 1px solid #999;">
+                                            <span class="testo blu" style="font-size: 20px;">Casa</span>
+                                            <hr />
+                                            <span class="testo nero" style="font-size: 16px;">***DATI_GENERALI_CASA***</span>
+                                        </td>
+                                        <td style="width: 33%; min-width: 33%; max-width: 33%; text-align: center;">
+                                            <span class="testo blu" style="font-size: 20px;">Fuori</span>
+                                            <hr />
+                                            <span class="testo nero" style="font-size: 16px;">***DATI_GENERALI_FUORI***</span>
+                                        </td>
+                                        <td style="width: 33%; min-width: 33%; max-width: 33%; text-align: center; border-left: 1px solid #999;">
+                                            <span class="testo blu" style="font-size: 20px;">Campo esterno</span>
+                                            <hr />
+                                            <span class="testo nero" style="font-size: 16px;">***DATI_GENERALI_CAMPOESTERNO***</span>
+                                        </td>
+                                    </tr>
 
-                            <tr>
-                                <td style="width: 33%; text-align: center; border-right: 1px solid #999;">
-                                    <hr />
-                                    <span class="testo blu" style="font-size: 20px;">Marcatori</span>
-                                    <span class="testo nero" style="font-size: 16px;">***DATI_GENERALI_MARCATORI_CASA***</span>
-                                </td>
-                                <td style="width: 33%; min-width: 33%; max-width: 33%; text-align: center;">
-                                    <hr />
-                                    <span class="testo blu" style="font-size: 20px;">Marcatori</span>
-                                    <span class="testo nero" style="font-size: 16px;">***DATI_GENERALI_MARCATORI_FUORI***</span>
-                                </td>
-                                <td style="width: 33%; min-width: 33%; max-width: 33%; text-align: center; border-left: 1px solid #999;">
-                                    <hr />
-                                    <span class="testo blu" style="font-size: 20px;">Marcatori</span>
-                                    <span class="testo nero" style="font-size: 16px;">***DATI_GENERALI_MARCATORI_CAMPOESTERNO***</span>
-                                </td>
-                            </tr>
-                        </table>
-                    </td>
-                </tr>
-            </table>
+                                    <tr style=" vertical-align: top;">
+                                        <td style="width: 33%; text-align: left; border-right: 1px solid #999;">
+                                            <hr />
+                                            <span class="testo blu" style="font-size: 20px;">Marcatori</span>
+                                            <hr />
+                                            <span class="testo nero" style="font-size: 16px;">***DATI_GENERALI_MARCATORI_CASA***</span>
+                                        </td>
+                                        <td style="width: 33%; min-width: 33%; max-width: 33%; text-align: left;">
+                                            <hr />
+                                            <span class="testo blu" style="font-size: 20px;">Marcatori</span>
+                                            <hr />
+                                            <span class="testo nero" style="font-size: 16px;">***DATI_GENERALI_MARCATORI_FUORI***</span>
+                                        </td>
+                                        <td style="width: 33%; min-width: 33%; max-width: 33%; text-align: left; border-left: 1px solid #999;">
+                                            <hr />
+                                            <span class="testo blu" style="font-size: 20px;">Marcatori</span>
+                                            <hr />
+                                            <span class="testo nero" style="font-size: 16px;">***DATI_GENERALI_MARCATORI_CAMPOESTERNO***</span>
+                                        </td>
+                                    </tr>
+                                </table>
+                            </td>
+                        </tr>
+                    </table>
 
-            <!-- CAMPIONATO -->
-            <table class="area" style="width: 100%; margin-top: 10px;" cellspacing="10px">
-                <tr>
-                    <td style="width: 33%; text-align: center; background-color: #aaa; border: 1px solid #999;">
-                        <span class="testo blu" style="font-size: 20px;">Campionato</span>
-                    </td>
-                </tr>
-                <tr>
-                    <td style="width: 33%; text-align: center;">
-                        <table style="width: 100%; border: 1px solid #999;">
-                            <tr>
-                                <td style="width: 33%; text-align: center; border-right: 1px solid #999;">
-                                    <span class="testo blu" style="font-size: 20px;">Casa</span>
-                                    <hr />
-                                    <span class="testo nero" style="font-size: 16px;">***DATI_CAMPIONATO_CASA***</span>
-                                </td>
-                                <td style="width: 33%; min-width: 33%; max-width: 33%; text-align: center;">
-                                    <span class="testo blu" style="font-size: 20px;">Fuori</span>
-                                    <hr />
-                                    <span class="testo nero" style="font-size: 16px;">***DATI_CAMPIONATO_FUORI***</span>
-                                </td>
-                                <td style="width: 33%; min-width: 33%; max-width: 33%; text-align: center; border-left: 1px solid #999;">
-                                    <span class="testo blu" style="font-size: 20px;">Campo esterno</span>
-                                    <hr />
-                                    <span class="testo nero" style="font-size: 16px;">***DATI_CAMPIONATO_CAMPOESTERNO***</span>
-                                </td>
-                            </tr>
+                    <!-- CAMPIONATO -->
+                    <table style="width: 100%; margin-top: 10px;" cellspacing="10px">
+                        <tr>
+                            <td style="width: 33%; text-align: center; background-color: #aaa; border: 1px solid #999;">
+                                <span class="testo blu" style="font-size: 20px;">Campionato</span>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td style="width: 33%; text-align: center;">
+                                <table style="width: 100%; border: 1px solid #999;">
+                                    <tr>
+                                        <td style="width: 33%; text-align: center; border-right: 1px solid #999;">
+                                            <span class="testo blu" style="font-size: 20px;">Casa</span>
+                                            <hr />
+                                            <span class="testo nero" style="font-size: 16px;">***DATI_CAMPIONATO_CASA***</span>
+                                        </td>
+                                        <td style="width: 33%; min-width: 33%; max-width: 33%; text-align: center;">
+                                            <span class="testo blu" style="font-size: 20px;">Fuori</span>
+                                            <hr />
+                                            <span class="testo nero" style="font-size: 16px;">***DATI_CAMPIONATO_FUORI***</span>
+                                        </td>
+                                        <td style="width: 33%; min-width: 33%; max-width: 33%; text-align: center; border-left: 1px solid #999;">
+                                            <span class="testo blu" style="font-size: 20px;">Campo esterno</span>
+                                            <hr />
+                                            <span class="testo nero" style="font-size: 16px;">***DATI_CAMPIONATO_CAMPOESTERNO***</span>
+                                        </td>
+                                    </tr>
 
-                            <tr>
-                                <td style="width: 33%; text-align: center; border-right: 1px solid #999;">
-                                    <hr />
-                                    <span class="testo blu" style="font-size: 20px;">Marcatori</span>
-                                    <hr />
-                                    <span class="testo nero" style="font-size: 16px;">***DATI_CAMPIONATO_MARCATORI_CASA***</span>
-                                </td>
-                                <td style="width: 33%; min-width: 33%; max-width: 33%; text-align: center;">
-                                    <hr />
-                                    <span class="testo blu" style="font-size: 20px;">Marcatori</span>
-                                    <hr />
-                                    <span class="testo nero" style="font-size: 16px;">***DATI_CAMPIONATO_MARCATORI_FUORI***</span>
-                                </td>
-                                <td style="width: 33%; min-width: 33%; max-width: 33%; text-align: center; border-left: 1px solid #999;">
-                                    <hr />
-                                    <span class="testo blu" style="font-size: 20px;">Marcatori</span>
-                                    <hr />
-                                    <span class="testo nero" style="font-size: 16px;">***DATI_CAMPIONATO_MARCATORI_CAMPOESTERNO***</span>
-                                </td>
-                            </tr>
-                        </table>
-                    </td>
-                </tr>
-            </table>
+                                    <tr style=" vertical-align: top;">
+                                        <td style="width: 33%; text-align: left; border-right: 1px solid #999;">
+                                            <hr />
+                                            <span class="testo blu" style="font-size: 20px;">Marcatori</span>
+                                            <hr />
+                                            <span class="testo nero" style="font-size: 16px;">***DATI_CAMPIONATO_MARCATORI_CASA***</span>
+                                        </td>
+                                        <td style="width: 33%; min-width: 33%; max-width: 33%; text-align: left;">
+                                            <hr />
+                                            <span class="testo blu" style="font-size: 20px;">Marcatori</span>
+                                            <hr />
+                                            <span class="testo nero" style="font-size: 16px;">***DATI_CAMPIONATO_MARCATORI_FUORI***</span>
+                                        </td>
+                                        <td style="width: 33%; min-width: 33%; max-width: 33%; text-align: left; border-left: 1px solid #999;">
+                                            <hr />
+                                            <span class="testo blu" style="font-size: 20px;">Marcatori</span>
+                                            <hr />
+                                            <span class="testo nero" style="font-size: 16px;">***DATI_CAMPIONATO_MARCATORI_CAMPOESTERNO***</span>
+                                        </td>
+                                    </tr>
+                                </table>
+                            </td>
+                        </tr>
+                    </table>
 
-            <!-- AMICHEVOLI -->
-            <table class="area" style="width: 100%; margin-top: 10px;" cellspacing="10px">
-                <tr>
-                    <td style="width: 33%; text-align: center; background-color: #aaa; border: 1px solid #999;">
-                        <span class="testo blu" style="font-size: 20px;">Amichevoli</span>
-                    </td>
-                </tr>
-                <tr>
-                    <td style="width: 33%; text-align: center;">
-                        <table style="width: 100%; border: 1px solid #999;">
-                            <tr>
-                                <td style="width: 33%; text-align: center; border-right: 1px solid #999;">
-                                    <span class="testo blu" style="font-size: 20px;">Casa</span>
-                                    <hr />
-                                    <span class="testo nero" style="font-size: 16px;">***DATI_AMICHEVOLI_CASA***</span>
-                                </td>
-                                <td style="width: 33%; min-width: 33%; max-width: 33%; text-align: center;">
-                                    <span class="testo blu" style="font-size: 20px;">Fuori</span>
-                                    <hr />
-                                    <span class="testo nero" style="font-size: 16px;">***DATI_AMICHEVOLI_FUORI***</span>
-                                </td>
-                                <td style="width: 33%; min-width: 33%; max-width: 33%; text-align: center; border-left: 1px solid #999;">
-                                    <span class="testo blu" style="font-size: 20px;">Campo esterno</span>
-                                    <hr />
-                                    <span class="testo nero" style="font-size: 16px;">***DATI_AMICHEVOLI_CAMPOESTERNO***</span>
-                                </td>
-                            </tr>
+                    <!-- AMICHEVOLI -->
+                    <table style="width: 100%; margin-top: 10px;" cellspacing="10px">
+                        <tr>
+                            <td style="width: 33%; text-align: center; background-color: #aaa; border: 1px solid #999;">
+                                <span class="testo blu" style="font-size: 20px;">Amichevoli</span>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td style="width: 33%; text-align: center;">
+                                <table style="width: 100%; border: 1px solid #999;">
+                                    <tr>
+                                        <td style="width: 33%; text-align: center; border-right: 1px solid #999;">
+                                            <span class="testo blu" style="font-size: 20px;">Casa</span>
+                                            <hr />
+                                            <span class="testo nero" style="font-size: 16px;">***DATI_AMICHEVOLI_CASA***</span>
+                                        </td>
+                                        <td style="width: 33%; min-width: 33%; max-width: 33%; text-align: center;">
+                                            <span class="testo blu" style="font-size: 20px;">Fuori</span>
+                                            <hr />
+                                            <span class="testo nero" style="font-size: 16px;">***DATI_AMICHEVOLI_FUORI***</span>
+                                        </td>
+                                        <td style="width: 33%; min-width: 33%; max-width: 33%; text-align: center; border-left: 1px solid #999;">
+                                            <span class="testo blu" style="font-size: 20px;">Campo esterno</span>
+                                            <hr />
+                                            <span class="testo nero" style="font-size: 16px;">***DATI_AMICHEVOLI_CAMPOESTERNO***</span>
+                                        </td>
+                                    </tr>
 
-                            <tr>
-                                <td style="width: 33%; text-align: center; border-right: 1px solid #999;">
-                                    <hr />
-                                    <span class="testo blu" style="font-size: 20px;">Marcatori</span>
-                                    <hr />
-                                    <span class="testo nero" style="font-size: 16px;">***DATI_AMICHEVOLI_MARCATORI_CASA***</span>
-                                </td>
-                                <td style="width: 33%; min-width: 33%; max-width: 33%; text-align: center;">
-                                    <hr />
-                                    <span class="testo blu" style="font-size: 20px;">Marcatori</span>
-                                    <hr />
-                                    <span class="testo nero" style="font-size: 16px;">***DATI_AMICHEVOLI_MARCATORI_FUORI***</span>
-                                </td>
-                                <td style="width: 33%; min-width: 33%; max-width: 33%; text-align: center; border-left: 1px solid #999;">
-                                    <hr />
-                                    <span class="testo blu" style="font-size: 20px;">Marcatori</span>
-                                    <hr />
-                                    <span class="testo nero" style="font-size: 16px;">***DATI_AMICHEVOLI_MARCATORI_CAMPOESTERNO***</span>
-                                </td>
-                            </tr>
-                        </table>
-                    </td>
-                </tr>
-            </table>
+                                    <tr style=" vertical-align: top;">
+                                        <td style="width: 33%; text-align: left; border-right: 1px solid #999;">
+                                            <hr />
+                                            <span class="testo blu" style="font-size: 20px;">Marcatori</span>
+                                            <hr />
+                                            <span class="testo nero" style="font-size: 16px;">***DATI_AMICHEVOLI_MARCATORI_CASA***</span>
+                                        </td>
+                                        <td style="width: 33%; min-width: 33%; max-width: 33%; text-align: left;">
+                                            <hr />
+                                            <span class="testo blu" style="font-size: 20px;">Marcatori</span>
+                                            <hr />
+                                            <span class="testo nero" style="font-size: 16px;">***DATI_AMICHEVOLI_MARCATORI_FUORI***</span>
+                                        </td>
+                                        <td style="width: 33%; min-width: 33%; max-width: 33%; text-align: left; border-left: 1px solid #999;">
+                                            <hr />
+                                            <span class="testo blu" style="font-size: 20px;">Marcatori</span>
+                                            <hr />
+                                            <span class="testo nero" style="font-size: 16px;">***DATI_AMICHEVOLI_MARCATORI_CAMPOESTERNO***</span>
+                                        </td>
+                                    </tr>
+                                </table>
+                            </td>
+                        </tr>
+                    </table>
 
-            <!-- TORNEI -->
-            <table class="area" style="width: 100%; margin-top: 10px;" cellspacing="10px">
-                <tr>
-                    <td style="width: 33%; text-align: center; background-color: #aaa; border: 1px solid #999;">
-                        <span class="testo blu" style="font-size: 20px;">Tornei</span>
-                    </td>
-                </tr>
-                <tr>
-                    <td style="width: 33%; text-align: center;">
-                        <table style="width: 100%; border: 1px solid #999;">
-                            <tr>
-                                <td style="width: 33%; text-align: center; border-right: 1px solid #999;">
-                                    <span class="testo blu" style="font-size: 20px;">Casa</span>
-                                    <hr />
-                                    <span class="testo nero" style="font-size: 16px;">***DATI_TORNEI_CASA***</span>
-                                </td>
-                                <td style="width: 33%; min-width: 33%; max-width: 33%; text-align: center;">
-                                    <span class="testo blu" style="font-size: 20px;">Fuori</span>
-                                    <hr />
-                                    <span class="testo nero" style="font-size: 16px;">***DATI_TORNEI_FUORI***</span>
-                                </td>
-                                <td style="width: 33%; min-width: 33%; max-width: 33%; text-align: center; border-left: 1px solid #999;">
-                                    <span class="testo blu" style="font-size: 20px;">Campo esterno</span>
-                                    <hr />
-                                    <span class="testo nero" style="font-size: 16px;">***DATI_TORNEI_CAMPOESTERNO***</span>
-                                </td>
-                            </tr>
+                    <!-- TORNEI -->
+                    <table style="width: 100%; margin-top: 10px;" cellspacing="10px">
+                        <tr>
+                            <td style="width: 33%; text-align: center; background-color: #aaa; border: 1px solid #999;">
+                                <span class="testo blu" style="font-size: 20px;">Tornei</span>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td style="width: 33%; text-align: center;">
+                                <table style="width: 100%; border: 1px solid #999;">
+                                    <tr>
+                                        <td style="width: 33%; text-align: center; border-right: 1px solid #999;">
+                                            <span class="testo blu" style="font-size: 20px;">Casa</span>
+                                            <hr />
+                                            <span class="testo nero" style="font-size: 16px;">***DATI_TORNEI_CASA***</span>
+                                        </td>
+                                        <td style="width: 33%; min-width: 33%; max-width: 33%; text-align: center;">
+                                            <span class="testo blu" style="font-size: 20px;">Fuori</span>
+                                            <hr />
+                                            <span class="testo nero" style="font-size: 16px;">***DATI_TORNEI_FUORI***</span>
+                                        </td>
+                                        <td style="width: 33%; min-width: 33%; max-width: 33%; text-align: center; border-left: 1px solid #999;">
+                                            <span class="testo blu" style="font-size: 20px;">Campo esterno</span>
+                                            <hr />
+                                            <span class="testo nero" style="font-size: 16px;">***DATI_TORNEI_CAMPOESTERNO***</span>
+                                        </td>
+                                    </tr>
 
-                            <tr>
-                                <td style="width: 33%; text-align: center; border-right: 1px solid #999;">
-                                    <hr />
-                                    <span class="testo blu" style="font-size: 20px;">Marcatori</span>
-                                    <hr />
-                                    <span class="testo nero" style="font-size: 16px;">***DATI_TORNEI_MARCATORI_CASA***</span>
-                                </td>
-                                <td style="width: 33%; min-width: 33%; max-width: 33%; text-align: center;">
-                                    <hr />
-                                    <span class="testo blu" style="font-size: 20px;">Marcatori</span>
-                                    <hr />
-                                    <span class="testo nero" style="font-size: 16px;">***DATI_TORNEI_MARCATORI_FUORI***</span>
-                                </td>
-                                <td style="width: 33%; min-width: 33%; max-width: 33%; text-align: center; border-left: 1px solid #999;">
-                                    <hr />
-                                    <span class="testo blu" style="font-size: 20px;">Marcatori</span>
-                                    <hr />
-                                    <span class="testo nero" style="font-size: 16px;">***DATI_TORNEI_MARCATORI_CAMPOESTERNO***</span>
-                                </td>
-                            </tr>
-                        </table>
-                    </td>
-                </tr>
-            </table>
+                                    <tr style=" vertical-align: top;">
+                                        <td style="width: 33%; text-align: center; border-right: 1px solid #999;">
+                                            <hr />
+                                            <span class="testo blu" style="font-size: 20px;">Marcatori</span>
+                                            <hr />
+                                            <span class="testo nero" style="font-size: 16px;">***DATI_TORNEI_MARCATORI_CASA***</span>
+                                        </td>
+                                        <td style="width: 33%; min-width: 33%; max-width: 33%; text-align: center;">
+                                            <hr />
+                                            <span class="testo blu" style="font-size: 20px;">Marcatori</span>
+                                            <hr />
+                                            <span class="testo nero" style="font-size: 16px;">***DATI_TORNEI_MARCATORI_FUORI***</span>
+                                        </td>
+                                        <td style="width: 33%; min-width: 33%; max-width: 33%; text-align: center; border-left: 1px solid #999;">
+                                            <hr />
+                                            <span class="testo blu" style="font-size: 20px;">Marcatori</span>
+                                            <hr />
+                                            <span class="testo nero" style="font-size: 16px;">***DATI_TORNEI_MARCATORI_CAMPOESTERNO***</span>
+                                        </td>
+                                    </tr>
+                                </table>
+                            </td>
+                        </tr>
+                    </table>
+
+                    <table style="width: 100%; margin-top: 5px;">
+                        <tr>
+                            <td style="text-align: center;">
+                                <span class="testo blu" style="font-size: 20px;">Partita con più goals</span>
+                                ***PARTITA_CON_PIU_GOAL***
+                            </td>
+                        </tr>
+                        <tr style="margin-top: 5px;">
+                            <td style="text-align: center;">
+                                <span class="testo blu" style="font-size: 20px;">Partita con meno goals</span>
+                                ***PARTITA_CON_MENO_GOAL***
+                            </td>
+                        </tr>
+			<tr style="width: 100%; margin-top: 5px;">
+				<td>
+					<table style="width: 100%;">
+						<tr style="width: 100%;">
+							<td style="width: 50%; text-align: center; vertical-align: top;">
+                                				<span class="testo blu" style="font-size: 20px;">Goals per minuto</span>
+								<hr />
+								***GOALS_PER_MINUTO***
+							</td>
+							<td style="width: 50%; text-align: center; vertical-align: top;">
+				                                <span class="testo blu" style="font-size: 20px;">Subiti per minuto</span>
+								<hr />
+								***SUBITI_PER_MINUTO***
+							</td>
+						</tr>
+					</table>
+				</td>
+			</tr>
+                    </table>
+                </td>
+                <td class="area" style="width: 24%; margin-left: 3px; vertical-align: top; text-align: center; vertical-align: top;">
+                    <span class="testo blu" style="font-size: 20px;">Marcatori globali</span>
+                    <hr />
+                    ***MARCATORI_GLOBALI***
+                    <hr />
+                    <span class="testo blu" style="font-size: 20px;">Presenze</span>
+		    <hr />
+                    ***PRESENZE***
+		    <hr />
+                    <span class="testo blu" style="font-size: 20px;">Squadre incontrate</span>
+                    <hr />
+                    ***SQUADRE_INCONTRATE***
+                </td>
+		    </tr>
+	    </table>
         </div>
     </form>
 </body>

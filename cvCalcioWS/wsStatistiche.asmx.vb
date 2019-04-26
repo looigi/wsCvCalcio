@@ -1047,6 +1047,10 @@ Public Class wsStatistiche
 
                 Dim sPartitaConPiuGoal As String = ""
                 Dim sPartitaConMenoGoal As String = ""
+                Dim TempoTotaleDiGioco As String = ""
+
+                Dim GoalSubitiPerMinuto As String = ""
+                Dim GoalFattiPerMinuto As String = ""
 
                 Dim gf As New GestioneFilesDirectory
                 Dim PathBaseImmagini As String = "http://looigi.no-ip.biz:12345/CVCalcio/App_Themes/Standard/Images"
@@ -1597,6 +1601,197 @@ Public Class wsStatistiche
                             Rec.MoveNext
                         Loop
                         Rec.Close()
+                    End If
+                Catch ex As Exception
+                    Ritorno = StringaErrore & " " & ex.Message
+                End Try
+
+                Sql = "SELECT Minuto, Count(*) As Quanti " &
+                    "FROM RisultatiAggiuntiviMarcatori INNER JOIN Partite ON RisultatiAggiuntiviMarcatori.idPartita = Partite.idPartita " &
+                    "WHERE Partite.idAnno=" & idAnno & " AND Partite.idCategoria=" & idCategoria & " " &
+                    "Group By Minuto " &
+                    "Order By 2 Desc"
+                Try
+                    Rec = LeggeQuery(Conn, Sql, Connessione)
+                    If TypeOf (Rec) Is String Then
+                        Ritorno = Rec
+                    Else
+                        Dim Stringozza As String = ""
+
+                        Stringozza &= "<table style=""width: 100%;"">"
+                        Do Until Rec.Eof
+                            Stringozza &= "<tr>"
+                            Stringozza &= "<td style=""width: 50%; text-align: center;"">"
+                            Stringozza &= "<span class=""testo nero"" style=""font-size: 16px;"">" & Rec("Minuto").Value & "°</span>"
+                            Stringozza &= "</td>"
+                            Stringozza &= "<td style=""width: 50%; text-align: center;"">"
+                            Stringozza &= "<span class=""testo nero"" style=""font-size: 16px;"">" & Rec("Quanti").Value & "</span>"
+                            Stringozza &= "</td>"
+                            Stringozza &= "</tr>"
+
+                            Rec.MoveNext
+                        Loop
+                        Stringozza &= "</table>"
+
+                        GoalFattiPerMinuto = Stringozza
+
+                        Rec.Close()
+                    End If
+                Catch ex As Exception
+                    Ritorno = StringaErrore & " " & ex.Message
+                End Try
+
+                Sql = "SELECT TempiGoalAvversari.TempiPrimoTempo, TempiGoalAvversari.TempiSecondoTempo, TempiGoalAvversari.TempiTerzoTempo " &
+                    "FROM TempiGoalAvversari LEFT JOIN Partite ON TempiGoalAvversari.idPartita = Partite.idPartita " &
+                    "WHERE Partite.idAnno=" & idAnno & " AND Partite.idCategoria=" & idCategoria
+                Try
+                    Rec = LeggeQuery(Conn, Sql, Connessione)
+                    If TypeOf (Rec) Is String Then
+                        Ritorno = Rec
+                    Else
+                        Dim Stringozza As String = ""
+                        Dim Minuti(60) As Integer
+                        Dim sMinuti(60) As String
+
+                        Do Until Rec.Eof
+                            If "" & Rec("TempiPrimoTempo").Value <> "" Then
+                                Dim t() As String = Rec("TempiPrimoTempo").Value.split("#")
+
+                                For Each Minuto As String In t
+                                    If Minuto <> "" Then
+                                        Minuti(Val(Minuto)) += 1
+                                        sMinuti(Val(Minuto)) = Minuto
+                                    End If
+                                Next
+                            End If
+                            If "" & Rec("TempiSecondoTempo").Value <> "" Then
+                                Dim t() As String = Rec("TempiSecondoTempo").Value.split("#")
+
+                                For Each Minuto As String In t
+                                    If Minuto <> "" Then
+                                        Minuti(Val(Minuto)) += 1
+                                        sMinuti(Val(Minuto)) = Minuto
+                                    End If
+                                Next
+                            End If
+                            If "" & Rec("TempiTerzoTempo").Value <> "" Then
+                                Dim t() As String = Rec("TempiTerzoTempo").Value.split("#")
+
+                                For Each Minuto As String In t
+                                    If Minuto <> "" Then
+                                        Minuti(Val(Minuto)) += 1
+                                        sMinuti(Val(Minuto)) = Minuto
+                                    End If
+                                Next
+                            End If
+
+                            Rec.MoveNext
+                        Loop
+
+                        For i As Integer = 0 To 60
+                            For k As Integer = 0 To 60
+                                If Minuti(i) > Minuti(k) Then
+                                    Dim Appoggio As Integer = Minuti(i)
+                                    Minuti(i) = Minuti(k)
+                                    Minuti(k) = Appoggio
+
+                                    Dim sAppoggio As String = sMinuti(i)
+                                    sMinuti(i) = sMinuti(k)
+                                    sMinuti(k) = sAppoggio
+                                End If
+                            Next
+                        Next
+
+                        Stringozza &= "<table style=""width: 100%;"">"
+                        For i As Integer = 0 To 60
+                            If Minuti(i) > 0 Then
+                                Stringozza &= "<tr>"
+                                Stringozza &= "<td style=""width: 50%; text-align: center;"">"
+                                Stringozza &= "<span class=""testo nero"" style=""font-size: 16px;"">" & sMinuti(i) & "°</span>"
+                                Stringozza &= "</td>"
+                                Stringozza &= "<td style=""width: 50%; text-align: center;"">"
+                                Stringozza &= "<span class=""testo nero"" style=""font-size: 16px;"">" & Minuti(i) & "</span>"
+                                Stringozza &= "</td>"
+                                Stringozza &= "</tr>"
+                            End If
+                        Next
+                        Stringozza &= "</table>"
+
+                        GoalSubitiPerMinuto = Stringozza
+
+                        Rec.Close()
+                    End If
+                Catch ex As Exception
+                    Ritorno = StringaErrore & " " & ex.Message
+                End Try
+
+                Sql = "SELECT Tempo1Tempo, Tempo2Tempo, Tempo3Tempo " &
+                    "FROM RisultatiAggiuntivi INNER JOIN Partite ON RisultatiAggiuntivi.idPartita = Partite.idPartita " &
+                    "WHERE Partite.idAnno=" & idAnno & " AND Partite.idCategoria=" & idCategoria
+                Try
+                    Rec = LeggeQuery(Conn, Sql, Connessione)
+                    If TypeOf (Rec) Is String Then
+                        Ritorno = Rec
+                    Else
+                        Dim SecondiTotali As Integer = 0
+                        Dim MinutiTotali As Integer = 0
+                        Dim OreTotali As Integer = 0
+
+                        Do Until Rec.Eof
+                            If "" & Rec("Tempo1Tempo").Value <> "" Then
+                                Dim t() As String = Rec("Tempo1Tempo").Value.split(":")
+                                Dim Minuti As Integer = Val(t(0))
+                                Dim Secondi As Integer = Val(t(1))
+
+                                SecondiTotali += Secondi
+                                MinutiTotali += Minuti
+                                While SecondiTotali > 60
+                                    SecondiTotali -= 60
+                                    MinutiTotali += 1
+                                End While
+                                While MinutiTotali > 60
+                                    OreTotali += 1
+                                    MinutiTotali -= 60
+                                End While
+                            End If
+                            If "" & Rec("Tempo2Tempo").Value <> "" Then
+                                Dim t() As String = Rec("Tempo2Tempo").Value.split(":")
+                                Dim Minuti As Integer = Val(t(0))
+                                Dim Secondi As Integer = Val(t(1))
+
+                                SecondiTotali += Secondi
+                                MinutiTotali += Minuti
+                                While SecondiTotali > 60
+                                    SecondiTotali -= 60
+                                    MinutiTotali += 1
+                                End While
+                                While MinutiTotali > 60
+                                    OreTotali += 1
+                                    MinutiTotali -= 60
+                                End While
+                            End If
+                            If "" & Rec("Tempo3Tempo").Value <> "" Then
+                                Dim t() As String = Rec("Tempo3Tempo").Value.split(":")
+                                Dim Minuti As Integer = Val(t(0))
+                                Dim Secondi As Integer = Val(t(1))
+
+                                SecondiTotali += Secondi
+                                MinutiTotali += Minuti
+                                While SecondiTotali > 60
+                                    SecondiTotali -= 60
+                                    MinutiTotali += 1
+                                End While
+                                While MinutiTotali > 60
+                                    OreTotali += 1
+                                    MinutiTotali -= 60
+                                End While
+                            End If
+
+                            Rec.MoveNext
+                        Loop
+                        Rec.Close()
+
+                        TempoTotaleDiGioco = Format(OreTotali, "00") & ":" & Format(MinutiTotali, "00") & ":" & Format(SecondiTotali, "00")
                     End If
                 Catch ex As Exception
                     Ritorno = StringaErrore & " " & ex.Message
@@ -2427,6 +2622,8 @@ Public Class wsStatistiche
                     GoalAvvTorneiCasa1Tempo + GoalAvvTorneiCasa2Tempo + GoalAvvTorneiCasa3Tempo).ToString & "<br />"
                 Filone = Filone.Replace("***DATI_GENERALI_CASA***", Stringona)
 
+                Filone = Filone.Replace("***TEMPO_TOTALE_DI_GIOCO***", TempoTotaleDiGioco)
+
                 ' Marcatori generali casa
                 Stringona = "<table>"
                 For Each Giocatore As String In NomiMarcatoriGeneraliCasa
@@ -2834,6 +3031,9 @@ Public Class wsStatistiche
 
                 Filone = Filone.Replace("***PARTITA_CON_PIU_GOAL***", sPartitaConPiuGoal)
                 Filone = Filone.Replace("***PARTITA_CON_MENO_GOAL***", sPartitaConMenoGoal)
+
+                Filone = Filone.Replace("***GOALS_PER_MINUTO***", GoalFattiPerMinuto)
+                Filone = Filone.Replace("***SUBITI_PER_MINUTO***", GoalSubitiPerMinuto)
 
                 gf.CreaAggiornaFile(NomeFileFinale, Filone)
 
