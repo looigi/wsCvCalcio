@@ -5,6 +5,7 @@
     Public PercorsoSitoCV As String = "C:\inetpub\wwwroot\CVCalcio\App_Themes\Standard\Images\"
     Public PercorsoSitoURLImmagini As String = "http://looigi.no-ip.biz:12345/CvCalcio/App_Themes/Standard/Images/"
     Public StringaErrore As String = "ERROR: "
+    Public RigaPari As Boolean = False
 
     Public Function LeggeImpostazioniDiBase(Percorso As String) As String
         Dim Connessione As String = ""
