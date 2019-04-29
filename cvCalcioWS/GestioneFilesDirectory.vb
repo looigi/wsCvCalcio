@@ -280,7 +280,7 @@ Public Class GestioneFilesDirectory
 
             Do
                 sLine = objReader.ReadLine()
-                Ritorno += sLine
+                Ritorno += sLine & vbCrLf
             Loop Until sLine Is Nothing
             objReader.Close()
 

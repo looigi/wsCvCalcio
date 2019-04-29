@@ -913,6 +913,7 @@ Public Class wsStatistiche
                 Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
             Else
                 Dim Rec As Object = Server.CreateObject("ADODB.Recordset")
+                Dim Rec2 As Object = Server.CreateObject("ADODB.Recordset")
                 Dim Sql As String
 
                 Dim PartiteCampionato As New List(Of Integer)
@@ -1055,6 +1056,14 @@ Public Class wsStatistiche
                 Dim ListaPartiteDiCampionato As String = ""
                 Dim ListaPartiteAmichevoli As String = ""
                 Dim ListaPartiteTornei As String = ""
+
+                Dim ListaMarkers As String = ""
+                Dim GraficoPuntiCampionato As String = ""
+                Dim PuntiTotali As Integer = 0
+                Dim GiornataPerGrafico As Integer = 0
+
+                Dim LatCasa As String = ""
+                Dim LonCasa As String = ""
 
                 Dim gf As New GestioneFilesDirectory
                 Dim PathBaseImmagini As String = "http://looigi.no-ip.biz:12345/CVCalcio/App_Themes/Standard/Images"
@@ -1729,6 +1738,7 @@ Public Class wsStatistiche
                     Ritorno = StringaErrore & " " & ex.Message
                 End Try
 
+                GraficoPuntiCampionato &= "['0', 0], "
                 For i As Integer = 1 To 3
                     Sql = "SELECT Partite.RisultatoATempi, Partite.DataOra, Allenatori.Cognome+ '<br />' +Allenatori.Nome As Allenatore,MeteoPartite.Tempo, MeteoPartite.Gradi, " &
                     "Partite.idCategoria, SquadreAvversarie.idAvversario, SquadreAvversarie.Descrizione, " &
@@ -1739,14 +1749,17 @@ Public Class wsStatistiche
                     "RisultatiAggiuntivi.GoalAvvSecondoTempo, RisultatiAggiuntivi.GoalAvvPrimoTempo, RisultatiAggiuntivi.GoalAvvTerzoTempo, " &
                     "(SELECT Count(*) FROM RisultatiAggiuntiviMarcatori Where idPartita = Partite.idPartita And idTempo=1) As GoalPrimoTempo, " &
                     "(SELECT Count(*) FROM RisultatiAggiuntiviMarcatori Where idPartita = Partite.idPartita And idTempo=2) As GoalSecondoTempo, " &
-                    "(SELECT Count(*) FROM RisultatiAggiuntiviMarcatori Where idPartita = Partite.idPartita And idTempo=3) As GoalTerzoTempo " &
-                    "FROM ((((((Partite LEFT JOIN Allenatori ON Partite.idAllenatore = Allenatori.idAllenatore And Allenatori.idAnno=Partite.idAnno) " &
+                    "(SELECT Count(*) FROM RisultatiAggiuntiviMarcatori Where idPartita = Partite.idPartita And idTempo=3) As GoalTerzoTempo, " &
+                    "CampiAvversari.Descrizione As Campo, CampiAvversari.Indirizzo As IndirizzoCampo, Partite.idPartita, Anni.Indirizzo As IndirizzoCasa, " &
+                    "Anni.Lat As LatCasa, Anni.Lon As LonCasa " &
+                    "FROM (((((((Partite LEFT JOIN Allenatori ON Partite.idAllenatore = Allenatori.idAllenatore And Allenatori.idAnno=Partite.idAnno) " &
                     "LEFT JOIN SquadreAvversarie ON Partite.idAvversario = SquadreAvversarie.idAvversario) " &
                     "LEFT JOIN MeteoPartite ON Partite.idPartita = MeteoPartite.idPartita) " &
                     "Left Join RisultatiAggiuntivi On Partite.idPartita=RisultatiAggiuntivi.idPartita) " &
                     "LEFT JOIN ArbitriPartite On Partite.idPartita = ArbitriPartite.idPartita) " &
                     "LEFT JOIN Arbitri On ArbitriPartite.idArbitro=Arbitri.idArbitro) " &
-                    "Left Join Anni On Partite.idAnno = Anni.idAnno " &
+                    "LEFT JOIN Anni On Partite.idAnno = Anni.idAnno) " &
+                    "LEFT JOIN CampiAvversari On SquadreAvversarie.idCampo = CampiAvversari.idCampo " &
                     "WHERE Partite.idAnno=" & idAnno & " And Partite.idCategoria=" & idCategoria & " And Partite.idTipologia=" & i & " " &
                     "Order By DataOra"
                     Try
@@ -1755,6 +1768,9 @@ Public Class wsStatistiche
                             Ritorno = Rec
                         Else
                             Dim Stringozza As String = ""
+
+                            LatCasa = Rec("LatCasa").Value
+                            LonCasa = Rec("LonCasa").Value
 
                             Stringozza &= "<table cellspacing=""0"" style=""width: 100%;"">"
                             Stringozza &= "<tr>"
@@ -1931,6 +1947,9 @@ Public Class wsStatistiche
                                     If Rec("Casa").Value = "S" Then
                                         Esito = "Vittoria"
                                         Colore = "#0a0"
+                                        If i = 1 Then
+                                            PuntiTotali += 3
+                                        End If
                                     Else
                                         Esito = "Sconfitta"
                                         Colore = "#a00"
@@ -1941,10 +1960,16 @@ Public Class wsStatistiche
                                             Esito = "Sconfitta"
                                             Colore = "#a00"
                                         Else
+                                            If i = 1 Then
+                                                PuntiTotali += 3
+                                            End If
                                             Esito = "Vittoria"
                                             Colore = "#0a0"
                                         End If
                                     Else
+                                        If i = 1 Then
+                                            PuntiTotali += 1
+                                        End If
                                         Esito = "Pareggio"
                                         Colore = "#000"
                                     End If
@@ -1953,6 +1978,11 @@ Public Class wsStatistiche
                                     Esito &= " in casa"
                                 Else
                                     Esito &= " fuori casa"
+                                End If
+
+                                If i = 1 Then
+                                    GiornataPerGrafico += 1
+                                    GraficoPuntiCampionato &= "['" & GiornataPerGrafico & "', " & PuntiTotali & "], "
                                 End If
 
                                 Stringozza &= "<tr " & RitornaColoreSfondo() & ">"
@@ -1984,9 +2014,78 @@ Public Class wsStatistiche
                                 Stringozza &= "</td>"
                                 Stringozza &= "</tr>"
 
+                                Dim Notelle As String = ""
+
+                                Sql = "Select * From Risultati Where idPartita = " & Rec("idPartita").Value
+                                Try
+                                    Rec2 = LeggeQuery(Conn, Sql, Connessione)
+                                    If TypeOf (Rec2) Is String Then
+                                        Ritorno = Rec2
+                                    Else
+                                        If Not Rec2.Eof Then
+                                            Notelle = Rec2(2).Value
+                                        End If
+                                    End If
+                                Catch ex As Exception
+                                    Ritorno = StringaErrore & " " & ex.Message
+                                End Try
+
+                                If Rec("Casa").Value = "S" Then
+                                    Stringozza &= "<tr " & RitornaColoreSfondo() & ">"
+                                    Stringozza &= "<td colspan=""6""><span class=""testo nero"" style=""font-size: 14px;"">In casa. " & Rec("IndirizzoCasa").Value & "</span></td>"
+                                    Stringozza &= "<td colspan=""5""><span class=""testo"" style=""font-size: 14px; font-style: italic; color: crimson; font-variant: all-petite-caps;"">" & Notelle & "</span></td>"
+                                    Stringozza &= "</tr>"
+                                Else
+                                    If Rec("Casa").Value = "N" Then
+                                        Stringozza &= "<tr " & RitornaColoreSfondo() & ">"
+                                        Stringozza &= "<td colspan=""6""><span class=""testo nero"" style=""font-size: 14px;"">Campo " & Rec("Campo").Value & ". " & Rec("IndirizzoCampo").Value & "</span></td>"
+                                        Stringozza &= "<td colspan=""5""><span class=""testo"" style=""font-size: 14px; font-style: italic; color: crimson; font-variant: all-petite-caps;"">" & Notelle & "</span></td>"
+                                        Stringozza &= "</tr>"
+                                    Else
+                                        Dim CampoEsterno As String = ""
+
+                                        Sql = "Select * From CampiEsterni Where idPartita = " & Rec("idPartita").Value
+                                        Try
+                                            Rec2 = LeggeQuery(Conn, Sql, Connessione)
+                                            If TypeOf (Rec2) Is String Then
+                                                Ritorno = Rec2
+                                            Else
+                                                If Not Rec2.Eof Then
+                                                    CampoEsterno = Rec2(1).Value
+                                                End If
+                                            End If
+                                        Catch ex As Exception
+                                            Ritorno = StringaErrore & " " & ex.Message
+                                        End Try
+
+                                        Stringozza &= "<tr " & RitornaColoreSfondo() & ">"
+                                        Stringozza &= "<td colspan=""6""><span class=""testo nero"" style=""font-size: 14px;"">Campo esterno: " & CampoEsterno & "</span></td>"
+                                        Stringozza &= "<td colspan=""5""><span class=""testo"" style=""font-size: 14px; font-style: italic; color: crimson; font-variant: all-petite-caps;"">" & Notelle & "</span></td>"
+                                        Stringozza &= "</tr>"
+                                    End If
+                                End If
+
                                 Stringozza &= "<tr>"
                                 Stringozza &= "<td colspan=""11"" style=""background-color: #555; height: 5px;""></td>"
                                 Stringozza &= "</tr>"
+
+                                Sql = "Select * From CoordinatePartite " &
+                                    "Where idPartita = " & Rec("idPartita").Value
+                                Try
+                                    Rec2 = LeggeQuery(Conn, Sql, Connessione)
+                                    If TypeOf (Rec2) Is String Then
+                                        Ritorno = Rec2
+                                    Else
+                                        If Not Rec2.Eof Then
+                                            Dim Descrizione As String = Esito & "<br />" & Tempo & "<br />Risultato: " & Punti1 & "-" & Punti2
+                                            If "" & Rec2("Lat").Value <> "" And "" & Rec2("Lon").Value <> "" Then
+                                                ListaMarkers &= "AggiungeMarker(" & Rec2("Lat").Value & ", " & Rec2("Lon").Value & ", '" & Rec("DataOra").Value.ToString & ": " & Casa & "-" & Fuori & " " & "', '" & Descrizione & "');" & vbCrLf
+                                            End If
+                                        End If
+                                    End If
+                                Catch ex As Exception
+                                    Ritorno = StringaErrore & " " & ex.Message
+                                End Try
 
                                 Rec.MoveNext
                             Loop
@@ -2007,6 +2106,10 @@ Public Class wsStatistiche
                         Ritorno = StringaErrore & " " & ex.Message
                     End Try
                 Next i
+
+                If GraficoPuntiCampionato.Length > 0 Then
+                    GraficoPuntiCampionato = Mid(GraficoPuntiCampionato, 1, GraficoPuntiCampionato.Length - 1)
+                End If
 
                 Sql = "SELECT Tempo1Tempo, Tempo2Tempo, Tempo3Tempo " &
                     "FROM RisultatiAggiuntivi INNER JOIN Partite ON RisultatiAggiuntivi.idPartita = Partite.idPartita " &
@@ -3323,6 +3426,12 @@ Public Class wsStatistiche
 
                 Filone = Filone.Replace("***GOALS_PER_MINUTO***", GoalFattiPerMinuto)
                 Filone = Filone.Replace("***SUBITI_PER_MINUTO***", GoalSubitiPerMinuto)
+
+                Filone = Filone.Replace("***LAT_CASA***", LatCasa)
+                Filone = Filone.Replace("***LON_CASA***", LonCasa)
+
+                Filone = Filone.Replace("***GRAFICO_PUNTI***", GraficoPuntiCampionato)
+                Filone = Filone.Replace("***LISTA_MARKERS_MAPPA***", ListaMarkers)
 
                 gf.CreaAggiornaFile(NomeFileFinale, Filone)
 
