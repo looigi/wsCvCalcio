@@ -1,7 +1,94 @@
 ﻿<html xmlns="http://www.w3.org/1999/xhtml">
 <head runat="server">
-<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
     <title>Scheda anno ***ANNO*** categoria ***CATEGORIA***</title>
+
+    <script type="text/javascript" src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCJ6LqMv1zV5Z_-wrETyen4ltCfMubiCzI"></script>
+    <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+
+    <script type="text/javascript">
+        var map;
+		var myLatlngOriginale = new google.maps.LatLng(***LAT_CASA***, ***LON_CASA***);
+		var distanceTotal = 0;
+
+		setTimeout(function(){
+				var mapCanvas = document.getElementById('map_canvas');
+				var mapOptions = {
+					center: new google.maps.LatLng(***LAT_CASA***, ***LON_CASA***),
+					zoom: 11,
+					mapTypeId: google.maps.MapTypeId.ROADMAP
+				}
+				map = new google.maps.Map(mapCanvas, mapOptions);				
+				setTimeout(function() {
+					***LISTA_MARKERS_MAPPA***
+					// alert(distanceTotal);
+					distanceTotal *= 1.35;
+					var round = Math.round(distanceTotal / 1000); 
+					// round /= 100;
+					document.getElementById('kmField').innerText = 'Media Km. effettuati: ' + round.toString();
+				}, 1000);
+		}, 1000);
+
+        function AggiungeMarker(myLatLngX, myLatLngY, titolo, Spiegazioni) {
+		    var myLatlng = new google.maps.LatLng(myLatLngX, myLatLngY);
+			distanceTotal += (getDistance(myLatlngOriginale, myLatlng) * 2);
+        
+            var divvinoInfo = '<div style=\'width: 350px; heigth: 250px; text-align: left; \'>' + titolo + '<hr />' + Spiegazioni + '<hr /></div>';
+
+            var infowindow = new google.maps.InfoWindow({
+                content: divvinoInfo
+            });
+
+			var marker = new google.maps.Marker({
+				position: myLatlng,
+				map: map,
+				title: titolo,
+				icon: { 
+					url: 'http://looigi.no-ip.biz:12345/cvCalcio/app_themes/standard/images/icone/marker.png',
+					scaledSize: new google.maps.Size(32, 32)
+				}
+			});
+			
+			google.maps.event.addListener(marker, 'click', function () {
+				infowindow.open(map, marker);
+			});
+        }
+
+		var rad = function(x) {
+		  return x * Math.PI / 180;
+		};
+
+		var getDistance = function(p1, p2) {
+		  var R = 6378137; // Earth’s mean radius in meter
+		  var dLat = rad(p2.lat() - p1.lat());
+		  var dLong = rad(p2.lng() - p1.lng());
+		  var a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+			Math.cos(rad(p1.lat())) * Math.cos(rad(p2.lat())) *
+			Math.sin(dLong / 2) * Math.sin(dLong / 2);
+		  var c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+		  var d = R * c;
+		  return d; // returns the distance in meter
+		};
+		
+      google.charts.load('current', {'packages':['corechart']});
+      google.charts.setOnLoadCallback(drawChart);
+
+      function drawChart() {
+        var data = google.visualization.arrayToDataTable([
+          ['Partita', 'Punti', 'Media inglese'],
+          ***GRAFICO_PUNTI***
+        ]);
+
+        var options = {
+          title: 'Punti totali in Campionato',
+          hAxis: {title: 'Partita',  titleTextStyle: {color: '#333'}},
+          vAxis: {minValue: 0}
+        };
+
+        var chart = new google.visualization.AreaChart(document.getElementById('chart_div'));
+        chart.draw(data, options);
+      }
+    </script>
 
     <style type="text/css">
         body {
@@ -43,6 +130,7 @@
         }
     </style>
 </head>
+
 <body>
     <form id="form1" runat="server">
         <div>
@@ -350,26 +438,40 @@
                     </table>
                 </td>
                 <td class="area" style="vertical-align: top; text-align: center;">
-<div style=" background-color: #888; width: 100%; text-align:center;">
-                    <span class="testo blu" style="font-size: 20px;">Marcatori globali</span>
-</div>
+					<div style=" background-color: #888; width: 100%; text-align:center;">
+						<span class="testo blu" style="font-size: 20px;">Marcatori globali</span>
+					</div>
                     <hr />
                     ***MARCATORI_GLOBALI***
                     <hr />
-<div style=" background-color: #888; width: 100%; text-align:center;">
-                    <span class="testo blu" style="font-size: 20px;">Presenze</span>
-</div>
-		    <hr />
+					<div style=" background-color: #888; width: 100%; text-align:center;">
+						<span class="testo blu" style="font-size: 20px;">Presenze</span>
+					</div>
+					<hr />
                     ***PRESENZE***
-		    <hr />
-<div style=" background-color: #888; width: 100%; text-align:center;">
-                    <span class="testo blu" style="font-size: 20px;">Squadre incontrate</span>
-</div>
+					<hr />
+					<div style=" background-color: #888; width: 100%; text-align:center;">
+						<span class="testo blu" style="font-size: 20px;">Squadre incontrate</span>
+					</div>
                     <hr />
                     ***SQUADRE_INCONTRATE***
                 </td>
 		    </tr>
 	    </table>
+
+		<div class="area" style="width: 99%;">
+			<div style=" background-color: #888; width: 100%; text-align:center;">
+				<span class="testo blu" style="font-size: 20px;">Mappa partite</span>
+			</div>
+			<div id="kmField" class="testo nero" style="width: 100%; text-align:center; height: 20px; font-style: italic;">
+			</div>
+			<div id="map_canvas" runat="server" style="z-index: 100; width: 100%; height: 500px; border: 1px solid #aaaaaa;"></div>
+		</div>
+
+		<div class="area" style="width: 99%;">
+			<div id="chart_div" style="width: 100%; height: 500px;"></div>
+		</div>
+
         </div>
     </form>
 </body>

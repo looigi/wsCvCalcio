@@ -14,7 +14,7 @@
 		setTimeout(function(){
 				var mapCanvas = document.getElementById('map_canvas');
 				var mapOptions = {
-					center: new google.maps.LatLng(41.9100711, 12.5359979),
+					center: new google.maps.LatLng(***LAT_CASA***, ***LON_CASA***),
 					zoom: 11,
 					mapTypeId: google.maps.MapTypeId.ROADMAP
 				}
@@ -75,7 +75,7 @@
 
       function drawChart() {
         var data = google.visualization.arrayToDataTable([
-          ['Partita', 'Punti'],
+          ['Partita', 'Punti', 'Media inglese'],
           ***GRAFICO_PUNTI***
         ]);
 

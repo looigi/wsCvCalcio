@@ -412,7 +412,7 @@ Public Class wsGenerale
                     End If
 
                     If idAnno > -1 Then
-                        Sql = "SELECT Descrizione, NomeSquadra From Anni Where idAnno=" & idAnno
+                        Sql = "SELECT Descrizione, NomeSquadra, Lat, Lon From Anni Where idAnno=" & idAnno
                         Rec = LeggeQuery(Conn, Sql, Connessione)
                         If TypeOf (Rec) Is String Then
                             Ritorno = Rec
@@ -423,7 +423,7 @@ Public Class wsGenerale
                                 Dim desc As String = Rec(0).Value
                                 Dim NomeSquadra As String = "" & Rec("NomeSquadra").Value
 
-                                Ritorno &= desc & ";" & NomeSquadra & ";"
+                                Ritorno &= desc & ";" & NomeSquadra & ";" & Rec("Lat").Value & ";" & Rec("Lon").Value & ";"
                             End If
                             Rec.Close()
                         End If

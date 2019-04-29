@@ -1,0 +1,486 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head runat="server">
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+    <title>Scheda anno 5 categoria 3</title>
+
+    <script type="text/javascript" src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCJ6LqMv1zV5Z_-wrETyen4ltCfMubiCzI"></script>
+    <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+
+    <script type="text/javascript">
+        var map;
+		var myLatlngOriginale = new google.maps.LatLng(41.895031, 12.6733437);
+		var distanceTotal = 0;
+
+		setTimeout(function(){
+				var mapCanvas = document.getElementById('map_canvas');
+				var mapOptions = {
+					center: new google.maps.LatLng(41.9100711, 12.5359979),
+					zoom: 11,
+					mapTypeId: google.maps.MapTypeId.ROADMAP
+				}
+				map = new google.maps.Map(mapCanvas, mapOptions);				
+				setTimeout(function() {
+					AggiungeMarker(41.870073603956875, 12.635235677318722, '12/01/2019 16:15:00: Unicusano-Ponte di Nona ', 'Sconfitta fuori casa<br />cielo sereno<br />8.98 Gradi<br />Risultato: 3-1');
+AggiungeMarker(41.876921205921725, 12.58238152658287, '09/03/2019 15:00:00: Alessandrino-Ponte di Nona ', 'Sconfitta fuori casa<br />poco nuvoloso<br />16.54 Gradi<br />Risultato: 3-1');
+AggiungeMarker(41.86290938194303, 12.700075148767198, '24/03/2019 09:45:00: Atletico Torrenova-Ponte di Nona ', 'Sconfitta fuori casa<br />cielo sereno<br />13.92 Gradi<br />Risultato: 4-1');
+AggiungeMarker(41.8716716, 12.5500286, '30/09/2018 10:00:00: Atletico 2000-Ponte di Nona ', 'Sconfitta fuori casa<br />cielo sereno<br />13.98 Gradi<br />Risultato: 3-1');
+AggiungeMarker(41.8474452, 12.854022899999999, '12/10/2018 17:00:00: Palestrina-Ponte di Nona ', 'Sconfitta fuori casa<br />poco nuvoloso<br />21.12 Gradi<br />Risultato: 7-1');
+AggiungeMarker(41.9669445, 12.7327341, '13/10/2018 02:30:00: Villalba-Ponte di Nona ', 'Sconfitta fuori casa<br />cielo sereno<br />22.75 Gradi<br />Risultato: 6-1');
+AggiungeMarker(41.89462457047315, 12.676593657463432, '21/10/2018 11:15:00: Ponte di Nona-Villanova ', 'Sconfitta in casa<br />cielo sereno<br />15.72 Gradi<br />Risultato: 4-5');
+
+					// alert(distanceTotal);
+					distanceTotal *= 1.35;
+					var round = Math.round(distanceTotal / 1000); 
+					// round /= 100;
+					document.getElementById('kmField').innerText = 'Media Km. effettuati: ' + round.toString();
+				}, 1000);
+		}, 1000);
+
+        function AggiungeMarker(myLatLngX, myLatLngY, titolo, Spiegazioni) {
+		    var myLatlng = new google.maps.LatLng(myLatLngX, myLatLngY);
+			distanceTotal += (getDistance(myLatlngOriginale, myLatlng) * 2);
+        
+            var divvinoInfo = '<div style=\'width: 350px; heigth: 250px; text-align: left; \'>' + titolo + '<hr />' + Spiegazioni + '<hr /></div>';
+
+            var infowindow = new google.maps.InfoWindow({
+                content: divvinoInfo
+            });
+
+			var marker = new google.maps.Marker({
+				position: myLatlng,
+				map: map,
+				title: titolo,
+				icon: { 
+					url: 'http://looigi.no-ip.biz:12345/cvCalcio/app_themes/standard/images/icone/marker.png',
+					scaledSize: new google.maps.Size(32, 32)
+				}
+			});
+			
+			google.maps.event.addListener(marker, 'click', function () {
+				infowindow.open(map, marker);
+			});
+        }
+
+		var rad = function(x) {
+		  return x * Math.PI / 180;
+		};
+
+		var getDistance = function(p1, p2) {
+		  var R = 6378137; // Earth’s mean radius in meter
+		  var dLat = rad(p2.lat() - p1.lat());
+		  var dLong = rad(p2.lng() - p1.lng());
+		  var a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+			Math.cos(rad(p1.lat())) * Math.cos(rad(p2.lat())) *
+			Math.sin(dLong / 2) * Math.sin(dLong / 2);
+		  var c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+		  var d = R * c;
+		  return d; // returns the distance in meter
+		};
+		
+      google.charts.load('current', {'packages':['corechart']});
+      google.charts.setOnLoadCallback(drawChart);
+
+      function drawChart() {
+        var data = google.visualization.arrayToDataTable([
+          ['Partita', 'Punti'],
+          ['0', 0], ['1', 0], ['2', 0], ['3', 0],
+        ]);
+
+        var options = {
+          title: 'Punti totali in Campionato',
+          hAxis: {title: 'Partita',  titleTextStyle: {color: '#333'}},
+          vAxis: {minValue: 0}
+        };
+
+        var chart = new google.visualization.AreaChart(document.getElementById('chart_div'));
+        chart.draw(data, options);
+      }
+    </script>
+
+    <style type="text/css">
+        body {
+            background-image: url('http://looigi.no-ip.biz:12345/CVCalcio/App_Themes/Standard/Images/bg.jpg');
+        }
+
+        .area {
+            margin: 2px;
+            background-color: #DDDDDD;
+            padding: 5px;
+            -webkit-border-radius: 8px;
+            -moz-border-radius: 8px;
+            border-radius: 8px;
+            -webkit-box-shadow: 0px 0px 4px 1px rgba(0, 0, 0, .3);
+            -moz-box-shadow: 0px 0px 4px 1px rgba(0, 0, 0, .3);
+            box-shadow: 0px 0px 4px 1px rgba(0, 0, 0, .3);
+            opacity: .88;
+        }
+
+        .testo {
+            font-family: Verdana; 
+            text-shadow: 1px 1px #000000; 
+        }
+
+        .blu {
+            color: #0000cc;
+        }
+
+        .rosso {
+            color: #aa0000;
+        }
+
+        .nero {
+            color: #000000;
+        }
+
+        .verde {
+            color: #00aa00;
+        }
+    </style>
+</head>
+
+<body>
+    <form id="form1" runat="server">
+        <div>
+	    <table style="width: 100%;" cellspacing="5">
+	        <tr>
+                <td style="vertical-align: top;">
+                    <!-- GENERALE -->
+                    <table class="area" style="width: 100%;">
+                        <tr>
+                            <td style="width: 100%; text-align: center;background-color: #aaa; border: 1px solid #999;">
+                                <span class="testo blu" style="font-size: 20px; ">Tempo Totale di Gioco</span>
+			    </td>
+			</tr>
+			<tr>
+			   <td style="width: 100%; text-align: center;">
+				<hr />
+				<span class="testo nero" style="font-size: 20px;">06:55:55</span>
+				<hr />
+                            </td>
+                        </tr>
+		    </table>
+                    <table class="area" style="width: 100%; margin-top: 10px;">
+                        <tr>
+                            <td style="width: 33%; padding: 3px; text-align: center; background-color: #aaa; border: 1px solid #999;">
+                                <span class="testo blu" style="font-size: 20px;">Generale</span>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td style="width: 33%; padding: 3px; text-align: center;">
+                                <table style="width: 100%; border: 1px solid #999;">
+                                    <tr>
+                                        <td style="width: 33%; padding: 3px; text-align: center; border-right: 1px solid #999;">
+<div style=" background-color: #888; width: 100%; text-align:center;">
+                                            <span class="testo blu" style="font-size: 20px;">Casa</span>
+</div>
+                                            <span class="testo nero" style="font-size: 16px;">Giocate: 1<br /><br />Vittorie: 0<br />Pareggi: 0<br />Sconfitte: 1<br /><br />Goal segnati: 4<br />Goal subiti: 5<br /></span>
+                                        </td>
+                                        <td style="width: 33%; padding: 3px; min-width: 33%; max-width: 33%; text-align: center;">
+<div style=" background-color: #888; width: 100%; text-align:center;">
+                                            <span class="testo blu" style="font-size: 20px;">Fuori</span>
+</div>
+                                            <span class="testo nero" style="font-size: 16px;">Giocate: 5<br /><br />Vittorie: 0<br />Pareggi: 0<br />Sconfitte: 5<br /><br />Goal segnati: 4<br />Goal subiti: 40<br /></span>
+                                        </td>
+                                        <td style="width: 33%; padding: 3px; min-width: 33%; max-width: 33%; text-align: center; border-left: 1px solid #999;">
+<div style=" background-color: #888; width: 100%; text-align:center;">
+                                            <span class="testo blu" style="font-size: 20px;">Campo esterno</span>
+</div>
+                                            <span class="testo nero" style="font-size: 16px;">Giocate: 1<br /><br />Vittorie: 0<br />Pareggi: 0<br />Sconfitte: 1<br /><br />Goal segnati: 0<br />Goal subiti: 6<br /></span>
+                                        </td>
+                                    </tr>
+                                    <tr style=" vertical-align: top;">
+                                        <td style="width: 33%; padding: 3px; text-align: left; border-right: 1px solid #999;">
+
+<div style=" background-color: #888; width: 100%; text-align:center;">
+                                            <span class="testo blu" style="font-size: 20px;">Marcatori</span>
+</div>
+                                            <span class="testo nero" style="font-size: 16px;"><table cellspacing="0" style="width: 100%;"><tr style="background-color: #aaa;"><td>&nbsp;2</td><td><img src="http://looigi.no-ip.biz:12345/CVCalcio/App_Themes/Standard/Images/Giocatori/5_418.jpg" style="width: 50px; height: 50px;" onerror="this.src='http://looigi.no-ip.biz:12345/CVCalcio/App_Themes/Standard/Images/Sconosciuto.png'" /></td><td>Krasniqi Edom</td></tr><tr style="background-color: #ccc;"><td>&nbsp;1</td><td><img src="http://looigi.no-ip.biz:12345/CVCalcio/App_Themes/Standard/Images/Giocatori/5_428.jpg" style="width: 50px; height: 50px;" onerror="this.src='http://looigi.no-ip.biz:12345/CVCalcio/App_Themes/Standard/Images/Sconosciuto.png'" /></td><td>Salem Amhed</td></tr><tr style="background-color: #aaa;"><td>&nbsp;1</td><td><img src="http://looigi.no-ip.biz:12345/CVCalcio/App_Themes/Standard/Images/Giocatori/5_399.jpg" style="width: 50px; height: 50px;" onerror="this.src='http://looigi.no-ip.biz:12345/CVCalcio/App_Themes/Standard/Images/Sconosciuto.png'" /></td><td>Galloppa Francesco</td></tr></table></span>
+                                        </td>
+                                        <td style="width: 33%; padding: 3px; min-width: 33%; max-width: 33%; text-align: left;">
+<div style=" background-color: #888; width: 100%; text-align:center;">
+                                            <span class="testo blu" style="font-size: 20px;">Marcatori</span>
+</div>
+                                            <span class="testo nero" style="font-size: 16px;"><table cellspacing="0" style="width: 100%;"><tr style="background-color: #ccc;"><td>&nbsp;2</td><td><img src="http://looigi.no-ip.biz:12345/CVCalcio/App_Themes/Standard/Images/Giocatori/5_439.jpg" style="width: 50px; height: 50px;" onerror="this.src='http://looigi.no-ip.biz:12345/CVCalcio/App_Themes/Standard/Images/Sconosciuto.png'" /></td><td>Konovalou Stefano</td></tr><tr style="background-color: #aaa;"><td>&nbsp;1</td><td><img src="http://looigi.no-ip.biz:12345/CVCalcio/App_Themes/Standard/Images/Giocatori/5_411.jpg" style="width: 50px; height: 50px;" onerror="this.src='http://looigi.no-ip.biz:12345/CVCalcio/App_Themes/Standard/Images/Sconosciuto.png'" /></td><td>. Aurora</td></tr><tr style="background-color: #ccc;"><td>&nbsp;1</td><td><img src="http://looigi.no-ip.biz:12345/CVCalcio/App_Themes/Standard/Images/Giocatori/5_397.jpg" style="width: 50px; height: 50px;" onerror="this.src='http://looigi.no-ip.biz:12345/CVCalcio/App_Themes/Standard/Images/Sconosciuto.png'" /></td><td>Di Sano Damiano</td></tr></table></span>
+                                        </td>
+                                        <td style="width: 33%; padding: 3px; min-width: 33%; max-width: 33%; text-align: left; border-left: 1px solid #999;">
+<div style=" background-color: #888; width: 100%; text-align:center;">
+                                            <span class="testo blu" style="font-size: 20px;">Marcatori</span>
+</div>
+                                            <span class="testo nero" style="font-size: 16px;"><table cellspacing="0" style="width: 100%;"><tr style="background-color: #aaa;"><td>&nbsp;1</td><td><img src="http://looigi.no-ip.biz:12345/CVCalcio/App_Themes/Standard/Images/Giocatori/5_.jpg" style="width: 50px; height: 50px;" onerror="this.src='http://looigi.no-ip.biz:12345/CVCalcio/App_Themes/Standard/Images/Sconosciuto.png'" /></td><td>Autorete</td></tr><tr style="background-color: #ccc;"><td>&nbsp;1</td><td><img src="http://looigi.no-ip.biz:12345/CVCalcio/App_Themes/Standard/Images/Giocatori/5_411.jpg" style="width: 50px; height: 50px;" onerror="this.src='http://looigi.no-ip.biz:12345/CVCalcio/App_Themes/Standard/Images/Sconosciuto.png'" /></td><td>. Aurora</td></tr></table></span>
+                                        </td>
+                                    </tr>
+                                </table>
+                            </td>
+                        </tr>
+                    </table>
+
+                    <!-- CAMPIONATO -->
+                    <table class="area" style="width: 100%; margin-top: 10px;" cellspacing="10px">
+                        <tr>
+                            <td style="width: 33%; padding: 3px; text-align: center; background-color: #aaa; border: 1px solid #999;">
+                                <span class="testo blu" style="font-size: 20px;">Campionato</span>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td style="width: 33%; padding: 3px; text-align: center;">
+                                <table style="width: 100%; border: 1px solid #999;">
+                                    <tr>
+                                        <td style="width: 33%; padding: 3px; text-align: center; border-right: 1px solid #999;">
+<div style=" background-color: #888; width: 100%; text-align:center;">
+                                            <span class="testo blu" style="font-size: 20px;">Casa</span>
+</div>
+                                            <span class="testo nero" style="font-size: 16px;">Giocate: 0<br /><br />Vittorie: 0<br />Pareggi: 0<br />Sconfitte: 0<br /><br />Goal segnati: 0<br />Goal subiti: 0<br /></span>
+                                        </td>
+                                        <td style="width: 33%; padding: 3px; min-width: 33%; max-width: 33%; text-align: center;">
+<div style=" background-color: #888; width: 100%; text-align:center;">
+                                            <span class="testo blu" style="font-size: 20px;">Fuori</span>
+</div>
+                                            <span class="testo nero" style="font-size: 16px;">Giocate: 2<br /><br />Vittorie: 0<br />Pareggi: 0<br />Sconfitte: 2<br /><br />Goal segnati: 1<br />Goal subiti: 24<br /></span>
+                                        </td>
+                                        <td style="width: 33%; padding: 3px; min-width: 33%; max-width: 33%; text-align: center; border-left: 1px solid #999;">
+<div style=" background-color: #888; width: 100%; text-align:center;">
+                                            <span class="testo blu" style="font-size: 20px;">Campo esterno</span>
+</div>
+                                            <span class="testo nero" style="font-size: 16px;">Giocate: 1<br /><br />Vittorie: 0<br />Pareggi: 0<br />Sconfitte: 1<br /><br />Goal segnati: 0<br />Goal subiti: 6<br /></span>
+                                        </td>
+                                    </tr>
+
+<tr style="width: 100%;">
+	<td colspan="3" style="width: 100%; text-align: center; background-color: #aaa; border: 1px solid #999;">
+        	<span class="testo blu" style="font-size: 20px;">Lista partite di campionato</span>
+        </td>
+</tr>
+<tr style="width: 100%;">
+	<td colspan="3">
+		<table cellspacing="0" style="width: 100%;"><tr><td colspan="11" style="background-color: #555; height: 5px;"></td></tr><tr style="background-color: #ccc;"><td style="text-align: center;"><span class="testo nero" style="font-size: 13px;">12/01/2019<br />16:15:00</span></td><td style="text-align: center;"><span class="testo nero" style="font-size: 13px;">Fabi<br />Sergio </span></td><td style="text-align: center;"><span class="testo nero" style="font-size: 13px;">cielo sereno<br />8.98 Gradi</span></td><td style="text-align: center;"><span class="testo nero" style="font-size: 13px;">Unicusano</span></td><td style="text-align: center;"><td style ="text-align: center;"><img src="http://looigi.no-ip.biz:12345/CVCalcio/App_Themes/Standard/Images/Avversari/203.Jpg" style="width: 30px; height: 30px;" onerror="this.src='http://looigi.no-ip.biz:12345/CVCalcio/App_Themes/Standard/Images/Sconosciuto.png'"  /></td></td><td style="text-align: center;"><span class="testo nero" style="font-size: 13px;">15-1</span></td><td style="text-align: center;"><td style ="text-align: center;"><img src="http://looigi.no-ip.biz:12345/CVCalcio/App_Themes/Standard/Images/Categorie/5_3.Jpg" style="width: 30px; height: 30px;" onerror="this.src='http://looigi.no-ip.biz:12345/CVCalcio/App_Themes/Standard/Images/Sconosciuto.png'"  /></td></td><td style="text-align: center;"><span class="testo nero" style="font-size: 13px;">Ponte<br />di<br />Nona</span></td><td style="text-align: center;"><span class="testo nero" style="font-size: 13px;"></span></td></tr><tr style="background-color: #aaa;"><td style="text-align: center;"><span class="testo nero" style="font-size: 13px;">Risultato<br /> a tempi</span></td><td style="text-align: center;"><span class="testo nero" style="font-size: 13px;">1° Tempo: 4-0</span></td><td style="text-align: center;"><span class="testo nero" style="font-size: 13px;">2° Tempo: 4-1</span></td><td style="text-align: center;"><span class="testo nero" style="font-size: 13px;">3° Tempo: 7-0</span></td><td style="text-align: center;" colspan="2"><span class="testo nero" style="font-size: 13px;">Giochetti: 6-10</span></td><td style="text-align: center;" colspan="2"><span class="testo blu" style="font-size: 15px;">Risultato: 3-1</span></td><td style="text-align: center;" colspan="3"><span class="testo " style="color: #a00; font-size: 13px;">Sconfitta fuori casa</span></td></tr><tr style="background-color: #ccc;"><td colspan="6"><span class="testo nero" style="font-size: 14px;">Campo Roma VIII. Via di tor bella monaca</span></td><td colspan="5"><span class="testo" style="font-size: 14px; font-style: italic; color: crimson; font-variant: all-petite-caps;"></span></td></tr><tr><td colspan="11" style="background-color: #555; height: 5px;"></td></tr><tr style="background-color: #aaa;"><td style="text-align: center;"><span class="testo nero" style="font-size: 13px;">09/03/2019<br />15:00:00</span></td><td style="text-align: center;"><span class="testo nero" style="font-size: 13px;">Fabi<br />Sergio </span></td><td style="text-align: center;"><span class="testo nero" style="font-size: 13px;">poco nuvoloso<br />16.54 Gradi</span></td><td style="text-align: center;"><span class="testo nero" style="font-size: 13px;">Alessandrino</span></td><td style="text-align: center;"><td style ="text-align: center;"><img src="http://looigi.no-ip.biz:12345/CVCalcio/App_Themes/Standard/Images/Avversari/104.Jpg" style="width: 30px; height: 30px;" onerror="this.src='http://looigi.no-ip.biz:12345/CVCalcio/App_Themes/Standard/Images/Sconosciuto.png'"  /></td></td><td style="text-align: center;"><span class="testo nero" style="font-size: 13px;">9-0</span></td><td style="text-align: center;"><td style ="text-align: center;"><img src="http://looigi.no-ip.biz:12345/CVCalcio/App_Themes/Standard/Images/Categorie/5_3.Jpg" style="width: 30px; height: 30px;" onerror="this.src='http://looigi.no-ip.biz:12345/CVCalcio/App_Themes/Standard/Images/Sconosciuto.png'"  /></td></td><td style="text-align: center;"><span class="testo nero" style="font-size: 13px;">Ponte<br />di<br />Nona</span></td><td style="text-align: center;"><span class="testo nero" style="font-size: 13px;">Auto<br />Arbitraggio</span></td></tr><tr style="background-color: #ccc;"><td style="text-align: center;"><span class="testo nero" style="font-size: 13px;">Risultato<br /> a tempi</span></td><td style="text-align: center;"><span class="testo nero" style="font-size: 13px;">1° Tempo: 1-0</span></td><td style="text-align: center;"><span class="testo nero" style="font-size: 13px;">2° Tempo: 5-0</span></td><td style="text-align: center;"><span class="testo nero" style="font-size: 13px;">3° Tempo: 3-0</span></td><td style="text-align: center;" colspan="2"><span class="testo nero" style="font-size: 13px;">Giochetti: 9-11</span></td><td style="text-align: center;" colspan="2"><span class="testo blu" style="font-size: 15px;">Risultato: 3-1</span></td><td style="text-align: center;" colspan="3"><span class="testo " style="color: #a00; font-size: 13px;">Sconfitta fuori casa</span></td></tr><tr style="background-color: #aaa;"><td colspan="6"><span class="testo nero" style="font-size: 14px;">Campo Alessandrino. Via Francesco Bonafede, 65, Roma Rm</span></td><td colspan="5"><span class="testo" style="font-size: 14px; font-style: italic; color: crimson; font-variant: all-petite-caps;"></span></td></tr><tr><td colspan="11" style="background-color: #555; height: 5px;"></td></tr><tr style="background-color: #ccc;"><td style="text-align: center;"><span class="testo nero" style="font-size: 13px;">24/03/2019<br />09:45:00</span></td><td style="text-align: center;"><span class="testo nero" style="font-size: 13px;">Fabi<br />Sergio </span></td><td style="text-align: center;"><span class="testo nero" style="font-size: 13px;">cielo sereno<br />13.92 Gradi</span></td><td style="text-align: center;"><span class="testo nero" style="font-size: 13px;">Atletico<br />Torrenova</span></td><td style="text-align: center;"><td style ="text-align: center;"><img src="http://looigi.no-ip.biz:12345/CVCalcio/App_Themes/Standard/Images/Avversari/189.Jpg" style="width: 30px; height: 30px;" onerror="this.src='http://looigi.no-ip.biz:12345/CVCalcio/App_Themes/Standard/Images/Sconosciuto.png'"  /></td></td><td style="text-align: center;"><span class="testo nero" style="font-size: 13px;">6-2</span></td><td style="text-align: center;"><td style ="text-align: center;"><img src="http://looigi.no-ip.biz:12345/CVCalcio/App_Themes/Standard/Images/Categorie/5_3.Jpg" style="width: 30px; height: 30px;" onerror="this.src='http://looigi.no-ip.biz:12345/CVCalcio/App_Themes/Standard/Images/Sconosciuto.png'"  /></td></td><td style="text-align: center;"><span class="testo nero" style="font-size: 13px;">Ponte<br />di<br />Nona</span></td><td style="text-align: center;"><span class="testo nero" style="font-size: 13px;"></span></td></tr><tr style="background-color: #aaa;"><td style="text-align: center;"><span class="testo nero" style="font-size: 13px;">Risultato<br /> a tempi</span></td><td style="text-align: center;"><span class="testo nero" style="font-size: 13px;">1° Tempo: 3-0</span></td><td style="text-align: center;"><span class="testo nero" style="font-size: 13px;">2° Tempo: 1-1</span></td><td style="text-align: center;"><span class="testo nero" style="font-size: 13px;">3° Tempo: 2-1</span></td><td style="text-align: center;" colspan="2"><span class="testo nero" style="font-size: 13px;">Giochetti: 9-4</span></td><td style="text-align: center;" colspan="2"><span class="testo blu" style="font-size: 15px;">Risultato: 4-1</span></td><td style="text-align: center;" colspan="3"><span class="testo " style="color: #a00; font-size: 13px;">Sconfitta fuori casa</span></td></tr><tr style="background-color: #ccc;"><td colspan="6"><span class="testo nero" style="font-size: 14px;">Campo esterno: le palme</span></td><td colspan="5"><span class="testo" style="font-size: 14px; font-style: italic; color: crimson; font-variant: all-petite-caps;"></span></td></tr><tr><td colspan="11" style="background-color: #555; height: 5px;"></td></tr></table>
+	</td>
+</tr>
+
+                                    <tr style=" vertical-align: top;">
+                                        <td style="width: 33%; padding: 3px; text-align: left; border-right: 1px solid #999;">
+<div style="width: 100%; text-align: center; background-color: #888;">
+                                            <span class="testo blu" style="font-size: 20px;">Marcatori</span>
+</div>
+                                            <span class="testo nero" style="font-size: 16px;"><table cellspacing="0" style="width: 100%;"></table></span>
+                                        </td>
+                                        <td style="width: 33%; padding: 3px; min-width: 33%; max-width: 33%; text-align: left;">
+<div style="width: 100%; text-align: center; background-color: #888;">
+                                            <span class="testo blu" style="font-size: 20px;">Marcatori</span>
+</div>
+                                            <span class="testo nero" style="font-size: 16px;"><table cellspacing="0" style="width: 100%;"><tr style="background-color: #aaa;"><td>&nbsp;1</td><td><img src="http://looigi.no-ip.biz:12345/CVCalcio/App_Themes/Standard/Images/Giocatori/5_439.jpg" style="width: 50px; height: 50px;" onerror="this.src='http://looigi.no-ip.biz:12345/CVCalcio/App_Themes/Standard/Images/Sconosciuto.png'" /></td><td>Konovalou Stefano</td></tr></table></span>
+                                        </td>
+                                        <td style="width: 33%; padding: 3px; min-width: 33%; max-width: 33%; text-align: left; border-left: 1px solid #999;">
+<div style="width: 100%; text-align: center; background-color: #888;">
+                                            <span class="testo blu" style="font-size: 20px;">Marcatori</span>
+</div>
+                                            <span class="testo nero" style="font-size: 16px;"><table cellspacing="0" style="width: 100%;"><tr style="background-color: #ccc;"><td>&nbsp;1</td><td><img src="http://looigi.no-ip.biz:12345/CVCalcio/App_Themes/Standard/Images/Giocatori/5_.jpg" style="width: 50px; height: 50px;" onerror="this.src='http://looigi.no-ip.biz:12345/CVCalcio/App_Themes/Standard/Images/Sconosciuto.png'" /></td><td>Autorete</td></tr><tr style="background-color: #aaa;"><td>&nbsp;1</td><td><img src="http://looigi.no-ip.biz:12345/CVCalcio/App_Themes/Standard/Images/Giocatori/5_411.jpg" style="width: 50px; height: 50px;" onerror="this.src='http://looigi.no-ip.biz:12345/CVCalcio/App_Themes/Standard/Images/Sconosciuto.png'" /></td><td>. Aurora</td></tr></table></span>
+                                        </td>
+                                    </tr>
+                                </table>
+                            </td>
+                        </tr>
+                    </table>
+
+                    <!-- AMICHEVOLI -->
+                    <table class="area" style="width: 100%; margin-top: 10px;" cellspacing="10px">
+                        <tr>
+                            <td style="width: 33%; padding: 3px; text-align: center; background-color: #aaa; border: 1px solid #999;">
+                                <span class="testo blu" style="font-size: 20px;">Amichevoli</span>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td style="width: 33%; padding: 3px; text-align: center;">
+                                <table style="width: 100%; border: 1px solid #999;">
+                                    <tr>
+                                        <td style="width: 33%; padding: 3px; text-align: center; border-right: 1px solid #999;">
+<div style=" background-color: #888; width: 100%; text-align:center;">
+                                            <span class="testo blu" style="font-size: 20px;">Casa</span>
+</div>
+                                            <span class="testo nero" style="font-size: 16px;">Giocate: 1<br /><br />Vittorie: 0<br />Pareggi: 0<br />Sconfitte: 1<br /><br />Goal segnati: 4<br />Goal subiti: 5<br /></span>
+                                        </td>
+                                        <td style="width: 33%; padding: 3px; min-width: 33%; max-width: 33%; text-align: center;">
+<div style=" background-color: #888; width: 100%; text-align:center;">
+                                            <span class="testo blu" style="font-size: 20px;">Fuori</span>
+</div>
+                                            <span class="testo nero" style="font-size: 16px;">Giocate: 3<br /><br />Vittorie: 0<br />Pareggi: 0<br />Sconfitte: 3<br /><br />Goal segnati: 3<br />Goal subiti: 16<br /></span>
+                                        </td>
+                                        <td style="width: 33%; padding: 3px; min-width: 33%; max-width: 33%; text-align: center; border-left: 1px solid #999;">
+<div style=" background-color: #888; width: 100%; text-align:center;">
+                                            <span class="testo blu" style="font-size: 20px;">Campo esterno</span>
+</div>
+                                            <span class="testo nero" style="font-size: 16px;">Giocate: 0<br /><br />Vittorie: 0<br />Pareggi: 0<br />Sconfitte: 0<br /><br />Goal segnati: 0<br />Goal subiti: 0<br /></span>
+                                        </td>
+                                    </tr>
+<tr style="width: 100%;">
+	<td colspan="3" style="width: 100%; text-align: center; background-color: #aaa; border: 1px solid #999;">
+        	<span class="testo blu" style="font-size: 20px;">Lista partite amichevoli</span>
+        </td>
+</tr>
+<tr style="width: 100%;">
+	<td colspan="3">
+		<table cellspacing="0" style="width: 100%;"><tr><td colspan="11" style="background-color: #555; height: 5px;"></td></tr><tr style="background-color: #aaa;"><td style="text-align: center;"><span class="testo nero" style="font-size: 13px;">30/09/2018<br />10:00:00</span></td><td style="text-align: center;"><span class="testo nero" style="font-size: 13px;">Fabi<br />Sergio </span></td><td style="text-align: center;"><span class="testo nero" style="font-size: 13px;">cielo sereno<br />13.98 Gradi</span></td><td style="text-align: center;"><span class="testo nero" style="font-size: 13px;">Atletico<br />2000</span></td><td style="text-align: center;"><td style ="text-align: center;"><img src="http://looigi.no-ip.biz:12345/CVCalcio/App_Themes/Standard/Images/Avversari/213.Jpg" style="width: 30px; height: 30px;" onerror="this.src='http://looigi.no-ip.biz:12345/CVCalcio/App_Themes/Standard/Images/Sconosciuto.png'"  /></td></td><td style="text-align: center;"><span class="testo nero" style="font-size: 13px;">3-1</span></td><td style="text-align: center;"><td style ="text-align: center;"><img src="http://looigi.no-ip.biz:12345/CVCalcio/App_Themes/Standard/Images/Categorie/5_3.Jpg" style="width: 30px; height: 30px;" onerror="this.src='http://looigi.no-ip.biz:12345/CVCalcio/App_Themes/Standard/Images/Sconosciuto.png'"  /></td></td><td style="text-align: center;"><span class="testo nero" style="font-size: 13px;">Ponte<br />di<br />Nona</span></td><td style="text-align: center;"><span class="testo nero" style="font-size: 13px;"></span></td></tr><tr style="background-color: #ccc;"><td style="text-align: center;"><span class="testo nero" style="font-size: 13px;">Risultato<br />a goal</span></td><td colspan="5"></td><td style="text-align: center;" colspan="2"><span class="testo blu" style="font-size: 15px;">Risultato: 3-1</span></td><td style="text-align: center;" colspan="3"><span class="testo " style="color: #a00; font-size: 13px;">Sconfitta fuori casa</span></td></tr><tr style="background-color: #aaa;"><td colspan="6"><span class="testo nero" style="font-size: 14px;">Campo Catena. Via di Centocelle 195 Roma</span></td><td colspan="5"><span class="testo" style="font-size: 14px; font-style: italic; color: crimson; font-variant: all-petite-caps;"></span></td></tr><tr><td colspan="11" style="background-color: #555; height: 5px;"></td></tr><tr style="background-color: #ccc;"><td style="text-align: center;"><span class="testo nero" style="font-size: 13px;">12/10/2018<br />17:00:00</span></td><td style="text-align: center;"><span class="testo nero" style="font-size: 13px;">Fabi<br />Sergio </span></td><td style="text-align: center;"><span class="testo nero" style="font-size: 13px;">poco nuvoloso<br />21.12 Gradi</span></td><td style="text-align: center;"><span class="testo nero" style="font-size: 13px;">Palestrina</span></td><td style="text-align: center;"><td style ="text-align: center;"><img src="http://looigi.no-ip.biz:12345/CVCalcio/App_Themes/Standard/Images/Avversari/129.Jpg" style="width: 30px; height: 30px;" onerror="this.src='http://looigi.no-ip.biz:12345/CVCalcio/App_Themes/Standard/Images/Sconosciuto.png'"  /></td></td><td style="text-align: center;"><span class="testo nero" style="font-size: 13px;">7-1</span></td><td style="text-align: center;"><td style ="text-align: center;"><img src="http://looigi.no-ip.biz:12345/CVCalcio/App_Themes/Standard/Images/Categorie/5_3.Jpg" style="width: 30px; height: 30px;" onerror="this.src='http://looigi.no-ip.biz:12345/CVCalcio/App_Themes/Standard/Images/Sconosciuto.png'"  /></td></td><td style="text-align: center;"><span class="testo nero" style="font-size: 13px;">Ponte<br />di<br />Nona</span></td><td style="text-align: center;"><span class="testo nero" style="font-size: 13px;"></span></td></tr><tr style="background-color: #aaa;"><td style="text-align: center;"><span class="testo nero" style="font-size: 13px;">Risultato<br />a goal</span></td><td colspan="5"></td><td style="text-align: center;" colspan="2"><span class="testo blu" style="font-size: 15px;">Risultato: 7-1</span></td><td style="text-align: center;" colspan="3"><span class="testo " style="color: #a00; font-size: 13px;">Sconfitta fuori casa</span></td></tr><tr style="background-color: #ccc;"><td colspan="6"><span class="testo nero" style="font-size: 14px;">Campo Polidori Andrea. Via Pedemontana</span></td><td colspan="5"><span class="testo" style="font-size: 14px; font-style: italic; color: crimson; font-variant: all-petite-caps;"></span></td></tr><tr><td colspan="11" style="background-color: #555; height: 5px;"></td></tr><tr style="background-color: #aaa;"><td style="text-align: center;"><span class="testo nero" style="font-size: 13px;">13/10/2018<br />02:30:00</span></td><td style="text-align: center;"><span class="testo nero" style="font-size: 13px;">Fabi<br />Sergio </span></td><td style="text-align: center;"><span class="testo nero" style="font-size: 13px;">cielo sereno<br />22.75 Gradi</span></td><td style="text-align: center;"><span class="testo nero" style="font-size: 13px;">Villalba</span></td><td style="text-align: center;"><td style ="text-align: center;"><img src="http://looigi.no-ip.biz:12345/CVCalcio/App_Themes/Standard/Images/Avversari/202.Jpg" style="width: 30px; height: 30px;" onerror="this.src='http://looigi.no-ip.biz:12345/CVCalcio/App_Themes/Standard/Images/Sconosciuto.png'"  /></td></td><td style="text-align: center;"><span class="testo nero" style="font-size: 13px;">6-1</span></td><td style="text-align: center;"><td style ="text-align: center;"><img src="http://looigi.no-ip.biz:12345/CVCalcio/App_Themes/Standard/Images/Categorie/5_3.Jpg" style="width: 30px; height: 30px;" onerror="this.src='http://looigi.no-ip.biz:12345/CVCalcio/App_Themes/Standard/Images/Sconosciuto.png'"  /></td></td><td style="text-align: center;"><span class="testo nero" style="font-size: 13px;">Ponte<br />di<br />Nona</span></td><td style="text-align: center;"><span class="testo nero" style="font-size: 13px;"></span></td></tr><tr style="background-color: #ccc;"><td style="text-align: center;"><span class="testo nero" style="font-size: 13px;">Risultato<br />a goal</span></td><td colspan="5"></td><td style="text-align: center;" colspan="2"><span class="testo blu" style="font-size: 15px;">Risultato: 6-1</span></td><td style="text-align: center;" colspan="3"><span class="testo " style="color: #a00; font-size: 13px;">Sconfitta fuori casa</span></td></tr><tr style="background-color: #aaa;"><td colspan="6"><span class="testo nero" style="font-size: 14px;">Campo Guidonia. Via Pantane, Guidonia Montecelio</span></td><td colspan="5"><span class="testo" style="font-size: 14px; font-style: italic; color: crimson; font-variant: all-petite-caps;"></span></td></tr><tr><td colspan="11" style="background-color: #555; height: 5px;"></td></tr><tr style="background-color: #ccc;"><td style="text-align: center;"><span class="testo nero" style="font-size: 13px;">21/10/2018<br />11:15:00</span></td><td style="text-align: center;"><span class="testo nero" style="font-size: 13px;">Fabi<br />Sergio </span></td><td style="text-align: center;"><span class="testo nero" style="font-size: 13px;">cielo sereno<br />15.72 Gradi</span></td><td style="text-align: center;"><span class="testo nero" style="font-size: 13px;">Ponte<br />di<br />Nona</span></td><td style="text-align: center;"><td style ="text-align: center;"><img src="http://looigi.no-ip.biz:12345/CVCalcio/App_Themes/Standard/Images/Categorie/5_3.Jpg" style="width: 30px; height: 30px;" onerror="this.src='http://looigi.no-ip.biz:12345/CVCalcio/App_Themes/Standard/Images/Sconosciuto.png'"  /></td></td><td style="text-align: center;"><span class="testo nero" style="font-size: 13px;">4-5</span></td><td style="text-align: center;"><td style ="text-align: center;"><img src="http://looigi.no-ip.biz:12345/CVCalcio/App_Themes/Standard/Images/Avversari/43.Jpg" style="width: 30px; height: 30px;" onerror="this.src='http://looigi.no-ip.biz:12345/CVCalcio/App_Themes/Standard/Images/Sconosciuto.png'"  /></td></td><td style="text-align: center;"><span class="testo nero" style="font-size: 13px;">Villanova</span></td><td style="text-align: center;"><span class="testo nero" style="font-size: 13px;"></span></td></tr><tr style="background-color: #aaa;"><td style="text-align: center;"><span class="testo nero" style="font-size: 13px;">Risultato<br />a goal</span></td><td colspan="5"></td><td style="text-align: center;" colspan="2"><span class="testo blu" style="font-size: 15px;">Risultato: 4-5</span></td><td style="text-align: center;" colspan="3"><span class="testo " style="color: #a00; font-size: 13px;">Sconfitta in casa</span></td></tr><tr style="background-color: #ccc;"><td colspan="6"><span class="testo nero" style="font-size: 14px;">In casa. Via Raoul Follereau, 00132 Roma RM</span></td><td colspan="5"><span class="testo" style="font-size: 14px; font-style: italic; color: crimson; font-variant: all-petite-caps;"></span></td></tr><tr><td colspan="11" style="background-color: #555; height: 5px;"></td></tr></table>
+	</td>
+</tr>
+                                    <tr style=" vertical-align: top;">
+                                        <td style="width: 33%; padding: 3px; text-align: left; border-right: 1px solid #999;">
+<div style="width: 100%; text-align: center; background-color: #888;">
+                                            <span class="testo blu" style="font-size: 20px;">Marcatori</span>
+</div>
+                                            <span class="testo nero" style="font-size: 16px;"><table cellspacing="0" style="width: 100%;"><tr style="background-color: #ccc;"><td>&nbsp;2</td><td><img src="http://looigi.no-ip.biz:12345/CVCalcio/App_Themes/Standard/Images/Giocatori/5_418.jpg" style="width: 50px; height: 50px;" onerror="this.src='http://looigi.no-ip.biz:12345/CVCalcio/App_Themes/Standard/Images/Sconosciuto.png'" /></td><td>Krasniqi Edom</td></tr><tr style="background-color: #aaa;"><td>&nbsp;1</td><td><img src="http://looigi.no-ip.biz:12345/CVCalcio/App_Themes/Standard/Images/Giocatori/5_428.jpg" style="width: 50px; height: 50px;" onerror="this.src='http://looigi.no-ip.biz:12345/CVCalcio/App_Themes/Standard/Images/Sconosciuto.png'" /></td><td>Salem Amhed</td></tr><tr style="background-color: #ccc;"><td>&nbsp;1</td><td><img src="http://looigi.no-ip.biz:12345/CVCalcio/App_Themes/Standard/Images/Giocatori/5_399.jpg" style="width: 50px; height: 50px;" onerror="this.src='http://looigi.no-ip.biz:12345/CVCalcio/App_Themes/Standard/Images/Sconosciuto.png'" /></td><td>Galloppa Francesco</td></tr></table></span>
+                                        </td>
+                                        <td style="width: 33%; padding: 3px; min-width: 33%; max-width: 33%; text-align: left;">
+<div style="width: 100%; text-align: center; background-color: #888;">
+                                            <span class="testo blu" style="font-size: 20px;">Marcatori</span>
+</div>
+                                            <span class="testo nero" style="font-size: 16px;"><table cellspacing="0" style="width: 100%;"><tr style="background-color: #aaa;"><td>&nbsp;1</td><td><img src="http://looigi.no-ip.biz:12345/CVCalcio/App_Themes/Standard/Images/Giocatori/5_411.jpg" style="width: 50px; height: 50px;" onerror="this.src='http://looigi.no-ip.biz:12345/CVCalcio/App_Themes/Standard/Images/Sconosciuto.png'" /></td><td>. Aurora</td></tr><tr style="background-color: #ccc;"><td>&nbsp;1</td><td><img src="http://looigi.no-ip.biz:12345/CVCalcio/App_Themes/Standard/Images/Giocatori/5_397.jpg" style="width: 50px; height: 50px;" onerror="this.src='http://looigi.no-ip.biz:12345/CVCalcio/App_Themes/Standard/Images/Sconosciuto.png'" /></td><td>Di Sano Damiano</td></tr><tr style="background-color: #aaa;"><td>&nbsp;1</td><td><img src="http://looigi.no-ip.biz:12345/CVCalcio/App_Themes/Standard/Images/Giocatori/5_439.jpg" style="width: 50px; height: 50px;" onerror="this.src='http://looigi.no-ip.biz:12345/CVCalcio/App_Themes/Standard/Images/Sconosciuto.png'" /></td><td>Konovalou Stefano</td></tr></table></span>
+                                        </td>
+                                        <td style="width: 33%; padding: 3px; min-width: 33%; max-width: 33%; text-align: left; border-left: 1px solid #999;">
+<div style="width: 100%; text-align: center; background-color: #888;">
+                                            <span class="testo blu" style="font-size: 20px;">Marcatori</span>
+</div>
+                                            <span class="testo nero" style="font-size: 16px;"><table cellspacing="0" style="width: 100%;"></table></span>
+                                        </td>
+                                    </tr>
+                                </table>
+                            </td>
+                        </tr>
+                    </table>
+
+                    <!-- TORNEI -->
+                    <table class="area" style="width: 100%; margin-top: 10px;" cellspacing="10px">
+                        <tr>
+                            <td style="width: 33%; padding: 3px; text-align: center; background-color: #aaa; border: 1px solid #999;">
+                                <span class="testo blu" style="font-size: 20px;">Tornei</span>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td style="width: 33%; padding: 3px; text-align: center;">
+                                <table style="width: 100%; border: 1px solid #999;">
+                                    <tr>
+                                        <td style="width: 33%; padding: 3px; text-align: center; border-right: 1px solid #999;">
+<div style=" background-color: #888; width: 100%; text-align:center;">
+                                            <span class="testo blu" style="font-size: 20px;">Casa</span>
+</div>
+                                            <span class="testo nero" style="font-size: 16px;">Giocate: 0<br /><br />Vittorie: 0<br />Pareggi: 0<br />Sconfitte: 0<br /><br />Goal segnati: 0<br />Goal subiti: 0<br /></span>
+                                        </td>
+                                        <td style="width: 33%; padding: 3px; min-width: 33%; max-width: 33%; text-align: center;">
+<div style=" background-color: #888; width: 100%; text-align:center;">
+                                            <span class="testo blu" style="font-size: 20px;">Fuori</span>
+</div>
+                                            <span class="testo nero" style="font-size: 16px;">Giocate: 0<br /><br />Vittorie: 0<br />Pareggi: 0<br />Sconfitte: 0<br /><br />Goal segnati: 0<br />Goal subiti: 0<br /></span>
+                                        </td>
+                                        <td style="width: 33%; padding: 3px; min-width: 33%; max-width: 33%; text-align: center; border-left: 1px solid #999;">
+<div style=" background-color: #888; width: 100%; text-align:center;">
+                                            <span class="testo blu" style="font-size: 20px;">Campo esterno</span>
+</div>
+                                            <span class="testo nero" style="font-size: 16px;">Giocate: 0<br /><br />Vittorie: 0<br />Pareggi: 0<br />Sconfitte: 0<br /><br />Goal segnati: 0<br />Goal subiti: 0<br /></span>
+                                        </td>
+                                    </tr>
+<tr style="width: 100%;">
+	<td colspan="3" style="width: 100%; text-align: center; background-color: #aaa; border: 1px solid #999;">
+        	<span class="testo blu" style="font-size: 20px;">Lista partite di torneo</span>
+        </td>
+</tr>
+<tr style="width: 100%;">
+	<td colspan="3">
+		
+	</td>
+</tr>
+                                    <tr style=" vertical-align: top;">
+                                        <td style="width: 33%; padding: 3px; text-align: center; border-right: 1px solid #999;">
+<div style="width: 100%; text-align: center; background-color: #888;">
+                                            <span class="testo blu" style="font-size: 20px;">Marcatori</span>
+</div>
+                                            <span class="testo nero" style="font-size: 16px;"><table cellspacing="0" style="width: 100%;"></table></span>
+                                        </td>
+                                        <td style="width: 33%; padding: 3px; min-width: 33%; max-width: 33%; text-align: center;">
+<div style="width: 100%; text-align: center; background-color: #888;">
+                                            <span class="testo blu" style="font-size: 20px;">Marcatori</span>
+</div>
+                                            <span class="testo nero" style="font-size: 16px;"><table cellspacing="0" style="width: 100%;"></table></span>
+                                        </td>
+                                        <td style="width: 33%; padding: 3px; min-width: 33%; max-width: 33%; text-align: center; border-left: 1px solid #999;">
+<div style="width: 100%; text-align: center; background-color: #888;">
+                                            <span class="testo blu" style="font-size: 20px;">Marcatori</span>
+</div>
+                                            <span class="testo nero" style="font-size: 16px;"><table cellspacing="0" style="width: 100%;"></table></span>
+                                        </td>
+                                    </tr>
+                                </table>
+                            </td>
+                        </tr>
+                    </table>
+
+                    <table class="area" style="width: 100%; margin-top: 5px;">
+                        <tr>
+                            <td style="text-align: center;">
+                                <span class="testo blu" style="font-size: 20px;">Partita con più goals</span>
+                                <table cellspacing="0" style ="width: 100%; border: 1px solid #999;"><tr style="background-color: #aaa;"><td style =" border: 1px solid #999; text-align: center;"><span class="testo nero" style="font-size: 16px;">Campionato</span></td><td style =" border: 1px solid #999; text-align: center;"><span class="testo nero" style="font-size: 16px;">12/01/2019 16:15:00</span></td><td style =" border: 1px solid #999; text-align: center;"><span class="testo nero" style="font-size: 16px;">cielo sereno 8.98 Gradi</span></td><td style =" border: 1px solid #999; text-align: center;"><span class="testo nero" style="font-size: 16px;">Unicusano</span></td><td style =" border: 1px solid #999; text-align: center;"><img src="http://looigi.no-ip.biz:12345/CVCalcio/App_Themes/Standard/Images/Avversari/203.Jpg" style="width: 60px; height: 60px;" onerror="this.src='http://looigi.no-ip.biz:12345/CVCalcio/App_Themes/Standard/Images/Sconosciuto.png'"  /></td><td style =" border: 1px solid #999; text-align: center;"><span class="testo nero" style="font-size: 16px;">1-15</span></td><td style =" border: 1px solid #999; text-align: center;"><img src="http://looigi.no-ip.biz:12345/CVCalcio/App_Themes/Standard/Images/Categorie/5_3.Jpg" style="width: 60px; height: 60px;" onerror="this.src='http://looigi.no-ip.biz:12345/CVCalcio/App_Themes/Standard/Images/Sconosciuto.png'"  /></td><td style =" border: 1px solid #999; text-align: center;"><span class="testo nero" style="font-size: 16px;">Ponte di Nona</span></td></tr></table>
+                            </td>
+                        </tr>
+                        <tr style="margin-top: 5px;">
+                            <td style="text-align: center;">
+                                <span class="testo blu" style="font-size: 20px;">Partita con meno goals</span>
+                                <table cellspacing="0" style ="width: 100%; border: 1px solid #999;"><tr style="background-color: #ccc;"><td style =" border: 1px solid #999; text-align: center;"><span class="testo nero" style="font-size: 16px;">Amichevole</span></td><td style =" border: 1px solid #999; text-align: center;"><span class="testo nero" style="font-size: 16px;">30/09/2018 10:00:00</span></td><td style =" border: 1px solid #999; text-align: center;"><span class="testo nero" style="font-size: 16px;">cielo sereno 13.98 Gradi</span></td><td style =" border: 1px solid #999; text-align: center;"><span class="testo nero" style="font-size: 16px;">Atletico 2000</span></td><td style =" border: 1px solid #999;"><img src="http://looigi.no-ip.biz:12345/CVCalcio/App_Themes/Standard/Images/Avversari/213.Jpg" style="width: 60px; height: 60px;" onerror="this.src='http://looigi.no-ip.biz:12345/CVCalcio/App_Themes/Standard/Images/Sconosciuto.png'"  /></td><td style =" border: 1px solid #999; text-align: center;"><span class="testo nero" style="font-size: 16px;">1-3</span></td><td style =" border: 1px solid #999;"><img src="http://looigi.no-ip.biz:12345/CVCalcio/App_Themes/Standard/Images/Categorie/5_3.Jpg" style="width: 60px; height: 60px;" onerror="this.src='http://looigi.no-ip.biz:12345/CVCalcio/App_Themes/Standard/Images/Sconosciuto.png'"  /></td><td style =" border: 1px solid #999; text-align: center;"><span class="testo nero" style="font-size: 16px;">Ponte di Nona</span></td></tr></table>
+                            </td>
+                        </tr>
+			<tr style="width: 100%; margin-top: 5px;">
+				<td>
+					<table style="width: 100%;">
+						<tr style="width: 100%;">
+							<td style="width: 50%; text-align: center; vertical-align: top;">
+                                				<span class="testo blu" style="font-size: 20px;">Goals per minuto</span>
+								<hr />
+								<table cellspacing="0" style="width: 100%;"><tr style="background-color: #ccc;"><td style="width: 50%; text-align: center;"><span class="testo nero" style="font-size: 16px;">9°</span></td><td style="width: 50%; text-align: center;"><span class="testo nero" style="font-size: 16px;">2</span></td></tr><tr style="background-color: #aaa;"><td style="width: 50%; text-align: center;"><span class="testo nero" style="font-size: 16px;">20°</span></td><td style="width: 50%; text-align: center;"><span class="testo nero" style="font-size: 16px;">1</span></td></tr><tr style="background-color: #ccc;"><td style="width: 50%; text-align: center;"><span class="testo nero" style="font-size: 16px;">19°</span></td><td style="width: 50%; text-align: center;"><span class="testo nero" style="font-size: 16px;">1</span></td></tr><tr style="background-color: #aaa;"><td style="width: 50%; text-align: center;"><span class="testo nero" style="font-size: 16px;">17°</span></td><td style="width: 50%; text-align: center;"><span class="testo nero" style="font-size: 16px;">1</span></td></tr><tr style="background-color: #ccc;"><td style="width: 50%; text-align: center;"><span class="testo nero" style="font-size: 16px;">16°</span></td><td style="width: 50%; text-align: center;"><span class="testo nero" style="font-size: 16px;">1</span></td></tr><tr style="background-color: #aaa;"><td style="width: 50%; text-align: center;"><span class="testo nero" style="font-size: 16px;">12°</span></td><td style="width: 50%; text-align: center;"><span class="testo nero" style="font-size: 16px;">1</span></td></tr><tr style="background-color: #ccc;"><td style="width: 50%; text-align: center;"><span class="testo nero" style="font-size: 16px;">8°</span></td><td style="width: 50%; text-align: center;"><span class="testo nero" style="font-size: 16px;">1</span></td></tr><tr style="background-color: #aaa;"><td style="width: 50%; text-align: center;"><span class="testo nero" style="font-size: 16px;">4°</span></td><td style="width: 50%; text-align: center;"><span class="testo nero" style="font-size: 16px;">1</span></td></tr><tr style="background-color: #ccc;"><td style="width: 50%; text-align: center;"><span class="testo nero" style="font-size: 16px;">1°</span></td><td style="width: 50%; text-align: center;"><span class="testo nero" style="font-size: 16px;">1</span></td></tr></table>
+							</td>
+							<td style="width: 50%; text-align: center; vertical-align: top;">
+				                                <span class="testo blu" style="font-size: 20px;">Subiti per minuto</span>
+								<hr />
+								<table cellspacing="0" style="width: 100%;"><tr style="background-color: #aaa;"><td style="width: 50%; text-align: center;"><span class="testo nero" style="font-size: 16px;">7°</span></td><td style="width: 50%; text-align: center;"><span class="testo nero" style="font-size: 16px;">5</span></td></tr><tr style="background-color: #ccc;"><td style="width: 50%; text-align: center;"><span class="testo nero" style="font-size: 16px;">9°</span></td><td style="width: 50%; text-align: center;"><span class="testo nero" style="font-size: 16px;">4</span></td></tr><tr style="background-color: #aaa;"><td style="width: 50%; text-align: center;"><span class="testo nero" style="font-size: 16px;">12°</span></td><td style="width: 50%; text-align: center;"><span class="testo nero" style="font-size: 16px;">4</span></td></tr><tr style="background-color: #ccc;"><td style="width: 50%; text-align: center;"><span class="testo nero" style="font-size: 16px;">13°</span></td><td style="width: 50%; text-align: center;"><span class="testo nero" style="font-size: 16px;">4</span></td></tr><tr style="background-color: #aaa;"><td style="width: 50%; text-align: center;"><span class="testo nero" style="font-size: 16px;">14°</span></td><td style="width: 50%; text-align: center;"><span class="testo nero" style="font-size: 16px;">4</span></td></tr><tr style="background-color: #ccc;"><td style="width: 50%; text-align: center;"><span class="testo nero" style="font-size: 16px;">15°</span></td><td style="width: 50%; text-align: center;"><span class="testo nero" style="font-size: 16px;">4</span></td></tr><tr style="background-color: #aaa;"><td style="width: 50%; text-align: center;"><span class="testo nero" style="font-size: 16px;">6°</span></td><td style="width: 50%; text-align: center;"><span class="testo nero" style="font-size: 16px;">3</span></td></tr><tr style="background-color: #ccc;"><td style="width: 50%; text-align: center;"><span class="testo nero" style="font-size: 16px;">10°</span></td><td style="width: 50%; text-align: center;"><span class="testo nero" style="font-size: 16px;">3</span></td></tr><tr style="background-color: #aaa;"><td style="width: 50%; text-align: center;"><span class="testo nero" style="font-size: 16px;">4°</span></td><td style="width: 50%; text-align: center;"><span class="testo nero" style="font-size: 16px;">3</span></td></tr><tr style="background-color: #ccc;"><td style="width: 50%; text-align: center;"><span class="testo nero" style="font-size: 16px;">18°</span></td><td style="width: 50%; text-align: center;"><span class="testo nero" style="font-size: 16px;">3</span></td></tr><tr style="background-color: #aaa;"><td style="width: 50%; text-align: center;"><span class="testo nero" style="font-size: 16px;">2°</span></td><td style="width: 50%; text-align: center;"><span class="testo nero" style="font-size: 16px;">2</span></td></tr><tr style="background-color: #ccc;"><td style="width: 50%; text-align: center;"><span class="testo nero" style="font-size: 16px;">8°</span></td><td style="width: 50%; text-align: center;"><span class="testo nero" style="font-size: 16px;">2</span></td></tr><tr style="background-color: #aaa;"><td style="width: 50%; text-align: center;"><span class="testo nero" style="font-size: 16px;">17°</span></td><td style="width: 50%; text-align: center;"><span class="testo nero" style="font-size: 16px;">2</span></td></tr><tr style="background-color: #ccc;"><td style="width: 50%; text-align: center;"><span class="testo nero" style="font-size: 16px;">3°</span></td><td style="width: 50%; text-align: center;"><span class="testo nero" style="font-size: 16px;">2</span></td></tr><tr style="background-color: #aaa;"><td style="width: 50%; text-align: center;"><span class="testo nero" style="font-size: 16px;">20°</span></td><td style="width: 50%; text-align: center;"><span class="testo nero" style="font-size: 16px;">2</span></td></tr><tr style="background-color: #ccc;"><td style="width: 50%; text-align: center;"><span class="testo nero" style="font-size: 16px;">1°</span></td><td style="width: 50%; text-align: center;"><span class="testo nero" style="font-size: 16px;">1</span></td></tr><tr style="background-color: #aaa;"><td style="width: 50%; text-align: center;"><span class="testo nero" style="font-size: 16px;">19°</span></td><td style="width: 50%; text-align: center;"><span class="testo nero" style="font-size: 16px;">1</span></td></tr><tr style="background-color: #ccc;"><td style="width: 50%; text-align: center;"><span class="testo nero" style="font-size: 16px;">5°</span></td><td style="width: 50%; text-align: center;"><span class="testo nero" style="font-size: 16px;">1</span></td></tr><tr style="background-color: #aaa;"><td style="width: 50%; text-align: center;"><span class="testo nero" style="font-size: 16px;">23°</span></td><td style="width: 50%; text-align: center;"><span class="testo nero" style="font-size: 16px;">1</span></td></tr></table>
+							</td>
+						</tr>
+					</table>
+				</td>
+			</tr>
+                    </table>
+                </td>
+                <td class="area" style="vertical-align: top; text-align: center;">
+					<div style=" background-color: #888; width: 100%; text-align:center;">
+						<span class="testo blu" style="font-size: 20px;">Marcatori globali</span>
+					</div>
+                    <hr />
+                    <table cellspacing="0" style="width: 100%;"><tr style="background-color: #ccc;"><td><span class="testo nero" style="font-size: 16px;">&nbsp;2</span></td><td><img src="http://looigi.no-ip.biz:12345/CVCalcio/App_Themes/Standard/Images/Giocatori/5_439.jpg" style="width: 60px; height: 60px;" onerror="this.src='http://looigi.no-ip.biz:12345/CVCalcio/App_Themes/Standard/Images/Sconosciuto.png'"  /></td><td><span class="testo nero" style="font-size: 16px;">Konovalou Stefano</span></td></tr><tr style="background-color: #aaa;"><td><span class="testo nero" style="font-size: 16px;">&nbsp;2</span></td><td><img src="http://looigi.no-ip.biz:12345/CVCalcio/App_Themes/Standard/Images/Giocatori/5_418.jpg" style="width: 60px; height: 60px;" onerror="this.src='http://looigi.no-ip.biz:12345/CVCalcio/App_Themes/Standard/Images/Sconosciuto.png'"  /></td><td><span class="testo nero" style="font-size: 16px;">Krasniqi Edom</span></td></tr><tr style="background-color: #ccc;"><td><span class="testo nero" style="font-size: 16px;">&nbsp;2</span></td><td><img src="http://looigi.no-ip.biz:12345/CVCalcio/App_Themes/Standard/Images/Giocatori/5_411.jpg" style="width: 60px; height: 60px;" onerror="this.src='http://looigi.no-ip.biz:12345/CVCalcio/App_Themes/Standard/Images/Sconosciuto.png'"  /></td><td><span class="testo nero" style="font-size: 16px;">. Aurora</span></td></tr><tr style="background-color: #aaa;"><td><span class="testo nero" style="font-size: 16px;">&nbsp;1</span></td><td><img src="http://looigi.no-ip.biz:12345/CVCalcio/App_Themes/Standard/Images/Giocatori/5_428.jpg" style="width: 60px; height: 60px;" onerror="this.src='http://looigi.no-ip.biz:12345/CVCalcio/App_Themes/Standard/Images/Sconosciuto.png'"  /></td><td><span class="testo nero" style="font-size: 16px;">Salem Amhed</span></td></tr><tr style="background-color: #ccc;"><td><span class="testo nero" style="font-size: 16px;">&nbsp;1</span></td><td><img src="http://looigi.no-ip.biz:12345/CVCalcio/App_Themes/Standard/Images/Giocatori/5_399.jpg" style="width: 60px; height: 60px;" onerror="this.src='http://looigi.no-ip.biz:12345/CVCalcio/App_Themes/Standard/Images/Sconosciuto.png'"  /></td><td><span class="testo nero" style="font-size: 16px;">Galloppa Francesco</span></td></tr><tr style="background-color: #aaa;"><td><span class="testo nero" style="font-size: 16px;">&nbsp;1</span></td><td><img src="http://looigi.no-ip.biz:12345/CVCalcio/App_Themes/Standard/Images/Giocatori/5_397.jpg" style="width: 60px; height: 60px;" onerror="this.src='http://looigi.no-ip.biz:12345/CVCalcio/App_Themes/Standard/Images/Sconosciuto.png'"  /></td><td><span class="testo nero" style="font-size: 16px;">Di Sano Damiano</span></td></tr><tr style="background-color: #ccc;"><td><span class="testo nero" style="font-size: 16px;">&nbsp;1</span></td><td><img src="http://looigi.no-ip.biz:12345/CVCalcio/App_Themes/Standard/Images/Giocatori/5_.jpg" style="width: 60px; height: 60px;" onerror="this.src='http://looigi.no-ip.biz:12345/CVCalcio/App_Themes/Standard/Images/Sconosciuto.png'"  /></td><td><span class="testo nero" style="font-size: 16px;">Autorete</span></td></tr></table>
+                    <hr />
+					<div style=" background-color: #888; width: 100%; text-align:center;">
+						<span class="testo blu" style="font-size: 20px;">Presenze</span>
+					</div>
+					<hr />
+                    <table cellspacing="0" style="width: 100%;"><tr style="background-color: #aaa;"><td><span class="testo nero" style="font-size: 16px;">&nbsp;7</span></td><td><img src="http://looigi.no-ip.biz:12345/CVCalcio/App_Themes/Standard/Images/Giocatori/5_417.jpg" style="width: 60px; height: 60px;" onerror="this.src='http://looigi.no-ip.biz:12345/CVCalcio/App_Themes/Standard/Images/Sconosciuto.png'"  /></td><td><span class="testo nero" style="font-size: 16px;">Palmacci Massimiliano</span></td></tr><tr style="background-color: #ccc;"><td><span class="testo nero" style="font-size: 16px;">&nbsp;7</span></td><td><img src="http://looigi.no-ip.biz:12345/CVCalcio/App_Themes/Standard/Images/Giocatori/5_414.jpg" style="width: 60px; height: 60px;" onerror="this.src='http://looigi.no-ip.biz:12345/CVCalcio/App_Themes/Standard/Images/Sconosciuto.png'"  /></td><td><span class="testo nero" style="font-size: 16px;">Scotti Gabriele</span></td></tr><tr style="background-color: #aaa;"><td><span class="testo nero" style="font-size: 16px;">&nbsp;7</span></td><td><img src="http://looigi.no-ip.biz:12345/CVCalcio/App_Themes/Standard/Images/Giocatori/5_388.jpg" style="width: 60px; height: 60px;" onerror="this.src='http://looigi.no-ip.biz:12345/CVCalcio/App_Themes/Standard/Images/Sconosciuto.png'"  /></td><td><span class="testo nero" style="font-size: 16px;">Pecce Davide</span></td></tr><tr style="background-color: #ccc;"><td><span class="testo nero" style="font-size: 16px;">&nbsp;6</span></td><td><img src="http://looigi.no-ip.biz:12345/CVCalcio/App_Themes/Standard/Images/Giocatori/5_408.jpg" style="width: 60px; height: 60px;" onerror="this.src='http://looigi.no-ip.biz:12345/CVCalcio/App_Themes/Standard/Images/Sconosciuto.png'"  /></td><td><span class="testo nero" style="font-size: 16px;">Vagnozzi Francesco</span></td></tr><tr style="background-color: #aaa;"><td><span class="testo nero" style="font-size: 16px;">&nbsp;6</span></td><td><img src="http://looigi.no-ip.biz:12345/CVCalcio/App_Themes/Standard/Images/Giocatori/5_424.jpg" style="width: 60px; height: 60px;" onerror="this.src='http://looigi.no-ip.biz:12345/CVCalcio/App_Themes/Standard/Images/Sconosciuto.png'"  /></td><td><span class="testo nero" style="font-size: 16px;">Fava Christian</span></td></tr><tr style="background-color: #ccc;"><td><span class="testo nero" style="font-size: 16px;">&nbsp;5</span></td><td><img src="http://looigi.no-ip.biz:12345/CVCalcio/App_Themes/Standard/Images/Giocatori/5_411.jpg" style="width: 60px; height: 60px;" onerror="this.src='http://looigi.no-ip.biz:12345/CVCalcio/App_Themes/Standard/Images/Sconosciuto.png'"  /></td><td><span class="testo nero" style="font-size: 16px;">. Aurora</span></td></tr><tr style="background-color: #aaa;"><td><span class="testo nero" style="font-size: 16px;">&nbsp;5</span></td><td><img src="http://looigi.no-ip.biz:12345/CVCalcio/App_Themes/Standard/Images/Giocatori/5_429.jpg" style="width: 60px; height: 60px;" onerror="this.src='http://looigi.no-ip.biz:12345/CVCalcio/App_Themes/Standard/Images/Sconosciuto.png'"  /></td><td><span class="testo nero" style="font-size: 16px;">Palermo Riccardo</span></td></tr><tr style="background-color: #ccc;"><td><span class="testo nero" style="font-size: 16px;">&nbsp;5</span></td><td><img src="http://looigi.no-ip.biz:12345/CVCalcio/App_Themes/Standard/Images/Giocatori/5_437.jpg" style="width: 60px; height: 60px;" onerror="this.src='http://looigi.no-ip.biz:12345/CVCalcio/App_Themes/Standard/Images/Sconosciuto.png'"  /></td><td><span class="testo nero" style="font-size: 16px;">Forlizzi Simone</span></td></tr><tr style="background-color: #aaa;"><td><span class="testo nero" style="font-size: 16px;">&nbsp;5</span></td><td><img src="http://looigi.no-ip.biz:12345/CVCalcio/App_Themes/Standard/Images/Giocatori/5_439.jpg" style="width: 60px; height: 60px;" onerror="this.src='http://looigi.no-ip.biz:12345/CVCalcio/App_Themes/Standard/Images/Sconosciuto.png'"  /></td><td><span class="testo nero" style="font-size: 16px;">Konovalou Stefano</span></td></tr><tr style="background-color: #ccc;"><td><span class="testo nero" style="font-size: 16px;">&nbsp;4</span></td><td><img src="http://looigi.no-ip.biz:12345/CVCalcio/App_Themes/Standard/Images/Giocatori/5_412.jpg" style="width: 60px; height: 60px;" onerror="this.src='http://looigi.no-ip.biz:12345/CVCalcio/App_Themes/Standard/Images/Sconosciuto.png'"  /></td><td><span class="testo nero" style="font-size: 16px;">La Riccia Mattia</span></td></tr><tr style="background-color: #aaa;"><td><span class="testo nero" style="font-size: 16px;">&nbsp;4</span></td><td><img src="http://looigi.no-ip.biz:12345/CVCalcio/App_Themes/Standard/Images/Giocatori/5_420.jpg" style="width: 60px; height: 60px;" onerror="this.src='http://looigi.no-ip.biz:12345/CVCalcio/App_Themes/Standard/Images/Sconosciuto.png'"  /></td><td><span class="testo nero" style="font-size: 16px;">Della Guardia Francesco</span></td></tr><tr style="background-color: #ccc;"><td><span class="testo nero" style="font-size: 16px;">&nbsp;4</span></td><td><img src="http://looigi.no-ip.biz:12345/CVCalcio/App_Themes/Standard/Images/Giocatori/5_389.jpg" style="width: 60px; height: 60px;" onerror="this.src='http://looigi.no-ip.biz:12345/CVCalcio/App_Themes/Standard/Images/Sconosciuto.png'"  /></td><td><span class="testo nero" style="font-size: 16px;">Pizzuti Federico</span></td></tr><tr style="background-color: #aaa;"><td><span class="testo nero" style="font-size: 16px;">&nbsp;3</span></td><td><img src="http://looigi.no-ip.biz:12345/CVCalcio/App_Themes/Standard/Images/Giocatori/5_406.jpg" style="width: 60px; height: 60px;" onerror="this.src='http://looigi.no-ip.biz:12345/CVCalcio/App_Themes/Standard/Images/Sconosciuto.png'"  /></td><td><span class="testo nero" style="font-size: 16px;">Forti Marco</span></td></tr><tr style="background-color: #ccc;"><td><span class="testo nero" style="font-size: 16px;">&nbsp;3</span></td><td><img src="http://looigi.no-ip.biz:12345/CVCalcio/App_Themes/Standard/Images/Giocatori/5_399.jpg" style="width: 60px; height: 60px;" onerror="this.src='http://looigi.no-ip.biz:12345/CVCalcio/App_Themes/Standard/Images/Sconosciuto.png'"  /></td><td><span class="testo nero" style="font-size: 16px;">Galloppa Francesco</span></td></tr><tr style="background-color: #aaa;"><td><span class="testo nero" style="font-size: 16px;">&nbsp;3</span></td><td><img src="http://looigi.no-ip.biz:12345/CVCalcio/App_Themes/Standard/Images/Giocatori/5_430.jpg" style="width: 60px; height: 60px;" onerror="this.src='http://looigi.no-ip.biz:12345/CVCalcio/App_Themes/Standard/Images/Sconosciuto.png'"  /></td><td><span class="testo nero" style="font-size: 16px;">Riccio Cristian</span></td></tr><tr style="background-color: #ccc;"><td><span class="testo nero" style="font-size: 16px;">&nbsp;2</span></td><td><img src="http://looigi.no-ip.biz:12345/CVCalcio/App_Themes/Standard/Images/Giocatori/5_431.jpg" style="width: 60px; height: 60px;" onerror="this.src='http://looigi.no-ip.biz:12345/CVCalcio/App_Themes/Standard/Images/Sconosciuto.png'"  /></td><td><span class="testo nero" style="font-size: 16px;">Ceccarelli Aurora</span></td></tr><tr style="background-color: #aaa;"><td><span class="testo nero" style="font-size: 16px;">&nbsp;2</span></td><td><img src="http://looigi.no-ip.biz:12345/CVCalcio/App_Themes/Standard/Images/Giocatori/5_436.jpg" style="width: 60px; height: 60px;" onerror="this.src='http://looigi.no-ip.biz:12345/CVCalcio/App_Themes/Standard/Images/Sconosciuto.png'"  /></td><td><span class="testo nero" style="font-size: 16px;">Azali .</span></td></tr><tr style="background-color: #ccc;"><td><span class="testo nero" style="font-size: 16px;">&nbsp;2</span></td><td><img src="http://looigi.no-ip.biz:12345/CVCalcio/App_Themes/Standard/Images/Giocatori/5_438.jpg" style="width: 60px; height: 60px;" onerror="this.src='http://looigi.no-ip.biz:12345/CVCalcio/App_Themes/Standard/Images/Sconosciuto.png'"  /></td><td><span class="testo nero" style="font-size: 16px;">Konovalou .</span></td></tr><tr style="background-color: #aaa;"><td><span class="testo nero" style="font-size: 16px;">&nbsp;2</span></td><td><img src="http://looigi.no-ip.biz:12345/CVCalcio/App_Themes/Standard/Images/Giocatori/5_400.jpg" style="width: 60px; height: 60px;" onerror="this.src='http://looigi.no-ip.biz:12345/CVCalcio/App_Themes/Standard/Images/Sconosciuto.png'"  /></td><td><span class="testo nero" style="font-size: 16px;">Leggeri Emanuele</span></td></tr><tr style="background-color: #ccc;"><td><span class="testo nero" style="font-size: 16px;">&nbsp;2</span></td><td><img src="http://looigi.no-ip.biz:12345/CVCalcio/App_Themes/Standard/Images/Giocatori/5_421.jpg" style="width: 60px; height: 60px;" onerror="this.src='http://looigi.no-ip.biz:12345/CVCalcio/App_Themes/Standard/Images/Sconosciuto.png'"  /></td><td><span class="testo nero" style="font-size: 16px;">Matrone Alessio </span></td></tr><tr style="background-color: #aaa;"><td><span class="testo nero" style="font-size: 16px;">&nbsp;2</span></td><td><img src="http://looigi.no-ip.biz:12345/CVCalcio/App_Themes/Standard/Images/Giocatori/5_391.jpg" style="width: 60px; height: 60px;" onerror="this.src='http://looigi.no-ip.biz:12345/CVCalcio/App_Themes/Standard/Images/Sconosciuto.png'"  /></td><td><span class="testo nero" style="font-size: 16px;">Rossi Alessio</span></td></tr><tr style="background-color: #ccc;"><td><span class="testo nero" style="font-size: 16px;">&nbsp;1</span></td><td><img src="http://looigi.no-ip.biz:12345/CVCalcio/App_Themes/Standard/Images/Giocatori/5_397.jpg" style="width: 60px; height: 60px;" onerror="this.src='http://looigi.no-ip.biz:12345/CVCalcio/App_Themes/Standard/Images/Sconosciuto.png'"  /></td><td><span class="testo nero" style="font-size: 16px;">Di Sano Damiano</span></td></tr><tr style="background-color: #aaa;"><td><span class="testo nero" style="font-size: 16px;">&nbsp;1</span></td><td><img src="http://looigi.no-ip.biz:12345/CVCalcio/App_Themes/Standard/Images/Giocatori/5_394.jpg" style="width: 60px; height: 60px;" onerror="this.src='http://looigi.no-ip.biz:12345/CVCalcio/App_Themes/Standard/Images/Sconosciuto.png'"  /></td><td><span class="testo nero" style="font-size: 16px;">Pascale Valerio</span></td></tr><tr style="background-color: #ccc;"><td><span class="testo nero" style="font-size: 16px;">&nbsp;1</span></td><td><img src="http://looigi.no-ip.biz:12345/CVCalcio/App_Themes/Standard/Images/Giocatori/5_392.jpg" style="width: 60px; height: 60px;" onerror="this.src='http://looigi.no-ip.biz:12345/CVCalcio/App_Themes/Standard/Images/Sconosciuto.png'"  /></td><td><span class="testo nero" style="font-size: 16px;">Montanari Andrea</span></td></tr><tr style="background-color: #aaa;"><td><span class="testo nero" style="font-size: 16px;">&nbsp;1</span></td><td><img src="http://looigi.no-ip.biz:12345/CVCalcio/App_Themes/Standard/Images/Giocatori/5_396.jpg" style="width: 60px; height: 60px;" onerror="this.src='http://looigi.no-ip.biz:12345/CVCalcio/App_Themes/Standard/Images/Sconosciuto.png'"  /></td><td><span class="testo nero" style="font-size: 16px;">Ippoliti Thomas</span></td></tr><tr style="background-color: #ccc;"><td><span class="testo nero" style="font-size: 16px;">&nbsp;1</span></td><td><img src="http://looigi.no-ip.biz:12345/CVCalcio/App_Themes/Standard/Images/Giocatori/5_405.jpg" style="width: 60px; height: 60px;" onerror="this.src='http://looigi.no-ip.biz:12345/CVCalcio/App_Themes/Standard/Images/Sconosciuto.png'"  /></td><td><span class="testo nero" style="font-size: 16px;">Peluso Biagio</span></td></tr><tr style="background-color: #aaa;"><td><span class="testo nero" style="font-size: 16px;">&nbsp;1</span></td><td><img src="http://looigi.no-ip.biz:12345/CVCalcio/App_Themes/Standard/Images/Giocatori/5_419.jpg" style="width: 60px; height: 60px;" onerror="this.src='http://looigi.no-ip.biz:12345/CVCalcio/App_Themes/Standard/Images/Sconosciuto.png'"  /></td><td><span class="testo nero" style="font-size: 16px;">Mengarelli Simone</span></td></tr><tr style="background-color: #ccc;"><td><span class="testo nero" style="font-size: 16px;">&nbsp;1</span></td><td><img src="http://looigi.no-ip.biz:12345/CVCalcio/App_Themes/Standard/Images/Giocatori/5_449.jpg" style="width: 60px; height: 60px;" onerror="this.src='http://looigi.no-ip.biz:12345/CVCalcio/App_Themes/Standard/Images/Sconosciuto.png'"  /></td><td><span class="testo nero" style="font-size: 16px;">Barberini .</span></td></tr><tr style="background-color: #aaa;"><td><span class="testo nero" style="font-size: 16px;">&nbsp;1</span></td><td><img src="http://looigi.no-ip.biz:12345/CVCalcio/App_Themes/Standard/Images/Giocatori/5_426.jpg" style="width: 60px; height: 60px;" onerror="this.src='http://looigi.no-ip.biz:12345/CVCalcio/App_Themes/Standard/Images/Sconosciuto.png'"  /></td><td><span class="testo nero" style="font-size: 16px;">. .</span></td></tr><tr style="background-color: #ccc;"><td><span class="testo nero" style="font-size: 16px;">&nbsp;1</span></td><td><img src="http://looigi.no-ip.biz:12345/CVCalcio/App_Themes/Standard/Images/Giocatori/5_428.jpg" style="width: 60px; height: 60px;" onerror="this.src='http://looigi.no-ip.biz:12345/CVCalcio/App_Themes/Standard/Images/Sconosciuto.png'"  /></td><td><span class="testo nero" style="font-size: 16px;">Salem Amhed</span></td></tr><tr style="background-color: #aaa;"><td><span class="testo nero" style="font-size: 16px;">&nbsp;1</span></td><td><img src="http://looigi.no-ip.biz:12345/CVCalcio/App_Themes/Standard/Images/Giocatori/5_435.jpg" style="width: 60px; height: 60px;" onerror="this.src='http://looigi.no-ip.biz:12345/CVCalcio/App_Themes/Standard/Images/Sconosciuto.png'"  /></td><td><span class="testo nero" style="font-size: 16px;">Ierace Cristiano</span></td></tr><tr style="background-color: #ccc;"><td><span class="testo nero" style="font-size: 16px;">&nbsp;1</span></td><td><img src="http://looigi.no-ip.biz:12345/CVCalcio/App_Themes/Standard/Images/Giocatori/5_440.jpg" style="width: 60px; height: 60px;" onerror="this.src='http://looigi.no-ip.biz:12345/CVCalcio/App_Themes/Standard/Images/Sconosciuto.png'"  /></td><td><span class="testo nero" style="font-size: 16px;">Sanna Tommaso</span></td></tr><tr style="background-color: #aaa;"><td><span class="testo nero" style="font-size: 16px;">&nbsp;1</span></td><td><img src="http://looigi.no-ip.biz:12345/CVCalcio/App_Themes/Standard/Images/Giocatori/5_444.jpg" style="width: 60px; height: 60px;" onerror="this.src='http://looigi.no-ip.biz:12345/CVCalcio/App_Themes/Standard/Images/Sconosciuto.png'"  /></td><td><span class="testo nero" style="font-size: 16px;">Biondi Emanuele</span></td></tr><tr style="background-color: #ccc;"><td><span class="testo nero" style="font-size: 16px;">&nbsp;1</span></td><td><img src="http://looigi.no-ip.biz:12345/CVCalcio/App_Themes/Standard/Images/Giocatori/5_418.jpg" style="width: 60px; height: 60px;" onerror="this.src='http://looigi.no-ip.biz:12345/CVCalcio/App_Themes/Standard/Images/Sconosciuto.png'"  /></td><td><span class="testo nero" style="font-size: 16px;">Krasniqi Edom</span></td></tr></table>
+					<hr />
+					<div style=" background-color: #888; width: 100%; text-align:center;">
+						<span class="testo blu" style="font-size: 20px;">Squadre incontrate</span>
+					</div>
+                    <hr />
+                    <table cellspacing="0" style="width: 100%;"><tr style="background-color: #aaa;"><td><span class="testo nero" style="font-size: 16px;">&nbsp;1</span></td><td><img src="http://looigi.no-ip.biz:12345/CVCalcio/App_Themes/Standard/Images/Avversari/213.Jpg" style="width: 60px; height: 60px;" onerror="this.src='http://looigi.no-ip.biz:12345/CVCalcio/App_Themes/Standard/Images/Sconosciuto.png'"  /></td><td><span class="testo nero" style="font-size: 16px;">Atletico 2000</span></td></tr><tr style="background-color: #ccc;"><td><span class="testo nero" style="font-size: 16px;">&nbsp;1</span></td><td><img src="http://looigi.no-ip.biz:12345/CVCalcio/App_Themes/Standard/Images/Avversari/203.Jpg" style="width: 60px; height: 60px;" onerror="this.src='http://looigi.no-ip.biz:12345/CVCalcio/App_Themes/Standard/Images/Sconosciuto.png'"  /></td><td><span class="testo nero" style="font-size: 16px;">Unicusano</span></td></tr><tr style="background-color: #aaa;"><td><span class="testo nero" style="font-size: 16px;">&nbsp;1</span></td><td><img src="http://looigi.no-ip.biz:12345/CVCalcio/App_Themes/Standard/Images/Avversari/202.Jpg" style="width: 60px; height: 60px;" onerror="this.src='http://looigi.no-ip.biz:12345/CVCalcio/App_Themes/Standard/Images/Sconosciuto.png'"  /></td><td><span class="testo nero" style="font-size: 16px;">Villalba</span></td></tr><tr style="background-color: #ccc;"><td><span class="testo nero" style="font-size: 16px;">&nbsp;1</span></td><td><img src="http://looigi.no-ip.biz:12345/CVCalcio/App_Themes/Standard/Images/Avversari/189.Jpg" style="width: 60px; height: 60px;" onerror="this.src='http://looigi.no-ip.biz:12345/CVCalcio/App_Themes/Standard/Images/Sconosciuto.png'"  /></td><td><span class="testo nero" style="font-size: 16px;">Atletico Torrenova</span></td></tr><tr style="background-color: #aaa;"><td><span class="testo nero" style="font-size: 16px;">&nbsp;1</span></td><td><img src="http://looigi.no-ip.biz:12345/CVCalcio/App_Themes/Standard/Images/Avversari/129.Jpg" style="width: 60px; height: 60px;" onerror="this.src='http://looigi.no-ip.biz:12345/CVCalcio/App_Themes/Standard/Images/Sconosciuto.png'"  /></td><td><span class="testo nero" style="font-size: 16px;">Palestrina</span></td></tr><tr style="background-color: #ccc;"><td><span class="testo nero" style="font-size: 16px;">&nbsp;1</span></td><td><img src="http://looigi.no-ip.biz:12345/CVCalcio/App_Themes/Standard/Images/Avversari/104.Jpg" style="width: 60px; height: 60px;" onerror="this.src='http://looigi.no-ip.biz:12345/CVCalcio/App_Themes/Standard/Images/Sconosciuto.png'"  /></td><td><span class="testo nero" style="font-size: 16px;">Alessandrino</span></td></tr><tr style="background-color: #aaa;"><td><span class="testo nero" style="font-size: 16px;">&nbsp;1</span></td><td><img src="http://looigi.no-ip.biz:12345/CVCalcio/App_Themes/Standard/Images/Avversari/43.Jpg" style="width: 60px; height: 60px;" onerror="this.src='http://looigi.no-ip.biz:12345/CVCalcio/App_Themes/Standard/Images/Sconosciuto.png'"  /></td><td><span class="testo nero" style="font-size: 16px;">Villanova</span></td></tr></table>
+                </td>
+		    </tr>
+	    </table>
+
+		<div class="area" style="width: 99%;">
+			<div style=" background-color: #888; width: 100%; text-align:center;">
+				<span class="testo blu" style="font-size: 20px;">Mappa partite</span>
+			</div>
+			<div id="kmField" class="testo nero" style="width: 100%; text-align:center; height: 20px; font-style: italic;">
+			</div>
+			<div id="map_canvas" runat="server" style="z-index: 100; width: 100%; height: 500px; border: 1px solid #aaaaaa;"></div>
+		</div>
+
+		<div class="area" style="width: 99%;">
+			<div id="chart_div" style="width: 100%; height: 500px;"></div>
+		</div>
+
+        </div>
+    </form>
+</body>
+</html>
+
