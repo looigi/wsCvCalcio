@@ -455,6 +455,17 @@
 					</div>
                     <hr />
                     ***SQUADRE_INCONTRATE***
+                    <hr />
+			<div style=" background-color: #888; width: 100%; text-align:center;">
+				<span class="testo blu" style="font-size: 20px;">Marcatori di tutte<br />le categorie</span>
+			</div>
+                    ***MARCATORI_TUTTE***
+                    <hr />
+			<div style=" background-color: #888; width: 100%; text-align:center;">
+				<span class="testo blu" style="font-size: 20px;">Presenze di tutte<br />le categorie</span>
+			</div>
+		    <hr />
+                    ***PRESENZE_TUTTE***
                 </td>
 		    </tr>
 	    </table>

@@ -1038,6 +1038,8 @@ Public Class wsStatistiche
                 Dim SquadreIncontrate As New List(Of String)
                 Dim MarcatoriGenerali As New List(Of String)
                 Dim Presenze As New List(Of String)
+                Dim MarcatoriTutte As New List(Of String)
+                Dim PresenzeTutte As New List(Of String)
 
                 Dim maxGoalInUnaPartita As Integer = 0
                 Dim PartitaConPiuGoal As Integer = -1
@@ -1616,6 +1618,31 @@ Public Class wsStatistiche
                     Ritorno = StringaErrore & " " & ex.Message
                 End Try
 
+                Sql = "SELECT Giocatori.idGiocatore, Giocatori.Cognome, Giocatori.Nome, Count(*) As Goals " &
+                    "FROM(RisultatiAggiuntiviMarcatori INNER JOIN Partite On RisultatiAggiuntiviMarcatori.idPartita = Partite.idPartita) INNER JOIN Giocatori On (RisultatiAggiuntiviMarcatori.idGiocatore = Giocatori.idGiocatore) And (Partite.idAnno = Giocatori.idAnno) " &
+                    "WHERE Partite.idAnno= " & idAnno & " " &
+                    "Group By Giocatori.idGiocatore, Giocatori.Cognome, Giocatori.Nome " &
+                    "Order By 4 Desc"
+                Try
+                    Rec = LeggeQuery(Conn, Sql, Connessione)
+                    If TypeOf (Rec) Is String Then
+                        Ritorno = Rec
+                    Else
+                        Do Until Rec.Eof
+                            If "" & Rec("Cognome").Value = "" Or "" & Rec("Nome").Value = "" Then
+                                MarcatoriTutte.Add(Rec("idGiocatore").Value & ";Autorete;" & Rec("Goals").Value)
+                            Else
+                                MarcatoriTutte.Add(Rec("idGiocatore").Value & ";" & Rec("Cognome").Value & " " & Rec("Nome").Value & ";" & Rec("Goals").Value)
+                            End If
+
+                            Rec.MoveNext
+                        Loop
+                        Rec.Close()
+                    End If
+                Catch ex As Exception
+                    Ritorno = StringaErrore & " " & ex.Message
+                End Try
+
                 Sql = "SELECT Giocatori.idGiocatore, Giocatori.Cognome, Giocatori.Nome, Count(*) As Presenze " &
                 "FROM (Partite LEFT JOIN Convocati ON Partite.idPartita = Convocati.idPartita) LEFT JOIN Giocatori ON Convocati.idGiocatore = Giocatori.idGiocatore " &
                 "WHERE Partite.idAnno=" & idAnno & " AND Partite.idCategoria=" & idCategoria & " And Giocatori.idAnno=" & idAnno & " " &
@@ -1628,6 +1655,27 @@ Public Class wsStatistiche
                     Else
                         Do Until Rec.Eof
                             Presenze.Add(Rec("idGiocatore").Value & ";" & Rec("Cognome").Value & " " & Rec("Nome").Value & ";" & Rec("Presenze").Value)
+
+                            Rec.MoveNext
+                        Loop
+                        Rec.Close()
+                    End If
+                Catch ex As Exception
+                    Ritorno = StringaErrore & " " & ex.Message
+                End Try
+
+                Sql = "SELECT Giocatori.idGiocatore, Giocatori.Cognome, Giocatori.Nome, Count(*) As Presenze " &
+                    "FROM (Partite INNER JOIN Convocati ON Partite.idPartita = Convocati.idPartita) INNER JOIN Giocatori ON (Partite.idAnno = Giocatori.idAnno) AND (Convocati.idGiocatore = Giocatori.idGiocatore) " &
+                    "WHERE Partite.idAnno=" & idAnno & " " &
+                    "Group By Giocatori.idGiocatore, Giocatori.Cognome, Giocatori.Nome " &
+                    "Order By 4 Desc"
+                Try
+                    Rec = LeggeQuery(Conn, Sql, Connessione)
+                    If TypeOf (Rec) Is String Then
+                        Ritorno = Rec
+                    Else
+                        Do Until Rec.Eof
+                            PresenzeTutte.Add(Rec("idGiocatore").Value & ";" & Rec("Cognome").Value & " " & Rec("Nome").Value & ";" & Rec("Presenze").Value)
 
                             Rec.MoveNext
                         Loop
@@ -3467,6 +3515,43 @@ Public Class wsStatistiche
                 Next
                 Stringona &= "</table>"
                 Filone = Filone.Replace("***SQUADRE_INCONTRATE***", Stringona)
+
+
+                ' MARCATORI TUTTE LE CATEGORIE
+                Stringona = ""
+                Stringona &= "<table cellspacing=""0"" style=""width: 100%;"">"
+                For Each Giocatore As String In MarcatoriTutte
+                    Dim s() As String = Giocatore.Split(";")
+                    Dim Path As String = PathBaseImmagini & "/Giocatori/" & idAnno & "_" & s(0) & ".jpg"
+                    Dim gg As String = s(2).Trim
+                    If gg.Length = 1 Then gg = "&nbsp;" & gg
+
+                    Stringona &= "<tr " & RitornaColoreSfondo() & ">"
+                    Stringona &= "<td><span class=""testo nero"" style=""font-size: 16px;"">" & gg & "</span></td>"
+                    Stringona &= "<td><img src=""" & Path & """ style=""width: 60px; height: 60px;"" onerror=""this.src='http://looigi.no-ip.biz:12345/CVCalcio/App_Themes/Standard/Images/Sconosciuto.png'""  /></td>"
+                    Stringona &= "<td><span class=""testo nero"" style=""font-size: 16px;"">" & s(1) & "</span></td>"
+                    Stringona &= "</tr>"
+                Next
+                Stringona &= "</table>"
+                Filone = Filone.Replace("***MARCATORI_TUTTE***", Stringona)
+
+                ' PRESENZE TUTTE
+                Stringona = ""
+                Stringona &= "<table cellspacing=""0"" style=""width: 100%;"">"
+                For Each Giocatore As String In PresenzeTutte
+                    Dim s() As String = Giocatore.Split(";")
+                    Dim Path As String = PathBaseImmagini & "/Giocatori/" & idAnno & "_" & s(0) & ".jpg"
+                    Dim gg As String = s(2).Trim
+                    If gg.Length = 1 Then gg = "&nbsp;" & gg
+
+                    Stringona &= "<tr " & RitornaColoreSfondo() & ">"
+                    Stringona &= "<td><span class=""testo nero"" style=""font-size: 16px;"">" & gg & "</span></td>"
+                    Stringona &= "<td><img src=""" & Path & """ style=""width: 60px; height: 60px;"" onerror=""this.src='http://looigi.no-ip.biz:12345/CVCalcio/App_Themes/Standard/Images/Sconosciuto.png'""  /></td>"
+                    Stringona &= "<td><span class=""testo nero"" style=""font-size: 16px;"">" & s(1) & "</span></td>"
+                    Stringona &= "</tr>"
+                Next
+                Stringona &= "</table>"
+                Filone = Filone.Replace("***PRESENZE_TUTTE***", Stringona)
 
                 Filone = Filone.Replace("***PARTITA_CON_PIU_GOAL***", sPartitaConPiuGoal)
                 Filone = Filone.Replace("***PARTITA_CON_MENO_GOAL***", sPartitaConMenoGoal)
