@@ -1806,28 +1806,28 @@ Public Class wsStatistiche
 
                 GraficoPuntiCampionato &= "['0', 0, 0], "
                 For i As Integer = 1 To 3
-                    Sql = "SELECT Partite.RisultatoATempi, Partite.DataOra, Allenatori.Cognome+ '<br />' +Allenatori.Nome As Allenatore,MeteoPartite.Tempo, MeteoPartite.Gradi, " &
-                "Partite.idCategoria, SquadreAvversarie.idAvversario, SquadreAvversarie.Descrizione, " &
-                "(Select Count(*) From RisultatiAggiuntiviMarcatori Where idPartita = Partite.idPartita) As Goal, " &
-                "(Select (iif(GoalAvvPrimoTempo>-1,GoalAvvPrimoTempo,0)+iif(GoalAvvSecondoTempo>-1,GoalAvvSecondoTempo,0)+iif(GoalAvvTerzoTempo>-1,GoalAvvTerzoTempo,0)) " &
-                "From RisultatiAggiuntivi Where idPartita = Partite.idPartita) As GoalAvv, " &
-                "RisGiochetti, Arbitri.Cognome+ '<br />'+Arbitri.Nome As Arbitro, Anni.NomeSquadra, Partite.Casa, " &
-                "RisultatiAggiuntivi.GoalAvvSecondoTempo, RisultatiAggiuntivi.GoalAvvPrimoTempo, RisultatiAggiuntivi.GoalAvvTerzoTempo, " &
-                "(SELECT Count(*) FROM RisultatiAggiuntiviMarcatori Where idPartita = Partite.idPartita And idTempo=1) As GoalPrimoTempo, " &
-                "(SELECT Count(*) FROM RisultatiAggiuntiviMarcatori Where idPartita = Partite.idPartita And idTempo=2) As GoalSecondoTempo, " &
-                "(SELECT Count(*) FROM RisultatiAggiuntiviMarcatori Where idPartita = Partite.idPartita And idTempo=3) As GoalTerzoTempo, " &
-                "CampiAvversari.Descrizione As Campo, CampiAvversari.Indirizzo As IndirizzoCampo, Partite.idPartita, Anni.Indirizzo As IndirizzoCasa, " &
-                "Anni.Lat As LatCasa, Anni.Lon As LonCasa " &
-                "FROM (((((((Partite LEFT JOIN Allenatori ON Partite.idAllenatore = Allenatori.idAllenatore And Allenatori.idAnno=Partite.idAnno) " &
-                "LEFT JOIN SquadreAvversarie ON Partite.idAvversario = SquadreAvversarie.idAvversario) " &
-                "LEFT JOIN MeteoPartite ON Partite.idPartita = MeteoPartite.idPartita) " &
-                "Left Join RisultatiAggiuntivi On Partite.idPartita=RisultatiAggiuntivi.idPartita) " &
-                "LEFT JOIN ArbitriPartite On Partite.idPartita = ArbitriPartite.idPartita) " &
-                "LEFT JOIN Arbitri On ArbitriPartite.idArbitro=Arbitri.idArbitro) " &
-                "LEFT JOIN Anni On Partite.idAnno = Anni.idAnno) " &
-                "LEFT JOIN CampiAvversari On SquadreAvversarie.idCampo = CampiAvversari.idCampo " &
-                "WHERE Partite.idAnno=" & idAnno & " And Partite.idCategoria=" & idCategoria & " And Partite.idTipologia=" & i & " " &
-                "Order By DataOra"
+                    Sql = "SELECT Partite.idPartita, Partite.RisultatoATempi, Partite.DataOra, Allenatori.Cognome+ '<br />' +Allenatori.Nome As Allenatore,MeteoPartite.Tempo, MeteoPartite.Gradi, " &
+                        "Partite.idCategoria, SquadreAvversarie.idAvversario, SquadreAvversarie.Descrizione, " &
+                        "(Select Count(*) From RisultatiAggiuntiviMarcatori Where idPartita = Partite.idPartita) As Goal, " &
+                        "(Select (iif(GoalAvvPrimoTempo>-1,GoalAvvPrimoTempo,0)+iif(GoalAvvSecondoTempo>-1,GoalAvvSecondoTempo,0)+iif(GoalAvvTerzoTempo>-1,GoalAvvTerzoTempo,0)) " &
+                        "From RisultatiAggiuntivi Where idPartita = Partite.idPartita) As GoalAvv, " &
+                        "RisGiochetti, Arbitri.Cognome+ '<br />'+Arbitri.Nome As Arbitro, Anni.NomeSquadra, Partite.Casa, " &
+                        "RisultatiAggiuntivi.GoalAvvSecondoTempo, RisultatiAggiuntivi.GoalAvvPrimoTempo, RisultatiAggiuntivi.GoalAvvTerzoTempo, " &
+                        "(SELECT Count(*) FROM RisultatiAggiuntiviMarcatori Where idPartita = Partite.idPartita And idTempo=1) As GoalPrimoTempo, " &
+                        "(SELECT Count(*) FROM RisultatiAggiuntiviMarcatori Where idPartita = Partite.idPartita And idTempo=2) As GoalSecondoTempo, " &
+                        "(SELECT Count(*) FROM RisultatiAggiuntiviMarcatori Where idPartita = Partite.idPartita And idTempo=3) As GoalTerzoTempo, " &
+                        "CampiAvversari.Descrizione As Campo, CampiAvversari.Indirizzo As IndirizzoCampo, Partite.idPartita, Anni.Indirizzo As IndirizzoCasa, " &
+                        "Anni.Lat As LatCasa, Anni.Lon As LonCasa " &
+                        "FROM (((((((Partite LEFT JOIN Allenatori ON Partite.idAllenatore = Allenatori.idAllenatore And Allenatori.idAnno=Partite.idAnno) " &
+                        "LEFT JOIN SquadreAvversarie ON Partite.idAvversario = SquadreAvversarie.idAvversario) " &
+                        "LEFT JOIN MeteoPartite ON Partite.idPartita = MeteoPartite.idPartita) " &
+                        "Left Join RisultatiAggiuntivi On Partite.idPartita=RisultatiAggiuntivi.idPartita) " &
+                        "LEFT JOIN ArbitriPartite On Partite.idPartita = ArbitriPartite.idPartita) " &
+                        "LEFT JOIN Arbitri On ArbitriPartite.idArbitro=Arbitri.idArbitro) " &
+                        "LEFT JOIN Anni On Partite.idAnno = Anni.idAnno) " &
+                        "LEFT JOIN CampiAvversari On SquadreAvversarie.idCampo = CampiAvversari.idCampo " &
+                        "WHERE Partite.idAnno=" & idAnno & " And Partite.idCategoria=" & idCategoria & " And Partite.idTipologia=" & i & " " &
+                        "Order By DataOra"
                     Try
                         Rec = LeggeQuery(Conn, Sql, Connessione)
                         If TypeOf (Rec) Is String Then
@@ -1839,12 +1839,25 @@ Public Class wsStatistiche
                                 LatCasa = Rec("LatCasa").Value
                                 LonCasa = Rec("LonCasa").Value
 
-                                Stringozza &= "<table cellspacing=""0"" style=""width: 100%;"">"
-                                Stringozza &= "<tr>"
-                                Stringozza &= "<td colspan=""11"" style=""background-color: #555; height: 5px;""></td>"
-                                Stringozza &= "</tr>"
-
                                 Do Until Rec.Eof
+                                    Stringozza &= "<table cellspacing=""0"" style=""width: 100%;""> "
+                                    Stringozza &= "<tr>"
+                                    Stringozza &= "<td colspan=""11"" style=""background-color: #555; height: 5px;""></td>"
+                                    Stringozza &= "</tr>"
+                                    Stringozza &= "<tr>"
+                                    Stringozza &= "<td style=""text-align: center; background-color: #ccc; margin: 3px;""> "
+                                    Stringozza &= "<img src=""http://looigi.no-ip.biz:12345/CVCalcio/App_Themes/Standard/Images/icona_CERCA.png"" "
+                                    Stringozza &= "style=""width: 50px; height: 50px; cursor: pointer;"""
+                                    Stringozza &= "onerror=""this.src='http://looigi.no-ip.biz:12345/CVCalcio/App_Themes/Standard/Images/Sconosciuto.png'"" "
+                                    Stringozza &= "onclick=""VisualizzaPartita('" & idAnno & "_" & Rec("idPartita").Value & "');"" /> "
+                                    Stringozza &= "</td>"
+                                    Stringozza &= "<td>"
+
+                                    Stringozza &= "<table cellspacing=""0"" style=""width: 100%;"">"
+                                    ' Stringozza &= "<tr>"
+                                    ' Stringozza &= "<td colspan=""11"" style=""background-color: #555; height: 5px;""></td>"
+                                    ' Stringozza &= "</tr>"
+
                                     Stringozza &= "<tr " & RitornaColoreSfondo() & ">"
                                     Stringozza &= "<td style=""text-align: center;"">"
                                     Stringozza &= "<span class=""testo nero"" style=""font-size: 13px;"">" & Rec("DataOra").Value.ToString.Replace(" ", "<br />") & "</span>"
@@ -2142,9 +2155,9 @@ Public Class wsStatistiche
                                         End If
                                     End If
 
-                                    Stringozza &= "<tr>"
-                                    Stringozza &= "<td colspan=""11"" style=""background-color: #555; height: 5px;""></td>"
-                                    Stringozza &= "</tr>"
+                                    ' Stringozza &= "<tr>"
+                                    ' Stringozza &= "<td colspan=""11"" style=""background-color: #555; height: 5px;""></td>"
+                                    ' Stringozza &= "</tr>"
 
                                     Sql = "Select * From CoordinatePartite " &
                                         "Where idPartita = " & Rec("idPartita").Value
@@ -2181,9 +2194,13 @@ Public Class wsStatistiche
                                         Ritorno = StringaErrore & " " & ex.Message
                                     End Try
 
+                                    Stringozza &= "</table>"
+                                    Stringozza &= "</td>"
+                                    Stringozza &= "</tr>"
+                                    Stringozza &= "</table>"
+
                                     Rec.MoveNext
                                 Loop
-                                Stringozza &= "</table>"
 
                                 Select Case i
                                     Case 1
