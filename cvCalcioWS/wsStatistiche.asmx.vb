@@ -1878,12 +1878,15 @@ Public Class wsStatistiche
 										Dim sFiles As String = ""
 										For ii As Integer = 1 To qFiles
 											Dim nomeF As String = gf.TornaNomeFileDaPath(Filetti(ii))
-											nomeF = "http://looigi.no-ip.biz:12345/CVCalcio/App_Themes/Standard/Images/Partite/" & Rec("idPartita").Value.ToString.Trim & "/" & nomeF & ".jpg"
+											nomeF = "http://looigi.no-ip.biz:12345/CVCalcio/App_Themes/Standard/Images/Partite/" & Rec("idPartita").Value.ToString.Trim & "/" & nomeF
 											sFiles &= nomeF & "§"
 										Next
+										If sFiles <> "" Then
+											sFiles = Mid(sFiles, 1, sFiles.Length - 1)
+										End If
 
 										Stringozza &= "<hr />"
-										Stringozza &= "<img src=""http://looigi.no-ip.biz:12345/CVCalcio/App_Themes/Standard/Images/visualizzato_tondo.png"" "
+										Stringozza &= "<img src=""http://looigi.no-ip.biz:12345/CVCalcio/App_Themes/Standard/Images/Icone/visualizzato_tondo.png"" "
 										Stringozza &= "style=""width: 50px; height: 50px; cursor: pointer;"""
 										Stringozza &= "onclick=""VisualizzaImmagini('" & sFiles & "');"" /> "
 									End If
