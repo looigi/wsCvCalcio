@@ -901,9 +901,9 @@ Public Class wsStatistiche
 
     <WebMethod()>
     Public Function RitornaStatisticheStagione(idAnno As String, idCategoria As String) As String
-		Dim Ritorno As String = ""
-		Dim gf As New GestioneFilesDirectory
-		Dim Connessione As String = LeggeImpostazioniDiBase(Server.MapPath("."))
+        Dim Ritorno As String = ""
+        Dim gf As New GestioneFilesDirectory
+        Dim Connessione As String = LeggeImpostazioniDiBase(Server.MapPath("."))
 
         If Connessione = "" Then
             Ritorno = ErroreConnessioneNonValida
@@ -1072,33 +1072,33 @@ Public Class wsStatistiche
                 Dim lmLat As New List(Of String)
                 Dim lmLon As New List(Of String)
                 Dim lmInd As New List(Of String)
-				Dim lmDescr As New List(Of String)
+                Dim lmDescr As New List(Of String)
 
-				Dim descAnno As String = ""
-				Dim nomeSquadra As String = ""
+                Dim descAnno As String = ""
+                Dim nomeSquadra As String = ""
 
-				Dim PathBaseImmagini As String = "http://looigi.no-ip.biz:12345/CVCalcio/App_Themes/Standard/Images"
-				Dim PathBaseImmScon As String = "http://looigi.no-ip.biz:12345/CVCalcio/App_Themes/Standard/Images/Sconosciuto.png"
-				Dim PathImmaginiPartite As String = "C:\inetpub\wwwroot\CVCalcio\App_Themes\Standard\Images\Partite\"
+                Dim PathBaseImmagini As String = "http://looigi.no-ip.biz:12345/CVCalcio/App_Themes/Standard/Images"
+                Dim PathBaseImmScon As String = "http://looigi.no-ip.biz:12345/CVCalcio/App_Themes/Standard/Images/Sconosciuto.png"
+                Dim PathImmaginiPartite As String = "C:\inetpub\wwwroot\CVCalcio\App_Themes\Standard\Images\Partite\"
 
-				Sql = "SELECT * From Anni Where idAnno=" & idAnno
-				Try
-					Rec = LeggeQuery(Conn, Sql, Connessione)
-					If TypeOf (Rec) Is String Then
-						Ritorno = Rec
-					Else
-						If Not Rec.Eof Then
-							descAnno = Rec("Descrizione").Value
-							nomeSquadra = Rec("NomeSquadra").Value
-						End If
+                Sql = "SELECT * From Anni Where idAnno=" & idAnno
+                Try
+                    Rec = LeggeQuery(Conn, Sql, Connessione)
+                    If TypeOf (Rec) Is String Then
+                        Ritorno = Rec
+                    Else
+                        If Not Rec.Eof Then
+                            descAnno = Rec("Descrizione").Value
+                            nomeSquadra = Rec("NomeSquadra").Value
+                        End If
 
-						' Rec.Close()
-					End If
-				Catch ex As Exception
-					Ritorno = StringaErrore & " " & ex.Message
-				End Try
+                        ' Rec.Close()
+                    End If
+                Catch ex As Exception
+                    Ritorno = StringaErrore & " " & ex.Message
+                End Try
 
-				Sql = "SELECT TipologiePartite.Descrizione, Count(*) As Quante " &
+                Sql = "SELECT TipologiePartite.Descrizione, Count(*) As Quante " &
                     "FROM Partite Left Join TipologiePartite On Partite.idTipologia = TipologiePartite.idTipologia " &
                     "Where Partite.idAnno = " & idAnno & " And Partite.idCategoria = " & idCategoria & "  " &
                     "Group By TipologiePartite.Descrizione"
@@ -1827,422 +1827,424 @@ Public Class wsStatistiche
 
                 GraficoPuntiCampionato &= "['0', 0, 0], "
                 For i As Integer = 1 To 3
-					Sql = "SELECT Partite.idPartita, Partite.RisultatoATempi, Partite.DataOra, Allenatori.Cognome+ '<br />' +Allenatori.Nome As Allenatore,MeteoPartite.Tempo, MeteoPartite.Gradi, " &
-						"Partite.idCategoria, SquadreAvversarie.idAvversario, SquadreAvversarie.Descrizione, " &
-						"(Select Count(*) From RisultatiAggiuntiviMarcatori Where idPartita = Partite.idPartita) As Goal, " &
-						"(Select (iif(GoalAvvPrimoTempo>-1,GoalAvvPrimoTempo,0)+iif(GoalAvvSecondoTempo>-1,GoalAvvSecondoTempo,0)+iif(GoalAvvTerzoTempo>-1,GoalAvvTerzoTempo,0)) " &
-						"From RisultatiAggiuntivi Where idPartita = Partite.idPartita) As GoalAvv, " &
-						"RisGiochetti, Arbitri.Cognome+ '<br />'+Arbitri.Nome As Arbitro, Anni.NomeSquadra, Partite.Casa, " &
-						"RisultatiAggiuntivi.GoalAvvSecondoTempo, RisultatiAggiuntivi.GoalAvvPrimoTempo, RisultatiAggiuntivi.GoalAvvTerzoTempo, " &
-						"(SELECT Count(*) FROM RisultatiAggiuntiviMarcatori Where idPartita = Partite.idPartita And idTempo=1) As GoalPrimoTempo, " &
-						"(SELECT Count(*) FROM RisultatiAggiuntiviMarcatori Where idPartita = Partite.idPartita And idTempo=2) As GoalSecondoTempo, " &
-						"(SELECT Count(*) FROM RisultatiAggiuntiviMarcatori Where idPartita = Partite.idPartita And idTempo=3) As GoalTerzoTempo, " &
-						"CampiAvversari.Descrizione As Campo, CampiAvversari.Indirizzo As IndirizzoCampo, Partite.idPartita, Anni.Indirizzo As IndirizzoCasa, " &
-						"Anni.Lat As LatCasa, Anni.Lon As LonCasa " &
-						"FROM (((((((Partite LEFT JOIN Allenatori ON Partite.idAllenatore = Allenatori.idAllenatore And Allenatori.idAnno=Partite.idAnno) " &
-						"LEFT JOIN SquadreAvversarie ON Partite.idAvversario = SquadreAvversarie.idAvversario) " &
-						"LEFT JOIN MeteoPartite ON Partite.idPartita = MeteoPartite.idPartita) " &
-						"Left Join RisultatiAggiuntivi On Partite.idPartita=RisultatiAggiuntivi.idPartita) " &
-						"LEFT JOIN ArbitriPartite On Partite.idPartita = ArbitriPartite.idPartita) " &
-						"LEFT JOIN Arbitri On ArbitriPartite.idArbitro=Arbitri.idArbitro) " &
-						"LEFT JOIN Anni On Partite.idAnno = Anni.idAnno) " &
-						"LEFT JOIN CampiAvversari On SquadreAvversarie.idCampo = CampiAvversari.idCampo " &
-						"WHERE Partite.idAnno=" & idAnno & " And Partite.idCategoria=" & idCategoria & " And Partite.idTipologia=" & i & " " &
-						"Order By DataOra"
-					Try
-						Rec = LeggeQuery(Conn, Sql, Connessione)
-						If TypeOf (Rec) Is String Then
-							Ritorno = Rec
-						Else
-							If Not Rec.Eof Then
-								Dim Stringozza As String = ""
+                    Sql = "SELECT Partite.idPartita, Partite.RisultatoATempi, Partite.DataOra, Allenatori.Cognome+ '<br />' +Allenatori.Nome As Allenatore,MeteoPartite.Tempo, MeteoPartite.Gradi, " &
+                        "Partite.idCategoria, SquadreAvversarie.idAvversario, SquadreAvversarie.Descrizione, " &
+                        "(Select Count(*) From RisultatiAggiuntiviMarcatori Where idPartita = Partite.idPartita) As Goal, " &
+                        "(Select (iif(GoalAvvPrimoTempo>-1,GoalAvvPrimoTempo,0)+iif(GoalAvvSecondoTempo>-1,GoalAvvSecondoTempo,0)+iif(GoalAvvTerzoTempo>-1,GoalAvvTerzoTempo,0)) " &
+                        "From RisultatiAggiuntivi Where idPartita = Partite.idPartita) As GoalAvv, " &
+                        "RisGiochetti, Arbitri.Cognome+ '<br />'+Arbitri.Nome As Arbitro, Anni.NomeSquadra, Partite.Casa, " &
+                        "RisultatiAggiuntivi.GoalAvvSecondoTempo, RisultatiAggiuntivi.GoalAvvPrimoTempo, RisultatiAggiuntivi.GoalAvvTerzoTempo, " &
+                        "(SELECT Count(*) FROM RisultatiAggiuntiviMarcatori Where idPartita = Partite.idPartita And idTempo=1) As GoalPrimoTempo, " &
+                        "(SELECT Count(*) FROM RisultatiAggiuntiviMarcatori Where idPartita = Partite.idPartita And idTempo=2) As GoalSecondoTempo, " &
+                        "(SELECT Count(*) FROM RisultatiAggiuntiviMarcatori Where idPartita = Partite.idPartita And idTempo=3) As GoalTerzoTempo, " &
+                        "CampiAvversari.Descrizione As Campo, CampiAvversari.Indirizzo As IndirizzoCampo, Partite.idPartita, Anni.Indirizzo As IndirizzoCasa, " &
+                        "Anni.Lat As LatCasa, Anni.Lon As LonCasa " &
+                        "FROM (((((((Partite LEFT JOIN Allenatori ON Partite.idAllenatore = Allenatori.idAllenatore And Allenatori.idAnno=Partite.idAnno) " &
+                        "LEFT JOIN SquadreAvversarie ON Partite.idAvversario = SquadreAvversarie.idAvversario) " &
+                        "LEFT JOIN MeteoPartite ON Partite.idPartita = MeteoPartite.idPartita) " &
+                        "Left Join RisultatiAggiuntivi On Partite.idPartita=RisultatiAggiuntivi.idPartita) " &
+                        "LEFT JOIN ArbitriPartite On Partite.idPartita = ArbitriPartite.idPartita) " &
+                        "LEFT JOIN Arbitri On ArbitriPartite.idArbitro=Arbitri.idArbitro) " &
+                        "LEFT JOIN Anni On Partite.idAnno = Anni.idAnno) " &
+                        "LEFT JOIN CampiAvversari On SquadreAvversarie.idCampo = CampiAvversari.idCampo " &
+                        "WHERE Partite.idAnno=" & idAnno & " And Partite.idCategoria=" & idCategoria & " And Partite.idTipologia=" & i & " " &
+                        "Order By DataOra"
+                    Try
+                        Rec = LeggeQuery(Conn, Sql, Connessione)
+                        If TypeOf (Rec) Is String Then
+                            Ritorno = Rec
+                        Else
+                            If Not Rec.Eof Then
+                                Dim Stringozza As String = ""
 
-								LatCasa = Rec("LatCasa").Value
-								LonCasa = Rec("LonCasa").Value
+                                LatCasa = Rec("LatCasa").Value
+                                LonCasa = Rec("LonCasa").Value
 
-								Do Until Rec.Eof
-									gf.ScansionaDirectorySingola(PathImmaginiPartite & Rec("idPartita").Value.ToString.Trim)
-									Dim qFiles As Integer = gf.RitornaQuantiFilesRilevati
-									Dim Filetti() As String = gf.RitornaFilesRilevati
+                                Do Until Rec.Eof
+                                    gf.ScansionaDirectorySingola(PathImmaginiPartite & Rec("idPartita").Value.ToString.Trim)
+                                    Dim qFiles As Integer = gf.RitornaQuantiFilesRilevati
+                                    Dim Filetti() As String = gf.RitornaFilesRilevati
 
-									Stringozza &= "<table cellspacing=""0"" style=""width: 100%;""> "
-									Stringozza &= "<tr>"
-									Stringozza &= "<td colspan=""11"" style=""background-color: #555; height: 5px;""></td>"
-									Stringozza &= "</tr>"
-									Stringozza &= "<tr>"
-									Stringozza &= "<td style=""text-align: center; background-color: #ccc; margin: 3px;""> "
+                                    Stringozza &= "<table cellspacing=""0"" style=""width: 100%;""> "
+                                    Stringozza &= "<tr>"
+                                    Stringozza &= "<td colspan=""11"" style=""background-color: #555; height: 5px;""></td>"
+                                    Stringozza &= "</tr>"
+                                    Stringozza &= "<tr>"
+									Stringozza &= "<td style=""text-align: center; background-color: #ccc; margin: 3px; width: 55px;""> "
 									Stringozza &= "<img src=""http://looigi.no-ip.biz:12345/CVCalcio/App_Themes/Standard/Images/icona_CERCA.png"" "
-									Stringozza &= "style=""width: 50px; height: 50px; cursor: pointer;"""
-									Stringozza &= "onclick=""VisualizzaPartita('" & idAnno & "_" & Rec("idPartita").Value & "');"" /> "
+                                    Stringozza &= "style=""width: 50px; height: 50px; cursor: pointer;"""
+									Stringozza &= "onclick=""VisualizzaPartita('" & idAnno & "_" & Rec("idPartita").Value & "');"" "
+									Stringozza &= "title=""Visualizza dettaglio partita " & Rec("idPartita").Value.ToString.Trim & """ /> "
 									If qFiles > 0 Then
-										Dim sFiles As String = ""
-										For ii As Integer = 1 To qFiles
-											Dim nomeF As String = gf.TornaNomeFileDaPath(Filetti(ii))
-											nomeF = "http://looigi.no-ip.biz:12345/CVCalcio/App_Themes/Standard/Images/Partite/" & Rec("idPartita").Value.ToString.Trim & "/" & nomeF
-											sFiles &= nomeF & "§"
-										Next
-										If sFiles <> "" Then
-											sFiles = Mid(sFiles, 1, sFiles.Length - 1)
-										End If
+                                        Dim sFiles As String = ""
+                                        For ii As Integer = 1 To qFiles
+                                            Dim nomeF As String = gf.TornaNomeFileDaPath(Filetti(ii))
+                                            nomeF = "http://looigi.no-ip.biz:12345/CVCalcio/App_Themes/Standard/Images/Partite/" & Rec("idPartita").Value.ToString.Trim & "/" & nomeF
+                                            sFiles &= nomeF & "§"
+                                        Next
+                                        If sFiles <> "" Then
+                                            sFiles = Mid(sFiles, 1, sFiles.Length - 1)
+                                        End If
 
-										Stringozza &= "<hr />"
-										Stringozza &= "<img src=""http://looigi.no-ip.biz:12345/CVCalcio/App_Themes/Standard/Images/Icone/visualizzato_tondo.png"" "
-										Stringozza &= "style=""width: 50px; height: 50px; cursor: pointer;"""
-										Stringozza &= "onclick=""VisualizzaImmagini('" & sFiles & "');"" /> "
+                                        Stringozza &= "<hr />"
+                                        Stringozza &= "<img src=""http://looigi.no-ip.biz:12345/CVCalcio/App_Themes/Standard/Images/Icone/visualizzato_tondo.png"" "
+                                        Stringozza &= "style=""width: 50px; height: 50px; cursor: pointer;"""
+										Stringozza &= "onclick=""VisualizzaImmagini('" & sFiles & "');"" "
+										Stringozza &= "title=""Visualizza multimedia della partita " & Rec("idPartita").Value.ToString.Trim & """ /> "
 									End If
+                                    Stringozza &= "</td>"
+                                    Stringozza &= "<td>"
+
+                                    Stringozza &= "<table cellspacing=""0"" style=""width: 100%;"">"
+                                    ' Stringozza &= "<tr>"
+                                    ' Stringozza &= "<td colspan=""11"" style=""background-color: #555; height: 5px;""></td>"
+                                    ' Stringozza &= "</tr>"
+
+                                    Stringozza &= "<tr " & RitornaColoreSfondo() & ">"
+                                    Stringozza &= "<td style=""text-align: center;"">"
+									Stringozza &= "<span class=""testo nero"" style=""font-size: 15px;"">" & Rec("DataOra").Value.ToString.Replace(" ", "<br />") & "</span>"
 									Stringozza &= "</td>"
-									Stringozza &= "<td>"
-
-									Stringozza &= "<table cellspacing=""0"" style=""width: 100%;"">"
-									' Stringozza &= "<tr>"
-									' Stringozza &= "<td colspan=""11"" style=""background-color: #555; height: 5px;""></td>"
-									' Stringozza &= "</tr>"
-
-									Stringozza &= "<tr " & RitornaColoreSfondo() & ">"
-									Stringozza &= "<td style=""text-align: center;"">"
-									Stringozza &= "<span class=""testo nero"" style=""font-size: 13px;"">" & Rec("DataOra").Value.ToString.Replace(" ", "<br />") & "</span>"
-									Stringozza &= "</td>"
-									Stringozza &= "<td style=""text-align: center;"">"
-									Stringozza &= "<span class=""testo nero"" style=""font-size: 13px;"">" & Rec("Allenatore").Value & "</span>"
-									Stringozza &= "</td>"
-
-									Dim Tempo As String = ""
-
-									If "" & Rec("Tempo").Value <> "" Then
-										Tempo = Rec("Tempo").Value
-									End If
-									If "" & Rec("Gradi").Value <> "" Then
-										Tempo &= "<br />" & Rec("Gradi").Value & " Gradi"
-									End If
-									Stringozza &= "<td style=""text-align: center;"">"
-									Stringozza &= "<span class=""testo nero"" style=""font-size: 13px;"">" & Tempo & "</span>"
+                                    Stringozza &= "<td style=""text-align: center;"">"
+									Stringozza &= "<span class=""testo nero"" style=""font-size: 15px;"">" & Rec("Allenatore").Value & "</span>"
 									Stringozza &= "</td>"
 
-									Dim Casa As String
-									Dim Fuori As String
-									Dim Imm1 As String = PathBaseImmagini & "/Categorie/" & idAnno & "_" & idCategoria & ".Jpg"
-									Dim Imm2 As String = PathBaseImmagini & "/Avversari/" & Rec("idAvversario").Value & ".Jpg"
-									Dim ImmCasa As String
-									Dim ImmFuori As String
-									Dim GoalCasa As String
-									Dim GoalFuori As String
+                                    Dim Tempo As String = ""
 
-									If Rec("Casa").Value = "S" Then
-										Casa = Rec("NomeSquadra").Value
-										Fuori = Rec("Descrizione").Value
-										ImmCasa = "<td style =""text-align: center;""><img src=""" & Imm1 & """ style=""width: 30px; height: 30px;"" onerror=""this.src='http://looigi.no-ip.biz:12345/CVCalcio/App_Themes/Standard/Images/Sconosciuto.png'""  /></td>"
-										ImmFuori = "<td style =""text-align: center;""><img src=""" & Imm2 & """ style=""width: 30px; height: 30px;"" onerror=""this.src='http://looigi.no-ip.biz:12345/CVCalcio/App_Themes/Standard/Images/Sconosciuto.png'""  /></td>"
+                                    If "" & Rec("Tempo").Value <> "" Then
+                                        Tempo = Rec("Tempo").Value
+                                    End If
+                                    If "" & Rec("Gradi").Value <> "" Then
+                                        Tempo &= "<br />" & Rec("Gradi").Value & " Gradi"
+                                    End If
+                                    Stringozza &= "<td style=""text-align: center;"">"
+									Stringozza &= "<span class=""testo nero"" style=""font-size: 15px;"">" & Tempo & "</span>"
+									Stringozza &= "</td>"
+
+                                    Dim Casa As String
+                                    Dim Fuori As String
+                                    Dim Imm1 As String = PathBaseImmagini & "/Categorie/" & idAnno & "_" & idCategoria & ".Jpg"
+                                    Dim Imm2 As String = PathBaseImmagini & "/Avversari/" & Rec("idAvversario").Value & ".Jpg"
+                                    Dim ImmCasa As String
+                                    Dim ImmFuori As String
+                                    Dim GoalCasa As String
+                                    Dim GoalFuori As String
+
+                                    If Rec("Casa").Value = "S" Then
+                                        Casa = Rec("NomeSquadra").Value
+                                        Fuori = Rec("Descrizione").Value
+										ImmCasa = "<td style =""text-align: center;""><img src=""" & Imm1 & """ style=""width: 55px; height: 55px; border: 1px solid #999;"" onerror=""this.src='http://looigi.no-ip.biz:12345/CVCalcio/App_Themes/Standard/Images/Sconosciuto.png'""  /></td>"
+										ImmFuori = "<td style =""text-align: center;""><img src=""" & Imm2 & """ style=""width: 55px; height: 55px; border: 1px solid #999;"" onerror=""this.src='http://looigi.no-ip.biz:12345/CVCalcio/App_Themes/Standard/Images/Sconosciuto.png'""  /></td>"
 										GoalCasa = Rec("Goal").Value
-										GoalFuori = Rec("GoalAvv").Value
-									Else
-										Fuori = Rec("NomeSquadra").Value
-										Casa = Rec("Descrizione").Value
-										ImmCasa = "<td style =""text-align: center;""><img src=""" & Imm2 & """ style=""width: 30px; height: 30px;"" onerror=""this.src='http://looigi.no-ip.biz:12345/CVCalcio/App_Themes/Standard/Images/Sconosciuto.png'""  /></td>"
-										ImmFuori = "<td style =""text-align: center;""><img src=""" & Imm1 & """ style=""width: 30px; height: 30px;"" onerror=""this.src='http://looigi.no-ip.biz:12345/CVCalcio/App_Themes/Standard/Images/Sconosciuto.png'""  /></td>"
+                                        GoalFuori = Rec("GoalAvv").Value
+                                    Else
+                                        Fuori = Rec("NomeSquadra").Value
+                                        Casa = Rec("Descrizione").Value
+										ImmCasa = "<td style =""text-align: center;""><img src=""" & Imm2 & """ style=""width: 55px; height: 55px; border: 1px solid #999;"" onerror=""this.src='http://looigi.no-ip.biz:12345/CVCalcio/App_Themes/Standard/Images/Sconosciuto.png'""  /></td>"
+										ImmFuori = "<td style =""text-align: center;""><img src=""" & Imm1 & """ style=""width: 55px; height: 55px; border: 1px solid #999;"" onerror=""this.src='http://looigi.no-ip.biz:12345/CVCalcio/App_Themes/Standard/Images/Sconosciuto.png'""  /></td>"
 										GoalCasa = Rec("GoalAvv").Value
-										GoalFuori = Rec("Goal").Value
-									End If
-									Stringozza &= "<td style=""text-align: center;"">"
-									Stringozza &= "<span class=""testo nero"" style=""font-size: 13px;"">" & Casa.Replace(" ", "<br />") & "</span>"
+                                        GoalFuori = Rec("Goal").Value
+                                    End If
+                                    Stringozza &= "<td style=""text-align: center;"">"
+									Stringozza &= "<span class=""testo rosso"" style=""font-size: 15px;"">" & Casa.Replace(" ", "<br />") & "</span>"
 									Stringozza &= "</td>"
-									Stringozza &= "<td style=""text-align: center;"">"
-									Stringozza &= ImmCasa
+                                    Stringozza &= "<td style=""text-align: center;"">"
+                                    Stringozza &= ImmCasa
+                                    Stringozza &= "</td>"
+                                    Stringozza &= "<td style=""text-align: center;"">"
+									Stringozza &= "<span class=""testo nero"" style=""font-size: 15px;"">" & GoalCasa & "-" & GoalFuori & "</span>"
 									Stringozza &= "</td>"
-									Stringozza &= "<td style=""text-align: center;"">"
-									Stringozza &= "<span class=""testo nero"" style=""font-size: 13px;"">" & GoalCasa & "-" & GoalFuori & "</span>"
+                                    Stringozza &= "<td style=""text-align: center;"">"
+                                    Stringozza &= ImmFuori
+                                    Stringozza &= "</td>"
+                                    Stringozza &= "<td style=""text-align: center;"">"
+									Stringozza &= "<span class=""testo rosso"" style=""font-size: 15px;"">" & Fuori.Replace(" ", "<br />") & "</span>"
 									Stringozza &= "</td>"
-									Stringozza &= "<td style=""text-align: center;"">"
-									Stringozza &= ImmFuori
+                                    Stringozza &= "<td style=""text-align: center;"">"
+									Stringozza &= "<span class=""testo nero"" style=""font-size: 15px;"">" & Rec("Arbitro").Value & "</span>"
 									Stringozza &= "</td>"
-									Stringozza &= "<td style=""text-align: center;"">"
-									Stringozza &= "<span class=""testo nero"" style=""font-size: 13px;"">" & Fuori.Replace(" ", "<br />") & "</span>"
+                                    Stringozza &= "</tr>"
+
+                                    Dim ATempi As String = Rec("RisultatoATempi").Value
+                                    Dim GoalPrimoTempoCasa As Integer
+                                    Dim GoalPrimoTempoFuori As Integer
+                                    Dim GoalSecondoTempoCasa As Integer
+                                    Dim GoalSecondoTempoFuori As Integer
+                                    Dim GoalTerzoTempoCasa As Integer
+                                    Dim GoalTerzoTempoFuori As Integer
+
+                                    If Rec("Casa").Value = "S" Then
+                                        GoalPrimoTempoCasa = Rec("GoalPrimoTempo").Value
+                                        GoalSecondoTempoCasa = Rec("GoalSecondoTempo").Value
+                                        GoalTerzoTempoCasa = Rec("GoalTerzoTempo").Value
+                                        GoalPrimoTempoFuori = Rec("GoalAvvPrimoTempo").Value
+                                        GoalSecondoTempoFuori = Rec("GoalAvvSecondoTempo").Value
+                                        GoalTerzoTempoFuori = Rec("GoalAvvTerzoTempo").Value
+                                    Else
+                                        GoalPrimoTempoCasa = Rec("GoalAvvPrimoTempo").Value
+                                        GoalSecondoTempoCasa = Rec("GoalAvvSecondoTempo").Value
+                                        GoalTerzoTempoCasa = Rec("GoalAvvTerzoTempo").Value
+                                        GoalPrimoTempoFuori = Rec("GoalPrimoTempo").Value
+                                        GoalSecondoTempoFuori = Rec("GoalSecondoTempo").Value
+                                        GoalTerzoTempoFuori = Rec("GoalTerzoTempo").Value
+                                    End If
+
+                                    Dim Punti1 As Integer = 0
+                                    Dim Punti2 As Integer = 0
+
+                                    If Rec("RisultatoATempi").Value = "S" Then
+                                        If GoalPrimoTempoCasa > GoalPrimoTempoFuori Then
+                                            Punti1 += 1
+                                        Else
+                                            If GoalPrimoTempoCasa < GoalPrimoTempoFuori Then
+                                                Punti2 += 1
+                                            Else
+                                                Punti1 += 1
+                                                Punti2 += 1
+                                            End If
+                                        End If
+                                        If GoalSecondoTempoCasa > GoalSecondoTempoFuori Then
+                                            Punti1 += 1
+                                        Else
+                                            If GoalSecondoTempoCasa < GoalSecondoTempoFuori Then
+                                                Punti2 += 1
+                                            Else
+                                                Punti1 += 1
+                                                Punti2 += 1
+                                            End If
+                                        End If
+                                        If GoalTerzoTempoCasa > GoalTerzoTempoFuori Then
+                                            Punti1 += 1
+                                        Else
+                                            If GoalTerzoTempoCasa < GoalTerzoTempoFuori Then
+                                                Punti2 += 1
+                                            Else
+                                                Punti1 += 1
+                                                Punti2 += 1
+                                            End If
+                                        End If
+
+                                        Dim Giochetti As String = "" & Rec("RisGiochetti").Value
+
+                                        If Giochetti <> "" Then
+                                            Dim g() As String
+
+                                            If Giochetti.Contains("-") Then
+                                                g = Giochetti.Split("-")
+                                            Else
+                                                If Giochetti.Contains("/") Then
+                                                    g = Giochetti.Split("/")
+                                                Else
+                                                    Stop
+                                                End If
+                                            End If
+
+                                            If Val(g(0).Trim) > Val(g(1).Trim) Then
+                                                'If Rec("Casa").Value = "S" Then
+                                                Punti1 += 1
+                                                'Else
+                                                '    Punti2 += 1
+                                                'End If
+                                            Else
+                                                If Val(g(0).Trim) < Val(g(1).Trim) Then
+                                                    'If Rec("Casa").Value = "S" Then
+                                                    Punti2 += 1
+                                                    'Else
+                                                    '    Punti1 += 1
+                                                    'End If
+                                                Else
+                                                    Punti1 += 1
+                                                    Punti2 += 1
+                                                End If
+                                            End If
+                                        End If
+                                    Else
+                                        Punti1 = GoalPrimoTempoCasa + GoalSecondoTempoCasa + GoalTerzoTempoCasa
+                                        Punti2 = GoalPrimoTempoFuori + GoalSecondoTempoFuori + GoalTerzoTempoFuori
+                                    End If
+
+                                    Dim Esito As String = ""
+                                    Dim Colore As String
+
+                                    If Punti1 > Punti2 Then
+                                        If Rec("Casa").Value = "S" Then
+                                            Esito = "Vittoria"
+                                            Colore = "#0a0"
+                                            If i = 1 Then
+                                                PuntiTotali += 3
+                                            End If
+                                        Else
+                                            Esito = "Sconfitta"
+                                            Colore = "#a00"
+                                        End If
+                                    Else
+                                        If Punti1 < Punti2 Then
+                                            If Rec("Casa").Value = "S" Then
+                                                Esito = "Sconfitta"
+                                                Colore = "#a00"
+                                            Else
+                                                If i = 1 Then
+                                                    PuntiTotali += 3
+                                                End If
+                                                Esito = "Vittoria"
+                                                Colore = "#0a0"
+                                            End If
+                                        Else
+                                            If i = 1 Then
+                                                PuntiTotali += 1
+                                            End If
+                                            Esito = "Pareggio"
+                                            Colore = "#000"
+                                        End If
+                                    End If
+                                    If Rec("Casa").Value = "S" Then
+                                        Esito &= " in casa"
+                                    Else
+                                        Esito &= " fuori casa"
+                                    End If
+
+                                    If i = 1 Then
+                                        If Rec("Casa").Value = "S" Then
+                                            PuntiTotaliMedia += 3
+                                        Else
+                                            PuntiTotaliMedia += 1
+                                        End If
+                                        GiornataPerGrafico += 1
+                                        GraficoPuntiCampionato &= "['" & GiornataPerGrafico & "', " & PuntiTotali & ", " & PuntiTotaliMedia & "], "
+                                    End If
+
+                                    Stringozza &= "<tr " & RitornaColoreSfondo() & ">"
+                                    Stringozza &= "<td style=""text-align: center;"">"
+									Stringozza &= "<span class=""testo nero"" style=""font-size: 15px;"">" & IIf(ATempi = "S", "Risultato<br /> a tempi", "Risultato<br />a goal") & "</span>"
 									Stringozza &= "</td>"
-									Stringozza &= "<td style=""text-align: center;"">"
-									Stringozza &= "<span class=""testo nero"" style=""font-size: 13px;"">" & Rec("Arbitro").Value & "</span>"
-									Stringozza &= "</td>"
-									Stringozza &= "</tr>"
-
-									Dim ATempi As String = Rec("RisultatoATempi").Value
-									Dim GoalPrimoTempoCasa As Integer
-									Dim GoalPrimoTempoFuori As Integer
-									Dim GoalSecondoTempoCasa As Integer
-									Dim GoalSecondoTempoFuori As Integer
-									Dim GoalTerzoTempoCasa As Integer
-									Dim GoalTerzoTempoFuori As Integer
-
-									If Rec("Casa").Value = "S" Then
-										GoalPrimoTempoCasa = Rec("GoalPrimoTempo").Value
-										GoalSecondoTempoCasa = Rec("GoalSecondoTempo").Value
-										GoalTerzoTempoCasa = Rec("GoalTerzoTempo").Value
-										GoalPrimoTempoFuori = Rec("GoalAvvPrimoTempo").Value
-										GoalSecondoTempoFuori = Rec("GoalAvvSecondoTempo").Value
-										GoalTerzoTempoFuori = Rec("GoalAvvTerzoTempo").Value
-									Else
-										GoalPrimoTempoCasa = Rec("GoalAvvPrimoTempo").Value
-										GoalSecondoTempoCasa = Rec("GoalAvvSecondoTempo").Value
-										GoalTerzoTempoCasa = Rec("GoalAvvTerzoTempo").Value
-										GoalPrimoTempoFuori = Rec("GoalPrimoTempo").Value
-										GoalSecondoTempoFuori = Rec("GoalSecondoTempo").Value
-										GoalTerzoTempoFuori = Rec("GoalTerzoTempo").Value
-									End If
-
-									Dim Punti1 As Integer = 0
-									Dim Punti2 As Integer = 0
-
-									If Rec("RisultatoATempi").Value = "S" Then
-										If GoalPrimoTempoCasa > GoalPrimoTempoFuori Then
-											Punti1 += 1
-										Else
-											If GoalPrimoTempoCasa < GoalPrimoTempoFuori Then
-												Punti2 += 1
-											Else
-												Punti1 += 1
-												Punti2 += 1
-											End If
-										End If
-										If GoalSecondoTempoCasa > GoalSecondoTempoFuori Then
-											Punti1 += 1
-										Else
-											If GoalSecondoTempoCasa < GoalSecondoTempoFuori Then
-												Punti2 += 1
-											Else
-												Punti1 += 1
-												Punti2 += 1
-											End If
-										End If
-										If GoalTerzoTempoCasa > GoalTerzoTempoFuori Then
-											Punti1 += 1
-										Else
-											If GoalTerzoTempoCasa < GoalTerzoTempoFuori Then
-												Punti2 += 1
-											Else
-												Punti1 += 1
-												Punti2 += 1
-											End If
-										End If
-
-										Dim Giochetti As String = "" & Rec("RisGiochetti").Value
-
-										If Giochetti <> "" Then
-											Dim g() As String
-
-											If Giochetti.Contains("-") Then
-												g = Giochetti.Split("-")
-											Else
-												If Giochetti.Contains("/") Then
-													g = Giochetti.Split("/")
-												Else
-													Stop
-												End If
-											End If
-
-											If Val(g(0).Trim) > Val(g(1).Trim) Then
-												'If Rec("Casa").Value = "S" Then
-												Punti1 += 1
-												'Else
-												'    Punti2 += 1
-												'End If
-											Else
-												If Val(g(0).Trim) < Val(g(1).Trim) Then
-													'If Rec("Casa").Value = "S" Then
-													Punti2 += 1
-													'Else
-													'    Punti1 += 1
-													'End If
-												Else
-													Punti1 += 1
-													Punti2 += 1
-												End If
-											End If
-										End If
-									Else
-										Punti1 = GoalPrimoTempoCasa + GoalSecondoTempoCasa + GoalTerzoTempoCasa
-										Punti2 = GoalPrimoTempoFuori + GoalSecondoTempoFuori + GoalTerzoTempoFuori
-									End If
-
-									Dim Esito As String = ""
-									Dim Colore As String
-
-									If Punti1 > Punti2 Then
-										If Rec("Casa").Value = "S" Then
-											Esito = "Vittoria"
-											Colore = "#0a0"
-											If i = 1 Then
-												PuntiTotali += 3
-											End If
-										Else
-											Esito = "Sconfitta"
-											Colore = "#a00"
-										End If
-									Else
-										If Punti1 < Punti2 Then
-											If Rec("Casa").Value = "S" Then
-												Esito = "Sconfitta"
-												Colore = "#a00"
-											Else
-												If i = 1 Then
-													PuntiTotali += 3
-												End If
-												Esito = "Vittoria"
-												Colore = "#0a0"
-											End If
-										Else
-											If i = 1 Then
-												PuntiTotali += 1
-											End If
-											Esito = "Pareggio"
-											Colore = "#000"
-										End If
-									End If
-									If Rec("Casa").Value = "S" Then
-										Esito &= " in casa"
-									Else
-										Esito &= " fuori casa"
-									End If
-
-									If i = 1 Then
-										If Rec("Casa").Value = "S" Then
-											PuntiTotaliMedia += 3
-										Else
-											PuntiTotaliMedia += 1
-										End If
-										GiornataPerGrafico += 1
-										GraficoPuntiCampionato &= "['" & GiornataPerGrafico & "', " & PuntiTotali & ", " & PuntiTotaliMedia & "], "
-									End If
-
-									Stringozza &= "<tr " & RitornaColoreSfondo() & ">"
-									Stringozza &= "<td style=""text-align: center;"">"
-									Stringozza &= "<span class=""testo nero"" style=""font-size: 13px;"">" & IIf(ATempi = "S", "Risultato<br /> a tempi", "Risultato<br />a goal") & "</span>"
-									Stringozza &= "</td>"
-									If Rec("RisultatoATempi").Value = "S" Then
-										Stringozza &= "<td style=""text-align: center;"">"
-										Stringozza &= "<span class=""testo nero"" style=""font-size: 13px;"">1° Tempo: " & GoalPrimoTempoCasa & "-" & GoalPrimoTempoFuori & "</span>"
+                                    If Rec("RisultatoATempi").Value = "S" Then
+                                        Stringozza &= "<td style=""text-align: center;"">"
+										Stringozza &= "<span class=""testo nero"" style=""font-size: 15px;"">1° Tempo: " & GoalPrimoTempoCasa & "-" & GoalPrimoTempoFuori & "</span>"
 										Stringozza &= "</td>"
-										Stringozza &= "<td style=""text-align: center;"">"
-										Stringozza &= "<span class=""testo nero"" style=""font-size: 13px;"">2° Tempo: " & GoalSecondoTempoCasa & "-" & GoalSecondoTempoFuori & "</span>"
+                                        Stringozza &= "<td style=""text-align: center;"">"
+										Stringozza &= "<span class=""testo nero"" style=""font-size: 15px;"">2° Tempo: " & GoalSecondoTempoCasa & "-" & GoalSecondoTempoFuori & "</span>"
 										Stringozza &= "</td>"
-										Stringozza &= "<td style=""text-align: center;"">"
-										Stringozza &= "<span class=""testo nero"" style=""font-size: 13px;"">3° Tempo: " & GoalTerzoTempoCasa & "-" & GoalTerzoTempoFuori & "</span>"
+                                        Stringozza &= "<td style=""text-align: center;"">"
+										Stringozza &= "<span class=""testo nero"" style=""font-size: 15px;"">3° Tempo: " & GoalTerzoTempoCasa & "-" & GoalTerzoTempoFuori & "</span>"
 										Stringozza &= "</td>"
-										Stringozza &= "<td style=""text-align: center;"" colspan=""2"">"
-										Stringozza &= "<span class=""testo nero"" style=""font-size: 13px;"">Giochetti: " & Rec("RisGiochetti").Value & "</span>"
+                                        Stringozza &= "<td style=""text-align: center;"" colspan=""2"">"
+										Stringozza &= "<span class=""testo nero"" style=""font-size: 15px;"">Giochetti: " & Rec("RisGiochetti").Value & "</span>"
 										Stringozza &= "</td>"
-									Else
-										Stringozza &= "<td colspan=""5"">"
-										Stringozza &= "</td>"
-									End If
-									Stringozza &= "<td style=""text-align: center;"" colspan=""2"">"
-									Stringozza &= "<span class=""testo blu"" style=""font-size: 15px;"">Risultato: " & Punti1 & "-" & Punti2 & "</span>"
+                                    Else
+                                        Stringozza &= "<td colspan=""5"">"
+                                        Stringozza &= "</td>"
+                                    End If
+                                    Stringozza &= "<td style=""text-align: center;"" colspan=""2"">"
+									Stringozza &= "<span class=""testo blu"" style=""font-size: 17px;"">Risultato: " & Punti1 & "-" & Punti2 & "</span>"
 									Stringozza &= "</td>"
-									Stringozza &= "<td style=""text-align: center;"" colspan=""3"">"
-									Stringozza &= "<span class=""testo "" style=""color: " & Colore & "; font-size: 13px;"">" & Esito & "</span>"
+                                    Stringozza &= "<td style=""text-align: center;"" colspan=""3"">"
+									Stringozza &= "<span class=""testo "" style=""color: " & Colore & "; font-size: 15px;"">" & Esito & "</span>"
 									Stringozza &= "</td>"
-									Stringozza &= "</tr>"
+                                    Stringozza &= "</tr>"
 
-									Dim Notelle As String = ""
+                                    Dim Notelle As String = ""
 
-									Sql = "Select * From Risultati Where idPartita = " & Rec("idPartita").Value
-									Try
-										Rec2 = LeggeQuery(Conn, Sql, Connessione)
-										If TypeOf (Rec2) Is String Then
-											Ritorno = Rec2
-										Else
-											If Not Rec2.Eof Then
-												Notelle = Rec2(2).Value
-											End If
-										End If
-									Catch ex As Exception
-										Ritorno = StringaErrore & " " & ex.Message
-									End Try
+                                    Sql = "Select * From Risultati Where idPartita = " & Rec("idPartita").Value
+                                    Try
+                                        Rec2 = LeggeQuery(Conn, Sql, Connessione)
+                                        If TypeOf (Rec2) Is String Then
+                                            Ritorno = Rec2
+                                        Else
+                                            If Not Rec2.Eof Then
+                                                Notelle = Rec2(2).Value
+                                            End If
+                                        End If
+                                    Catch ex As Exception
+                                        Ritorno = StringaErrore & " " & ex.Message
+                                    End Try
 
-									Dim Indirizzo As String = ""
+                                    Dim Indirizzo As String = ""
 
-									If Rec("Casa").Value = "S" Then
-										Indirizzo = Rec("IndirizzoCasa").Value
+                                    If Rec("Casa").Value = "S" Then
+                                        Indirizzo = Rec("IndirizzoCasa").Value
 										Stringozza &= "<tr " & RitornaColoreSfondo() & ">"
-										Stringozza &= "<td colspan=""6""><span class=""testo nero"" style=""font-size: 14px;"">In casa. " & Rec("IndirizzoCasa").Value & "</span></td>"
-										Stringozza &= "<td colspan=""5""><span class=""testo"" style=""font-size: 14px; font-style: italic; color: crimson; font-variant: all-petite-caps;"">" & Notelle & "</span></td>"
+										Stringozza &= "<td colspan=""6"" style=""text-align: center;""><span class=""testo nero"" style=""font-size: 14px; font-style: italic; color: #8e2e40;"">In casa. " & Rec("IndirizzoCasa").Value & "</span></td>"
+										Stringozza &= "<td colspan=""5"" style=""text-align: center;""><span class=""testo"" style=""font-size: 14px; font-style: italic; color: crimson; font-variant: all-petite-caps;"">" & Notelle & "</span></td>"
 										Stringozza &= "</tr>"
-									Else
-										If Rec("Casa").Value = "N" Then
-											Indirizzo = Rec("IndirizzoCampo").Value
-											Stringozza &= "<tr " & RitornaColoreSfondo() & ">"
-											Stringozza &= "<td colspan=""6""><span class=""testo nero"" style=""font-size: 14px;"">Campo " & Rec("Campo").Value & ". " & Rec("IndirizzoCampo").Value & "</span></td>"
+                                    Else
+                                        If Rec("Casa").Value = "N" Then
+                                            Indirizzo = Rec("IndirizzoCampo").Value
+                                            Stringozza &= "<tr " & RitornaColoreSfondo() & ">"
+											Stringozza &= "<td colspan=""6"" style=""text-align: center;""><span class=""testo"" style=""font-size: 14px; font-style: italic; color: #8e2e40;"">Campo " & Rec("Campo").Value & ". " & Rec("IndirizzoCampo").Value & "</span></td>"
+											Stringozza &= "<td colspan=""5"" style=""text-align: center;""><span class=""testo"" style=""font-size: 14px; font-style: italic; color: crimson; font-variant: all-petite-caps;"">" & Notelle & "</span></td>"
+											Stringozza &= "</tr>"
+                                        Else
+                                            Dim CampoEsterno As String = ""
+
+                                            Sql = "Select * From CampiEsterni Where idPartita = " & Rec("idPartita").Value
+                                            Try
+                                                Rec2 = LeggeQuery(Conn, Sql, Connessione)
+                                                If TypeOf (Rec2) Is String Then
+                                                    Ritorno = Rec2
+                                                Else
+                                                    If Not Rec2.Eof Then
+                                                        CampoEsterno = Rec2(1).Value
+                                                    End If
+                                                End If
+                                            Catch ex As Exception
+                                                Ritorno = StringaErrore & " " & ex.Message
+                                            End Try
+
+                                            Indirizzo = CampoEsterno
+                                            Stringozza &= "<tr " & RitornaColoreSfondo() & ">"
+											Stringozza &= "<td colspan=""6""><span class=""testo nero"" style=""font-size: 14px; font-style: italic; color: #8e2e40;"">Campo esterno: " & CampoEsterno & "</span></td>"
 											Stringozza &= "<td colspan=""5""><span class=""testo"" style=""font-size: 14px; font-style: italic; color: crimson; font-variant: all-petite-caps;"">" & Notelle & "</span></td>"
 											Stringozza &= "</tr>"
-										Else
-											Dim CampoEsterno As String = ""
+                                        End If
+                                    End If
 
-											Sql = "Select * From CampiEsterni Where idPartita = " & Rec("idPartita").Value
-											Try
-												Rec2 = LeggeQuery(Conn, Sql, Connessione)
-												If TypeOf (Rec2) Is String Then
-													Ritorno = Rec2
-												Else
-													If Not Rec2.Eof Then
-														CampoEsterno = Rec2(1).Value
-													End If
-												End If
-											Catch ex As Exception
-												Ritorno = StringaErrore & " " & ex.Message
-											End Try
+                                    ' Stringozza &= "<tr>"
+                                    ' Stringozza &= "<td colspan=""11"" style=""background-color: #555; height: 5px;""></td>"
+                                    ' Stringozza &= "</tr>"
 
-											Indirizzo = CampoEsterno
-											Stringozza &= "<tr " & RitornaColoreSfondo() & ">"
-											Stringozza &= "<td colspan=""6""><span class=""testo nero"" style=""font-size: 14px;"">Campo esterno: " & CampoEsterno & "</span></td>"
-											Stringozza &= "<td colspan=""5""><span class=""testo"" style=""font-size: 14px; font-style: italic; color: crimson; font-variant: all-petite-caps;"">" & Notelle & "</span></td>"
-											Stringozza &= "</tr>"
-										End If
-									End If
+                                    Sql = "Select * From CoordinatePartite " &
+                                        "Where idPartita = " & Rec("idPartita").Value
+                                    Try
+                                        Rec2 = LeggeQuery(Conn, Sql, Connessione)
+                                        If TypeOf (Rec2) Is String Then
+                                            Ritorno = Rec2
+                                        Else
+                                            If Not Rec2.Eof Then
+                                                If "" & Rec2("Lat").Value <> "" And "" & Rec2("Lon").Value <> "" Then
+                                                    Dim Descrizione As String = Rec("DataOra").Value & ": " & Casa & "-" & Fuori & " " & Punti1 & "-" & Punti2 & "<br />" & Esito & " - " & Tempo.Replace("<br />", " ") & "<br />"
+                                                    Dim Ok As Boolean = False
 
-									' Stringozza &= "<tr>"
-									' Stringozza &= "<td colspan=""11"" style=""background-color: #555; height: 5px;""></td>"
-									' Stringozza &= "</tr>"
+                                                    For ii As Integer = 0 To lmLat.Count - 1
+                                                        If lmLat(ii).Trim = Rec2("Lat").Value.ToString.Trim And lmLon(ii).Trim = Rec2("Lon").Value.ToString.Trim Then
+                                                            lmDescr.Item(ii) &= "<hr />" & Descrizione
 
-									Sql = "Select * From CoordinatePartite " &
-										"Where idPartita = " & Rec("idPartita").Value
-									Try
-										Rec2 = LeggeQuery(Conn, Sql, Connessione)
-										If TypeOf (Rec2) Is String Then
-											Ritorno = Rec2
-										Else
-											If Not Rec2.Eof Then
-												If "" & Rec2("Lat").Value <> "" And "" & Rec2("Lon").Value <> "" Then
-													Dim Descrizione As String = Rec("DataOra").Value & ": " & Casa & "-" & Fuori & " " & Punti1 & "-" & Punti2 & "<br />" & Esito & " - " & Tempo.Replace("<br />", " ") & "<br />"
-													Dim Ok As Boolean = False
+                                                            Ok = True
+                                                            Exit For
+                                                        End If
+                                                        ii += 1
+                                                    Next
 
-													For ii As Integer = 0 To lmLat.Count - 1
-														If lmLat(ii).Trim = Rec2("Lat").Value.ToString.Trim And lmLon(ii).Trim = Rec2("Lon").Value.ToString.Trim Then
-															lmDescr.Item(ii) &= "<hr />" & Descrizione
+                                                    If Not Ok Then
+                                                        lmLat.Add(Rec2("Lat").Value.ToString.Trim)
+                                                        lmLon.Add(Rec2("Lon").Value.ToString.Trim)
+                                                        lmInd.Add(Indirizzo)
+                                                        lmDescr.Add(Descrizione)
+                                                    End If
+                                                End If
+                                            End If
+                                        End If
+                                    Catch ex As Exception
+                                        Ritorno = StringaErrore & " " & ex.Message
+                                    End Try
 
-															Ok = True
-															Exit For
-														End If
-														ii += 1
-													Next
+                                    Stringozza &= "</table>"
+                                    Stringozza &= "</td>"
+                                    Stringozza &= "</tr>"
+                                    Stringozza &= "</table>"
 
-													If Not Ok Then
-														lmLat.Add(Rec2("Lat").Value.ToString.Trim)
-														lmLon.Add(Rec2("Lon").Value.ToString.Trim)
-														lmInd.Add(Indirizzo)
-														lmDescr.Add(Descrizione)
-													End If
-												End If
-											End If
-										End If
-									Catch ex As Exception
-										Ritorno = StringaErrore & " " & ex.Message
-									End Try
+                                    Rec.MoveNext
+                                Loop
 
-									Stringozza &= "</table>"
-									Stringozza &= "</td>"
-									Stringozza &= "</tr>"
-									Stringozza &= "</table>"
-
-									Rec.MoveNext
-								Loop
-
-								Select Case i
+                                Select Case i
                                     Case 1
                                         ListaPartiteDiCampionato = Stringozza
                                     Case 2
@@ -3154,13 +3156,13 @@ Public Class wsStatistiche
 
                 ' Generali casa
                 Stringona = ""
-                Stringona &= "Giocate: " & (GiocateCampionatoCasa + GiocateAmichevoliCasa + GiocateTorneiCasa).ToString & "<br /><br />"
+				Stringona &= "Giocate: " & (GiocateCampionatoCasa + GiocateAmichevoliCasa + GiocateTorneiCasa).ToString & "<hr />"
 
-                Stringona &= "Vittorie: " & (VittorieCampionatoCasa + VittorieAmichevoliCampoEsterno + VittorieAmichevoliCasa).ToString & "<br />"
+				Stringona &= "Vittorie: " & (VittorieCampionatoCasa + VittorieAmichevoliCampoEsterno + VittorieAmichevoliCasa).ToString & "<br />"
                 Stringona &= "Pareggi: " & (PareggiCampionatoCasa + PareggiAmichevoliCasa + PareggiTorneiCasa).ToString & "<br />"
-                Stringona &= "Sconfitte: " & (SconfitteCampionatoCasa + SconfitteAmichevoliCasa + SconfitteTorneiCasa).ToString & "<br /><br />"
+				Stringona &= "Sconfitte: " & (SconfitteCampionatoCasa + SconfitteAmichevoliCasa + SconfitteTorneiCasa).ToString & "<hr />"
 
-                Stringona &= "Goal segnati: " & (GoalCampionatoCasa + GoalAmichevoliCasa + GoalTorneiCasa).ToString & "<br />"
+				Stringona &= "Goal segnati: " & (GoalCampionatoCasa + GoalAmichevoliCasa + GoalTorneiCasa).ToString & "<br />"
                 Stringona &= "Goal subiti: " & (GoalAvvCampionatoCasa1Tempo + GoalAvvCampionatoCasa2Tempo + GoalAvvCampionatoCasa3Tempo +
                 GoalAvvAmichevoliCasa1Tempo + GoalAvvAmichevoliCasa2Tempo + GoalAvvAmichevoliCasa3Tempo +
                 GoalAvvTorneiCasa1Tempo + GoalAvvTorneiCasa2Tempo + GoalAvvTorneiCasa3Tempo).ToString & "<br />"
@@ -3187,13 +3189,13 @@ Public Class wsStatistiche
 
                 ' Generali fuori
                 Stringona = ""
-                Stringona &= "Giocate: " & (GiocateCampionatoFuori + GiocateAmichevoliFuori + GiocateTorneiFuori).ToString & "<br /><br />"
+				Stringona &= "Giocate: " & (GiocateCampionatoFuori + GiocateAmichevoliFuori + GiocateTorneiFuori).ToString & "<hr />"
 
-                Stringona &= "Vittorie: " & (VittorieCampionatoFuori + VittorieAmichevoliCampoEsterno + VittorieAmichevoliFuori).ToString & "<br />"
+				Stringona &= "Vittorie: " & (VittorieCampionatoFuori + VittorieAmichevoliCampoEsterno + VittorieAmichevoliFuori).ToString & "<br />"
                 Stringona &= "Pareggi: " & (PareggiCampionatoFuori + PareggiAmichevoliFuori + PareggiTorneiFuori).ToString & "<br />"
-                Stringona &= "Sconfitte: " & (SconfitteCampionatoFuori + SconfitteAmichevoliFuori + SconfitteTorneiFuori).ToString & "<br /><br />"
+				Stringona &= "Sconfitte: " & (SconfitteCampionatoFuori + SconfitteAmichevoliFuori + SconfitteTorneiFuori).ToString & "<hr />"
 
-                Stringona &= "Goal segnati: " & (GoalCampionatoFuori + GoalAmichevoliFuori + GoalTorneiFuori).ToString & "<br />"
+				Stringona &= "Goal segnati: " & (GoalCampionatoFuori + GoalAmichevoliFuori + GoalTorneiFuori).ToString & "<br />"
                 Stringona &= "Goal subiti: " & (GoalAvvCampionatoFuori1Tempo + GoalAvvCampionatoFuori2Tempo + GoalAvvCampionatoFuori3Tempo +
                 GoalAvvAmichevoliFuori1Tempo + GoalAvvAmichevoliFuori2Tempo + GoalAvvAmichevoliFuori3Tempo +
                 GoalAvvTorneiFuori1Tempo + GoalAvvTorneiFuori2Tempo + GoalAvvTorneiFuori3Tempo).ToString & "<br />"
@@ -3219,13 +3221,13 @@ Public Class wsStatistiche
 
                 ' Generali campo esterno
                 Stringona = ""
-                Stringona &= "Giocate: " & (GiocateCampionatoCampoEsterno + GiocateAmichevoliCampoEsterno + GiocateTorneiCampoEsterno).ToString & "<br /><br />"
+				Stringona &= "Giocate: " & (GiocateCampionatoCampoEsterno + GiocateAmichevoliCampoEsterno + GiocateTorneiCampoEsterno).ToString & "<hr />"
 
-                Stringona &= "Vittorie: " & (VittorieCampionatoCampoEsterno + VittorieAmichevoliCampoEsterno + VittorieAmichevoliCampoEsterno).ToString & "<br />"
+				Stringona &= "Vittorie: " & (VittorieCampionatoCampoEsterno + VittorieAmichevoliCampoEsterno + VittorieAmichevoliCampoEsterno).ToString & "<br />"
                 Stringona &= "Pareggi: " & (PareggiCampionatoCampoEsterno + PareggiAmichevoliCampoEsterno + PareggiTorneiCampoEsterno).ToString & "<br />"
-                Stringona &= "Sconfitte: " & (SconfitteCampionatoCampoEsterno + SconfitteAmichevoliCampoEsterno + SconfitteTorneiCampoEsterno).ToString & "<br /><br />"
+				Stringona &= "Sconfitte: " & (SconfitteCampionatoCampoEsterno + SconfitteAmichevoliCampoEsterno + SconfitteTorneiCampoEsterno).ToString & "<hr />"
 
-                Stringona &= "Goal segnati: " & (GoalCampionatoCampoEsterno + GoalAmichevoliCampoEsterno + GoalTorneiCampoEsterno).ToString & "<br />"
+				Stringona &= "Goal segnati: " & (GoalCampionatoCampoEsterno + GoalAmichevoliCampoEsterno + GoalTorneiCampoEsterno).ToString & "<br />"
                 Stringona &= "Goal subiti: " & (GoalAvvCampionatoCampoEsterno1Tempo + GoalAvvCampionatoCampoEsterno2Tempo + GoalAvvCampionatoCampoEsterno3Tempo +
                 GoalAvvAmichevoliCampoEsterno1Tempo + GoalAvvAmichevoliCampoEsterno2Tempo + GoalAvvAmichevoliCampoEsterno3Tempo +
                 GoalAvvTorneiCampoEsterno1Tempo + GoalAvvTorneiCampoEsterno2Tempo + GoalAvvTorneiCampoEsterno3Tempo).ToString & "<br />"
@@ -3251,13 +3253,13 @@ Public Class wsStatistiche
 
                 ' Campionato casa
                 Stringona = ""
-                Stringona &= "Giocate: " & (GiocateCampionatoCasa).ToString & "<br /><br />"
+				Stringona &= "Giocate: " & (GiocateCampionatoCasa).ToString & "<hr />"
 
-                Stringona &= "Vittorie: " & (VittorieCampionatoCasa).ToString & "<br />"
+				Stringona &= "Vittorie: " & (VittorieCampionatoCasa).ToString & "<br />"
                 Stringona &= "Pareggi: " & (PareggiCampionatoCasa).ToString & "<br />"
-                Stringona &= "Sconfitte: " & (SconfitteCampionatoCasa).ToString & "<br /><br />"
+				Stringona &= "Sconfitte: " & (SconfitteCampionatoCasa).ToString & "<hr />"
 
-                Stringona &= "Goal segnati: " & (GoalCampionatoCasa).ToString & "<br />"
+				Stringona &= "Goal segnati: " & (GoalCampionatoCasa).ToString & "<br />"
                 Stringona &= "Goal subiti: " & (GoalAvvCampionatoCasa1Tempo + GoalAvvCampionatoCasa2Tempo + GoalAvvCampionatoCasa3Tempo).ToString & "<br />"
                 Filone = Filone.Replace("***DATI_CAMPIONATO_CASA***", Stringona)
 
@@ -3281,13 +3283,13 @@ Public Class wsStatistiche
 
                 ' Campionato fuori
                 Stringona = ""
-                Stringona &= "Giocate: " & (GiocateCampionatoFuori).ToString & "<br /><br />"
+				Stringona &= "Giocate: " & (GiocateCampionatoFuori).ToString & "<hr />"
 
-                Stringona &= "Vittorie: " & (VittorieCampionatoFuori).ToString & "<br />"
+				Stringona &= "Vittorie: " & (VittorieCampionatoFuori).ToString & "<br />"
                 Stringona &= "Pareggi: " & (PareggiCampionatoFuori).ToString & "<br />"
-                Stringona &= "Sconfitte: " & (SconfitteCampionatoFuori).ToString & "<br /><br />"
+				Stringona &= "Sconfitte: " & (SconfitteCampionatoFuori).ToString & "<hr />"
 
-                Stringona &= "Goal segnati: " & (GoalCampionatoFuori).ToString & "<br />"
+				Stringona &= "Goal segnati: " & (GoalCampionatoFuori).ToString & "<br />"
                 Stringona &= "Goal subiti: " & (GoalAvvCampionatoFuori1Tempo + GoalAvvCampionatoFuori2Tempo + GoalAvvCampionatoFuori3Tempo).ToString & "<br />"
                 Filone = Filone.Replace("***DATI_CAMPIONATO_FUORI***", Stringona)
 
@@ -3311,13 +3313,13 @@ Public Class wsStatistiche
 
                 ' Campionato campo esterno
                 Stringona = ""
-                Stringona &= "Giocate: " & (GiocateCampionatoCampoEsterno).ToString & "<br /><br />"
+				Stringona &= "Giocate: " & (GiocateCampionatoCampoEsterno).ToString & "<hr />"
 
-                Stringona &= "Vittorie: " & (VittorieCampionatoCampoEsterno).ToString & "<br />"
+				Stringona &= "Vittorie: " & (VittorieCampionatoCampoEsterno).ToString & "<br />"
                 Stringona &= "Pareggi: " & (PareggiCampionatoCampoEsterno).ToString & "<br />"
-                Stringona &= "Sconfitte: " & (SconfitteCampionatoCampoEsterno).ToString & "<br /><br />"
+				Stringona &= "Sconfitte: " & (SconfitteCampionatoCampoEsterno).ToString & "<hr />"
 
-                Stringona &= "Goal segnati: " & (GoalCampionatoCampoEsterno).ToString & "<br />"
+				Stringona &= "Goal segnati: " & (GoalCampionatoCampoEsterno).ToString & "<br />"
                 Stringona &= "Goal subiti: " & (GoalAvvCampionatoCampoEsterno1Tempo + GoalAvvCampionatoCampoEsterno2Tempo + GoalAvvCampionatoCampoEsterno3Tempo).ToString & "<br />"
                 Filone = Filone.Replace("***DATI_CAMPIONATO_CAMPOESTERNO***", Stringona)
 
@@ -3341,13 +3343,13 @@ Public Class wsStatistiche
 
                 ' Amichevoli casa
                 Stringona = ""
-                Stringona &= "Giocate: " & (GiocateAmichevoliCasa).ToString & "<br /><br />"
+				Stringona &= "Giocate: " & (GiocateAmichevoliCasa).ToString & "<hr />"
 
-                Stringona &= "Vittorie: " & (VittorieAmichevoliCasa).ToString & "<br />"
+				Stringona &= "Vittorie: " & (VittorieAmichevoliCasa).ToString & "<br />"
                 Stringona &= "Pareggi: " & (PareggiAmichevoliCasa).ToString & "<br />"
-                Stringona &= "Sconfitte: " & (SconfitteAmichevoliCasa).ToString & "<br /><br />"
+				Stringona &= "Sconfitte: " & (SconfitteAmichevoliCasa).ToString & "<hr />"
 
-                Stringona &= "Goal segnati: " & (GoalAmichevoliCasa).ToString & "<br />"
+				Stringona &= "Goal segnati: " & (GoalAmichevoliCasa).ToString & "<br />"
                 Stringona &= "Goal subiti: " & (GoalAvvAmichevoliCasa1Tempo + GoalAvvAmichevoliCasa2Tempo + GoalAvvAmichevoliCasa3Tempo).ToString & "<br />"
                 Filone = Filone.Replace("***DATI_AMICHEVOLI_CASA***", Stringona)
 
@@ -3371,13 +3373,13 @@ Public Class wsStatistiche
 
                 ' Amichevoli fuori
                 Stringona = ""
-                Stringona &= "Giocate: " & (GiocateAmichevoliFuori).ToString & "<br /><br />"
+				Stringona &= "Giocate: " & (GiocateAmichevoliFuori).ToString & "<hr />"
 
-                Stringona &= "Vittorie: " & (VittorieAmichevoliFuori).ToString & "<br />"
+				Stringona &= "Vittorie: " & (VittorieAmichevoliFuori).ToString & "<br />"
                 Stringona &= "Pareggi: " & (PareggiAmichevoliFuori).ToString & "<br />"
-                Stringona &= "Sconfitte: " & (SconfitteAmichevoliFuori).ToString & "<br /><br />"
+				Stringona &= "Sconfitte: " & (SconfitteAmichevoliFuori).ToString & "<hr />"
 
-                Stringona &= "Goal segnati: " & (GoalAmichevoliFuori).ToString & "<br />"
+				Stringona &= "Goal segnati: " & (GoalAmichevoliFuori).ToString & "<br />"
                 Stringona &= "Goal subiti: " & (GoalAvvAmichevoliFuori1Tempo + GoalAvvAmichevoliFuori2Tempo + GoalAvvAmichevoliFuori3Tempo).ToString & "<br />"
                 Filone = Filone.Replace("***DATI_AMICHEVOLI_FUORI***", Stringona)
 
@@ -3401,13 +3403,13 @@ Public Class wsStatistiche
 
                 ' Amichevoli campo esterno
                 Stringona = ""
-                Stringona &= "Giocate: " & (GiocateAmichevoliCampoEsterno).ToString & "<br /><br />"
+				Stringona &= "Giocate: " & (GiocateAmichevoliCampoEsterno).ToString & "<hr />"
 
-                Stringona &= "Vittorie: " & (VittorieAmichevoliCampoEsterno).ToString & "<br />"
+				Stringona &= "Vittorie: " & (VittorieAmichevoliCampoEsterno).ToString & "<br />"
                 Stringona &= "Pareggi: " & (PareggiAmichevoliCampoEsterno).ToString & "<br />"
-                Stringona &= "Sconfitte: " & (SconfitteAmichevoliCampoEsterno).ToString & "<br /><br />"
+				Stringona &= "Sconfitte: " & (SconfitteAmichevoliCampoEsterno).ToString & "<hr />"
 
-                Stringona &= "Goal segnati: " & (GoalAmichevoliCampoEsterno).ToString & "<br />"
+				Stringona &= "Goal segnati: " & (GoalAmichevoliCampoEsterno).ToString & "<br />"
                 Stringona &= "Goal subiti: " & (GoalAvvAmichevoliCampoEsterno1Tempo + GoalAvvAmichevoliCampoEsterno2Tempo + GoalAvvAmichevoliCampoEsterno3Tempo).ToString & "<br />"
                 Filone = Filone.Replace("***DATI_AMICHEVOLI_CAMPOESTERNO***", Stringona)
 
@@ -3431,13 +3433,13 @@ Public Class wsStatistiche
 
                 ' Tornei casa
                 Stringona = ""
-                Stringona &= "Giocate: " & (GiocateTorneiCasa).ToString & "<br /><br />"
+				Stringona &= "Giocate: " & (GiocateTorneiCasa).ToString & "<hr />"
 
-                Stringona &= "Vittorie: " & (VittorieTorneiCasa).ToString & "<br />"
+				Stringona &= "Vittorie: " & (VittorieTorneiCasa).ToString & "<br />"
                 Stringona &= "Pareggi: " & (PareggiTorneiCasa).ToString & "<br />"
-                Stringona &= "Sconfitte: " & (SconfitteTorneiCasa).ToString & "<br /><br />"
+				Stringona &= "Sconfitte: " & (SconfitteTorneiCasa).ToString & "<hr />"
 
-                Stringona &= "Goal segnati: " & (GoalTorneiCasa).ToString & "<br />"
+				Stringona &= "Goal segnati: " & (GoalTorneiCasa).ToString & "<br />"
                 Stringona &= "Goal subiti: " & (GoalAvvTorneiCasa1Tempo + GoalAvvTorneiCasa2Tempo + GoalAvvTorneiCasa3Tempo).ToString & "<br />"
                 Filone = Filone.Replace("***DATI_TORNEI_CASA***", Stringona)
 
@@ -3461,13 +3463,13 @@ Public Class wsStatistiche
 
                 ' Tornei fuori
                 Stringona = ""
-                Stringona &= "Giocate: " & (GiocateTorneiFuori).ToString & "<br /><br />"
+				Stringona &= "Giocate: " & (GiocateTorneiFuori).ToString & "<hr />"
 
-                Stringona &= "Vittorie: " & (VittorieTorneiFuori).ToString & "<br />"
+				Stringona &= "Vittorie: " & (VittorieTorneiFuori).ToString & "<br />"
                 Stringona &= "Pareggi: " & (PareggiTorneiFuori).ToString & "<br />"
-                Stringona &= "Sconfitte: " & (SconfitteTorneiFuori).ToString & "<br /><br />"
+				Stringona &= "Sconfitte: " & (SconfitteTorneiFuori).ToString & "<hr />"
 
-                Stringona &= "Goal segnati: " & (GoalTorneiFuori).ToString & "<br />"
+				Stringona &= "Goal segnati: " & (GoalTorneiFuori).ToString & "<br />"
                 Stringona &= "Goal subiti: " & (GoalAvvTorneiFuori1Tempo + GoalAvvTorneiFuori2Tempo + GoalAvvTorneiFuori3Tempo).ToString & "<br />"
                 Filone = Filone.Replace("***DATI_TORNEI_FUORI***", Stringona)
 
@@ -3491,13 +3493,13 @@ Public Class wsStatistiche
 
                 ' Tornei campo esterno
                 Stringona = ""
-                Stringona &= "Giocate: " & (GiocateTorneiCampoEsterno).ToString & "<br /><br />"
+				Stringona &= "Giocate: " & (GiocateTorneiCampoEsterno).ToString & "<hr />"
 
-                Stringona &= "Vittorie: " & (VittorieTorneiCampoEsterno).ToString & "<br />"
+				Stringona &= "Vittorie: " & (VittorieTorneiCampoEsterno).ToString & "<br />"
                 Stringona &= "Pareggi: " & (PareggiTorneiCampoEsterno).ToString & "<br />"
-                Stringona &= "Sconfitte: " & (SconfitteTorneiCampoEsterno).ToString & "<br /><br />"
+				Stringona &= "Sconfitte: " & (SconfitteTorneiCampoEsterno).ToString & "<hr />"
 
-                Stringona &= "Goal segnati: " & (GoalTorneiCampoEsterno).ToString & "<br />"
+				Stringona &= "Goal segnati: " & (GoalTorneiCampoEsterno).ToString & "<br />"
                 Stringona &= "Goal subiti: " & (GoalAvvTorneiCampoEsterno1Tempo + GoalAvvTorneiCampoEsterno2Tempo + GoalAvvTorneiCampoEsterno3Tempo).ToString & "<br />"
                 Filone = Filone.Replace("***DATI_TORNEI_CAMPOESTERNO***", Stringona)
 
@@ -3626,14 +3628,14 @@ Public Class wsStatistiche
                 Filone = Filone.Replace("***GRAFICO_PUNTI***", GraficoPuntiCampionato)
                 Filone = Filone.Replace("***LISTA_MARKERS_MAPPA***", ListaMarkers)
 
-				Filone = Filone.Replace("**CATEGORIA***", idCategoria)
-				Filone = Filone.Replace("***IMM_CATEGORIA***", idAnno.ToString.Trim & "_" & idCategoria.ToString.Trim)
-				Filone = Filone.Replace("***DESC_ANNO***", descAnno)
-				Filone = Filone.Replace("***NOME_SQUADRA***", nomeSquadra)
+                Filone = Filone.Replace("**CATEGORIA***", idCategoria)
+                Filone = Filone.Replace("***IMM_CATEGORIA***", idAnno.ToString.Trim & "_" & idCategoria.ToString.Trim)
+                Filone = Filone.Replace("***DESC_ANNO***", descAnno)
+                Filone = Filone.Replace("***NOME_SQUADRA***", nomeSquadra)
 
-				gf.CreaAggiornaFile(NomeFileFinale, Filone)
+                gf.CreaAggiornaFile(NomeFileFinale, Filone)
 
-				If Ritorno = "" Then Ritorno = "OK"
+                If Ritorno = "" Then Ritorno = "OK"
             End If
         End If
 

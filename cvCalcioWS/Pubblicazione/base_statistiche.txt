@@ -152,7 +152,9 @@
 			var nn = document.getElementById('divNomeImmagine');
 			
 			im.style.backgroundImage = "url('" + immagini[immagineVisualizzata] + "')"; 
-			nn.innerText = immagini[immagineVisualizzata];
+			var ss = immagini[immagineVisualizzata].split('/');
+			var sss = ss[ss.length - 1];
+			nn.innerText = "Immagine " + (immagineVisualizzata+1) + "/" + (quanteImmagini+1) + ": " + sss;
 		}
    </script>
 
@@ -270,10 +272,14 @@
             box-shadow: 0px 0px 4px 1px rgba(0, 0, 0, .3);
 			margin-right: 5px;
 			vertical-align: center;
+			text-align: center;
+			background: url('http://looigi.no-ip.biz:12345/CVCalcio/App_Themes/Standard/Images/Categorie/***IMM_CATEGORIA***.jpg');
+			background-size: cover;
+			background-position: center;
 		}
 		
 		.pannelloImmagini {
-			position: absolute;
+			position: fixed;
 			left: 10%;
 			top: 10vh;
 			width: 80%;
@@ -284,13 +290,14 @@
 			border: 1px solid #000;
 			background-color: #fff;
 			z-index: 1000;
-			background-size: cover; 
+			background-size: contain; 
 			background-position: center;
+			background-repeat: no-repeat;
 		}
 		
 		.pannelloOscura {
 			display: none;
-			position: absolute;
+			position: fixed;
 			left: 0px;
 			top: 0px;
 			width: 100%;
@@ -331,17 +338,28 @@
 			text-align: center;
 			background-color: #fff1ca;
 		}
+		
+		.glowingText {
+		  -webkit-animation: glow 1s ease-in-out infinite alternate;
+		  -moz-animation: glow 1s ease-in-out infinite alternate;
+		  animation: glow 1s ease-in-out infinite alternate;
+		}
+		
+		@-webkit-keyframes glow {
+		  from {
+			text-shadow: 0 0 10px #fff, 0 0 20px #fff, 0 0 30px #e60073, 0 0 40px #e60073, 0 0 50px #e60073, 0 0 60px #e60073, 0 0 70px #e60073;
+		  }
+		  to {
+			text-shadow: 0 0 20px #fff, 0 0 30px #ff4da6, 0 0 40px #ff4da6, 0 0 50px #ff4da6, 0 0 60px #ff4da6, 0 0 70px #ff4da6, 0 0 80px #ff4da6;
+		  }
+		}
 	</style>
 </head>
 
 <body>
 	<div class="intestazione">
-		<div style="float: left; margin-top: 15px; margin-left: 8px;">
-			<span class="testo rosso" style="font-size: 27px;">Statistiche annuali ***NOME_SQUADRA*** Categoria ***CATEGORIA*** Anno ***DESC_ANNO***</span>
-		</div>
-		<div style="float: right;">
-			<img src ="http://looigi.no-ip.biz:12345/CVCalcio/App_Themes/Standard/Images/Categorie/***IMM_CATEGORIA***.jpg" width="65px" height="65px" 
-				onerror="this.src='http://looigi.no-ip.biz:12345/CVCalcio/App_Themes/Standard/Images/Sconosciuto.png'" />
+		<div style="margin-top: 15px; margin-left: 8px;">
+			<span class="testo rosso glowingText" style="font-size: 27px;">Statistiche annuali ***NOME_SQUADRA*** Categoria ***CATEGORIA*** Anno ***DESC_ANNO***</span>
 		</div>
 	</div>
 	
@@ -363,7 +381,7 @@
 		<table class="area" style="width: 100%; margin-top: 10px;">
 			<tr>
 				<td style="width: 33%; padding: 3px; text-align: center; background-color: #aaa; border: 1px solid #999;">
-					<span class="testo blu" style="font-size: 22px;">Generale</span>
+					<span class="testo blu" style="font-size: 22px;">Statistiche Generali</span>
 				</td>
 			</tr>
 		</table>
@@ -426,7 +444,7 @@
 		<table class="area" style="width: 100%; margin-top: 10px;" >
 			<tr>
 				<td style="width: 33%; text-align: center; background-color: #aaa; border: 1px solid #999;">
-					<span class="testo blu" style="font-size: 22px;">Campionato</span>
+					<span class="testo blu" style="font-size: 22px;">Statistiche Campionato</span>
 				</td>
 			</tr>
 		</table>
@@ -497,7 +515,7 @@
 		<table class="area" style="width: 100%; margin-top: 10px;" >
 			<tr>
 				<td style="width: 33%; text-align: center; background-color: #aaa; border: 1px solid #999;">
-					<span class="testo blu" style="font-size: 22px;">Amichevoli</span>
+					<span class="testo blu" style="font-size: 22px;">Statistiche Amichevoli</span>
 				</td>
 			</tr>
 		</table>
@@ -567,7 +585,7 @@
 		<table class="area" style="width: 100%; margin-top: 10px;" >
 			<tr>
 				<td style="width: 33%; text-align: center; background-color: #aaa; border: 1px solid #999;">
-					<span class="testo blu" style="font-size: 22px;">Tornei</span>
+					<span class="testo blu" style="font-size: 22px;">Statistiche Tornei</span>
 				</td>
 			</tr>
 		</table>
@@ -641,7 +659,6 @@
 						<div style=" background-color: #888; width: 100%; text-align:center;">
 							<span class="testo blu" style="font-size: 22px;">Marcatori categoria</span>
 						</div>
-						<hr />
 						***MARCATORI_GLOBALI***
 					</div>
 				</td>
@@ -650,7 +667,6 @@
 						<div style=" background-color: #888; width: 100%; text-align:center;">
 							<span class="testo blu" style="font-size: 22px;">Marcatori di tutte le categorie</span>
 						</div>
-						<hr />
 						***MARCATORI_TUTTE***
 					</div>
 				</td>
@@ -668,7 +684,6 @@
 						<div style=" background-color: #888; width: 100%; text-align:center;">
 							<span class="testo blu" style="font-size: 22px;">Presenze categoria</span>
 						</div>
-						<hr />
 						***PRESENZE***
 					</div>
 				</td>
@@ -677,7 +692,6 @@
 						<div style=" background-color: #888; width: 100%; text-align:center;">
 							<span class="testo blu" style="font-size: 22px;">Presenze di tutte le categorie</span>
 						</div>
-						<hr />
 						***PRESENZE_TUTTE***
 					</div>
 				</td>
@@ -702,12 +716,10 @@
 			</tr>
 		</table>
 
-		<div class="area" style="width: 99%;">
+		<div class="area" style="width: 99%; margin-top: 5px;">
 			<div style=" background-color: #888; width: 100%; text-align:center;">
 				<span class="testo blu" style="font-size: 22px;">Squadre incontrate</span>
 			</div>
-
-			<hr />
 			***SQUADRE_INCONTRATE***
 		</div>
 		
@@ -715,7 +727,6 @@
 			<div style=" background-color: #888; width: 100%; text-align:center;">
 				<span class="testo blu" style="font-size: 22px;">Partita con più goals</span>
 			</div>
-			<hr />
 			***PARTITA_CON_PIU_GOAL***
 		</div>
 		
@@ -723,7 +734,6 @@
 			<div style=" background-color: #888; width: 100%; text-align:center;">
 				<span class="testo blu" style="font-size: 22px;">Partita con meno goals</span>
 			</div>
-			<hr />
 			***PARTITA_CON_MENO_GOAL***
 		</div>
 		
@@ -731,12 +741,10 @@
 			<tr style="width: 100%;">
 				<td style="width: 50%; text-align: center; vertical-align: top;">
 					<span class="testo blu" style="font-size: 22px;">Goals per minuto</span>
-					<hr />
 					***GOALS_PER_MINUTO***
 				</td>
 				<td style="width: 50%; text-align: center; vertical-align: top;">
 					<span class="testo blu" style="font-size: 22px;">Subiti per minuto</span>
-					<hr />
 					***SUBITI_PER_MINUTO***
 				</td>
 			</tr>
