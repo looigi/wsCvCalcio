@@ -372,16 +372,47 @@ Public Class wsGenerale
                 Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
             Else
                 Dim Sql As String = ""
+				Dim lat As String = ""
+				Dim lon As String = ""
+				Dim ind As String = ""
 
-                Try
-                    Sql = "Insert Into Anni Values (" & idAnno & ", '" & descAnno.Replace(";", "_").Replace("'", "''") & "', '" & nomeSquadra.Replace(";", "_").Replace("'", "''") & "')"
-                    Ritorno = EsegueSql(Conn, Sql, Connessione)
-                Catch ex As Exception
-                    Ritorno = StringaErrore & " " & ex.Message
+				Try
+					Sql = "Select * From Anni Where Ucase(Trim(NomeSquadra))= '" & nomeSquadra.Trim.ToUpper & "'"
+					Dim Rec As Object = Server.CreateObject("ADODB.Recordset")
+					Rec = LeggeQuery(Conn, Sql, Connessione)
+					If TypeOf (Rec) Is String Then
+						Ritorno = Rec
+					Else
+						If Rec.Eof Then
+							lat = "0"
+							lon = "0"
+							ind = "Sconosciuto"
+						Else
+							lat = "" & Rec("Lat").Value.ToString
+							lon = "" & Rec("Lon").Value.ToString
+							ind = "" & Rec("Indirizzo").Value.ToString
+							nomeSquadra = "" & Rec("NomeSquadra").Value.ToString
+
+							lat = lat.Replace(",", ".")
+							lon = lon.Replace(",", ".")
+						End If
+					End If
+
+					Sql = "Insert Into Anni Values (" &
+						" " & idAnno & ", " &
+						"'" & descAnno.Replace(";", "_").Replace("'", "''") & "', " &
+						"'" & nomeSquadra.Replace(";", "_").Replace("'", "''") & "', " &
+						" " & lat & ", " &
+						" " & lon & ", " &
+						"'" & ind & "' " &
+						")"
+					Ritorno = EsegueSql(Conn, Sql, Connessione)
+				Catch ex As Exception
+					Ritorno = StringaErrore & " " & ex.Message
                 End Try
 
-                Conn.Close()
-            End If
+				' Conn.Close()
+			End If
         End If
 
         Return Ritorno
