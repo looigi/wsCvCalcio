@@ -155,22 +155,43 @@ Public Class wsGenerale
                 End If
 
                 Try
-                    Sql = "SELECT * FROM Anni Where Descrizione Like '%" & Anno & "/%'"
-                    Rec = LeggeQuery(Conn, Sql, Connessione)
-                    If TypeOf (Rec) Is String Then
-                        Ritorno = Rec
-                    Else
-                        Ritorno = ""
-                        Do Until Rec.Eof
-                            Ritorno &= Rec("idAnno").Value & ";" &
-                                Rec("Descrizione").Value & ";" &
-                                Rec("NomeSquadra").Value & ";" &
-                                "§"
-                            Rec.MoveNext()
-                        Loop
-                        Rec.Close()
-                    End If
-                Catch ex As Exception
+					Sql = "SELECT * FROM Anni Where Descrizione Like '%" & Anno & "/%'"
+					Rec = LeggeQuery(Conn, Sql, Connessione)
+					If TypeOf (Rec) Is String Then
+						Ritorno = Rec
+					Else
+						Ritorno = ""
+						If Rec.Eof Then
+							Sql = "SELECT * FROM Anni Where Descrizione Like '%" & Anno & "'"
+							Rec = LeggeQuery(Conn, Sql, Connessione)
+							If TypeOf (Rec) Is String Then
+								Ritorno = Rec
+							Else
+								If Not Rec.Eof Then
+									Do Until Rec.Eof
+										Ritorno &= Rec("idAnno").Value & ";" &
+											Rec("Descrizione").Value & ";" &
+											Rec("NomeSquadra").Value & ";" &
+											"§"
+										Rec.MoveNext()
+									Loop
+									Rec.Close()
+								Else
+									Ritorno = "ERROR: Nessun valore rilevato"
+								End If
+							End If
+						Else
+							Do Until Rec.Eof
+								Ritorno &= Rec("idAnno").Value & ";" &
+								Rec("Descrizione").Value & ";" &
+								Rec("NomeSquadra").Value & ";" &
+								"§"
+								Rec.MoveNext()
+							Loop
+							Rec.Close()
+						End If
+					End If
+				Catch ex As Exception
                     Ritorno = StringaErrore & " " & ex.Message
                 End Try
 

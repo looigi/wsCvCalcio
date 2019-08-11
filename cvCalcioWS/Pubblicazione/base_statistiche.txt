@@ -186,6 +186,10 @@
             color: #0000cc;
         }
 
+        .bianco {
+            color: #ffffff;
+        }
+
         .rosso {
             color: #aa0000;
         }
@@ -258,20 +262,18 @@
 		
 		.intestazione {
 			width: 99%; 
-			height: 65px; 
+			height: 150px; 
 			border: 2px solid #ccc; 
 			background-color: #f1f1f1; 
 			-webkit-border-radius: 4px;
 			-moz-border-radius: 4px;
 			border-radius: 4px;
 			padding: 2px;
-			margin-left: 5px;
 			margin-bottom: 5px;
             -webkit-box-shadow: 0px 0px 4px 1px rgba(0, 0, 0, .3);
             -moz-box-shadow: 0px 0px 4px 1px rgba(0, 0, 0, .3);
             box-shadow: 0px 0px 4px 1px rgba(0, 0, 0, .3);
-			margin-right: 5px;
-			vertical-align: center;
+			vertical-align: middle;
 			text-align: center;
 			background: url('http://looigi.no-ip.biz:12345/CVCalcio/App_Themes/Standard/Images/Categorie/***IMM_CATEGORIA***.jpg');
 			background-size: cover;
@@ -358,13 +360,13 @@
 
 <body>
 	<div class="intestazione">
-		<div style="margin-top: 15px; margin-left: 8px;">
-			<span class="testo rosso glowingText" style="font-size: 27px;">Statistiche annuali ***NOME_SQUADRA*** Categoria ***CATEGORIA*** Anno ***DESC_ANNO***</span>
+		<div style="margin-top: 50px; ">
+			<span class="testo bianco glowingText" style="font-size: 35px;">Statistiche annuali ***NOME_SQUADRA*** Categoria ***CATEGORIA*** Anno ***DESC_ANNO***</span>
 		</div>
 	</div>
 	
 	<div class="tab">
-		<button id="defaultOpen" class="tablinks" onclick="openCity(event, 'PGenerali')">Partite Generali</button>
+		<button id="defaultOpen" class="tablinks" onclick="openCity(event, 'PGenerali')">Generali</button>
 		<button class="tablinks" onclick="openCity(event, 'PCampionato')">Campionato</button>
 		<button class="tablinks" onclick="openCity(event, 'PAmichevoli')">Amichevoli</button>
 		<button class="tablinks" onclick="openCity(event, 'PTornei')">Tornei</button>
