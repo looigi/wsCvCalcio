@@ -240,54 +240,65 @@ Public Class wsUtenti
                 Dim Sql As String = ""
                 Dim idUtente As String = ""
 
-                Try
-                    Sql = "SELECT Max(idUtente)+1 FROM UtentiMobile" ' Where idAnno=" & idAnno
-                    Rec = LeggeQuery(Conn, Sql, Connessione)
-                    If TypeOf (Rec) Is String Then
-                        Ritorno = Rec
-                    Else
-                        If Rec.Eof Then
-                            Ritorno = StringaErrore & " Nessun utente rilevato"
-                        Else
-                            If Rec(0).Value Is DBNull.Value Then
-                                idUtente = "1"
-                            Else
-                                idUtente = Rec(0).Value.ToString
-                            End If
-                        End If
-                        Rec.Close()
-                    End If
+				Try
+					Sql = "SELECT * FROM UtentiMobile Where Ucase(Trim(Utente))='" & Utente.Trim.ToUpper & "' And idAnno=" & idAnno
+					Rec = LeggeQuery(Conn, Sql, Connessione)
+					If TypeOf (Rec) Is String Then
+						Ritorno = Rec
+					Else
+						If Rec.Eof Then
+							Sql = "SELECT Max(idUtente)+1 FROM UtentiMobile" ' Where idAnno=" & idAnno
+							Rec = LeggeQuery(Conn, Sql, Connessione)
+							If TypeOf (Rec) Is String Then
+								Ritorno = Rec
+							Else
+								If Rec.Eof Then
+									Ritorno = StringaErrore & " Nessun utente rilevato"
+								Else
+									If Rec(0).Value Is DBNull.Value Then
+										idUtente = "1"
+									Else
+										idUtente = Rec(0).Value.ToString
+									End If
+								End If
+								Rec.Close()
+							End If
 
-                    If idUtente <> "" Then
-                        Sql = "Insert Into UtentiMobile Values (" &
-                            " " & idAnno & ", " &
-                            " " & idUtente & ", " &
-                            "'" & Utente & "', " &
-                            "'" & Cognome & "', " &
-                            "'" & Nome & "', " &
-                            "'" & Password & "', " &
-                            "'" & EMail & "', " &
-                            " " & idCategoria & ", " &
-                            " " & idTipologia & " " &
-                            ")"
-                        Ritorno = EsegueSql(Conn, Sql, Connessione)
+							If idUtente <> "" Then
+								Sql = "Insert Into UtentiMobile Values (" &
+							" " & idAnno & ", " &
+							" " & idUtente & ", " &
+							"'" & Utente & "', " &
+							"'" & Cognome & "', " &
+							"'" & Nome & "', " &
+							"'" & Password & "', " &
+							"'" & EMail & "', " &
+							" " & idCategoria & ", " &
+							" " & idTipologia & " " &
+							")"
+								Ritorno = EsegueSql(Conn, Sql, Connessione)
 
-                        Try
-                            Sql = "Delete From AnnoAttualeUtenti Where idUtente=" & idUtente
-                            Ritorno = EsegueSql(Conn, Sql, Connessione)
+								Try
+									Sql = "Delete From AnnoAttualeUtenti Where idUtente=" & idUtente
+									Ritorno = EsegueSql(Conn, Sql, Connessione)
 
-                            Sql = "Insert Into AnnoAttualeUtenti Values (" & idUtente & ", " & idAnno & ")"
-                            Ritorno = EsegueSql(Conn, Sql, Connessione)
-                        Catch ex As Exception
-                            Ritorno = StringaErrore & " " & ex.Message
-                        End Try
+									Sql = "Insert Into AnnoAttualeUtenti Values (" & idUtente & ", " & idAnno & ")"
+									Ritorno = EsegueSql(Conn, Sql, Connessione)
+								Catch ex As Exception
+									Ritorno = StringaErrore & " " & ex.Message
+								End Try
 
-                        If Ritorno = "*" Then Ritorno = idUtente
-                    Else
-                        Ritorno = StringaErrore & " Problemi nel rilevamento dell'ID Utente"
-                    End If
-                Catch ex As Exception
-                    Ritorno = StringaErrore & " " & ex.Message
+								If Ritorno = "*" Then Ritorno = idUtente
+							Else
+								Ritorno = StringaErrore & " Problemi nel rilevamento dell'ID Utente"
+							End If
+						Else
+							Ritorno = StringaErrore & " Utente già esistente per l'anno in corso"
+						End If
+					End If
+
+				Catch ex As Exception
+					Ritorno = StringaErrore & " " & ex.Message
                 End Try
 
                 Conn.Close()
