@@ -145,12 +145,12 @@ Public Class wsUtenti
                 Dim Sql As String = ""
 
                 Try
-                    Sql = "SELECT UtentiMobile.idAnno, UtentiMobile.idUtente, UtentiMobile.Utente, UtentiMobile.Cognome, UtentiMobile.Nome, UtentiMobile.EMail, Categorie.Descrizione As Categoria, " &
-                        "UtentiMobile.idTipologia, UtentiMobile.Password, Categorie.idCategoria " &
-                        "FROM (UtentiMobile LEFT JOIN Categorie ON UtentiMobile.idCategoria = Categorie.idCategoria And UtentiMobile.idAnno = Categorie.idAnno) " &
-                        "Order By 2,1;"
-                    ' "Where UtentiMobile.idAnno=" & idAnno & " Order By 2,1;"
-                    Rec = LeggeQuery(Conn, Sql, Connessione)
+					Sql = "SELECT UtentiMobile.idAnno, UtentiMobile.idUtente, UtentiMobile.Utente, UtentiMobile.Cognome, UtentiMobile.Nome, UtentiMobile.EMail, Categorie.Descrizione As Categoria, " &
+						"UtentiMobile.idTipologia, UtentiMobile.Password, Categorie.idCategoria " &
+						"FROM (UtentiMobile LEFT JOIN Categorie ON UtentiMobile.idCategoria = Categorie.idCategoria And UtentiMobile.idAnno = Categorie.idAnno) " &
+						"Where UtentiMobile.idAnno=" & idAnno & " Order By 2,1;"
+					' "Where UtentiMobile.idAnno=" & idAnno & " Order By 2,1;"
+					Rec = LeggeQuery(Conn, Sql, Connessione)
                     If TypeOf (Rec) Is String Then
                         Ritorno = Rec
                     Else
