@@ -358,20 +358,21 @@ Public Class wsGenerale
         Return Ritorno
     End Function
 
-    <WebMethod()>
-    Public Function CreaNuovoAnno(idAnno As String, descAnno As String, nomeSquadra As String) As String
-        Dim Ritorno As String = ""
-        Dim Connessione As String = LeggeImpostazioniDiBase(Server.MapPath("."))
+	<WebMethod()>
+	Public Function CreaNuovoAnno(idAnno As String, descAnno As String, nomeSquadra As String, idAnnoAttuale As String,
+								  idUtente As String, CreazioneTuttiIDati As String) As String
+		Dim Ritorno As String = ""
+		Dim Connessione As String = LeggeImpostazioniDiBase(Server.MapPath("."))
 
-        If Connessione = "" Then
-            Ritorno = ErroreConnessioneNonValida
-        Else
-            Dim Conn As Object = ApreDB(Connessione)
+		If Connessione = "" Then
+			Ritorno = ErroreConnessioneNonValida
+		Else
+			Dim Conn As Object = ApreDB(Connessione)
 
-            If TypeOf (Conn) Is String Then
-                Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
-            Else
-                Dim Sql As String = ""
+			If TypeOf (Conn) Is String Then
+				Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
+			Else
+				Dim Sql As String = ""
 				Dim lat As String = ""
 				Dim lon As String = ""
 				Dim ind As String = ""
@@ -407,18 +408,64 @@ Public Class wsGenerale
 						"'" & ind & "' " &
 						")"
 					Ritorno = EsegueSql(Conn, Sql, Connessione)
+
+					If Ritorno = "*" Then
+						' Creazione utenti
+						Sql = "Insert Into UtentiMobile SELECT " & idAnno & " as idAnno, idUtente, Utente, Cognome, Nome, PassWord, " &
+							"EMail, idCategoria, idTipologia From UtentiMobile Where idAnno=" & idAnnoAttuale & " And idUtente=" & idUtente
+						Ritorno = EsegueSql(Conn, Sql, Connessione)
+
+						If Ritorno <> "*" Then
+							EliminaDatiNuovoAnnoDopoErrore(idAnno, Conn, Connessione)
+						Else
+							If CreazioneTuttiIDati = "S" Then
+								' Creazione categorie
+								Sql = "Insert Into Categorie SELECT " & idAnno & " as idAnno, idCategoria, Descrizione, Eliminato, " &
+									"Ordinamento From Categorie Where Eliminato='N' And idAnno=" & idAnnoAttuale
+								Ritorno = EsegueSql(Conn, Sql, Connessione)
+								If Ritorno <> "*" Then
+									EliminaDatiNuovoAnnoDopoErrore(idAnno, Conn, Connessione)
+								Else
+									' Allenatori
+									Sql = "Insert Into Allenatori " &
+										"Select idAllenatore, Cognome, Nome, EMail, Telefono, Eliminato, idCategoria, " & idAnno & " As idAnno From " &
+										"Allenatori Where Eliminato='N' And idAnno=" & idAnnoAttuale
+									Ritorno = EsegueSql(Conn, Sql, Connessione)
+									If Ritorno <> "*" Then
+										EliminaDatiNuovoAnnoDopoErrore(idAnno, Conn, Connessione)
+									Else
+										' Dirigenti
+										Sql = "Insert Into Dirigenti " &
+											"SELECT idDirigente, Cognome, Nome, EMail, Telefono, Eliminato, idCategoria, " & idAnno & " as idAnno From " &
+											"Dirigenti Where Eliminato='N' And idAnno=" & idAnnoAttuale
+										Ritorno = EsegueSql(Conn, Sql, Connessione)
+										If Ritorno <> "*" Then
+											EliminaDatiNuovoAnnoDopoErrore(idAnno, Conn, Connessione)
+										Else
+											' Giocatori
+											Sql = "Insert Into Giocatori " &
+												"SELECT " & idAnno & " as idAnno, idGiocatore, idCategoria, idRuolo, Cognome, Nome, EMail, Telefono, Soprannome, DataDiNascita, Indirizzo, CodFiscale, Eliminato, CertScad, Maschio, " &
+												"Telefono2, Citta, idTaglia, idCategoria2, Matricola, NumeroMaglia, idCategoria3 From Giocatori Where idAnno=" & idAnnoAttuale & " And Eliminato='N'"
+											Ritorno = EsegueSql(Conn, Sql, Connessione)
+										End If
+									End If
+								End If
+							End If
+						End If
+					End If
+
 				Catch ex As Exception
 					Ritorno = StringaErrore & " " & ex.Message
-                End Try
+				End Try
 
 				' Conn.Close()
 			End If
-        End If
+		End If
 
-        Return Ritorno
-    End Function
+		Return Ritorno
+	End Function
 
-    <WebMethod()>
+	<WebMethod()>
     Public Function RitornaAnnoAttualeUtente(idUtente As String) As String
         Dim Ritorno As String = ""
         Dim Connessione As String = LeggeImpostazioniDiBase(Server.MapPath("."))

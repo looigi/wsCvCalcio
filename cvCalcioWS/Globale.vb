@@ -7,7 +7,30 @@
     Public StringaErrore As String = "ERROR: "
     Public RigaPari As Boolean = False
 
-    Public Function LeggeImpostazioniDiBase(Percorso As String) As String
+	Public Sub EliminaDatiNuovoAnnoDopoErrore(idAnno As String, Conn As Object, Connessione As String)
+		Dim Ritorno As String
+		Dim Sql As String
+
+		Sql = "Delete * From Anni Where idAnno=" & idAnno
+		Ritorno = EsegueSql(Conn, Sql, Connessione)
+
+		Sql = "Delete * From UtentiMobile Where idAnno=" & idAnno
+		Ritorno = EsegueSql(Conn, Sql, Connessione)
+
+		Sql = "Delete * From Categorie Where idAnno=" & idAnno
+		Ritorno = EsegueSql(Conn, Sql, Connessione)
+
+		Sql = "Delete * From Allenatori Where idAnno=" & idAnno
+		Ritorno = EsegueSql(Conn, Sql, Connessione)
+
+		Sql = "Delete * From Dirigenti Where idAnno=" & idAnno
+		Ritorno = EsegueSql(Conn, Sql, Connessione)
+
+		Sql = "Delete * From Giocatori Where idAnno=" & idAnno
+		Ritorno = EsegueSql(Conn, Sql, Connessione)
+	End Sub
+
+	Public Function LeggeImpostazioniDiBase(Percorso As String) As String
         Dim Connessione As String = ""
 
         ' Impostazioni di base
