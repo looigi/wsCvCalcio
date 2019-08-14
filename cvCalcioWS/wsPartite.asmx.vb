@@ -14,9 +14,8 @@ Public Class wsPartite
 								 RisGiochetti As String, RisAvv As String, Campo As String, Tempo1Tempo As String,
 								 Tempo2Tempo As String, Tempo3Tempo As String, Coordinate As String, sTempo As String,
 								 idUnioneCalendario As String, TGA1 As String, TGA2 As String, TGA3 As String, Dirigenti As String, idArbitro As String,
-								 RisultatoATempi As String, RigoriPropri As String, RigoriAvv As String) As String
-
-		' RICORDARSI DI AGGIUNGERE ANCHE I GOAL DEI RIGORI ALLE MARCATURE
+								 RisultatoATempi As String, RigoriPropri As String, RigoriAvv As String, EventiPrimoTempo As String,
+								 EventiSecondoTempo As String, EventiTerzoTempo As String) As String
 
 		Dim Ritorno As String = ""
 		Dim Connessione As String = LeggeImpostazioniDiBase(Server.MapPath("."))
@@ -164,6 +163,16 @@ Public Class wsPartite
 				If Ok Then
 					Try
 						Sql = "Delete * From RigoriPropri Where idPartita=" & idPartita & " And idAnno=" & idAnno
+						Ritorno = EsegueSql(Conn, Sql, Connessione)
+					Catch ex As Exception
+						Ritorno = StringaErrore & " " & ex.Message
+						Ok = False
+					End Try
+				End If
+
+				If Ok Then
+					Try
+						Sql = "Delete * From EventiPartita Where idPartita=" & idPartita & " And idAnno=" & idAnno
 						Ritorno = EsegueSql(Conn, Sql, Connessione)
 					Catch ex As Exception
 						Ritorno = StringaErrore & " " & ex.Message
@@ -507,15 +516,110 @@ Public Class wsPartite
 
 				If Ok Then
 					Try
-						Dim a() As String = RigoriAvv.Split("§")
+						If RigoriAvv <> "" Then
+							Dim a() As String = RigoriAvv.Split("§")
 
-						Sql = "Insert Into RigoriAvversari Values (" &
+							Sql = "Insert Into RigoriAvversari Values (" &
 									" " & idAnno & ", " &
 									" " & idPartita & ", " &
 									" " & a(0) & ", " &
 									" " & a(1) & " " &
 									")"
-						Ritorno = EsegueSql(Conn, Sql, Connessione)
+							Ritorno = EsegueSql(Conn, Sql, Connessione)
+						End If
+					Catch ex As Exception
+						Ritorno = StringaErrore & " " & ex.Message
+						Ok = False
+					End Try
+				End If
+
+				If Ok Then
+					Try
+						Dim e() As String = EventiPrimoTempo.Split("§")
+						Dim progr As Integer = 0
+
+						For Each ee As String In e
+							If ee <> "" Then
+								Dim eee() As String = ee.Split(";")
+								Dim idEvento As String = eee(1)
+								Dim idGiocatore As String = eee(3)
+								Dim Minuto As String = eee(0)
+
+								progr += 1
+								Sql = "Insert Into EventiPartita Values (" &
+									" " & idAnno & ", " &
+									" " & idPartita & ", " &
+									"1, " &
+									" " & progr & ", " &
+									" " & idEvento & ", " &
+									" " & idGiocatore & ", " &
+									" " & Minuto & " " &
+									")"
+								Ritorno = EsegueSql(Conn, Sql, Connessione)
+							End If
+						Next
+					Catch ex As Exception
+						Ritorno = StringaErrore & " " & ex.Message
+						Ok = False
+					End Try
+				End If
+
+				If Ok Then
+					Try
+						Dim e() As String = EventiSecondoTempo.Split("§")
+						Dim progr As Integer = 0
+
+						For Each ee As String In e
+							If ee <> "" Then
+								Dim eee() As String = ee.Split(";")
+								Dim idEvento As String = eee(1)
+								Dim idGiocatore As String = eee(3)
+								Dim Minuto As String = eee(0)
+
+								progr += 1
+								Sql = "Insert Into EventiPartita Values (" &
+										" " & idAnno & ", " &
+										" " & idPartita & ", " &
+										"2, " &
+										" " & progr & ", " &
+										" " & idEvento & ", " &
+										" " & idGiocatore & ", " &
+										" " & Minuto & " " &
+										")"
+								Ritorno = EsegueSql(Conn, Sql, Connessione)
+							End If
+						Next
+					Catch ex As Exception
+						Ritorno = StringaErrore & " " & ex.Message
+						Ok = False
+					End Try
+				End If
+
+				If Ok Then
+					Try
+						Dim e() As String = EventiTerzoTempo.Split("§")
+						Dim progr As Integer = 0
+
+						For Each ee As String In e
+							If ee <> "" Then
+								Dim eee() As String = ee.Split(";")
+								Dim idEvento As String = eee(1)
+								Dim idGiocatore As String = eee(3)
+								Dim Minuto As String = eee(0)
+
+								progr += 1
+								Sql = "Insert Into EventiPartita Values (" &
+										" " & idAnno & ", " &
+										" " & idPartita & ", " &
+										"3, " &
+										" " & progr & ", " &
+										" " & idEvento & ", " &
+										" " & idGiocatore & ", " &
+										" " & Minuto & " " &
+										")"
+								Ritorno = EsegueSql(Conn, Sql, Connessione)
+							End If
+						Next
 					Catch ex As Exception
 						Ritorno = StringaErrore & " " & ex.Message
 						Ok = False
@@ -937,9 +1041,76 @@ Public Class wsPartite
 								Ritorno &= RigoriPropri & ";"
 								Ritorno &= RigoriAvv & ";"
 
+								Dim EventiPrimoTempo As String = ""
+
+								Sql = "Select EventiPartita.Minuto, EventiPartita.idEvento, Eventi.Descrizione, EventiPartita.idGiocatore, iif(Giocatori.Cognome + ' ' + Giocatori.Nome is null, 'Avversario', Giocatori.Cognome + ' ' + Giocatori.Nome) As Giocatore " &
+									"From ((EventiPartita LEFT Join Eventi On Eventi.idEvento=EventiPartita.idEvento) " &
+									"LEFT JOIN Giocatori On EventiPartita.idAnno=Giocatori.idAnno And EventiPartita.idGiocatore=Giocatori.idGiocatore) " &
+									"Where EventiPartita.idAnno=" & idAnno & " And idPartita=" & Rec("idPartita").Value.ToString & " And idTempo=1 Order By Progressivo"
+								Rec2 = LeggeQuery(Conn, Sql, Connessione)
+								If TypeOf (Rec2) Is String Then
+								Else
+									Do Until Rec2.Eof
+										EventiPrimoTempo &= Rec2("Minuto").Value & "!" &
+											Rec2("idEvento").Value & "!" &
+											Rec2("Descrizione").Value & "!" &
+											Rec2("idGiocatore").Value & "!" &
+											Rec2("Giocatore").Value & "!%"
+
+										Rec2.MoveNext
+									Loop
+									Rec2.Close
+								End If
+
+								Dim EventiSecondoTempo As String = ""
+
+								Sql = "Select EventiPartita.Minuto, EventiPartita.idEvento, Eventi.Descrizione, EventiPartita.idGiocatore, iif(Giocatori.Cognome + ' ' + Giocatori.Nome is null, 'Avversario', Giocatori.Cognome + ' ' + Giocatori.Nome) As Giocatore " &
+									"From ((EventiPartita LEFT Join Eventi On Eventi.idEvento=EventiPartita.idEvento) " &
+									"LEFT JOIN Giocatori On EventiPartita.idAnno=Giocatori.idAnno And EventiPartita.idGiocatore=Giocatori.idGiocatore) " &
+									"Where EventiPartita.idAnno=" & idAnno & " And idPartita=" & Rec("idPartita").Value.ToString & " And idTempo=2 Order By Progressivo"
+								Rec2 = LeggeQuery(Conn, Sql, Connessione)
+								If TypeOf (Rec2) Is String Then
+								Else
+									Do Until Rec2.Eof
+										EventiSecondoTempo &= Rec2("Minuto").Value & "!" &
+											Rec2("idEvento").Value & "!" &
+											Rec2("Descrizione").Value & "!" &
+											Rec2("idGiocatore").Value & "!" &
+											Rec2("Giocatore").Value & "!%"
+
+										Rec2.MoveNext
+									Loop
+									Rec2.Close
+								End If
+
+								Dim EventiTerzoTempo As String = ""
+
+								Sql = "Select EventiPartita.Minuto, EventiPartita.idEvento, Eventi.Descrizione, EventiPartita.idGiocatore, iif(Giocatori.Cognome + ' ' + Giocatori.Nome is null, 'Avversario', Giocatori.Cognome + ' ' + Giocatori.Nome) As Giocatore " &
+									"From ((EventiPartita LEFT Join Eventi On Eventi.idEvento=EventiPartita.idEvento) " &
+									"LEFT JOIN Giocatori On EventiPartita.idAnno=Giocatori.idAnno And EventiPartita.idGiocatore=Giocatori.idGiocatore) " &
+									"Where EventiPartita.idAnno=" & idAnno & " And idPartita=" & Rec("idPartita").Value.ToString & " And idTempo=3 Order By Progressivo"
+								Rec2 = LeggeQuery(Conn, Sql, Connessione)
+								If TypeOf (Rec2) Is String Then
+								Else
+									Do Until Rec2.Eof
+										EventiTerzoTempo &= Rec2("Minuto").Value & "!" &
+											Rec2("idEvento").Value & "!" &
+											Rec2("Descrizione").Value & "!" &
+											Rec2("idGiocatore").Value & "!" &
+											Rec2("Giocatore").Value & "!%"
+
+										Rec2.MoveNext
+									Loop
+									Rec2.Close
+								End If
+
+								Ritorno &= EventiPrimoTempo & ";"
+								Ritorno &= EventiSecondoTempo & ";"
+								Ritorno &= EventiTerzoTempo & ";"
+
 								Ritorno &= "§"
 
-                                Rec.MoveNext()
+								Rec.MoveNext()
                             Loop
                         End If
                         Rec.Close()
