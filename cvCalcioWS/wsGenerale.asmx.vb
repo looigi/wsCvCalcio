@@ -447,6 +447,17 @@ Public Class wsGenerale
 												"SELECT " & idAnno & " as idAnno, idGiocatore, idCategoria, idRuolo, Cognome, Nome, EMail, Telefono, Soprannome, DataDiNascita, Indirizzo, CodFiscale, Eliminato, CertScad, Maschio, " &
 												"Telefono2, Citta, idTaglia, idCategoria2, Matricola, NumeroMaglia, idCategoria3 From Giocatori Where idAnno=" & idAnnoAttuale & " And Eliminato='N'"
 											Ritorno = EsegueSql(Conn, Sql, Connessione)
+											If Ritorno <> "*" Then
+												EliminaDatiNuovoAnnoDopoErrore(idAnno, Conn, Connessione)
+											Else
+												' Arbitri
+												Sql = "Insert Into Arbitri " &
+												"SELECT idArbitro, Cognome, Nome, EMail, Telefono, Eliminato, idCategoria, " & idAnno & " As idAnno From Arbitri Where idAnno=" & idAnnoAttuale & " And Eliminato='N'"
+												Ritorno = EsegueSql(Conn, Sql, Connessione)
+												If Ritorno <> "*" Then
+													EliminaDatiNuovoAnnoDopoErrore(idAnno, Conn, Connessione)
+												End If
+											End If
 										End If
 									End If
 								End If

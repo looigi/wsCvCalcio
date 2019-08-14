@@ -146,32 +146,61 @@ Public Class wsStatistiche
                 Sql &= "LEFT JOIN Giocatori On RisultatiAggiuntiviMarcatori.idGiocatore = Giocatori.idGiocatore) "
                 Sql &= "LEFT JOIN Categorie On Giocatori.idCategoria=Categorie.idCategoria And Categorie.idAnno=Giocatori.idAnno "
                 If SoloAnno = "S" Then
-                    Sql &= "WHERE Partite.idAnno=" & idAnno & " And Partite.Giocata='S' And Cognome Is Not Null And Categorie.idCategoria=" & idCategoria & " "
-                Else
-                    Sql &= "WHERE Partite.Giocata='S' And Cognome Is Not Null And Categorie.idCategoria=" & idCategoria & " "
-                End If
+					Sql &= "WHERE Partite.idAnno=" & idAnno & " And Partite.Giocata='S' And Cognome Is Not Null And Categorie.idCategoria=" & idCategoria & "  And Giocatori.idAnno=Partite.idanno "
+				Else
+					Sql &= "WHERE Partite.Giocata='S' And Cognome Is Not Null And Categorie.idCategoria=" & idCategoria & "  And Giocatori.idAnno=Partite.idanno "
+				End If
                 Sql &= "GROUP BY Giocatori.idGiocatore, Giocatori.Cognome, Giocatori.Nome, Giocatori.NumeroMaglia "
                 Sql &= ") AS q "
                 Sql &= "Group BY q.idGiocatore, q.Cognome, q.Nome, q.NumeroMaglia "
                 Sql &= "ORDER BY 4 DESC, 2, 3"
 
-                Try
+				Dim Ok As Boolean = True
+
+				Try
                     Rec = LeggeQuery(Conn, Sql, Connessione)
                     If TypeOf (Rec) Is String Then
                         Ritorno = Rec
                     Else
                         Do Until Rec.Eof
-                            Ritorno &= Rec("idGiocatore").Value & ";" & Rec("Cognome").Value & ";" & Rec("Nome").Value & ";" & Rec("GoalFinali").Value & ";" & Rec("NumeroMaglia").Value & "§"
+							Ritorno &= Rec("idGiocatore").Value & ";" & Rec("Cognome").Value & ";" & Rec("Nome").Value & ";" & Rec("GoalFinali").Value & ";" & Rec("NumeroMaglia").Value & ";GOAL;§"
 
-                            Rec.MoveNext
+							Rec.MoveNext
                         Loop
                         Rec.Close()
                     End If
                 Catch ex As Exception
-                    Ritorno = StringaErrore & " " & ex.Message
-                End Try
+					Ritorno = StringaErrore & " " & ex.Message
+					Ok = False
+				End Try
 
-                Conn.Close()
+				If Ok Then
+					Sql = "SELECT RigoriPropri.idGiocatore, Ruoli.Descrizione, Giocatori.Cognome, Giocatori.Nome, Giocatori.NumeroMaglia, Sum(RigoriPropri.Termine) As Rigori " &
+						"From ((RigoriPropri Left Join Giocatori On RigoriPropri.idGiocatore=Giocatori.idGiocatore And RigoriPropri.idAnno = Giocatori.idAnno) Left Join Ruoli On Giocatori.idRuolo = Ruoli.idRuolo) " &
+						"Where RigoriPropri.idAnno=" & idAnno & " And Termine=1 " &
+						"Group By RigoriPropri.idGiocatore, Ruoli.Descrizione, Giocatori.Cognome, Giocatori.Nome, Giocatori.NumeroMaglia"
+					Rec = LeggeQuery(Conn, Sql, Connessione)
+					If TypeOf (Rec) Is String Then
+					Else
+						Do Until Rec.Eof
+							' 448;Centrocampista;Cataldi Lorenzo;;;14;-1;
+							' RigoriPropri &= Rec2("idGiocatore").Value & "!"
+							' RigoriPropri &= Rec2("Descrizione").Value & "!"
+							' RigoriPropri &= Rec2("Giocatore").Value & "!"
+							' RigoriPropri &= "!"
+							' RigoriPropri &= "!"
+							' RigoriPropri &= Rec2("NumeroMaglia").Value & "!"
+							' RigoriPropri &= Rec2("Termine").Value & "!"
+							' RigoriPropri &= "%"
+							Ritorno &= Rec("idGiocatore").Value & ";" & Rec("Cognome").Value & ";" & Rec("Nome").Value & ";" & Rec("Rigori").Value & ";" & Rec("NumeroMaglia").Value & ";RIGORE;§"
+
+							Rec.MoveNext
+						Loop
+					End If
+					Rec.Close
+				End If
+
+				Conn.Close()
             End If
         End If
 
@@ -1191,13 +1220,25 @@ Public Class wsStatistiche
 						"From RisultatiAggiuntiviMarcatori Left Join Partite On RisultatiAggiuntiviMarcatori.idPartita=Partite.idPartita " &
 						"Where Partite.idPartita In (" & PartiteCampionatoIN & ") And Partite.Casa = 'S' " &
 						"Union All " &
+						"SELECT 'RigoriCampionatoCasa' As Cosa, Count(*) As GoalTotali " &
+						"From RigoriPropri Left Join Partite On RigoriPropri.idPartita=Partite.idPartita " &
+						"Where Partite.idPartita In (" & PartiteCampionatoIN & ") And Partite.Casa = 'S' And Termine=1 " &
+						"Union All " &
 						"SELECT 'GoalCampionatoFuori' As Cosa, Count(*) As GoalTotali " &
 						"From RisultatiAggiuntiviMarcatori Left Join Partite On RisultatiAggiuntiviMarcatori.idPartita=Partite.idPartita " &
 						"Where Partite.idPartita In (" & PartiteCampionatoIN & ") And Partite.Casa = 'N' " &
 						"Union All " &
+						"SELECT 'RigoriCampionatoFuori' As Cosa, Count(*) As GoalTotali " &
+						"From RigoriPropri Left Join Partite On RigoriPropri.idPartita=Partite.idPartita " &
+						"Where Partite.idPartita In (" & PartiteCampionatoIN & ") And Partite.Casa = 'N' And Termine=1 " &
+						"Union All " &
 						"SELECT 'GoalCampionatoCampoEsterno' As Cosa, Count(*) As GoalTotali " &
 						"From RisultatiAggiuntiviMarcatori Left Join Partite On RisultatiAggiuntiviMarcatori.idPartita=Partite.idPartita " &
-						"Where Partite.idPartita In (" & PartiteCampionatoIN & ") And Partite.Casa = 'E'"
+						"Where Partite.idPartita In (" & PartiteCampionatoIN & ") And Partite.Casa = 'E' " &
+						"Union All " &
+						"SELECT 'RigoriCampionatoCampoEsterno' As Cosa, Count(*) As GoalTotali " &
+						"From RigoriPropri Left Join Partite On RigoriPropri.idPartita=Partite.idPartita " &
+						"Where Partite.idPartita In (" & PartiteCampionatoIN & ") And Partite.Casa = 'E' And Termine=1 "
 					Try
 						Rec = LeggeQuery(Conn, Sql, Connessione)
 						If TypeOf (Rec) Is String Then
@@ -1206,11 +1247,18 @@ Public Class wsStatistiche
 							Do Until Rec.Eof
 								Select Case Rec("Cosa").Value
 									Case "GoalCampionatoCasa"
-										GoalCampionatoCasa = Rec(1).Value
+										GoalCampionatoCasa += Rec(1).Value
 									Case "GoalCampionatoFuori"
-										GoalCampionatoFuori = Rec(1).Value
+										GoalCampionatoFuori += Rec(1).Value
 									Case "GoalCampionatoCasa"
-										GoalCampionatoCampoEsterno = Rec(1).Value
+										GoalCampionatoCampoEsterno += Rec(1).Value
+
+									Case "RigoriCampionatoCasa"
+										GoalCampionatoCasa += Rec(1).Value
+									Case "RigoriCampionatoFuori"
+										GoalCampionatoFuori += Rec(1).Value
+									Case "RigoriCampionatoCasa"
+										GoalCampionatoCampoEsterno += Rec(1).Value
 								End Select
 
 								Rec.MoveNext
@@ -1228,13 +1276,25 @@ Public Class wsStatistiche
 						"From RisultatiAggiuntiviMarcatori Left Join Partite On RisultatiAggiuntiviMarcatori.idPartita=Partite.idPartita " &
 						"Where Partite.idPartita In (" & PartiteTorneiIN & ") And Partite.Casa = 'S' " &
 						"Union All " &
+						"SELECT 'RigoriTorneiCasa' As Cosa, Count(*) As GoalTotali " &
+						"From RigoriPropri Left Join Partite On RigoriPropri.idPartita=Partite.idPartita " &
+						"Where Partite.idPartita In (" & PartiteTorneiIN & ") And Partite.Casa = 'S' And Termine=1 " &
+						"Union All " &
 						"SELECT 'GoalTorneiFuori' As Cosa, Count(*) As GoalTotali " &
 						"From RisultatiAggiuntiviMarcatori Left Join Partite On RisultatiAggiuntiviMarcatori.idPartita=Partite.idPartita " &
 						"Where Partite.idPartita In (" & PartiteTorneiIN & ") And Partite.Casa = 'N' " &
 						"Union All " &
+						"SELECT 'RigoriTorneiFuori' As Cosa, Count(*) As GoalTotali " &
+						"From RigoriPropri Left Join Partite On RigoriPropri.idPartita=Partite.idPartita " &
+						"Where Partite.idPartita In (" & PartiteTorneiIN & ") And Partite.Casa = 'N' And Termine=1 " &
+						"Union All " &
 						"SELECT 'GoalTorneiCampoEsterno' As Cosa, Count(*) As GoalTotali " &
 						"From RisultatiAggiuntiviMarcatori Left Join Partite On RisultatiAggiuntiviMarcatori.idPartita=Partite.idPartita " &
-						"Where Partite.idPartita In (" & PartiteTorneiIN & ") And Partite.Casa = 'E'"
+						"Where Partite.idPartita In (" & PartiteTorneiIN & ") And Partite.Casa = 'E' " &
+						"Union All " &
+						"SELECT 'RigoriTorneiCampoEsterno' As Cosa, Count(*) As GoalTotali " &
+						"From RigoriPropri Left Join Partite On RigoriPropri.idPartita=Partite.idPartita " &
+						"Where Partite.idPartita In (" & PartiteTorneiIN & ") And Partite.Casa = 'E' And Termine=1 "
 					Try
 						Rec = LeggeQuery(Conn, Sql, Connessione)
 						If TypeOf (Rec) Is String Then
@@ -1243,11 +1303,17 @@ Public Class wsStatistiche
 							Do Until Rec.Eof
 								Select Case Rec("Cosa").Value
 									Case "GoalTorneiCasa"
-										GoalTorneiCasa = Rec(1).Value
+										GoalTorneiCasa += Rec(1).Value
 									Case "GoalTorneiFuori"
-										GoalTorneiFuori = Rec(1).Value
+										GoalTorneiFuori += Rec(1).Value
 									Case "GoalTorneiCampoEsterno"
-										GoalTorneiCampoEsterno = Rec(1).Value
+										GoalTorneiCampoEsterno += Rec(1).Value
+									Case "RigoriTorneiCasa"
+										GoalTorneiCasa += Rec(1).Value
+									Case "RigoriTorneiFuori"
+										GoalTorneiFuori += Rec(1).Value
+									Case "RigoriTorneiCampoEsterno"
+										GoalTorneiCampoEsterno += Rec(1).Value
 								End Select
 
 								Rec.MoveNext
@@ -1265,13 +1331,25 @@ Public Class wsStatistiche
 						"From RisultatiAggiuntiviMarcatori Left Join Partite On RisultatiAggiuntiviMarcatori.idPartita=Partite.idPartita " &
 						"Where Partite.idPartita In (" & PartiteAmichevoliIN & ") And Partite.Casa = 'S' " &
 						"Union All " &
+						"SELECT 'RigoriAmichevoliCasa' As Cosa, Count(*) As GoalTotali " &
+						"From RigoriPropri Left Join Partite On RigoriPropri.idPartita=Partite.idPartita " &
+						"Where Partite.idPartita In (" & PartiteAmichevoliIN & ") And Partite.Casa = 'S' And Termine=1 " &
+						"Union All " &
 						"SELECT 'GoalAmichevoliFuori' As Cosa, Count(*) As GoalTotali " &
 						"From RisultatiAggiuntiviMarcatori Left Join Partite On RisultatiAggiuntiviMarcatori.idPartita=Partite.idPartita " &
 						"Where Partite.idPartita In (" & PartiteAmichevoliIN & ") And Partite.Casa = 'N' " &
 						"Union All " &
+						"SELECT 'RigoriAmichevoliFuori' As Cosa, Count(*) As GoalTotali " &
+						"From RigoriPropri Left Join Partite On RigoriPropri.idPartita=Partite.idPartita " &
+						"Where Partite.idPartita In (" & PartiteAmichevoliIN & ") And Partite.Casa = 'N' And Termine=1 " &
+						"Union All " &
 						"SELECT 'GoalAmichevoliCampoEsterno' As Cosa, Count(*) As GoalTotali " &
 						"From RisultatiAggiuntiviMarcatori Left Join Partite On RisultatiAggiuntiviMarcatori.idPartita=Partite.idPartita " &
-						"Where Partite.idPartita In (" & PartiteAmichevoliIN & ") And Partite.Casa = 'E'"
+						"Where Partite.idPartita In (" & PartiteAmichevoliIN & ") And Partite.Casa = 'E' " &
+						"Union All " &
+						"SELECT 'RigoriAmichevoliCampoEsterno' As Cosa, Count(*) As GoalTotali " &
+						"From RigoriPropri Left Join Partite On RigoriPropri.idPartita=Partite.idPartita " &
+						"Where Partite.idPartita In (" & PartiteAmichevoliIN & ") And Partite.Casa = 'E' And Termine=1 "
 					Try
 						Rec = LeggeQuery(Conn, Sql, Connessione)
 						If TypeOf (Rec) Is String Then
@@ -1280,11 +1358,18 @@ Public Class wsStatistiche
 							Do Until Rec.Eof
 								Select Case Rec("Cosa").Value
 									Case "GoalAmichevoliCasa"
-										GoalAmichevoliCasa = Rec(1).Value
+										GoalAmichevoliCasa += Rec(1).Value
 									Case "GoalAmichevoliFuori"
-										GoalAmichevoliFuori = Rec(1).Value
+										GoalAmichevoliFuori += Rec(1).Value
 									Case "GoalAmichevoliCampoEsterno"
-										GoalAmichevoliCampoEsterno = Rec(1).Value
+										GoalAmichevoliCampoEsterno += Rec(1).Value
+
+									Case "RigoriAmichevoliCasa"
+										GoalAmichevoliCasa += Rec(1).Value
+									Case "RigoriAmichevoliFuori"
+										GoalAmichevoliFuori += Rec(1).Value
+									Case "RigoriAmichevoliCampoEsterno"
+										GoalAmichevoliCampoEsterno += Rec(1).Value
 								End Select
 
 								Rec.MoveNext
@@ -1298,22 +1383,40 @@ Public Class wsStatistiche
 
 				If PartiteCampionatoIN.Length > 0 Then
 					Sql = "SELECT 'MarcatoriCasaCampionato' As Cosa, Giocatori.Cognome, Giocatori.Nome, Count(*) As Goal, Giocatori.idGiocatore " &
-					"FROM(RisultatiAggiuntiviMarcatori Left Join Partite On Partite.idPartita = RisultatiAggiuntiviMarcatori.idPartita) " &
-					"Left Join Giocatori On RisultatiAggiuntiviMarcatori.idGiocatore = Giocatori.idGiocatore " &
-					"Where RisultatiAggiuntiviMarcatori.idPartita In (" & PartiteCampionatoIN & ") And Partite.Casa = 'S' " &
-					"Group By Giocatori.Cognome, Giocatori.Nome, Giocatori.idGiocatore " &
-					"Union All " &
-					"Select 'MarcatoriFuoriCampionato' As Cosa, Giocatori.Cognome, Giocatori.Nome, Count(*) As Goal, Giocatori.idGiocatore " &
-					"FROM(RisultatiAggiuntiviMarcatori Left Join Partite On Partite.idPartita = RisultatiAggiuntiviMarcatori.idPartita) " &
-					"Left Join Giocatori On RisultatiAggiuntiviMarcatori.idGiocatore = Giocatori.idGiocatore " &
-					"Where RisultatiAggiuntiviMarcatori.idPartita In (" & PartiteCampionatoIN & ") And Partite.Casa = 'N' " &
-					"Group By Giocatori.Cognome, Giocatori.Nome, Giocatori.idGiocatore " &
-					"Union All " &
-					"Select 'MarcatoriCampoEsternoCampionato' As Cosa, Giocatori.Cognome, Giocatori.Nome, Count(*) As Goal, Giocatori.idGiocatore " &
-					"FROM(RisultatiAggiuntiviMarcatori Left Join Partite On Partite.idPartita = RisultatiAggiuntiviMarcatori.idPartita) " &
-					"Left Join Giocatori On RisultatiAggiuntiviMarcatori.idGiocatore = Giocatori.idGiocatore " &
-					"Where RisultatiAggiuntiviMarcatori.idPartita In (" & PartiteCampionatoIN & ") And Partite.Casa = 'E' " &
-					"Group By Giocatori.Cognome, Giocatori.Nome, Giocatori.idGiocatore"
+						"FROM(RisultatiAggiuntiviMarcatori Left Join Partite On Partite.idPartita = RisultatiAggiuntiviMarcatori.idPartita) " &
+						"Left Join Giocatori On RisultatiAggiuntiviMarcatori.idGiocatore = Giocatori.idGiocatore " &
+						"Where RisultatiAggiuntiviMarcatori.idPartita In (" & PartiteCampionatoIN & ") And Partite.Casa = 'S' And Giocatori.idAnno=Partite.idAnno " &
+						"Group By Giocatori.Cognome, Giocatori.Nome, Giocatori.idGiocatore " &
+						"Union All " &
+						"Select 'RigoriCasaCampionato' As Cosa, Giocatori.Cognome, Giocatori.Nome, Count(*) As Goal, Giocatori.idGiocatore " &
+						"FROM(RigoriPropri Left Join Partite On Partite.idPartita = RigoriPropri.idPartita) " &
+						"Left Join Giocatori On RigoriPropri.idGiocatore = Giocatori.idGiocatore " &
+						"Where RigoriPropri.idPartita In (" & PartiteCampionatoIN & ") And Partite.Casa = 'S' And Termine=1 And Giocatori.idAnno=Partite.idAnno " &
+						"Group By Giocatori.Cognome, Giocatori.Nome, Giocatori.idGiocatore " &
+						"Union All " &
+						"Select 'MarcatoriFuoriCampionato' As Cosa, Giocatori.Cognome, Giocatori.Nome, Count(*) As Goal, Giocatori.idGiocatore " &
+						"FROM(RisultatiAggiuntiviMarcatori Left Join Partite On Partite.idPartita = RisultatiAggiuntiviMarcatori.idPartita) " &
+						"Left Join Giocatori On RisultatiAggiuntiviMarcatori.idGiocatore = Giocatori.idGiocatore " &
+						"Where RisultatiAggiuntiviMarcatori.idPartita In (" & PartiteCampionatoIN & ") And Partite.Casa = 'N' And Giocatori.idAnno=Partite.idAnno " &
+						"Group By Giocatori.Cognome, Giocatori.Nome, Giocatori.idGiocatore " &
+						"Union All " &
+						"Select 'RigoriFuoriCampionato' As Cosa, Giocatori.Cognome, Giocatori.Nome, Count(*) As Goal, Giocatori.idGiocatore " &
+						"FROM(RigoriPropri Left Join Partite On Partite.idPartita = RigoriPropri.idPartita) " &
+						"Left Join Giocatori On RigoriPropri.idGiocatore = Giocatori.idGiocatore " &
+						"Where RigoriPropri.idPartita In (" & PartiteCampionatoIN & ") And Partite.Casa = 'N' And Termine=1 And Giocatori.idAnno=Partite.idAnno " &
+						"Group By Giocatori.Cognome, Giocatori.Nome, Giocatori.idGiocatore " &
+						"Union All " &
+						"Select 'MarcatoriCampoEsternoCampionato' As Cosa, Giocatori.Cognome, Giocatori.Nome, Count(*) As Goal, Giocatori.idGiocatore " &
+						"FROM(RisultatiAggiuntiviMarcatori Left Join Partite On Partite.idPartita = RisultatiAggiuntiviMarcatori.idPartita) " &
+						"Left Join Giocatori On RisultatiAggiuntiviMarcatori.idGiocatore = Giocatori.idGiocatore " &
+						"Where RisultatiAggiuntiviMarcatori.idPartita In (" & PartiteCampionatoIN & ") And Partite.Casa = 'E' And Giocatori.idAnno=Partite.idAnno " &
+						"Group By Giocatori.Cognome, Giocatori.Nome, Giocatori.idGiocatore " &
+						"Union All " &
+						"Select 'RigoriCampoEsternoCampionato' As Cosa, Giocatori.Cognome, Giocatori.Nome, Count(*) As Goal, Giocatori.idGiocatore " &
+						"FROM(RigoriPropri Left Join Partite On Partite.idPartita = RigoriPropri.idPartita) " &
+						"Left Join Giocatori On RigoriPropri.idGiocatore = Giocatori.idGiocatore " &
+						"Where RigoriPropri.idPartita In (" & PartiteCampionatoIN & ") And Partite.Casa = 'E' And Termine=1 And Giocatori.idAnno=Partite.idAnno " &
+						"Group By Giocatori.Cognome, Giocatori.Nome, Giocatori.idGiocatore "
 					Try
 						Rec = LeggeQuery(Conn, Sql, Connessione)
 						If TypeOf (Rec) Is String Then
@@ -1325,23 +1428,39 @@ Public Class wsStatistiche
 										If "" & Rec(1).Value = "" Or "" & Rec(2).Value = "" Then
 											NomiMarcatoriCampionatoCasa.Add(Rec(4).Value & "-Autorete-" & Rec(3).Value)
 										Else
-											NomiMarcatoriCampionatoCasa.Add(Rec(4).Value & "-" & Rec(1).Value & " " & Rec(2).Value & "-" & Rec(3).Value)
+											' NomiMarcatoriCampionatoCasa.Add(Rec(4).Value & "-" & Rec(1).Value & " " & Rec(2).Value & "-" & Rec(3).Value)
+											NomiMarcatoriCampionatoCasa = AggiungeRigoriEGoal(NomiMarcatoriCampionatoCasa, Rec)
 										End If
-										MarcatoriCampionatoCasa = Rec(3).Value
+										MarcatoriCampionatoCasa += Rec(3).Value
 									Case "MarcatoriFuoriCampionato"
 										If "" & Rec(1).Value = "" Or "" & Rec(2).Value = "" Then
 											NomiMarcatoriCampionatoFuori.Add(Rec(4).Value & "-Autorete-" & Rec(3).Value)
 										Else
-											NomiMarcatoriCampionatoFuori.Add(Rec(4).Value & "-" & Rec(1).Value & " " & Rec(2).Value & "-" & Rec(3).Value)
+											' NomiMarcatoriCampionatoFuori.Add(Rec(4).Value & "-" & Rec(1).Value & " " & Rec(2).Value & "-" & Rec(3).Value)
+											NomiMarcatoriCampionatoFuori = AggiungeRigoriEGoal(NomiMarcatoriCampionatoFuori, Rec)
 										End If
-										MarcatoriCampionatoFuori = Rec(3).Value
+										MarcatoriCampionatoFuori += Rec(3).Value
 									Case "MarcatoriCampoEsternoCampionato"
 										If "" & Rec(1).Value = "" Or "" & Rec(2).Value = "" Then
 											NomiMarcatoriCampionatoCampoEsterno.Add(Rec(4).Value & "-Autorete-" & Rec(3).Value)
 										Else
-											NomiMarcatoriCampionatoCampoEsterno.Add(Rec(4).Value & "-" & Rec(1).Value & " " & Rec(2).Value & "-" & Rec(3).Value)
+											'NomiMarcatoriCampionatoCampoEsterno.Add(Rec(4).Value & "-" & Rec(1).Value & " " & Rec(2).Value & "-" & Rec(3).Value)
+											NomiMarcatoriCampionatoCampoEsterno = AggiungeRigoriEGoal(NomiMarcatoriCampionatoCampoEsterno, Rec)
 										End If
-										MarcatoriCampionatoCampoEsterno = Rec(3).Value
+										MarcatoriCampionatoCampoEsterno += Rec(3).Value
+
+									Case "RigoriCasaCampionato"
+										NomiMarcatoriCampionatoCasa = AggiungeRigoriEGoal(NomiMarcatoriCampionatoCasa, Rec)
+
+										MarcatoriCampionatoCasa += Rec(3).Value
+									Case "RigoriFuoriCampionato"
+										NomiMarcatoriCampionatoFuori = AggiungeRigoriEGoal(NomiMarcatoriCampionatoFuori, Rec)
+
+										MarcatoriCampionatoFuori += Rec(3).Value
+									Case "RigoriCampoEsternoCampionato"
+										NomiMarcatoriCampionatoCampoEsterno = AggiungeRigoriEGoal(NomiMarcatoriCampionatoCampoEsterno, Rec)
+
+										MarcatoriCampionatoCampoEsterno += Rec(3).Value
 								End Select
 
 								Rec.MoveNext
@@ -1360,17 +1479,35 @@ Public Class wsStatistiche
 					"Where RisultatiAggiuntiviMarcatori.idPartita In (" & PartiteAmichevoliIN & ") And Partite.Casa = 'S' " &
 					"Group By Giocatori.Cognome, Giocatori.Nome, Giocatori.idGiocatore " &
 					"Union All " &
+					"Select 'RigoriCasaAmichevoli' As Cosa, Giocatori.Cognome, Giocatori.Nome, Count(*) As Goal, Giocatori.idGiocatore " &
+					"FROM(RigoriPropri Left Join Partite On Partite.idPartita = RigoriPropri.idPartita) " &
+					"Left Join Giocatori On RigoriPropri.idGiocatore = Giocatori.idGiocatore " &
+					"Where RigoriPropri.idPartita In (" & PartiteAmichevoliIN & ") And Partite.Casa = 'S' And Termine=1 " &
+					"Group By Giocatori.Cognome, Giocatori.Nome, Giocatori.idGiocatore " &
+					"Union All " &
 					"Select 'MarcatoriFuoriAmichevoli' As Cosa, Giocatori.Cognome, Giocatori.Nome, Count(*) As Goal, Giocatori.idGiocatore " &
 					"FROM(RisultatiAggiuntiviMarcatori Left Join Partite On Partite.idPartita = RisultatiAggiuntiviMarcatori.idPartita) " &
 					"Left Join Giocatori On RisultatiAggiuntiviMarcatori.idGiocatore = Giocatori.idGiocatore " &
 					"Where RisultatiAggiuntiviMarcatori.idPartita In (" & PartiteAmichevoliIN & ") And Partite.Casa = 'N' " &
 					"Group By Giocatori.Cognome, Giocatori.Nome, Giocatori.idGiocatore " &
 					"Union All " &
+					"Select 'RigoriFuoriAmichevoli' As Cosa, Giocatori.Cognome, Giocatori.Nome, Count(*) As Goal, Giocatori.idGiocatore " &
+					"FROM(RigoriPropri Left Join Partite On Partite.idPartita = RigoriPropri.idPartita) " &
+					"Left Join Giocatori On RigoriPropri.idGiocatore = Giocatori.idGiocatore " &
+					"Where RigoriPropri.idPartita In (" & PartiteAmichevoliIN & ") And Partite.Casa = 'N' And Termine=1 " &
+					"Group By Giocatori.Cognome, Giocatori.Nome, Giocatori.idGiocatore " &
+					"Union All " &
 					"Select 'MarcatoriCampoEsternoAmichevoli' As Cosa, Giocatori.Cognome, Giocatori.Nome, Count(*) As Goal, Giocatori.idGiocatore " &
 					"FROM(RisultatiAggiuntiviMarcatori Left Join Partite On Partite.idPartita = RisultatiAggiuntiviMarcatori.idPartita) " &
 					"Left Join Giocatori On RisultatiAggiuntiviMarcatori.idGiocatore = Giocatori.idGiocatore " &
 					"Where RisultatiAggiuntiviMarcatori.idPartita In (" & PartiteAmichevoliIN & ") And Partite.Casa = 'E' " &
-					"Group By Giocatori.Cognome, Giocatori.Nome, Giocatori.idGiocatore"
+					"Group By Giocatori.Cognome, Giocatori.Nome, Giocatori.idGiocatore " &
+					"Union All " &
+					"Select 'RigoriCampoEsternoAmichevoli' As Cosa, Giocatori.Cognome, Giocatori.Nome, Count(*) As Goal, Giocatori.idGiocatore " &
+					"FROM(RigoriPropri Left Join Partite On Partite.idPartita = RigoriPropri.idPartita) " &
+					"Left Join Giocatori On RigoriPropri.idGiocatore = Giocatori.idGiocatore " &
+					"Where RigoriPropri.idPartita In (" & PartiteAmichevoliIN & ") And Partite.Casa = 'E' And Termine=1 " &
+					"Group By Giocatori.Cognome, Giocatori.Nome, Giocatori.idGiocatore "
 					Try
 						Rec = LeggeQuery(Conn, Sql, Connessione)
 						If TypeOf (Rec) Is String Then
@@ -1382,23 +1519,39 @@ Public Class wsStatistiche
 										If "" & Rec(1).Value = "" Or "" & Rec(2).Value = "" Then
 											NomiMarcatoriAmichevoliCasa.Add(Rec(4).Value & "-Autorete-" & Rec(3).Value)
 										Else
-											NomiMarcatoriAmichevoliCasa.Add(Rec(4).Value & "-" & Rec(1).Value & " " & Rec(2).Value & "-" & Rec(3).Value)
+											' NomiMarcatoriAmichevoliCasa.Add(Rec(4).Value & "-" & Rec(1).Value & " " & Rec(2).Value & "-" & Rec(3).Value)
+											NomiMarcatoriAmichevoliCasa = AggiungeRigoriEGoal(NomiMarcatoriAmichevoliCasa, Rec)
 										End If
-										MarcatoriAmichevoliCasa = Rec(3).Value
+										MarcatoriAmichevoliCasa += Rec(3).Value
 									Case "MarcatoriFuoriAmichevoli"
 										If "" & Rec(1).Value = "" Or "" & Rec(2).Value = "" Then
 											NomiMarcatoriAmichevoliFuori.Add(Rec(4).Value & "-Autorete-" & Rec(3).Value)
 										Else
-											NomiMarcatoriAmichevoliFuori.Add(Rec(4).Value & "-" & Rec(1).Value & " " & Rec(2).Value & "-" & Rec(3).Value)
+											' NomiMarcatoriAmichevoliFuori.Add(Rec(4).Value & "-" & Rec(1).Value & " " & Rec(2).Value & "-" & Rec(3).Value)
+											NomiMarcatoriAmichevoliFuori = AggiungeRigoriEGoal(NomiMarcatoriAmichevoliFuori, Rec)
 										End If
-										MarcatoriAmichevoliFuori = Rec(3).Value
+										MarcatoriAmichevoliFuori += Rec(3).Value
 									Case "MarcatoriCampoEsternoAmichevoli"
 										If "" & Rec(1).Value = "" Or "" & Rec(2).Value = "" Then
 											NomiMarcatoriAmichevoliCampoEsterno.Add(Rec(4).Value & "-Autorete-" & Rec(3).Value)
 										Else
-											NomiMarcatoriAmichevoliCampoEsterno.Add(Rec(4).Value & "-" & Rec(1).Value & " " & Rec(2).Value & "-" & Rec(3).Value)
+											' NomiMarcatoriAmichevoliCampoEsterno.Add(Rec(4).Value & "-" & Rec(1).Value & " " & Rec(2).Value & "-" & Rec(3).Value)
+											NomiMarcatoriAmichevoliCampoEsterno = AggiungeRigoriEGoal(NomiMarcatoriAmichevoliCampoEsterno, Rec)
 										End If
-										MarcatoriAmichevoliCampoEsterno = Rec(3).Value
+										MarcatoriAmichevoliCampoEsterno += Rec(3).Value
+
+									Case "RigoriCasaAmichevoli"
+										NomiMarcatoriAmichevoliCasa = AggiungeRigoriEGoal(NomiMarcatoriAmichevoliCasa, Rec)
+
+										MarcatoriAmichevoliCasa += Rec(3).Value
+									Case "RigoriFuoriAmichevoli"
+										NomiMarcatoriAmichevoliFuori = AggiungeRigoriEGoal(NomiMarcatoriAmichevoliFuori, Rec)
+
+										MarcatoriAmichevoliFuori += Rec(3).Value
+									Case "RigoriCampoEsternoAmichevoli"
+										NomiMarcatoriAmichevoliCampoEsterno = AggiungeRigoriEGoal(NomiMarcatoriAmichevoliCampoEsterno, Rec)
+
+										MarcatoriAmichevoliCampoEsterno += Rec(3).Value
 								End Select
 
 								Rec.MoveNext
@@ -1412,22 +1565,40 @@ Public Class wsStatistiche
 
 				If PartiteTorneiIN.Length > 0 Then
 					Sql = "SELECT 'MarcatoriCasaTornei' As Cosa, Giocatori.Cognome, Giocatori.Nome, Count(*) As Goal, Giocatori.idGiocatore " &
-					"FROM(RisultatiAggiuntiviMarcatori Left Join Partite On Partite.idPartita = RisultatiAggiuntiviMarcatori.idPartita) " &
-					"Left Join Giocatori On RisultatiAggiuntiviMarcatori.idGiocatore = Giocatori.idGiocatore " &
-					"Where RisultatiAggiuntiviMarcatori.idPartita In (" & PartiteTorneiIN & ") And Partite.Casa = 'S' " &
-					"Group By Giocatori.Cognome, Giocatori.Nome, Giocatori.idGiocatore " &
-					"Union All " &
-					"Select 'MarcatoriFuoriTornei' As Cosa, Giocatori.Cognome, Giocatori.Nome, Count(*) As Goal, Giocatori.idGiocatore " &
-					"FROM(RisultatiAggiuntiviMarcatori Left Join Partite On Partite.idPartita = RisultatiAggiuntiviMarcatori.idPartita) " &
-					"Left Join Giocatori On RisultatiAggiuntiviMarcatori.idGiocatore = Giocatori.idGiocatore " &
-					"Where RisultatiAggiuntiviMarcatori.idPartita In (" & PartiteTorneiIN & ") And Partite.Casa = 'N' " &
-					"Group By Giocatori.Cognome, Giocatori.Nome, Giocatori.idGiocatore " &
-					"Union All " &
-					"Select 'MarcatoriCampoEsternoTornei' As Cosa, Giocatori.Cognome, Giocatori.Nome, Count(*) As Goal, Giocatori.idGiocatore " &
-					"FROM(RisultatiAggiuntiviMarcatori Left Join Partite On Partite.idPartita = RisultatiAggiuntiviMarcatori.idPartita) " &
-					"Left Join Giocatori On RisultatiAggiuntiviMarcatori.idGiocatore = Giocatori.idGiocatore " &
-					"Where RisultatiAggiuntiviMarcatori.idPartita In (" & PartiteTorneiIN & ") And Partite.Casa = 'E' " &
-					"Group By Giocatori.Cognome, Giocatori.Nome, Giocatori.idGiocatore"
+						"FROM(RisultatiAggiuntiviMarcatori Left Join Partite On Partite.idPartita = RisultatiAggiuntiviMarcatori.idPartita) " &
+						"Left Join Giocatori On RisultatiAggiuntiviMarcatori.idGiocatore = Giocatori.idGiocatore " &
+						"Where RisultatiAggiuntiviMarcatori.idPartita In (" & PartiteTorneiIN & ") And Partite.Casa = 'S' " &
+						"Group By Giocatori.Cognome, Giocatori.Nome, Giocatori.idGiocatore " &
+						"Union All " &
+						"Select 'RigoriCasaTornei' As Cosa, Giocatori.Cognome, Giocatori.Nome, Count(*) As Goal, Giocatori.idGiocatore " &
+						"FROM(RigoriPropri Left Join Partite On Partite.idPartita = RigoriPropri.idPartita) " &
+						"Left Join Giocatori On RigoriPropri.idGiocatore = Giocatori.idGiocatore " &
+						"Where RigoriPropri.idPartita In (" & PartiteTorneiIN & ") And Partite.Casa = 'S' And Termine=1 And Giocatori.idAnno=Partite.idAnno " &
+						"Group By Giocatori.Cognome, Giocatori.Nome, Giocatori.idGiocatore " &
+						"Union All " &
+						"Select 'MarcatoriFuoriTornei' As Cosa, Giocatori.Cognome, Giocatori.Nome, Count(*) As Goal, Giocatori.idGiocatore " &
+						"FROM(RisultatiAggiuntiviMarcatori Left Join Partite On Partite.idPartita = RisultatiAggiuntiviMarcatori.idPartita) " &
+						"Left Join Giocatori On RisultatiAggiuntiviMarcatori.idGiocatore = Giocatori.idGiocatore " &
+						"Where RisultatiAggiuntiviMarcatori.idPartita In (" & PartiteTorneiIN & ") And Partite.Casa = 'N' " &
+						"Group By Giocatori.Cognome, Giocatori.Nome, Giocatori.idGiocatore " &
+						"Union All " &
+						"Select 'RigoriFuoriTornei' As Cosa, Giocatori.Cognome, Giocatori.Nome, Count(*) As Goal, Giocatori.idGiocatore " &
+						"FROM(RigoriPropri Left Join Partite On Partite.idPartita = RigoriPropri.idPartita) " &
+						"Left Join Giocatori On RigoriPropri.idGiocatore = Giocatori.idGiocatore " &
+						"Where RigoriPropri.idPartita In (" & PartiteTorneiIN & ") And Partite.Casa = 'N' And Termine=1 And Giocatori.idAnno=Partite.idAnno " &
+						"Group By Giocatori.Cognome, Giocatori.Nome, Giocatori.idGiocatore " &
+						"Union All " &
+						"Select 'MarcatoriCampoEsternoTornei' As Cosa, Giocatori.Cognome, Giocatori.Nome, Count(*) As Goal, Giocatori.idGiocatore " &
+						"FROM(RisultatiAggiuntiviMarcatori Left Join Partite On Partite.idPartita = RisultatiAggiuntiviMarcatori.idPartita) " &
+						"Left Join Giocatori On RisultatiAggiuntiviMarcatori.idGiocatore = Giocatori.idGiocatore " &
+						"Where RisultatiAggiuntiviMarcatori.idPartita In (" & PartiteTorneiIN & ") And Partite.Casa = 'E' " &
+						"Group By Giocatori.Cognome, Giocatori.Nome, Giocatori.idGiocatore " &
+						"Union All " &
+						"Select 'RigoriCampoEsternoTornei' As Cosa, Giocatori.Cognome, Giocatori.Nome, Count(*) As Goal, Giocatori.idGiocatore " &
+						"FROM(RigoriPropri Left Join Partite On Partite.idPartita = RigoriPropri.idPartita) " &
+						"Left Join Giocatori On RigoriPropri.idGiocatore = Giocatori.idGiocatore " &
+						"Where RigoriPropri.idPartita In (" & PartiteTorneiIN & ") And Partite.Casa = 'E' And Termine=1 And Giocatori.idAnno=Partite.idAnno " &
+						"Group By Giocatori.Cognome, Giocatori.Nome, Giocatori.idGiocatore "
 					Try
 						Rec = LeggeQuery(Conn, Sql, Connessione)
 						If TypeOf (Rec) Is String Then
@@ -1439,23 +1610,42 @@ Public Class wsStatistiche
 										If "" & Rec(1).Value = "" Or "" & Rec(2).Value = "" Then
 											NomiMarcatoriTorneiCasa.Add(Rec(4).Value & "-Autorete-" & Rec(3).Value)
 										Else
-											NomiMarcatoriTorneiCasa.Add(Rec(4).Value & "-" & Rec(1).Value & " " & Rec(2).Value & "-" & Rec(3).Value)
+											' NomiMarcatoriTorneiCasa.Add(Rec(4).Value & "-" & Rec(1).Value & " " & Rec(2).Value & "-" & Rec(3).Value)
+											NomiMarcatoriTorneiCasa = AggiungeRigoriEGoal(NomiMarcatoriTorneiCasa, Rec)
 										End If
-										MarcatoriTorneiCasa = Rec(3).Value
+
+										MarcatoriTorneiCasa += Rec(3).Value
 									Case "MarcatoriFuoriTornei"
 										If "" & Rec(1).Value = "" Or "" & Rec(2).Value = "" Then
 											NomiMarcatoriTorneiFuori.Add(Rec(4).Value & "-Autorete-" & Rec(3).Value)
 										Else
-											NomiMarcatoriTorneiFuori.Add(Rec(4).Value & "-" & Rec(1).Value & " " & Rec(2).Value & "-" & Rec(3).Value)
+											' NomiMarcatoriTorneiFuori.Add(Rec(4).Value & "-" & Rec(1).Value & " " & Rec(2).Value & "-" & Rec(3).Value)
+											NomiMarcatoriTorneiFuori = AggiungeRigoriEGoal(NomiMarcatoriTorneiFuori, Rec)
 										End If
-										MarcatoriTorneiFuori = Rec(3).Value
+
+										MarcatoriTorneiFuori += Rec(3).Value
 									Case "MarcatoriCampoEsternoTornei"
 										If "" & Rec(1).Value = "" Or "" & Rec(2).Value = "" Then
 											NomiMarcatoriTorneiCampoEsterno.Add(Rec(4).Value & "-Autorete-" & Rec(3).Value)
 										Else
-											NomiMarcatoriTorneiCampoEsterno.Add(Rec(4).Value & "-" & Rec(1).Value & " " & Rec(2).Value & "-" & Rec(3).Value)
+											'NomiMarcatoriTorneiCampoEsterno.Add(Rec(4).Value & "-" & Rec(1).Value & " " & Rec(2).Value & "-" & Rec(3).Value)
+											NomiMarcatoriTorneiCampoEsterno = AggiungeRigoriEGoal(NomiMarcatoriTorneiCampoEsterno, Rec)
 										End If
-										MarcatoriTorneiCampoEsterno = Rec(3).Value
+
+										MarcatoriTorneiCampoEsterno += Rec(3).Value
+
+									Case "RigoriCasaTornei"
+										NomiMarcatoriTorneiCasa = AggiungeRigoriEGoal(NomiMarcatoriTorneiCasa, Rec)
+
+										MarcatoriTorneiCasa += Rec(3).Value
+									Case "RigoriFuoriTornei"
+										NomiMarcatoriTorneiFuori = AggiungeRigoriEGoal(NomiMarcatoriTorneiFuori, Rec)
+
+										MarcatoriTorneiFuori += Rec(3).Value
+									Case "RigoriCampoEsternoTornei"
+										NomiMarcatoriTorneiCampoEsterno = AggiungeRigoriEGoal(NomiMarcatoriTorneiCampoEsterno, Rec)
+
+										MarcatoriTorneiCampoEsterno += Rec(3).Value
 								End Select
 
 								Rec.MoveNext
@@ -1469,16 +1659,28 @@ Public Class wsStatistiche
 
 				If PartiteCampionatoIN.Length > 0 Then
 					Sql = "SELECT 'AvversariCasa' As Cosa, Sum(GoalAvvPrimoTempo) As PrimoTempo, Sum(GoalAvvSecondoTempo) As SecondoTempo, Sum(GoalAvvTerzoTempo) As TerzoTempo " &
-					"From RisultatiAggiuntivi Left Join Partite On RisultatiAggiuntivi.idPartita = Partite.idPartita " &
-					"Where RisultatiAggiuntivi.idPartita In (" & PartiteCampionatoIN & ") And Partite.Casa = 'S' " &
-					"Union All " &
-					"SELECT 'AvversariFuori' As Cosa, Sum(GoalAvvPrimoTempo) As PrimoTempo, Sum(GoalAvvSecondoTempo) As SecondoTempo, Sum(GoalAvvTerzoTempo) As TerzoTempo " &
-					"From RisultatiAggiuntivi Left Join Partite On RisultatiAggiuntivi.idPartita = Partite.idPartita " &
-					"Where RisultatiAggiuntivi.idPartita In (" & PartiteCampionatoIN & ") And Partite.Casa = 'N' " &
-					"Union All " &
-					"SELECT 'AvversariCampoEsterno' As Cosa, Sum(GoalAvvPrimoTempo) As PrimoTempo, Sum(GoalAvvSecondoTempo) As SecondoTempo, Sum(GoalAvvTerzoTempo) As TerzoTempo " &
-					"From RisultatiAggiuntivi Left Join Partite On RisultatiAggiuntivi.idPartita = Partite.idPartita " &
-					"Where RisultatiAggiuntivi.idPartita In (" & PartiteCampionatoIN & ") And Partite.Casa = 'E'"
+						"From RisultatiAggiuntivi Left Join Partite On RisultatiAggiuntivi.idPartita = Partite.idPartita " &
+						"Where RisultatiAggiuntivi.idPartita In (" & PartiteCampionatoIN & ") And Partite.Casa = 'S' " &
+						"Union All " &
+						"SELECT 'AvversariRigoriCasa' As Cosa, Sum(Segnati) As PrimoTempo, 0 As SecondoTempo, 0 As TerzoTempo " &
+						"From RigoriAvversari Left Join Partite On RigoriAvversari.idPartita = Partite.idPartita " &
+						"Where RigoriAvversari.idPartita In (" & PartiteCampionatoIN & ") And Partite.Casa = 'S' And Giocatori.idAnno=Partite.idAnno " &
+						"Union All " &
+						"SELECT 'AvversariFuori' As Cosa, Sum(GoalAvvPrimoTempo) As PrimoTempo, Sum(GoalAvvSecondoTempo) As SecondoTempo, Sum(GoalAvvTerzoTempo) As TerzoTempo " &
+						"From RisultatiAggiuntivi Left Join Partite On RisultatiAggiuntivi.idPartita = Partite.idPartita " &
+						"Where RisultatiAggiuntivi.idPartita In (" & PartiteCampionatoIN & ") And Partite.Casa = 'N' " &
+						"Union All " &
+						"SELECT 'AvversariRigoriFuori' As Cosa, Sum(Segnati) As PrimoTempo, 0 As SecondoTempo, 0 As TerzoTempo " &
+						"From RigoriAvversari Left Join Partite On RigoriAvversari.idPartita = Partite.idPartita " &
+						"Where RigoriAvversari.idPartita In (" & PartiteCampionatoIN & ") And Partite.Casa = 'N' And Giocatori.idAnno=Partite.idAnno" &
+						"Union All " &
+						"SELECT 'AvversariCampoEsterno' As Cosa, Sum(GoalAvvPrimoTempo) As PrimoTempo, Sum(GoalAvvSecondoTempo) As SecondoTempo, Sum(GoalAvvTerzoTempo) As TerzoTempo " &
+						"From RisultatiAggiuntivi Left Join Partite On RisultatiAggiuntivi.idPartita = Partite.idPartita " &
+						"Where RisultatiAggiuntivi.idPartita In (" & PartiteCampionatoIN & ") And Partite.Casa = 'E' " &
+						"Union All " &
+						"SELECT 'AvversariRigoriCampoEsterno' As Cosa, Sum(Segnati) As PrimoTempo, 0 As SecondoTempo, 0 As TerzoTempo " &
+						"From RigoriAvversari Left Join Partite On RigoriAvversari.idPartita = Partite.idPartita " &
+						"Where RigoriAvversari.idPartita In (" & PartiteCampionatoIN & ") And Partite.Casa = 'E' And Giocatori.idAnno=Partite.idAnno "
 					Try
 						Rec = LeggeQuery(Conn, Sql, Connessione)
 						If TypeOf (Rec) Is String Then
@@ -1489,15 +1691,22 @@ Public Class wsStatistiche
 									Case "AvversariCasa"
 										GoalAvvCampionatoCasa1Tempo = Val("" & Rec(1).Value)
 										GoalAvvCampionatoCasa2Tempo = Val("" & Rec(2).Value)
-										GoalAvvCampionatoCasa3Tempo = Val("" & Rec(3).Value)
+										GoalAvvCampionatoCasa3Tempo += Val("" & Rec(3).Value)
 									Case "AvversariFuori"
 										GoalAvvCampionatoFuori1Tempo = Val("" & Rec(1).Value)
 										GoalAvvCampionatoFuori2Tempo = Val("" & Rec(2).Value)
-										GoalAvvCampionatoFuori3Tempo = Val("" & Rec(3).Value)
+										GoalAvvCampionatoFuori3Tempo += Val("" & Rec(3).Value)
 									Case "AvversariCampoEsterno"
 										GoalAvvCampionatoCampoEsterno1Tempo = Val("" & Rec(1).Value)
 										GoalAvvCampionatoCampoEsterno2Tempo = Val("" & Rec(2).Value)
-										GoalAvvCampionatoCampoEsterno3Tempo = Val("" & Rec(3).Value)
+										GoalAvvCampionatoCampoEsterno3Tempo += Val("" & Rec(3).Value)
+
+									Case "AvversariRigoriCasa"
+										GoalAvvCampionatoCasa3Tempo += Val("" & Rec(1).Value)
+									Case "AvversariRigoriFuori"
+										GoalAvvCampionatoFuori3Tempo += Val("" & Rec(1).Value)
+									Case "AvversariRigoriCampoEsterno"
+										GoalAvvCampionatoCampoEsterno3Tempo += Val("" & Rec(1).Value)
 								End Select
 
 								Rec.MoveNext
@@ -1514,13 +1723,25 @@ Public Class wsStatistiche
 					"From RisultatiAggiuntivi Left Join Partite On RisultatiAggiuntivi.idPartita = Partite.idPartita " &
 					"Where RisultatiAggiuntivi.idPartita In (" & PartiteAmichevoliIN & ") And Partite.Casa = 'S' " &
 					"Union All " &
+					"SELECT 'AvversariRigoriCasa' As Cosa, Sum(Segnati) As PrimoTempo, 0 As SecondoTempo, 0 As TerzoTempo " &
+					"From RigoriAvversari Left Join Partite On RigoriAvversari.idPartita = Partite.idPartita " &
+					"Where RigoriAvversari.idPartita In (" & PartiteAmichevoliIN & ") And Partite.Casa = 'S' And Giocatori.idAnno=Partite.idAnno " &
+					"Union All " &
 					"SELECT 'AvversariFuori' As Cosa, Sum(GoalAvvPrimoTempo) As PrimoTempo, Sum(GoalAvvSecondoTempo) As SecondoTempo, Sum(GoalAvvTerzoTempo) As TerzoTempo " &
 					"From RisultatiAggiuntivi Left Join Partite On RisultatiAggiuntivi.idPartita = Partite.idPartita " &
 					"Where RisultatiAggiuntivi.idPartita In (" & PartiteAmichevoliIN & ") And Partite.Casa = 'N' " &
 					"Union All " &
+					"SELECT 'AvversariRigoriFuori' As Cosa, Sum(Segnati) As PrimoTempo, 0 As SecondoTempo, 0 As TerzoTempo " &
+					"From RigoriAvversari Left Join Partite On RigoriAvversari.idPartita = Partite.idPartita " &
+					"Where RigoriAvversari.idPartita In (" & PartiteAmichevoliIN & ") And Partite.Casa = 'N' And Giocatori.idAnno=Partite.idAnno " &
+					"Union All " &
 					"SELECT 'AvversariCampoEsterno' As Cosa, Sum(GoalAvvPrimoTempo) As PrimoTempo, Sum(GoalAvvSecondoTempo) As SecondoTempo, Sum(GoalAvvTerzoTempo) As TerzoTempo " &
 					"From RisultatiAggiuntivi Left Join Partite On RisultatiAggiuntivi.idPartita = Partite.idPartita " &
-					"Where RisultatiAggiuntivi.idPartita In (" & PartiteAmichevoliIN & ") And Partite.Casa = 'E'"
+					"Where RisultatiAggiuntivi.idPartita In (" & PartiteAmichevoliIN & ") And Partite.Casa = 'E' " &
+					"Union All " &
+					"SELECT 'AvversariRigoriCampoEsterno' As Cosa, Sum(Segnati) As PrimoTempo, 0 As SecondoTempo, 0 As TerzoTempo " &
+					"From RigoriAvversari Left Join Partite On RigoriAvversari.idPartita = Partite.idPartita " &
+					"Where RigoriAvversari.idPartita In (" & PartiteAmichevoliIN & ") And Partite.Casa = 'E' And Giocatori.idAnno=Partite.idAnno "
 					Try
 						Rec = LeggeQuery(Conn, Sql, Connessione)
 						If TypeOf (Rec) Is String Then
@@ -1531,15 +1752,22 @@ Public Class wsStatistiche
 									Case "AvversariCasa"
 										GoalAvvAmichevoliCasa1Tempo = Val("" & Rec(1).Value)
 										GoalAvvAmichevoliCasa2Tempo = Val("" & Rec(2).Value)
-										GoalAvvAmichevoliCasa3Tempo = Val("" & Rec(3).Value)
+										GoalAvvAmichevoliCasa3Tempo += Val("" & Rec(3).Value)
 									Case "AvversariFuori"
 										GoalAvvAmichevoliFuori1Tempo = Val("" & Rec(1).Value)
 										GoalAvvAmichevoliFuori2Tempo = Val("" & Rec(2).Value)
-										GoalAvvAmichevoliFuori3Tempo = Val("" & Rec(3).Value)
+										GoalAvvAmichevoliFuori3Tempo += Val("" & Rec(3).Value)
 									Case "AvversariCampoEsterno"
 										GoalAvvAmichevoliCampoEsterno1Tempo = Val("" & Rec(1).Value)
 										GoalAvvAmichevoliCampoEsterno2Tempo = Val("" & Rec(2).Value)
-										GoalAvvAmichevoliCampoEsterno3Tempo = Val("" & Rec(3).Value)
+										GoalAvvAmichevoliCampoEsterno3Tempo += Val("" & Rec(3).Value)
+
+									Case "AvversariRigoriCasa"
+										GoalAvvAmichevoliCasa3Tempo += Val("" & Rec(1).Value)
+									Case "AvversariRigoriFuori"
+										GoalAvvAmichevoliFuori3Tempo += Val("" & Rec(1).Value)
+									Case "AvversariRigoriCampoEsterno"
+										GoalAvvAmichevoliCampoEsterno3Tempo += Val("" & Rec(1).Value)
 								End Select
 
 								Rec.MoveNext
@@ -1556,13 +1784,25 @@ Public Class wsStatistiche
 					"From RisultatiAggiuntivi Left Join Partite On RisultatiAggiuntivi.idPartita = Partite.idPartita " &
 					"Where RisultatiAggiuntivi.idPartita In (" & PartiteTorneiIN & ") And Partite.Casa = 'S' " &
 					"Union All " &
+					"SELECT 'AvversariRigoriCasa' As Cosa, Sum(Segnati) As PrimoTempo, 0 As SecondoTempo, 0 As TerzoTempo " &
+					"From RigoriAvversari Left Join Partite On RigoriAvversari.idPartita = Partite.idPartita " &
+					"Where RigoriAvversari.idPartita In (" & PartiteTorneiIN & ") And Partite.Casa = 'S' And Giocatori.idAnno=Partite.idAnno " &
+					"Union All " &
 					"SELECT 'AvversariFuori' As Cosa, Sum(GoalAvvPrimoTempo) As PrimoTempo, Sum(GoalAvvSecondoTempo) As SecondoTempo, Sum(GoalAvvTerzoTempo) As TerzoTempo " &
 					"From RisultatiAggiuntivi Left Join Partite On RisultatiAggiuntivi.idPartita = Partite.idPartita " &
 					"Where RisultatiAggiuntivi.idPartita In (" & PartiteTorneiIN & ") And Partite.Casa = 'N' " &
 					"Union All " &
+					"SELECT 'AvversariRigoriFuori' As Cosa, Sum(Segnati) As PrimoTempo, 0 As SecondoTempo, 0 As TerzoTempo " &
+					"From RigoriAvversari Left Join Partite On RigoriAvversari.idPartita = Partite.idPartita " &
+					"Where RigoriAvversari.idPartita In (" & PartiteTorneiIN & ") And Partite.Casa = 'N' And Giocatori.idAnno=Partite.idAnno " &
+					"Union All " &
 					"SELECT 'AvversariCampoEsterno' As Cosa, Sum(GoalAvvPrimoTempo) As PrimoTempo, Sum(GoalAvvSecondoTempo) As SecondoTempo, Sum(GoalAvvTerzoTempo) As TerzoTempo " &
 					"From RisultatiAggiuntivi Left Join Partite On RisultatiAggiuntivi.idPartita = Partite.idPartita " &
-					"Where RisultatiAggiuntivi.idPartita In (" & PartiteTorneiIN & ") And Partite.Casa = 'E'"
+					"Where RisultatiAggiuntivi.idPartita In (" & PartiteTorneiIN & ") And Partite.Casa = 'E' " &
+					"Union All " &
+					"SELECT 'AvversariRigoriCampoEsterno' As Cosa, Sum(Segnati) As PrimoTempo, 0 As SecondoTempo, 0 As TerzoTempo " &
+					"From RigoriAvversari Left Join Partite On RigoriAvversari.idPartita = Partite.idPartita " &
+					"Where RigoriAvversari.idPartita In (" & PartiteTorneiIN & ") And Partite.Casa = 'E' And Giocatori.idAnno=Partite.idAnno "
 					Try
 						Rec = LeggeQuery(Conn, Sql, Connessione)
 						If TypeOf (Rec) Is String Then
@@ -1573,15 +1813,22 @@ Public Class wsStatistiche
 									Case "AvversariCasa"
 										GoalAvvTorneiCasa1Tempo = Val("" & Rec(1).Value)
 										GoalAvvTorneiCasa2Tempo = Val("" & Rec(2).Value)
-										GoalAvvTorneiCasa3Tempo = Val("" & Rec(3).Value)
+										GoalAvvTorneiCasa3Tempo += Val("" & Rec(3).Value)
 									Case "AvversariFuori"
 										GoalAvvTorneiFuori1Tempo = Val("" & Rec(1).Value)
 										GoalAvvTorneiFuori2Tempo = Val("" & Rec(2).Value)
-										GoalAvvTorneiFuori3Tempo = Val("" & Rec(3).Value)
+										GoalAvvTorneiFuori3Tempo += Val("" & Rec(3).Value)
 									Case "AvversariCampoEsterno"
 										GoalAvvTorneiCampoEsterno1Tempo = Val("" & Rec(1).Value)
 										GoalAvvTorneiCampoEsterno2Tempo = Val("" & Rec(2).Value)
-										GoalAvvTorneiCampoEsterno3Tempo = Val("" & Rec(3).Value)
+										GoalAvvTorneiCampoEsterno3Tempo += Val("" & Rec(3).Value)
+
+									Case "AvversariRigoriCasa"
+										GoalAvvTorneiCasa3Tempo += Val("" & Rec(1).Value)
+									Case "AvversariRigoriFuori"
+										GoalAvvTorneiFuori3Tempo += Val("" & Rec(1).Value)
+									Case "AvversariRigoriCampoEsterno"
+										GoalAvvTorneiCampoEsterno3Tempo += Val("" & Rec(1).Value)
 								End Select
 
 								Rec.MoveNext
@@ -1614,11 +1861,21 @@ Public Class wsStatistiche
 					Ritorno = StringaErrore & " " & ex.Message
 				End Try
 
-				Sql = "SELECT Giocatori.idGiocatore, Giocatori.Cognome, Giocatori.Nome, Count(*) As Quanti " &
-				"FROM (RisultatiAggiuntiviMarcatori INNER JOIN Partite ON RisultatiAggiuntiviMarcatori.idPartita = Partite.idPartita) Left Join Giocatori On RisultatiAggiuntiviMarcatori.idGiocatore = Giocatori.idGiocatore " &
-				"WHERE Partite.idAnno=" & idAnno & " AND Partite.idCategoria=" & idCategoria & " " &
-				"Group By Giocatori.idGiocatore, Giocatori.Cognome, Giocatori.Nome " &
-				"Order By 4 Desc"
+				Sql = "Select Giocatori.idGiocatore, Giocatori.Cognome, Giocatori.Nome, Sum(Quanti2) As Quanti From (" &
+					"SELECT Giocatori.idGiocatore, Giocatori.Cognome, Giocatori.Nome, Count(*) As Quanti2 " &
+					"FROM (RisultatiAggiuntiviMarcatori INNER JOIN Partite On RisultatiAggiuntiviMarcatori.idPartita = Partite.idPartita) INNER JOIN Giocatori On (RisultatiAggiuntiviMarcatori.idGiocatore = Giocatori.idGiocatore) And (Partite.idAnno = Giocatori.idAnno) " &
+					"WHERE Partite.idAnno=" & idAnno & " AND Partite.idCategoria=" & idCategoria & " " &
+					"Group By Giocatori.idGiocatore, Giocatori.Cognome, Giocatori.Nome " &
+					"Order By 4 Desc " &
+					"Union All " &
+					"Select Giocatori.idGiocatore, Giocatori.Cognome, Giocatori.Nome, Count(*) As Quanti2 " &
+					"FROM (RigoriPropri INNER JOIN Partite On RigoriPropri.idPartita = Partite.idPartita) INNER JOIN Giocatori On (RigoriPropri.idGiocatore = Giocatori.idGiocatore) And (Partite.idAnno = Giocatori.idAnno) " &
+					"WHERE Partite.idAnno=" & idAnno & " AND Partite.idCategoria=" & idCategoria & " And RigoriPropri.Termine=1 And RigoriPropri.idAnno=" & idAnno & " And Giocatori.idAnno=" & idAnno & " " &
+					"Group By Giocatori.idGiocatore, Giocatori.Cognome, Giocatori.Nome " &
+					"Order By 4 Desc " &
+					") A " &
+					"Group By Giocatori.idGiocatore, Giocatori.Cognome, Giocatori.Nome " &
+					"Order By 4 Desc"
 				Try
 					Rec = LeggeQuery(Conn, Sql, Connessione)
 					If TypeOf (Rec) Is String Then
@@ -1639,9 +1896,19 @@ Public Class wsStatistiche
 					Ritorno = StringaErrore & " " & ex.Message
 				End Try
 
-				Sql = "SELECT Giocatori.idGiocatore, Giocatori.Cognome, Giocatori.Nome, Count(*) As Goals " &
-					"FROM(RisultatiAggiuntiviMarcatori INNER JOIN Partite On RisultatiAggiuntiviMarcatori.idPartita = Partite.idPartita) INNER JOIN Giocatori On (RisultatiAggiuntiviMarcatori.idGiocatore = Giocatori.idGiocatore) And (Partite.idAnno = Giocatori.idAnno) " &
-					"WHERE Partite.idAnno= " & idAnno & " " &
+				Sql = "Select Giocatori.idGiocatore, Giocatori.Cognome, Giocatori.Nome, Sum(Quanti2) As Quanti From (" &
+					"SELECT Giocatori.idGiocatore, Giocatori.Cognome, Giocatori.Nome, Count(*) As Quanti2 " &
+					"FROM (RisultatiAggiuntiviMarcatori INNER JOIN Partite On RisultatiAggiuntiviMarcatori.idPartita = Partite.idPartita) INNER JOIN Giocatori On (RisultatiAggiuntiviMarcatori.idGiocatore = Giocatori.idGiocatore) And (Partite.idAnno = Giocatori.idAnno) " &
+					"WHERE Partite.idAnno=" & idAnno & " " &
+					"Group By Giocatori.idGiocatore, Giocatori.Cognome, Giocatori.Nome " &
+					"Order By 4 Desc " &
+					"Union All " &
+					"Select Giocatori.idGiocatore, Giocatori.Cognome, Giocatori.Nome, Count(*) As Quanti2 " &
+					"FROM (RigoriPropri INNER JOIN Partite On RigoriPropri.idPartita = Partite.idPartita) INNER JOIN Giocatori On (RigoriPropri.idGiocatore = Giocatori.idGiocatore) And (Partite.idAnno = Giocatori.idAnno) " &
+					"WHERE Partite.idAnno=" & idAnno & " And RigoriPropri.Termine=1 And RigoriPropri.idAnno=" & idAnno & " And Giocatori.idAnno=" & idAnno & " " &
+					"Group By Giocatori.idGiocatore, Giocatori.Cognome, Giocatori.Nome " &
+					"Order By 4 Desc " &
+					") A " &
 					"Group By Giocatori.idGiocatore, Giocatori.Cognome, Giocatori.Nome " &
 					"Order By 4 Desc"
 				Try
@@ -1651,9 +1918,9 @@ Public Class wsStatistiche
 					Else
 						Do Until Rec.Eof
 							If "" & Rec("Cognome").Value = "" Or "" & Rec("Nome").Value = "" Then
-								MarcatoriTutte.Add(Rec("idGiocatore").Value & ";Autorete;" & Rec("Goals").Value)
+								MarcatoriTutte.Add(Rec("idGiocatore").Value & ";Autorete;" & Rec("Quanti").Value)
 							Else
-								MarcatoriTutte.Add(Rec("idGiocatore").Value & ";" & Rec("Cognome").Value & " " & Rec("Nome").Value & ";" & Rec("Goals").Value)
+								MarcatoriTutte.Add(Rec("idGiocatore").Value & ";" & Rec("Cognome").Value & " " & Rec("Nome").Value & ";" & Rec("Quanti").Value)
 							End If
 
 							Rec.MoveNext
@@ -1665,10 +1932,10 @@ Public Class wsStatistiche
 				End Try
 
 				Sql = "SELECT Giocatori.idGiocatore, Giocatori.Cognome, Giocatori.Nome, Count(*) As Presenze " &
-				"FROM (Partite LEFT JOIN Convocati ON Partite.idPartita = Convocati.idPartita) LEFT JOIN Giocatori ON Convocati.idGiocatore = Giocatori.idGiocatore " &
-				"WHERE Partite.idAnno=" & idAnno & " AND Partite.idCategoria=" & idCategoria & " And Giocatori.idAnno=" & idAnno & " " &
-				"Group By Giocatori.idGiocatore, Giocatori.Cognome, Giocatori.Nome " &
-				"Order By 4 Desc"
+					"FROM (Partite LEFT JOIN Convocati ON Partite.idPartita = Convocati.idPartita) LEFT JOIN Giocatori ON Convocati.idGiocatore = Giocatori.idGiocatore " &
+					"WHERE Partite.idAnno=" & idAnno & " AND Partite.idCategoria=" & idCategoria & " And Giocatori.idAnno=" & idAnno & " " &
+					"Group By Giocatori.idGiocatore, Giocatori.Cognome, Giocatori.Nome " &
+					"Order By 4 Desc"
 				Try
 					Rec = LeggeQuery(Conn, Sql, Connessione)
 					If TypeOf (Rec) Is String Then
@@ -1707,10 +1974,10 @@ Public Class wsStatistiche
 				End Try
 
 				Sql = "SELECT Minuto, Count(*) As Quanti " &
-				"FROM RisultatiAggiuntiviMarcatori INNER JOIN Partite ON RisultatiAggiuntiviMarcatori.idPartita = Partite.idPartita " &
-				"WHERE Partite.idAnno=" & idAnno & " AND Partite.idCategoria=" & idCategoria & " " &
-				"Group By Minuto " &
-				"Order By 2 Desc"
+					"FROM RisultatiAggiuntiviMarcatori INNER JOIN Partite ON RisultatiAggiuntiviMarcatori.idPartita = Partite.idPartita " &
+					"WHERE Partite.idAnno=" & idAnno & " AND Partite.idCategoria=" & idCategoria & " " &
+					"Group By Minuto " &
+					"Order By 2 Desc"
 				Try
 					Rec = LeggeQuery(Conn, Sql, Connessione)
 					If TypeOf (Rec) Is String Then
@@ -1742,8 +2009,8 @@ Public Class wsStatistiche
 				End Try
 
 				Sql = "SELECT TempiGoalAvversari.TempiPrimoTempo, TempiGoalAvversari.TempiSecondoTempo, TempiGoalAvversari.TempiTerzoTempo " &
-				"FROM TempiGoalAvversari LEFT JOIN Partite ON TempiGoalAvversari.idPartita = Partite.idPartita " &
-				"WHERE Partite.idAnno=" & idAnno & " AND Partite.idCategoria=" & idCategoria
+					"FROM TempiGoalAvversari LEFT JOIN Partite ON TempiGoalAvversari.idPartita = Partite.idPartita " &
+					"WHERE Partite.idAnno=" & idAnno & " AND Partite.idCategoria=" & idCategoria
 				Try
 					Rec = LeggeQuery(Conn, Sql, Connessione)
 					If TypeOf (Rec) Is String Then
@@ -1847,7 +2114,7 @@ Public Class wsStatistiche
 						"LEFT JOIN Arbitri On ArbitriPartite.idArbitro=Arbitri.idArbitro) " &
 						"LEFT JOIN Anni On Partite.idAnno = Anni.idAnno) " &
 						"LEFT JOIN CampiAvversari On SquadreAvversarie.idCampo = CampiAvversari.idCampo " &
-						"WHERE Partite.idAnno=" & idAnno & " And Partite.idCategoria=" & idCategoria & " And Partite.idTipologia=" & i & " " &
+						"WHERE Partite.idAnno=" & idAnno & " And Partite.idCategoria=" & idCategoria & " And Partite.idTipologia=" & i & " And Arbitri.idAnno=Partite.idAnno " &
 						"Order By DataOra"
 					Try
 						Rec = LeggeQuery(Conn, Sql, Connessione)
@@ -1929,6 +2196,37 @@ Public Class wsStatistiche
 									Dim GoalCasa As String
 									Dim GoalFuori As String
 
+									Dim RigoriPropri As Integer = 0
+									Dim RigoriAvversari As Integer = 0
+
+									Try
+										Sql = "Select Count(*) As Quanti From RigoriPropri Where idPartita=" & Rec("idPartita").Value & " And Termine=1"
+										Rec2 = LeggeQuery(Conn, Sql, Connessione)
+										If TypeOf (Rec2) Is String Then
+											Ritorno = Rec2
+										Else
+											If Not Rec2.Eof Then
+												RigoriPropri = Rec2("Quanti").Value
+											End If
+										End If
+									Catch ex As Exception
+										Ritorno = StringaErrore & " " & ex.Message
+									End Try
+
+									Try
+										Sql = "Select Segnati As Quanti From RigoriAvversari Where idPartita=" & Rec("idPartita").Value
+										Rec2 = LeggeQuery(Conn, Sql, Connessione)
+										If TypeOf (Rec2) Is String Then
+											Ritorno = Rec2
+										Else
+											If Not Rec2.Eof Then
+												RigoriAvversari = Rec2("Quanti").Value
+											End If
+										End If
+									Catch ex As Exception
+										Ritorno = StringaErrore & " " & ex.Message
+									End Try
+
 									If Rec("Casa").Value = "S" Then
 										Casa = Rec("NomeSquadra").Value
 										Fuori = Rec("Descrizione").Value
@@ -1936,6 +2234,9 @@ Public Class wsStatistiche
 										ImmFuori = "<td style =""text-align: center;""><img src=""" & Imm2 & """ style=""width: 55px; height: 55px; border: 1px solid #999;"" onerror=""this.src='http://looigi.no-ip.biz:12345/CVCalcio/App_Themes/Standard/Images/Sconosciuto.png'""  /></td>"
 										GoalCasa = Rec("Goal").Value
 										GoalFuori = Rec("GoalAvv").Value
+
+										GoalCasa += RigoriPropri
+										GoalFuori += RigoriAvversari
 									Else
 										Fuori = Rec("NomeSquadra").Value
 										Casa = Rec("Descrizione").Value
@@ -1943,6 +2244,9 @@ Public Class wsStatistiche
 										ImmFuori = "<td style =""text-align: center;""><img src=""" & Imm1 & """ style=""width: 55px; height: 55px; border: 1px solid #999;"" onerror=""this.src='http://looigi.no-ip.biz:12345/CVCalcio/App_Themes/Standard/Images/Sconosciuto.png'""  /></td>"
 										GoalCasa = Rec("GoalAvv").Value
 										GoalFuori = Rec("Goal").Value
+
+										GoalCasa += RigoriAvversari
+										GoalFuori += RigoriPropri
 									End If
 									Stringozza &= "<td style=""text-align: center;"">"
 									Stringozza &= "<span class=""testo rosso"" style=""font-size: 15px;"">" & Casa.Replace(" ", "<br />") & "</span>"
@@ -2270,8 +2574,8 @@ Public Class wsStatistiche
 				End If
 
 				Sql = "SELECT Tempo1Tempo, Tempo2Tempo, Tempo3Tempo " &
-				"FROM RisultatiAggiuntivi INNER JOIN Partite ON RisultatiAggiuntivi.idPartita = Partite.idPartita " &
-				"WHERE Partite.idAnno=" & idAnno & " AND Partite.idCategoria=" & idCategoria
+					"FROM RisultatiAggiuntivi INNER JOIN Partite ON RisultatiAggiuntivi.idPartita = Partite.idPartita " &
+					"WHERE Partite.idAnno=" & idAnno & " AND Partite.idCategoria=" & idCategoria
 				Try
 					Rec = LeggeQuery(Conn, Sql, Connessione)
 					If TypeOf (Rec) Is String Then
@@ -2355,26 +2659,26 @@ Public Class wsStatistiche
 
 					For Each Partita As Integer In ListaPartite
 						Sql = "Select (Select RisultatoATempi From Partite Where idPartita=" & Partita & ") As RisultatoATempi, " &
-						"(Select Casa From Partite Where idPartita=" & Partita & ") As Casa, *, " &
-						"(Select RisGiochetti From RisultatiAggiuntivi Where idPartita =" & Partita & ") " &
-						"From (" &
-						"Select Sum(Goal1Tempo) As G1Tempo, Sum(Goal2Tempo) As G2Tempo, Sum(Goal3Tempo) As G3Tempo, " &
-						"Sum(GA1Tempo) As GoalAvv1Tempo, Sum(Ga2Tempo) As GoalAvv2Tempo, Sum(GA3Tempo) As GoalAvv3Tempo, " &
-						"(Select RisGiochetti From RisultatiAggiuntivi Where idPartita =" & Partita & ")  As RisGiochetti From (" &
-						"Select 0 As Goal1Tempo, 0 As Goal2Tempo, 0 As Goal3Tempo, " &
-						"IIf(GoalAvvPrimoTempo > 0, GoalAvvPrimoTempo, 0) As GA1Tempo, " &
-						"IIf(GoalAvvSecondoTempo > 0, GoalAvvSecondoTempo, 0) As GA2Tempo, " &
-						"IIf(GoalAvvTerzoTempo > 0, GoalAvvTerzoTempo, 0) As GA3Tempo, " &
-						"RisultatiAggiuntivi.RisGiochetti " &
-						"From Partite Left Join RisultatiAggiuntivi On Partite.idPartita = RisultatiAggiuntivi.idPartita " &
-						"Where Partite.idPartita = " & Partita & " " &
-						"Union All " &
-						"Select Count(*) As Goal1Tempo, 0 As Goal2Tempo, 0 As Goal3Tempo, 0 As GA1Tempo, 0 As GA2Tempo, 0 As GA3Tempo, '' As RisGiochetti From RisultatiAggiuntiviMarcatori Where idPartita = " & Partita & " And idTempo=1 " &
-						"Union All " &
-						"Select 0 As Goal1Tempo, Count(*) As Goal2Tempo, 0 As Goal3Tempo, 0 As GA1Tempo, 0 As GA2Tempo, 0 As GA3Tempo, '' As RisGiochetti From RisultatiAggiuntiviMarcatori Where idPartita = " & Partita & " And idTempo=2 " &
-						"Union All " &
-						"Select 0 As Goal1Tempo, 0 As Goal2Tempo, Count(*) As Goal3Tempo, 0 As GA1Tempo, 0 As GA2Tempo, 0 As GA3Tempo, '' As RisGiochetti From RisultatiAggiuntiviMarcatori Where idPartita = " & Partita & " And idTempo=3 " &
-						") As A) As B"
+							"(Select Casa From Partite Where idPartita=" & Partita & ") As Casa, *, " &
+							"(Select RisGiochetti From RisultatiAggiuntivi Where idPartita =" & Partita & ") " &
+							"From (" &
+							"Select Sum(Goal1Tempo) As G1Tempo, Sum(Goal2Tempo) As G2Tempo, Sum(Goal3Tempo) As G3Tempo, " &
+							"Sum(GA1Tempo) As GoalAvv1Tempo, Sum(Ga2Tempo) As GoalAvv2Tempo, Sum(GA3Tempo) As GoalAvv3Tempo, " &
+							"(Select RisGiochetti From RisultatiAggiuntivi Where idPartita =" & Partita & ")  As RisGiochetti From (" &
+							"Select 0 As Goal1Tempo, 0 As Goal2Tempo, 0 As Goal3Tempo, " &
+							"IIf(GoalAvvPrimoTempo > 0, GoalAvvPrimoTempo, 0) As GA1Tempo, " &
+							"IIf(GoalAvvSecondoTempo > 0, GoalAvvSecondoTempo, 0) As GA2Tempo, " &
+							"IIf(GoalAvvTerzoTempo > 0, GoalAvvTerzoTempo, 0) As GA3Tempo, " &
+							"RisultatiAggiuntivi.RisGiochetti " &
+							"From Partite Left Join RisultatiAggiuntivi On Partite.idPartita = RisultatiAggiuntivi.idPartita " &
+							"Where Partite.idPartita = " & Partita & " " &
+							"Union All " &
+							"Select Count(*) As Goal1Tempo, 0 As Goal2Tempo, 0 As Goal3Tempo, 0 As GA1Tempo, 0 As GA2Tempo, 0 As GA3Tempo, '' As RisGiochetti From RisultatiAggiuntiviMarcatori Where idPartita = " & Partita & " And idTempo=1 " &
+							"Union All " &
+							"Select 0 As Goal1Tempo, Count(*) As Goal2Tempo, 0 As Goal3Tempo, 0 As GA1Tempo, 0 As GA2Tempo, 0 As GA3Tempo, '' As RisGiochetti From RisultatiAggiuntiviMarcatori Where idPartita = " & Partita & " And idTempo=2 " &
+							"Union All " &
+							"Select 0 As Goal1Tempo, 0 As Goal2Tempo, Count(*) As Goal3Tempo, 0 As GA1Tempo, 0 As GA2Tempo, 0 As GA3Tempo, '' As RisGiochetti From RisultatiAggiuntiviMarcatori Where idPartita = " & Partita & " And idTempo=3 " &
+							") As A) As B"
 						Try
 							Rec = LeggeQuery(Conn, Sql, Connessione)
 							If TypeOf (Rec) Is String Then
@@ -2395,9 +2699,35 @@ Public Class wsStatistiche
 										PartitaConMenoGoal = Partita
 									End If
 
+									Dim RigoriPropri As Integer = 0
+									Dim RigoriAvversari As Integer = 0
+
+									Sql = "Select Count(*) As Quanti From RigoriPropri Where idPartita=" & Partita & " And Termine=1"
+									Rec2 = LeggeQuery(Conn, Sql, Connessione)
+									If TypeOf (Rec2) Is String Then
+										Ritorno = Rec2
+									Else
+										If Not Rec2.Eof Then
+											RigoriPropri = Rec2("Quanti").Value
+										End If
+									End If
+
+									Sql = "Select Segnati As Quanti From RigoriAvversari Where idPartita=" & Partita
+									Rec2 = LeggeQuery(Conn, Sql, Connessione)
+									If TypeOf (Rec2) Is String Then
+										Ritorno = Rec2
+									Else
+										If Not Rec2.Eof Then
+											RigoriAvversari = Rec2("Quanti").Value
+										End If
+									End If
+
 									If Rec("RisultatoATempi").Value = "N" Then
 										Dim GoalTotaliFatti As Integer = Rec("G1Tempo").Value + Rec("G2Tempo").Value + Rec("G3Tempo").Value
+										GoalTotaliFatti += RigoriPropri
 										Dim GoalTotaliSubiti As Integer = Rec("GoalAvv1Tempo").Value + Rec("GoalAvv2Tempo").Value + Rec("GoalAvv3Tempo").Value
+										GoalTotaliSubiti += RigoriAvversari
+
 										If GoalTotaliFatti > GoalTotaliSubiti Then
 											Select Case Rec("Casa").Value
 												Case "S"
@@ -2528,6 +2858,19 @@ Public Class wsStatistiche
 											End If
 										End If
 
+										If RigoriPropri > 0 Or RigoriAvversari > 0 Then
+											If RigoriPropri > RigoriAvversari Then
+												Punti1 += 1
+											Else
+												If RigoriPropri < RigoriAvversari Then
+													Punti2 += 1
+												Else
+													Punti1 += 1
+													Punti2 += 1
+												End If
+											End If
+										End If
+
 										Dim RisGiochetti As String = Rec("RisGiochetti").Value
 
 										If RisGiochetti.Contains("-") Then
@@ -2653,13 +2996,13 @@ Public Class wsStatistiche
 				Next
 
 				Sql = "SELECT TipologiePartite.Descrizione As Tipologia, NomeSquadra, SquadreAvversarie.Descrizione, Partite.Casa, Partite.DataOra, Tempo, Gradi, SquadreAvversarie.idAvversario, " &
-				"(Select Count(*) From RisultatiAggiuntiviMarcatori Where idPartita=" & PartitaConPiuGoal & ") As Goal, " &
-				"(Select Sum(iif(GoalAvvPrimoTempo>0,GoalAvvPrimoTempo,0))+Sum(iif(GoalAvvSecondoTempo>0,GoalAvvSecondoTempo,0))+Sum(iif(GoalAvvTerzoTempo>0,GoalAvvTerzoTempo,0)) " &
-				"From RisultatiAggiuntivi Where idPartita=" & PartitaConPiuGoal & ") As GoalAvv From " &
-				 "(((Partite Left Join SquadreAvversarie On Partite.idAvversario = SquadreAvversarie.idAvversario) " &
-				"Left Join Anni On Partite.idAnno = Anni.idAnno) Left Join MeteoPartite On Partite.idPartita = MeteoPartite.idPartita) " &
-				"Left Join TipologiePartite On Partite.idTipologia = TipologiePartite.idTipologia " &
-				"Where Partite.idAnno = " & idAnno & " And Partite.idCategoria = " & idCategoria & " And Partite.idPartita = " & PartitaConPiuGoal & ""
+					"(Select Count(*) From RisultatiAggiuntiviMarcatori Where idPartita=" & PartitaConPiuGoal & ") As Goal, " &
+					"(Select Sum(iif(GoalAvvPrimoTempo>0,GoalAvvPrimoTempo,0))+Sum(iif(GoalAvvSecondoTempo>0,GoalAvvSecondoTempo,0))+Sum(iif(GoalAvvTerzoTempo>0,GoalAvvTerzoTempo,0)) " &
+					"From RisultatiAggiuntivi Where idPartita=" & PartitaConPiuGoal & ") As GoalAvv From " &
+					 "(((Partite Left Join SquadreAvversarie On Partite.idAvversario = SquadreAvversarie.idAvversario) " &
+					"Left Join Anni On Partite.idAnno = Anni.idAnno) Left Join MeteoPartite On Partite.idPartita = MeteoPartite.idPartita) " &
+					"Left Join TipologiePartite On Partite.idTipologia = TipologiePartite.idTipologia " &
+					"Where Partite.idAnno = " & idAnno & " And Partite.idCategoria = " & idCategoria & " And Partite.idPartita = " & PartitaConPiuGoal & ""
 				Try
 					Rec = LeggeQuery(Conn, Sql, Connessione)
 					If TypeOf (Rec) Is String Then
@@ -2728,13 +3071,13 @@ Public Class wsStatistiche
 				End Try
 
 				Sql = "SELECT TipologiePartite.Descrizione As Tipologia, NomeSquadra, SquadreAvversarie.Descrizione, Partite.Casa, Partite.DataOra, Tempo, Gradi, SquadreAvversarie.idAvversario, " &
-				"(Select Count(*) From RisultatiAggiuntiviMarcatori Where idPartita=" & PartitaConMenoGoal & ") As Goal, " &
-				"(Select Sum(iif(GoalAvvPrimoTempo>0,GoalAvvPrimoTempo,0))+Sum(iif(GoalAvvSecondoTempo>0,GoalAvvSecondoTempo,0))+Sum(iif(GoalAvvTerzoTempo>0,GoalAvvTerzoTempo,0)) " &
-				"From RisultatiAggiuntivi Where idPartita=" & PartitaConMenoGoal & ") As GoalAvv From " &
-				"(((Partite Left Join SquadreAvversarie On Partite.idAvversario = SquadreAvversarie.idAvversario) " &
-				"Left Join Anni On Partite.idAnno = Anni.idAnno) Left Join MeteoPartite On Partite.idPartita = MeteoPartite.idPartita) " &
-				"Left Join TipologiePartite On Partite.idTipologia = TipologiePartite.idTipologia " &
-				"Where Partite.idAnno = " & idAnno & " And Partite.idCategoria = " & idCategoria & " And Partite.idPartita = " & PartitaConMenoGoal & ""
+					"(Select Count(*) From RisultatiAggiuntiviMarcatori Where idPartita=" & PartitaConMenoGoal & ") As Goal, " &
+					"(Select Sum(iif(GoalAvvPrimoTempo>0,GoalAvvPrimoTempo,0))+Sum(iif(GoalAvvSecondoTempo>0,GoalAvvSecondoTempo,0))+Sum(iif(GoalAvvTerzoTempo>0,GoalAvvTerzoTempo,0)) " &
+					"From RisultatiAggiuntivi Where idPartita=" & PartitaConMenoGoal & ") As GoalAvv From " &
+					"(((Partite Left Join SquadreAvversarie On Partite.idAvversario = SquadreAvversarie.idAvversario) " &
+					"Left Join Anni On Partite.idAnno = Anni.idAnno) Left Join MeteoPartite On Partite.idPartita = MeteoPartite.idPartita) " &
+					"Left Join TipologiePartite On Partite.idTipologia = TipologiePartite.idTipologia " &
+					"Where Partite.idAnno = " & idAnno & " And Partite.idCategoria = " & idCategoria & " And Partite.idPartita = " & PartitaConMenoGoal & ""
 				Try
 					Rec = LeggeQuery(Conn, Sql, Connessione)
 					If TypeOf (Rec) Is String Then

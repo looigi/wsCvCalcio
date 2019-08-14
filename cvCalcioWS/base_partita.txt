@@ -79,6 +79,8 @@
 		    <br />
                     <span class="testo blu" style="font-size: 18px;">***TIT RIS GIOCHETTI*** ***RIS 1G*** ***TRATTINO2*** ***RIS 2G***</span>
 		    <br />
+                    ***RIGORI***
+					<br />
                     <span class="testo nero" style="font-size: 14px;">***METEO***</span>
                 </td>
                 <td class="area" style="width: 22%; max-width: 22%; text-align: center;">

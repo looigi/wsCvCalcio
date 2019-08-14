@@ -7,6 +7,30 @@
     Public StringaErrore As String = "ERROR: "
     Public RigaPari As Boolean = False
 
+	Public Function AggiungeRigoriEGoal(NomeLista As List(Of String), Rec As Object) As List(Of String)
+		Dim ListaNomi As New List(Of String)
+		Dim posi As Integer = 0
+		Dim Ok As Boolean = False
+
+		ListaNomi.AddRange(NomeLista)
+		For Each s As String In ListaNomi
+			Dim n As Integer = Val(Mid(s, 1, s.IndexOf("-")))
+			If n = Rec(4).Value Then
+				Dim cc() As String = s.Split("-")
+				ListaNomi.Item(posi) = Rec(4).Value & "-" & Rec(1).Value & " " & Rec(2).Value & "-" & (Rec(3).Value + cc(2))
+				Ok = True
+				Exit For
+			End If
+			posi += 1
+		Next
+
+		If Not Ok Then
+			ListaNomi.add(Rec(4).Value & "-" & Rec(1).Value & " " & Rec(2).Value & "-" & Rec(3).Value)
+		End If
+
+		Return ListaNomi
+	End Function
+
 	Public Sub EliminaDatiNuovoAnnoDopoErrore(idAnno As String, Conn As Object, Connessione As String)
 		Dim Ritorno As String
 		Dim Sql As String
@@ -27,6 +51,9 @@
 		Ritorno = EsegueSql(Conn, Sql, Connessione)
 
 		Sql = "Delete * From Giocatori Where idAnno=" & idAnno
+		Ritorno = EsegueSql(Conn, Sql, Connessione)
+
+		Sql = "Delete * From Arbitri Where idAnno=" & idAnno
 		Ritorno = EsegueSql(Conn, Sql, Connessione)
 	End Sub
 
@@ -97,8 +124,9 @@
     Public Sub CreaHtmlPartita(Conn As Object, Connessione As String, idAnno As String, idPartita As String)
         Dim Sql As String
         Dim Rec As Object
-        Dim Ok As Boolean = True
-        Dim Pagina As StringBuilder = New StringBuilder
+		Dim Rec2 As Object
+		Dim Ok As Boolean = True
+		Dim Pagina As StringBuilder = New StringBuilder
         Dim gf As New GestioneFilesDirectory
         Dim PathBaseImmagini As String = "http://looigi.no-ip.biz:12345/CVCalcio/App_Themes/Standard/Images"
         Dim PathBaseImmScon As String = "http://looigi.no-ip.biz:12345/CVCalcio/App_Themes/Standard/Images/Sconosciuto.png"
@@ -147,7 +175,7 @@
                 Filone = Filone.Replace("***METEO***", "" & Meteo)
                 Filone = Filone.Replace("***NOTE***", "" & Rec("Note").Value)
 
-                Dim CiSonoGiochetti As Boolean = False
+				Dim CiSonoGiochetti As Boolean = False
                 Dim Giochetti() As String = {}
 
                 If Rec("RisGiochetti").Value <> "" Then
@@ -222,11 +250,11 @@
                         Filone = Filone.Replace("***ARBITRO***", "Non impostato")
                     End If
 
-                    ' Dirigenti
-                    Sql = "SELECT Dirigenti.idDirigente, Dirigenti.Cognome, Dirigenti.Nome " &
-                    "FROM (Partite INNER JOIN DirigentiPartite ON Partite.idPartita = DirigentiPartite.idPartita) INNER JOIN Dirigenti ON DirigentiPartite.idDirigente = Dirigenti.idDirigente " &
-                    "Where Partite.idAnno=" & idAnno & " And Partite.idPartita=" & idPartita
-                    Rec = LeggeQuery(Conn, Sql, Connessione)
+					' Dirigenti
+					Sql = "SELECT Dirigenti.idDirigente, Dirigenti.Cognome, Dirigenti.Nome " &
+						"FROM (Partite INNER JOIN DirigentiPartite ON Partite.idPartita = DirigentiPartite.idPartita) INNER JOIN Dirigenti ON DirigentiPartite.idDirigente = Dirigenti.idDirigente " &
+						"Where Partite.idAnno=" & idAnno & " And Partite.idPartita=" & idPartita & " And Dirigenti.idAnno=" & idAnno
+					Rec = LeggeQuery(Conn, Sql, Connessione)
                     If TypeOf (Rec) Is String Then
                         Ok = False
                     Else
@@ -417,100 +445,215 @@
                                     End If
                                 End If
 
-                                If RisultatoATempi = "S" Then
-                                    Filone = Filone.Replace("***TIT RIS TEMPI***", "Risultato a tempi:")
-                                    Filone = Filone.Replace("***RIS 1T***", RisProprio.ToString.Trim)
-                                    Filone = Filone.Replace("***RIS 2T***", RisAvversario.ToString.Trim)
-                                    Filone = Filone.Replace("***TRATTINO1***", "-")
-                                Else
-                                    Filone = Filone.Replace("***RIS 1T***", "")
-                                    Filone = Filone.Replace("***RIS 2T***", "")
-                                    Filone = Filone.Replace("***TIT RIS TEMPI***", "")
-                                    Filone = Filone.Replace("***TRATTINO1***", "")
-                                End If
+								Dim CiSonoRigori As Boolean = False
+								Dim Rigoristi As New List(Of String)
+								Dim RigoriAvv As String = ""
+								Dim RigoriSegnatiPropri As Integer = 0
+								Dim RigoriSegnatiAvversari As Integer = 0
+								Dim RigoriSbagliatiAvversari As Integer = 0
 
-                                Dim Marcatori As New StringBuilder
+								Sql = "SELECT RigoriPropri.idGiocatore, RigoriPropri.idRigore, Ruoli.Descrizione, Giocatori.Cognome + ' ' + Giocatori.Nome As Giocatore, " &
+									"Giocatori.NumeroMaglia, RigoriPropri.Termine From ((RigoriPropri " &
+									"Left Join Giocatori On RigoriPropri.idGiocatore=Giocatori.idGiocatore And RigoriPropri.idAnno = Giocatori.idAnno) " &
+									"Left Join Ruoli On Giocatori.idRuolo = Ruoli.idRuolo) " &
+									"Where RigoriPropri.idAnno=" & idAnno & " And idPartita=" & idPartita & " " &
+									"Order By RigoriPropri.idRigore"
+								Rec2 = LeggeQuery(Conn, Sql, Connessione)
+								If TypeOf (Rec2) Is String Then
+									Ok = False
+								Else
+									If Not Rec2.Eof Then
+										CiSonoRigori = True
 
-                                    Marcatori.Append("<table style=""width: 99%; text-align: center;"">")
-                                    Marcatori.Append("<tr>")
-                                    Marcatori.Append("<td>")
-                                    Marcatori.Append("<span class=""testo verde"" style=""font-size: 13px;"">Tempo</span>")
-                                    Marcatori.Append("</td>")
-                                    Marcatori.Append("<td>")
-                                    Marcatori.Append("<span class=""testo verde"" style=""font-size: 13px;"">Minuto</span>")
-                                    Marcatori.Append("</td>")
-                                    Marcatori.Append("<td>")
-                                    Marcatori.Append("</td>")
-                                    Marcatori.Append("<td>")
-                                    Marcatori.Append("<span class=""testo verde"" style=""font-size: 13px;"">Giocatore</span>")
-                                    Marcatori.Append("</td>")
-                                    Marcatori.Append("<td>")
-                                    Marcatori.Append("<span class=""testo verde"" style=""font-size: 13px;"">Ruolo</span>")
-                                    Marcatori.Append("</td>")
-                                    Marcatori.Append("</tr>")
+										Do Until Rec2.Eof
+											Dim Termine As String = ""
+											Dim Colore As String = ""
 
-                                    Dim OldTempo As String = ""
+											If Rec2("Termine").Value = "1" Then
+												Termine = "Segnato"
+												Colore = "verde"
+												RigoriSegnatiPropri += 1
+											Else
+												If Rec2("Termine").Value = "0" Then
+													Termine = "Sbagliato"
+													Colore = "rosso"
+												End If
+											End If
+											If Termine <> "" Then
+												' Rigoristi.Add("<span class=""testo " & Colore & """ style=""font-size: 15px;"">Rigore " & Rec2("idRigore").Value & ": " & Rec2("Giocatore").Value & " (" & Rec2("Descrizione").Value & ") - " & Termine & "</span>")
+												Rigoristi.Add(Colore & ";" & Rec2("idRigore").Value & ";;" & Rec2("Giocatore").Value & ";" & Rec2("Descrizione").Value & "; " & Termine & ";" & Rec2("idGiocatore").Value & ";")
+											End If
 
-                                    For Each m As String In Marc
-                                        Dim Mm() As String = m.Split(";")
+											Rec2.MoveNext
+										Loop
+										Rec2.Close
+									End If
+								End If
+								If CiSonoRigori Then
+									Sql = "Select * From RigoriAvversari Where idAnno=" & idAnno & " And idPartita=" & idPartita
+									Rec2 = LeggeQuery(Conn, Sql, Connessione)
+									If TypeOf (Rec2) Is String Then
+									Else
+										If Not Rec2.Eof Then
+											RigoriSegnatiAvversari += Val(Rec2("Segnati").Value)
+											RigoriSbagliatiAvversari += Val(Rec2("Sbagliati").Value)
 
-                                        If OldTempo <> Mm(0) Then
-                                            Marcatori.Append("<tr>")
-                                            Marcatori.Append("<td>")
-                                            Marcatori.Append("<hr />")
-                                            Marcatori.Append("</td>")
-                                            Marcatori.Append("<td>")
-                                            Marcatori.Append("<hr />")
-                                            Marcatori.Append("</td>")
-                                            Marcatori.Append("<td>")
-                                            Marcatori.Append("<hr />")
-                                            Marcatori.Append("</td>")
-                                            Marcatori.Append("<td>")
-                                            Marcatori.Append("<hr />")
-                                            Marcatori.Append("</td>")
-                                            Marcatori.Append("<td>")
-                                            Marcatori.Append("<hr />")
-                                            Marcatori.Append("</td>")
-                                            Marcatori.Append("</tr>")
-                                            OldTempo = Mm(0)
-                                        End If
+											RigoriAvv = Rec2("Segnati").Value & "!" & Rec2("Sbagliati").Value & "!"
+										End If
+									End If
 
-                                        Dim Path As String
-                                    If m.Contains("Goal avversario") Then
-                                        Path = PathBaseImmagini & "/goal.png"
-                                    Else
-                                        If m.Contains("Autorete") Then
-                                            Path = PathBaseImmagini & "/autorete.png"
-                                        Else
-                                            Path = PathBaseImmagini & "/Giocatori/" & idAnno & "_" & Mm(2) & ".jpg"
-                                        End If
-                                    End If
+									Dim Rigori As String = "<span class=""testo blu"" style=""font-size: 15px;"">RISULTATO DOPO I TEMPI REGOLAMENTARI: " & QuantiGoal1 & " - " & QuantiGoal2 & "</span><br /><br />"
 
-                                    Marcatori.Append("<tr>")
-                                        Marcatori.Append("<td>")
-                                        Marcatori.Append("<span class=""testo nero"" style=""font-size: 13px;"">" & Mm(0) & "</span>")
-                                        Marcatori.Append("</td>")
-                                        Marcatori.Append("<td>")
-                                        Marcatori.Append("<span class=""testo nero"" style=""font-size: 13px;"">" & Mm(1) & "°</span>")
-                                        Marcatori.Append("</td>")
-                                        Marcatori.Append("<td>")
-                                        Marcatori.Append("<img src=""" & Path & """ style=""width: 50px; height: 50px;"" onerror=""this.src='" & PathBaseImmScon & "'"" />")
-                                        Marcatori.Append("</td>")
-                                        Marcatori.Append("<td style=""text-align: left;"">")
-                                        Marcatori.Append("<span class=""testo nero"" style=""font-size: 13px;"">" & Mm(3) & " " & Mm(4) & "</span>")
-                                        Marcatori.Append("</td>")
-                                        Marcatori.Append("<td>")
-                                        Marcatori.Append("<span class=""testo nero"" style=""font-size: 13px;"">" & Mm(5) & "</span>")
-                                        Marcatori.Append("</td>")
-                                        Marcatori.Append("</tr>")
-                                    Next
-                                    Marcatori.Append("</table>")
+									Rigori &= "<span class=""testo blu"" style=""font-size: 15px;"">RIGORI PROPRI:</span><hr />"
 
-                                    Filone = Filone.Replace("***MARCATORI***", Marcatori.ToString)
+									Rigori &= "<table style=""width: 99%; text-align: center;"">"
+									For Each s As String In Rigoristi
+										Dim c() As String = s.Split(";")
+										Dim Path2 As String = PathBaseImmagini & "/Giocatori/" & idAnno & "_" & c(6) & ".jpg"
 
-                                    ' Risultato
-                                    'If Casa = "S" Then
-                                    Filone = Filone.Replace("***RIS 1***", QuantiGoal1)
+										Rigori &= "<tr>"
+										Rigori &= "<td align=""left"">"
+										Rigori &= "<span class=""testo blu"" style=""font-size: 15px;"">Rigore " & c(1) & "</span>"
+										Rigori &= "</td>"
+										Rigori &="<td>"
+										Rigori &= "<img src=""" & Path2 & """ style=""width: 50px; height: 50px;"" onerror=""this.src='" & PathBaseImmScon & "'"" />"
+										Rigori &= "</td>"
+										Rigori &= "<td align=""center"">"
+										Rigori &= "<span class=""testo blu"" style=""font-size: 15px;"">" & c(3) & "</span>"
+										Rigori &= "</td>"
+										Rigori &= "<td align=""center"">"
+										Rigori &= "<span class=""testo blu"" style=""font-size: 15px;"">" & c(4) & "</span>"
+										Rigori &= "</td>"
+										Rigori &= "<td align=""center"">"
+										Rigori &= "<span class=""testo " & c(0) & """ style=""font-size: 15px;"">" & c(5) & "</span>"
+										Rigori &= "</td>"
+										Rigori &= "</tr>"
+									Next
+									Rigori &= "</table>"
+
+									Rigori &= "<br /><span class=""testo blu"" style=""font-size: 15px;"">RIGORI AVVERSARI:</span><hr />"
+									Rigori &= "<span class=""testo rosso"" style=""font-size: 15px;"">Segnati: " & RigoriSegnatiAvversari & "</span><br />"
+									Rigori &= "<span class=""testo verde"" style=""font-size: 15px;"">Sbagliati: " & RigoriSbagliatiAvversari & "</span><hr />"
+
+									Filone = Filone.Replace("***RIGORI***", Rigori)
+
+									If RisultatoATempi = "S" Then
+										RisProprio += RigoriSegnatiPropri
+										RisAvversario += RigoriSegnatiAvversari
+									Else
+										If (RigoriSegnatiPropri > RigoriSegnatiAvversari) Then
+											RisProprio += 1
+										Else
+											If (RigoriSegnatiPropri < RigoriSegnatiAvversari) Then
+												RisAvversario += 1
+											End If
+										End If
+									End If
+								Else
+									Filone = Filone.Replace("***RIGORI***", "")
+								End If
+
+								If RisultatoATempi = "S" Then
+									Filone = Filone.Replace("***TIT RIS TEMPI***", "Risultato a tempi:")
+									Filone = Filone.Replace("***RIS 1T***", RisProprio.ToString.Trim)
+									Filone = Filone.Replace("***RIS 2T***", RisAvversario.ToString.Trim)
+									Filone = Filone.Replace("***TRATTINO1***", "-")
+								Else
+									Filone = Filone.Replace("***RIS 1T***", "")
+									Filone = Filone.Replace("***RIS 2T***", "")
+									Filone = Filone.Replace("***TIT RIS TEMPI***", "")
+									Filone = Filone.Replace("***TRATTINO1***", "")
+								End If
+
+								Dim Marcatori As New StringBuilder
+
+								Marcatori.Append("<table style=""width: 99%; text-align: center;"">")
+								Marcatori.Append("<tr>")
+								Marcatori.Append("<td>")
+								Marcatori.Append("<span class=""testo verde"" style=""font-size: 13px;"">Tempo</span>")
+								Marcatori.Append("</td>")
+								Marcatori.Append("<td>")
+								Marcatori.Append("<span class=""testo verde"" style=""font-size: 13px;"">Minuto</span>")
+								Marcatori.Append("</td>")
+								Marcatori.Append("<td>")
+								Marcatori.Append("</td>")
+								Marcatori.Append("<td>")
+								Marcatori.Append("<span class=""testo verde"" style=""font-size: 13px;"">Giocatore</span>")
+								Marcatori.Append("</td>")
+								Marcatori.Append("<td>")
+								Marcatori.Append("<span class=""testo verde"" style=""font-size: 13px;"">Ruolo</span>")
+								Marcatori.Append("</td>")
+								Marcatori.Append("</tr>")
+
+								Dim OldTempo As String = ""
+
+								For Each m As String In Marc
+									Dim Mm() As String = m.Split(";")
+
+									If OldTempo <> Mm(0) Then
+										Marcatori.Append("<tr>")
+										Marcatori.Append("<td>")
+										Marcatori.Append("<hr />")
+										Marcatori.Append("</td>")
+										Marcatori.Append("<td>")
+										Marcatori.Append("<hr />")
+										Marcatori.Append("</td>")
+										Marcatori.Append("<td>")
+										Marcatori.Append("<hr />")
+										Marcatori.Append("</td>")
+										Marcatori.Append("<td>")
+										Marcatori.Append("<hr />")
+										Marcatori.Append("</td>")
+										Marcatori.Append("<td>")
+										Marcatori.Append("<hr />")
+										Marcatori.Append("</td>")
+										Marcatori.Append("</tr>")
+										OldTempo = Mm(0)
+									End If
+
+									Dim Path As String
+
+									If m.Contains("Goal avversario") Then
+										Path = PathBaseImmagini & "/goal.png"
+									Else
+										If m.Contains("Autorete") Then
+											Path = PathBaseImmagini & "/autorete.png"
+										Else
+											Path = PathBaseImmagini & "/Giocatori/" & idAnno & "_" & Mm(2) & ".jpg"
+										End If
+									End If
+
+									Marcatori.Append("<tr>")
+									Marcatori.Append("<td>")
+									Marcatori.Append("<span class=""testo nero"" style=""font-size: 13px;"">" & Mm(0) & "</span>")
+									Marcatori.Append("</td>")
+									Marcatori.Append("<td>")
+									Marcatori.Append("<span class=""testo nero"" style=""font-size: 13px;"">" & Mm(1) & "°</span>")
+									Marcatori.Append("</td>")
+									Marcatori.Append("<td>")
+									Marcatori.Append("<img src=""" & Path & """ style=""width: 50px; height: 50px;"" onerror=""this.src='" & PathBaseImmScon & "'"" />")
+									Marcatori.Append("</td>")
+									Marcatori.Append("<td style=""text-align: left;"">")
+									Marcatori.Append("<span class=""testo nero"" style=""font-size: 13px;"">" & Mm(3) & " " & Mm(4) & "</span>")
+									Marcatori.Append("</td>")
+									Marcatori.Append("<td>")
+									Marcatori.Append("<span class=""testo nero"" style=""font-size: 13px;"">" & Mm(5) & "</span>")
+									Marcatori.Append("</td>")
+									Marcatori.Append("</tr>")
+								Next
+
+								Marcatori.Append("</table>")
+
+								Filone = Filone.Replace("***MARCATORI***", Marcatori.ToString)
+
+								' Risultato
+								If CiSonoRigori Then
+									QuantiGoal1 += RigoriSegnatiPropri
+									QuantiGoal2 += RigoriSegnatiAvversari
+								End If
+
+								'If Casa = "S" Then
+								Filone = Filone.Replace("***RIS 1***", QuantiGoal1)
                                     Filone = Filone.Replace("***RIS 2***", QuantiGoal2)
                                     'Else
                                     '    Filone = Filone.Replace("***RIS 1***", QuantiGoal2)
