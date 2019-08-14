@@ -646,6 +646,52 @@
 
 								Filone = Filone.Replace("***MARCATORI***", Marcatori.ToString)
 
+								' Eventi
+								Dim Eventi As New StringBuilder
+
+								Eventi.Append("<table style=""width: 99%; text-align: center;"">")
+
+								Sql = "SELECT EventiPartita.idTempo, EventiPartita.Minuto, Eventi.Descrizione, iif(Giocatori.Cognome + ' ' + Giocatori.Nome is null, 'Avversario', Giocatori.Cognome + ' ' + Giocatori.Nome) As Giocatore, Giocatori.idGiocatore " &
+									"FROM (EventiPartita LEFT JOIN Giocatori ON (EventiPartita.idGiocatore = Giocatori.idGiocatore) AND (EventiPartita.idAnno = Giocatori.idAnno)) LEFT JOIN Eventi ON EventiPartita.idEvento = Eventi.idEvento " &
+									"WHERE EventiPartita.idPartita=" & idPartita & " AND EventiPartita.idAnno=" & idAnno
+								Rec2 = LeggeQuery(Conn, Sql, Connessione)
+								If TypeOf (Rec2) Is String Then
+								Else
+									Do Until Rec2.Eof
+										Dim Path As String
+
+										If Rec2("Giocatore").Value.Contains("Avversario") Then
+											Path = PathBaseImmScon
+										Else
+											Path = PathBaseImmagini & "/Giocatori/" & idAnno & "_" & Rec2("idGiocatore").Value & ".jpg"
+										End If
+
+										Eventi.Append("<tr>")
+										Eventi.Append("<td align=""right"">")
+										Eventi.Append("<span class=""testo nero"" style=""font-size: 13px;"">" & Rec2("idTempo").Value & "</span>")
+										Eventi.Append("</td>")
+										Eventi.Append("<td align=""right"">")
+										Eventi.Append("<span class=""testo nero"" style=""font-size: 13px;"">" & Rec2("Minuto").Value & "°</span>")
+										Eventi.Append("</td>")
+										Eventi.Append("<td align=""left"">")
+										Eventi.Append("<span class=""testo nero"" style=""font-size: 13px;"">" & Rec2("Descrizione").Value & "</span>")
+										Eventi.Append("</td>")
+										Eventi.Append("<td>")
+										Eventi.Append("<img src=""" & Path & """ style=""width: 30px; height: 30px;"" onerror=""this.src='" & PathBaseImmScon & "'"" />")
+										Eventi.Append("</td>")
+										Eventi.Append("<td align=""left"">")
+										Eventi.Append("<span class=""testo nero"" style=""font-size: 13px;"">" & Rec2("Giocatore").Value & "</span>")
+										Eventi.Append("</td>")
+										Eventi.Append("</tr>")
+
+										Rec2.MoveNext
+									Loop
+									Rec2.Close
+								End If
+
+								Eventi.Append("</table>")
+								Filone = Filone.Replace("***RACCONTO***", Eventi.ToString)
+
 								' Risultato
 								If CiSonoRigori Then
 									QuantiGoal1 += RigoriSegnatiPropri

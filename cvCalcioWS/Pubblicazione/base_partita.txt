@@ -117,12 +117,17 @@
 
         <table style="width: 100%;" cellspacing="10px">
             <tr>
-                <td class="area" style="width: 50%; text-align: left; vertical-align: top;">
+                <td class="area" style="width: 33%; text-align: left; vertical-align: top;">
                     <span class="testo blu" style="font-size: 19px;">Convocati</span>
                     <hr />
                     ***CONVOCATI***
                 </td>
-                <td class="area" style="width: 50%; text-align: left; vertical-align: top;">
+                <td class="area" style="width: 34%; text-align: left; vertical-align: top;">
+                    <span class="testo blu" style="font-size: 19px;">Eventi</span>
+                    <hr />
+                    ***RACCONTO***
+                </td>
+                <td class="area" style="width: 33%; text-align: left; vertical-align: top;">
                     <span class="testo blu" style="font-size: 19px;">Marcatori</span>
                     <hr />
                     ***MARCATORI***
