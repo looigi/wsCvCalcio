@@ -86,6 +86,7 @@
     <Content Include="wsAvversari.asmx" />
     <Content Include="wsCampionato.asmx" />
     <Content Include="wsCategorie.asmx" />
+    <Content Include="wsEventi.asmx" />
     <Content Include="wsDirigenti.asmx" />
     <Content Include="wsGenerale.asmx" />
     <Content Include="Web.config">
@@ -123,6 +124,10 @@
     </Compile>
     <Compile Include="wsCategorie.asmx.vb">
       <DependentUpon>wsCategorie.asmx</DependentUpon>
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="wsEventi.asmx.vb">
+      <DependentUpon>wsEventi.asmx</DependentUpon>
       <SubType>Component</SubType>
     </Compile>
     <Compile Include="wsDirigenti.asmx.vb">
