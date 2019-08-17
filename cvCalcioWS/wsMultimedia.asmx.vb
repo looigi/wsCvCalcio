@@ -75,9 +75,13 @@ Public Class wsMultimedia
         Dim Ritorno As String = ""
         Dim Ok As Boolean = True
         Dim gf As New GestioneFilesDirectory
-        Dim PathIniziale As String = gf.LeggeFileIntero(Server.MapPath(".") & "/PathCvCalcio.txt")
+		Dim PathIniziale As String = gf.LeggeFileIntero(Server.MapPath(".") & "/PathCvCalcio.txt")
+		PathIniziale = PathIniziale.Trim
+		If Not PathIniziale.EndsWith("\") Then
+			PathIniziale &= "\"
+		End If
 
-        Dim Connessione As String = LeggeImpostazioniDiBase(Server.MapPath("."))
+		Dim Connessione As String = LeggeImpostazioniDiBase(Server.MapPath("."))
 
         If Connessione = "" Then
             Ritorno = ErroreConnessioneNonValida
@@ -114,42 +118,51 @@ Public Class wsMultimedia
                     If TypeOf (Rec) Is String Then
                         'Ritorno = Rec
                     Else
-                        If Not Rec.Eof Then
-                            Dim idPartite As List(Of Integer) = New List(Of Integer)
-                            Dim Desc As List(Of String) = New List(Of String)
+						If Not Rec.Eof Then
+							Dim idPartite As List(Of Integer) = New List(Of Integer)
+							Dim Desc As List(Of String) = New List(Of String)
 
-                            Do Until Rec.Eof
-                                Dim Casa As String = ""
-                                Select Case Rec("Casa").Value
-                                    Case "S"
-                                        Casa = "In casa"
-                                    Case "N"
-                                        Casa = "Fuori casa"
-                                    Case "E"
-                                        Casa = "Campo esterno"
-                                End Select
-                                idPartite.Add(Rec("idPartita").Value)
-                                Desc.Add("Partite;" & Rec("DataOra").Value & ";" & Casa & ";" & Rec("Descrizione").Value & ";" & Rec("Segnati").Value & "-" & Rec("Subiti").Value & ";")
+							Do Until Rec.Eof
+								Dim Casa As String = ""
+								Select Case Rec("Casa").Value
+									Case "S"
+										Casa = "In casa"
+									Case "N"
+										Casa = "Fuori casa"
+									Case "E"
+										Casa = "Campo esterno"
+								End Select
+								idPartite.Add(Rec("idPartita").Value)
+								Desc.Add("Partite;" & Rec("DataOra").Value & ";" & Casa & ";" & Rec("Descrizione").Value & ";" & Rec("Segnati").Value & "-" & Rec("Subiti").Value & ";")
 
-                                Rec.MoveNext()
-                            Loop
-                            Rec.Close()
+								Rec.MoveNext()
+							Loop
+							Rec.Close()
 
-                            Dim Partita As Integer = 0
+							Dim Partita As Integer = 0
 
-                            For Each i As Integer In idPartite
-                                Dim Path As String = PathIniziale & "Partite\" & i
-                                gf.ScansionaDirectorySingola(Path)
-                                Dim Filetti() As String = gf.RitornaFilesRilevati
-                                Dim qFiletti As String = gf.RitornaQuantiFilesRilevati
-                                For k As Integer = 1 To qFiletti
-                                    Ritorno &= Filetti(k).Replace(PathIniziale, "") & ";" & Desc.Item(Partita) & "§"
-                                Next
-                                Partita += 1
-                            Next
-                        End If
+							' Ritorno = ""
 
-                        If idCategoria <> "-1" Then
+							For Each i As Integer In idPartite
+								Dim Path As String = PathIniziale & "Partite\" & i
+								gf.ScansionaDirectorySingola(Path)
+								Dim Filetti() As String = gf.RitornaFilesRilevati
+								Dim qFiletti As String = gf.RitornaQuantiFilesRilevati
+
+								' Ritorno &= PathIniziale & "Partite\" & i
+
+								For k As Integer = 1 To qFiletti
+									Ritorno &= Filetti(k).Replace(PathIniziale, "") & ";" & Desc.Item(Partita) & "§"
+								Next
+
+								Partita += 1
+							Next
+						End If
+
+						' Return Ritorno
+
+
+						If idCategoria <> "-1" Then
                             Altro = " And idCategoria = " & idCategoria
                         End If
 
@@ -296,8 +309,8 @@ Public Class wsMultimedia
         End If
 
         If Ritorno = "" Then
-            Ritorno = "*"
-        End If
+			Ritorno = StringaErrore & " Nessun multimedia rilevato"
+		End If
 
         Return Ritorno
     End Function
