@@ -79,7 +79,7 @@ Public Class wsEventi
 				Dim Sql As String = ""
 
 				Try
-					Sql = "SELECT * From Eventi Where Eliminato='N' Order By idEvento"
+					Sql = "SELECT * From Eventi Where Eliminato='N' Order By Descrizione"
 					Rec = LeggeQuery(Conn, Sql, Connessione)
 					If TypeOf (Rec) Is String Then
 						Ritorno = Rec
