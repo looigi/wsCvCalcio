@@ -27,29 +27,29 @@ Public Class wsStatAllenamenti
 
 				Select Case Mese
 					Case "Gennaio"
-						sMese = "01"
+						sMese = "/01/"
 					Case "Febbraio"
-						sMese = "02"
+						sMese = "/02/"
 					Case "Marzo"
-						sMese = "03"
+						sMese = "/03/"
 					Case "Aprile"
-						sMese = "04"
+						sMese = "/04/"
 					Case "Maggio"
-						sMese = "05"
+						sMese = "/05/"
 					Case "Giugno"
-						sMese = "06"
+						sMese = "/06/"
 					Case "Luglio"
-						sMese = "07"
+						sMese = "/07/"
 					Case "Agosto"
-						sMese = "08"
+						sMese = "/08/"
 					Case "Settembre"
-						sMese = "09"
+						sMese = "/09/"
 					Case "Ottobre"
-						sMese = "10"
+						sMese = "/10/"
 					Case "Novembre"
-						sMese = "11"
+						sMese = "/11/"
 					Case "Dicembre"
-						sMese = "12"
+						sMese = "/12/"
 				End Select
 
 				Try
@@ -97,4 +97,84 @@ Public Class wsStatAllenamenti
 
 		Return Ritorno
 	End Function
+
+
+	<WebMethod()>
+	Public Function RitornaInfo(ByVal idAnno As String, idCategoria As String, idGiocatore As String, Mese As String) As String
+		Dim Ritorno As String = ""
+		Dim Connessione As String = LeggeImpostazioniDiBase(Server.MapPath("."))
+
+		If Connessione = "" Then
+			Ritorno = ErroreConnessioneNonValida
+		Else
+			Dim Conn As Object = ApreDB(Connessione)
+
+			If TypeOf (Conn) Is String Then
+				Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
+			Else
+				Dim Rec As Object = Server.CreateObject("ADODB.Recordset")
+				Dim Sql As String = ""
+				Dim sMese As String = "/"
+
+				Select Case Mese
+					Case "Gennaio"
+						sMese = "/01/"
+					Case "Febbraio"
+						sMese = "/02/"
+					Case "Marzo"
+						sMese = "/03/"
+					Case "Aprile"
+						sMese = "/04/"
+					Case "Maggio"
+						sMese = "/05/"
+					Case "Giugno"
+						sMese = "/06/"
+					Case "Luglio"
+						sMese = "/07/"
+					Case "Agosto"
+						sMese = "/08/"
+					Case "Settembre"
+						sMese = "/09/"
+					Case "Ottobre"
+						sMese = "/10/"
+					Case "Novembre"
+						sMese = "/11/"
+					Case "Dicembre"
+						sMese = "/12/"
+				End Select
+
+				Try
+					Sql = "SELECT Allenamenti.Datella, Allenamenti.Orella " &
+						"FROM Allenamenti " &
+						"WHERE Allenamenti.idAnno=" & idAnno & " AND Allenamenti.idCategoria=" & idCategoria & " AND Allenamenti.idGiocatore=" & idGiocatore & " And Instr(Datella,'" & sMese & "')>0 " &
+						"Order By Datella, Orella"
+
+					Rec = LeggeQuery(Conn, Sql, Connessione)
+					If TypeOf (Rec) Is String Then
+						Ritorno = Rec
+					Else
+						If Rec.Eof Then
+							Ritorno = StringaErrore & " Nessuna info di allenamento rilevata"
+						Else
+							Ritorno = ""
+							Do Until Rec.Eof
+								Ritorno &= Rec("Datella").Value.ToString & ";" &
+									Rec("Orella").Value.ToString.Trim & ";" &
+									"§"
+								Rec.MoveNext()
+							Loop
+						End If
+						Rec.Close()
+					End If
+				Catch ex As Exception
+					Ritorno = StringaErrore & " " & ex.Message
+				End Try
+
+				Conn.Close()
+			End If
+		End If
+
+		Return Ritorno
+	End Function
+
 End Class
