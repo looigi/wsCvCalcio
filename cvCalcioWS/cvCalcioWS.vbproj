@@ -80,6 +80,7 @@
     <Content Include="PathCvCalcio.txt">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Content Include="wsStatAllenamenti.asmx" />
     <Content Include="wsAllenamenti.asmx" />
     <Content Include="wsAllenatori.asmx" />
     <Content Include="wsArbitri.asmx" />
@@ -102,6 +103,10 @@
     <Compile Include="GestioneFilesDirectory.vb" />
     <Compile Include="Globale.vb" />
     <Compile Include="mdlTrasfSMS.vb" />
+    <Compile Include="wsStatAllenamenti.asmx.vb">
+      <DependentUpon>wsStatAllenamenti.asmx</DependentUpon>
+      <SubType>Component</SubType>
+    </Compile>
     <Compile Include="wsAllenamenti.asmx.vb">
       <DependentUpon>wsAllenamenti.asmx</DependentUpon>
       <SubType>Component</SubType>
