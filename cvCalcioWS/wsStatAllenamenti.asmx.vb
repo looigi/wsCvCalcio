@@ -53,14 +53,14 @@ Public Class wsStatAllenamenti
 				End Select
 
 				Try
-					Sql = "Select B.idGiocatore, B.Cognome, B.Nome, B.Descrizione,  B.Presenze, B.Totale, B.Presenze/B.Totale*100 As Perc From ( " &
+					Sql = "Select B.idGiocatore, B.Cognome, B.Nome, B.Descrizione,  B.Presenze, B.Totale, B.Presenze/B.Totale*100 As Perc, B.NumeroMaglia From ( " &
 						"Select A.idGiocatore, A.Cognome, A.Nome, A.Descrizione,  A.Presenze, (SELECT Count(*) From Allenamenti " &
-						"Where idAnno=" & idAnno & " And idCategoria=" & idCategoria & " And Instr(Datella,'" & sMese & "')>0  And Progressivo=0) As Totale From ( " &
-						"SELECT Giocatori.idGiocatore, Cognome, Nome, Ruoli.Descrizione,  Count(*) As Presenze " &
+						"Where idAnno=" & idAnno & " And idCategoria=" & idCategoria & " And Instr(Datella,'" & sMese & "')>0  And Progressivo=0) As Totale, A.NumeroMaglia From ( " &
+						"SELECT Giocatori.idGiocatore, Cognome, Nome, Ruoli.Descrizione,  Count(*) As Presenze, Giocatori.NumeroMaglia " &
 						"FROM (Allenamenti LEFT JOIN Giocatori ON (Allenamenti.idAnno = Giocatori.idAnno) AND (Allenamenti.idGiocatore=Giocatori.idGiocatore) AND (Allenamenti.idCategoria = Giocatori.idCategoria)) " &
 						"LEFT Join Ruoli On Giocatori.idRuolo=Ruoli.idRuolo " &
 						"WHERE Allenamenti.idCategoria=" & idCategoria & " And Allenamenti.idAnno=" & idAnno & " And Giocatori.idGiocatore Is Not Null And Instr(Datella,'" & sMese & "')>0 " &
-						"Group By Giocatori.idGiocatore, Cognome, Nome, Ruoli.Descrizione " &
+						"Group By Giocatori.idGiocatore, Cognome, Nome, Ruoli.Descrizione, Giocatori.NumeroMaglia " &
 						") A) B " &
 						"Order By 2"
 
@@ -80,6 +80,7 @@ Public Class wsStatAllenamenti
 									Rec("Presenze").Value.ToString.Trim & ";" &
 									Rec("Totale").Value.ToString.Trim & ";" &
 									Rec("Perc").Value.ToString.Trim & ";" &
+									Rec("NumeroMaglia").Value.ToString.Trim & ";" &
 									"§"
 								Rec.MoveNext()
 							Loop
