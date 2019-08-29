@@ -9,9 +9,9 @@ Public Class wsStatAllenamenti
 	Inherits System.Web.Services.WebService
 
 	<WebMethod()>
-	Public Function RitornaStatAllenamentiCategoria(ByVal idAnno As String, idCategoria As String, Mese As String) As String
+	Public Function RitornaStatAllenamentiCategoria(Squadra As String, ByVal idAnno As String, idCategoria As String, Mese As String) As String
 		Dim Ritorno As String = ""
-		Dim Connessione As String = LeggeImpostazioniDiBase(Server.MapPath("."))
+		Dim Connessione As String = LeggeImpostazioniDiBase(Server.MapPath("."), Squadra)
 
 		If Connessione = "" Then
 			Ritorno = ErroreConnessioneNonValida
@@ -100,9 +100,9 @@ Public Class wsStatAllenamenti
 
 
 	<WebMethod()>
-	Public Function RitornaInfo(ByVal idAnno As String, idCategoria As String, idGiocatore As String, Mese As String) As String
+	Public Function RitornaInfo(Squadra As String, ByVal idAnno As String, idCategoria As String, idGiocatore As String, Mese As String) As String
 		Dim Ritorno As String = ""
-		Dim Connessione As String = LeggeImpostazioniDiBase(Server.MapPath("."))
+		Dim Connessione As String = LeggeImpostazioniDiBase(Server.MapPath("."), Squadra)
 
 		If Connessione = "" Then
 			Ritorno = ErroreConnessioneNonValida

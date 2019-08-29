@@ -9,9 +9,9 @@ Public Class wsEventi
 	Inherits System.Web.Services.WebService
 
 	<WebMethod()>
-	Public Function SalvaEvento(idEvento As String, Evento As String) As String
+	Public Function SalvaEvento(Squadra As String, idEvento As String, Evento As String) As String
 		Dim Ritorno As String = ""
-		Dim Connessione As String = LeggeImpostazioniDiBase(Server.MapPath("."))
+		Dim Connessione As String = LeggeImpostazioniDiBase(Server.MapPath("."), Squadra)
 
 		If Connessione = "" Then
 			Ritorno = ErroreConnessioneNonValida
@@ -63,9 +63,9 @@ Public Class wsEventi
 	End Function
 
 	<WebMethod()>
-	Public Function RitornaEventi() As String
+	Public Function RitornaEventi(Squadra As String) As String
 		Dim Ritorno As String = ""
-		Dim Connessione As String = LeggeImpostazioniDiBase(Server.MapPath("."))
+		Dim Connessione As String = LeggeImpostazioniDiBase(Server.MapPath("."), Squadra)
 
 		If Connessione = "" Then
 			Ritorno = ErroreConnessioneNonValida
@@ -108,9 +108,9 @@ Public Class wsEventi
 	End Function
 
 	<WebMethod()>
-	Public Function EliminaEvento(idEvento As String) As String
+	Public Function EliminaEvento(Squadra As String, idEvento As String) As String
 		Dim Ritorno As String = ""
-		Dim Connessione As String = LeggeImpostazioniDiBase(Server.MapPath("."))
+		Dim Connessione As String = LeggeImpostazioniDiBase(Server.MapPath("."), Squadra)
 
 		If Connessione = "" Then
 			Ritorno = ErroreConnessioneNonValida & ":" & Connessione
