@@ -1262,4 +1262,123 @@ Public Class wsPartite
 		Return Ritorno
 	End Function
 
+
+	<WebMethod()>
+	Public Function CreaFoglioConvocazioni(Squadra As String, idAnno As String, idPartita As String) As String
+		Dim Ritorno As String = ""
+		Dim Connessione As String = LeggeImpostazioniDiBase(Server.MapPath("."), Squadra)
+		Dim gf As New GestioneFilesDirectory
+
+		If Connessione = "" Then
+			Ritorno = ErroreConnessioneNonValida
+		Else
+			Dim Conn As Object = ApreDB(Connessione)
+
+			If TypeOf (Conn) Is String Then
+				Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
+			Else
+				Dim Rec As Object = Server.CreateObject("ADODB.Recordset")
+				Dim Rec2 As Object = Server.CreateObject("ADODB.Recordset")
+				Dim Sql As String = ""
+
+				Sql = "SELECT Partite.idPartita, Partite.DataOra, Categorie.Descrizione As Categoria, SquadreAvversarie.Descrizione As Avversario, '' + CampiAvversari.Descrizione As Campo, " &
+					"CampiAvversari.Indirizzo, '' + CampiEsterni.Descrizione As CampoEsterno, Allenatori.Cognome + ' ' + Allenatori.Nome As Mister, Allenatori.Telefono, Partite.OraConv " &
+					"FROM ((((Partite LEFT JOIN SquadreAvversarie ON Partite.idAvversario = SquadreAvversarie.idAvversario) LEFT JOIN CampiAvversari ON SquadreAvversarie.idCampo = CampiAvversari.idCampo) LEFT JOIN Categorie ON (Partite.idAnno = Categorie.idAnno) AND (Partite.idCategoria = Categorie.idCategoria)) LEFT JOIN CampiEsterni ON Partite.idPartita = CampiEsterni.idPartita) LEFT JOIN Allenatori ON (Partite.idAllenatore = Allenatori.idAllenatore) AND (Partite.idCategoria = Allenatori.idCategoria) AND (Partite.idAnno = Allenatori.idAnno) " &
+					"WHERE Partite.idAnno=" & idAnno & " AND Partite.idPartita=" & idPartita
+				Rec = LeggeQuery(Conn, Sql, Connessione)
+				If TypeOf (Rec) Is String Then
+					Ritorno = Rec
+				Else
+					Dim Filetto As String = gf.LeggeFileIntero(Server.MapPath(".") & "\base_convocazioni.txt")
+					Dim Datella As Date = Rec("DataOra").Value
+					Dim DatellaConv As Date = Datella.AddHours(-1)
+
+					Filetto = Filetto.Replace("***SQUADRA***", Rec("Categoria").Value)
+					Filetto = Filetto.Replace("***GARA***", Rec("Categoria").Value & " - " & Rec("Avversario").Value)
+					Filetto = Filetto.Replace("***DATA***", Format(Datella.Day, "00") & "/" & Format(Datella.Month, "00") & "/" & Datella.Year)
+					If Rec("CampoEsterno").Value = "" Then
+						Filetto = Filetto.Replace("***CAMPO***", Rec("CampoEsterno").Value)
+						Filetto = Filetto.Replace("***INDIRIZZO***", "")
+					Else
+						Filetto = Filetto.Replace("***CAMPO***", Rec("Campo").Value)
+						Filetto = Filetto.Replace("***INDIRIZZO***", Rec("Indirizzo").Value)
+					End If
+					Filetto = Filetto.Replace("***ORARIO1***", Format(DatellaConv.Hour, "00") & ":" & Format(DatellaConv.Minute, "00"))
+					Filetto = Filetto.Replace("***ORARIO2***", Rec("OraConv").Value)
+
+					Filetto = Filetto.Replace("***MISTER***", Rec("Mister").Value)
+					Filetto = Filetto.Replace("***Telefono***", Rec("Telefono").Value)
+
+					Rec.Close()
+
+					Dim Convocati As String = ""
+					Sql = "SELECT Giocatori.Cognome+' '+Giocatori.Nome AS Giocatore, Ruoli.idRuolo " &
+						"FROM (Convocati LEFT JOIN Giocatori ON Convocati.idGiocatore = Giocatori.idGiocatore) LEFT JOIN Ruoli ON Giocatori.idRuolo = Ruoli.idRuolo " &
+						"WHERE Convocati.idPartita=" & idPartita & " AND Giocatori.idAnno=" & idAnno & " " &
+						"ORDER BY Ruoli.idRuolo, Giocatori.Cognome, Giocatori.Nome"
+					Rec = LeggeQuery(Conn, Sql, Connessione)
+					If TypeOf (Rec) Is String Then
+						Ritorno = Rec
+					Else
+						Dim Giocatori As List(Of String) = New List(Of String)
+
+						Do Until Rec.Eof
+							Giocatori.Add(Rec("Giocatore").Value)
+
+							Rec.MoveNext
+						Loop
+						Rec.Close
+
+						Convocati &= "<table style=""width: 100%;"" cellpadding=""0px"" cellspacing=""0px"">"
+						For i As Integer = 1 To 12
+							Dim Riga As String = "<tr>"
+
+							Riga &= "<td colspan=""1"" class=""adestra"">"
+							Riga &= "<span class=""titolo3"">" & i & "</span>"
+							Riga &= "</td>"
+
+							Riga &= "<td style=""width:10px;"">"
+							Riga &= "&nbsp;"
+							Riga &= "</td>"
+
+							Riga &= "<td colspan=""4"">"
+							If i < Giocatori.Count Then
+								Riga &= "<span class=""titolo3"">" & Giocatori.Item(i) & "</span>"
+							Else
+								Riga &= "&nbsp;"
+							End If
+							Riga &= "</td>"
+
+							Riga &= "<td colspan=""1"" class=""adestra"">"
+							Riga &= "<span class=""titolo3"">" & i + 12 & "</span>"
+							Riga &= "</td>"
+
+							Riga &= "<td style=""width:10px;"">"
+							Riga &= "&nbsp;"
+							Riga &= "</td>"
+
+							Riga &= "<td colspan=""4"">"
+							If i + 12 < Giocatori.Count Then
+								Riga &= "<span class=""titolo3"">" & Giocatori.Item(i + 12) & "</span>"
+							Else
+								Riga &= "&nbsp;"
+							End If
+							Riga &= "</td>"
+							Riga &= "</tr>"
+
+							Convocati &= Riga
+						Next
+						Convocati &= "</table>"
+					End If
+					Filetto = Filetto.Replace("***CONVOCATI***", Convocati)
+
+					gf.CreaDirectoryDaPercorso(Server.MapPath(".") & "\Convocazioni\")
+					gf.CreaAggiornaFile(Server.MapPath(".") & "\Convocazioni\" & idPartita & ".html", Filetto)
+				End If
+			End If
+		End If
+
+		Return Ritorno
+	End Function
+
 End Class

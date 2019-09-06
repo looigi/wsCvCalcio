@@ -207,11 +207,11 @@
 					Filone = Filone.Replace("***RIS 2G***", "")
 				End If
 
-				Dim ImmAll As String = PathBaseImmagini & "/Allenatori/" & idAnno & "_" & Rec("idAllenatore").Value & ".Jpg"
+				Dim ImmAll As String = PathBaseImmagini & "/" & Squadra & "/Allenatori/" & idAnno & "_" & Rec("idAllenatore").Value & ".Jpg"
 				Filone = Filone.Replace("***IMMAGINE ALL***", ImmAll)
 				Filone = Filone.Replace("***ALLENATORE***", Rec("Allenatore").Value)
 
-				Dim Imm1 As String = PathBaseImmagini & "/Categorie/" & idAnno & "_" & Rec("idCategoria").Value & ".Jpg"
+				Dim Imm1 As String = PathBaseImmagini & "/" & Squadra & "/Categorie/" & idAnno & "_" & Rec("idCategoria").Value & ".Jpg"
 				Dim Imm2 As String = PathBaseImmagini & "/Avversari/" & Rec("idAvversario").Value & ".Jpg"
 
 				'If Casa = "S" Then
@@ -270,7 +270,7 @@
 						Dirigenti.Append("<table style=""width: 99%; text-align: center;"">")
 
 						Do Until Rec.Eof
-							Dim Path As String = PathBaseImmagini & "/Dirigenti/" & idAnno & "_" & Rec("idDirigente").Value & ".jpg"
+							Dim Path As String = PathBaseImmagini & "/" & Squadra & "/Dirigenti/" & idAnno & "_" & Rec("idDirigente").Value & ".jpg"
 
 							Dirigenti.Append("<tr>")
 							Dirigenti.Append("<td>")
@@ -306,7 +306,7 @@
 
 							Do Until Rec.Eof
 								Dim C As String = Rec("Cognome").Value & " " & Rec("Nome").Value & " (" & Rec("Ruolo").Value & ")"
-								Dim Path As String = PathBaseImmagini & "/Giocatori/" & idAnno & "_" & Rec("idGiocatore").Value & ".jpg"
+								Dim Path As String = PathBaseImmagini & "/" & Squadra & "/Giocatori/" & idAnno & "_" & Rec("idGiocatore").Value & ".jpg"
 
 								Convocati.Append("<tr>")
 								Convocati.Append("<td>")
@@ -626,7 +626,7 @@
 										If m.Contains("Autorete") Then
 											Path = PathBaseImmagini & "/autorete.png"
 										Else
-											Path = PathBaseImmagini & "/Giocatori/" & idAnno & "_" & Mm(2) & ".jpg"
+											Path = PathBaseImmagini & "/" & Squadra & "/Giocatori/" & idAnno & "_" & Mm(2) & ".jpg"
 										End If
 									End If
 
@@ -670,7 +670,7 @@
 										If Rec2("Giocatore").Value.Contains("Avversario") Then
 											Path = PathBaseImmScon
 										Else
-											Path = PathBaseImmagini & "/Giocatori/" & idAnno & "_" & Rec2("idGiocatore").Value & ".jpg"
+											Path = PathBaseImmagini & "/" & Squadra & "/Giocatori/" & idAnno & "_" & Rec2("idGiocatore").Value & ".jpg"
 										End If
 
 										Eventi.Append("<tr>")

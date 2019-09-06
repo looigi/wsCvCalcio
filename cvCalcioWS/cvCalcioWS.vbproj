@@ -75,6 +75,7 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="App_Themes\Standard\bg.jpg" />
+    <Content Include="base_convocazioni.txt" />
     <Content Include="base_partita.txt" />
     <Content Include="base_statistiche.txt" />
     <Content Include="PathCvCalcio.txt">
