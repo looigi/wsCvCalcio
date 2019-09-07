@@ -1,4 +1,4 @@
-<html xmlns="http://www.w3.org/1999/xhtml">
+﻿<html xmlns="http://www.w3.org/1999/xhtml">
 <head runat="server">
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
     <title>Convocazioni Partita ***PARTITA***</title>
@@ -6,17 +6,17 @@
 	<style type="text/css">
 		.titolo1 {
 			font-family: Verdana; 
-			font-size: 22px;
+			font-size: 30px;
 		}
 
 		.titolo2 {
 			font-family: Arial; 
-			font-size: 19px;
+			font-size: 23px;
 		}
 
 		.titolo3 {
 			font-family: Arial; 
-			font-size: 15px;
+			font-size: 23px;
 		}
 		
 		.bordato {
@@ -66,11 +66,11 @@
 		<div style="width: 90%; margin-left: 5%;">
 			<table width="100%" cellspacing="0px" cellpadding="0px">
 				<tr>
-					<td colspan="1" class="bordato centrato" style="height: 75px;">
-						<img src="" />
+					<td colspan="1" class="bordato centrato" style="height: 75px; padding: 3px;">
+						***LOGO***
 					</td>
 					<td colspan="9" class="bordato">
-						<span class="titolo1 grassetto italico">POLISPORTIVA PONTE DI NONA</span>
+						<span class="titolo1 grassetto italico">&nbsp;***NOME_SQUADRA***</span>
 					</td>
 				</tr>
 				<tr>
