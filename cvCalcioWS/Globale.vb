@@ -249,7 +249,7 @@
 					Ok = False
 				Else
 					If Not Rec.Eof Then
-						Dim PathArb As String = PathBaseImmagini & "/Arbitri/" & idAnno & "_" & Rec("idArbitro").Value & ".jpg"
+						Dim PathArb As String = PathBaseImmagini & "/Arbitri/" & Rec("idArbitro").Value & ".jpg"
 						Filone = Filone.Replace("***IMMAGINE ARB***", PathArb)
 						Filone = Filone.Replace("***ARBITRO***", Rec("Cognome").Value & " " & Rec("Nome").Value)
 					Else
