@@ -274,7 +274,7 @@
 
 							Dirigenti.Append("<tr>")
 							Dirigenti.Append("<td>")
-							Dirigenti.Append("<img src=""" & Path & """ style=""width: 50px; height: 50px;"" onerror=""this.src='" & PathBaseImmScon & "'"" />")
+							Dirigenti.Append("<img src=""" & Path & """?tag=" & Now & " style=""width: 50px; height: 50px;"" onerror=""this.src='" & PathBaseImmScon & "'"" />")
 							Dirigenti.Append("</td>")
 							Dirigenti.Append("<td>")
 							Dirigenti.Append("<span class=""testo nero"" style=""font-size: 13px;"">" & Rec("Cognome").Value & " " & Rec("Nome").Value & "</span>")
@@ -310,7 +310,7 @@
 
 								Convocati.Append("<tr>")
 								Convocati.Append("<td>")
-								Convocati.Append("<img src=""" & Path & """ style=""width: 50px; height: 50px;"" onerror=""this.src='" & PathBaseImmScon & "'"" />")
+								Convocati.Append("<img src=""" & Path & """?tag=" & Now & "  style=""width: 50px; height: 50px;"" onerror=""this.src='" & PathBaseImmScon & "'"" />")
 								Convocati.Append("</td>")
 								Convocati.Append("<td style=""text-align: center;"">")
 								Convocati.Append("<span class=""testo nero"" style=""font-size: 13px;"">" & Rec("NumeroMaglia").Value & "</span>")
@@ -523,7 +523,7 @@
 										Rigori &= "<span class=""testo blu"" style=""font-size: 15px;"">Rigore " & c(1) & "</span>"
 										Rigori &= "</td>"
 										Rigori &= "<td>"
-										Rigori &= "<img src=""" & Path2 & """ style=""width: 50px; height: 50px;"" onerror=""this.src='" & PathBaseImmScon & "'"" />"
+										Rigori &= "<img src=""" & Path2 & """?tag=" & Now & "  style=""width: 50px; height: 50px;"" onerror=""this.src='" & PathBaseImmScon & "'"" />"
 										Rigori &= "</td>"
 										Rigori &= "<td align=""center"">"
 										Rigori &= "<span class=""testo blu"" style=""font-size: 15px;"">" & c(3) & "</span>"
@@ -638,7 +638,7 @@
 									Marcatori.Append("<span class=""testo nero"" style=""font-size: 13px;"">" & Mm(1) & "°</span>")
 									Marcatori.Append("</td>")
 									Marcatori.Append("<td>")
-									Marcatori.Append("<img src=""" & Path & """ style=""width: 50px; height: 50px;"" onerror=""this.src='" & PathBaseImmScon & "'"" />")
+									Marcatori.Append("<img src=""" & Path & """?tag=" & Now & "  style=""width: 50px; height: 50px;"" onerror=""this.src='" & PathBaseImmScon & "'"" />")
 									Marcatori.Append("</td>")
 									Marcatori.Append("<td style=""text-align: left;"">")
 									Marcatori.Append("<span class=""testo nero"" style=""font-size: 13px;"">" & Mm(3) & " " & Mm(4) & "</span>")
@@ -684,7 +684,7 @@
 										Eventi.Append("<span class=""testo nero"" style=""font-size: 13px;"">" & Rec2("Descrizione").Value & "</span>")
 										Eventi.Append("</td>")
 										Eventi.Append("<td>")
-										Eventi.Append("<img src=""" & Path & """ style=""width: 30px; height: 30px;"" onerror=""this.src='" & PathBaseImmScon & "'"" />")
+										Eventi.Append("<img src=""" & Path & """?tag=" & Now & "  style=""width: 30px; height: 30px;"" onerror=""this.src='" & PathBaseImmScon & "'"" />")
 										Eventi.Append("</td>")
 										Eventi.Append("<td align=""left"">")
 										Eventi.Append("<span class=""testo nero"" style=""font-size: 13px;"">" & Rec2("Giocatore").Value & "</span>")
