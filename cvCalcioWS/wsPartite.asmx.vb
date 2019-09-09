@@ -1303,7 +1303,7 @@ Public Class wsPartite
 
 						Filetto = Filetto.Replace("***PARTITA***", "Partita " & idPartita & " Anno " & Rec("Anno").Value)
 						Filetto = Filetto.Replace("***NOME_SQUADRA***", Squadra.ToUpper.Trim.Replace("_", " "))
-						Filetto = Filetto.Replace("***LOGO***", "<img src=""http://looigi.no-ip.biz:12345/wsCvCalcio/Loghi/" & Squadra & ".png"" style=""width: 80px; height: 100px;"" />")
+						Filetto = Filetto.Replace("***LOGO***", "<img src=""http://looigi.no-ip.biz:12345/wsCvCalcio/Loghi/" & Squadra & ".png?tag=" & Now.ToString.Replace(" ", "_") & """ style=""width: 80px; height: 100px;"" />")
 						Filetto = Filetto.Replace("***SQUADRA***", "" & Rec("Categoria").Value)
 						Filetto = Filetto.Replace("***GARA***", "" & Rec("Categoria").Value & " - " & "" & Rec("Avversario").Value)
 						Filetto = Filetto.Replace("***DATA***", Format(Datella.Day, "00") & "/" & Format(Datella.Month, "00") & "/" & Datella.Year)
