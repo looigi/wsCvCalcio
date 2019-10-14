@@ -1381,4 +1381,63 @@ Public Class wsPartite
 		Return Ritorno
 	End Function
 
+	<WebMethod()>
+	Public Function EliminaPartitaGEN(Squadra As String, idAnno As String, idPartita As String) As String
+		Dim Ritorno As String = ""
+		Dim Connessione As String = LeggeImpostazioniDiBase(Server.MapPath("."), Squadra)
+
+		If Connessione = "" Then
+			Ritorno = ErroreConnessioneNonValida
+		Else
+			Dim Conn As Object = ApreDB(Connessione)
+
+			If TypeOf (Conn) Is String Then
+				Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
+			Else
+				Dim sql As String
+
+				sql = "Delete * From Partite Where idAnno = " & idAnno & " And idPartita = " & idPartita
+				Ritorno = EsegueSql(Conn, sql, Connessione)
+
+				sql = "Delete * From AbritriPartite Where idAnno = " & idAnno & " And idPartita = " & idPartita
+				Ritorno = EsegueSql(Conn, sql, Connessione)
+
+				sql = "Delete * From Convocati Where idPartita = " & idPartita
+				Ritorno = EsegueSql(Conn, sql, Connessione)
+
+				sql = "Delete * From CoordinatePartite Where idPartita = " & idPartita
+				Ritorno = EsegueSql(Conn, sql, Connessione)
+
+				sql = "Delete * From EventiPartita Where idAnno = " & idAnno & " And idPartita = " & idPartita
+				Ritorno = EsegueSql(Conn, sql, Connessione)
+
+				sql = "Delete * From Marcatori Where idPartita = " & idPartita
+				Ritorno = EsegueSql(Conn, sql, Connessione)
+
+				sql = "Delete * From MeteoPartite Where idPartita = " & idPartita
+				Ritorno = EsegueSql(Conn, sql, Connessione)
+
+				sql = "Delete * From RigoriAvversari Where idAnno = " & idAnno & " And idPartita = " & idPartita
+				Ritorno = EsegueSql(Conn, sql, Connessione)
+
+				sql = "Delete * From RigoriPropri Where idAnno = " & idAnno & " And idPartita = " & idPartita
+				Ritorno = EsegueSql(Conn, sql, Connessione)
+
+				sql = "Delete * From Risultati Where idPartita = " & idPartita
+				Ritorno = EsegueSql(Conn, sql, Connessione)
+
+				sql = "Delete * From RisultatiAggiuntivi Where idPartita = " & idPartita
+				Ritorno = EsegueSql(Conn, sql, Connessione)
+
+				sql = "Delete * From RisultatiAggiuntiviMarcatori Where idPartita = " & idPartita
+				Ritorno = EsegueSql(Conn, sql, Connessione)
+
+				sql = "Delete * From TempiGoalAvversari Where idPartita = " & idPartita
+				Ritorno = EsegueSql(Conn, sql, Connessione)
+			End If
+		End If
+
+		Return Ritorno
+	End Function
+
 End Class
