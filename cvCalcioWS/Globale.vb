@@ -145,13 +145,13 @@
 		Filone = Filone.Replace("***SFONDO***", PathBaseImmagini & "/bg.jpg")
 
 		Sql = "SELECT TipologiePartite.Descrizione As Tipologia, Partite.DataOra, Partite.Casa, Partite.idAvversario, Categorie.idCategoria, Categorie.Descrizione As Squadra1, " &
-			"SquadreAvversarie.Descrizione As Squadra2, CampiAvversari.Descrizione As Campo, CampiAvversari.Indirizzo, " &
+			"SquadreAvversarie.Descrizione As Squadra2, CampiAvversari.Descrizione As CampoAvversari, CampiAvversari.Indirizzo As IndirizzoAvversari, " &
 			"Risultati.Risultato, Risultati.Note, Allenatori.idAllenatore, Allenatori.Cognome + ' ' + Allenatori.Nome As Allenatore, " &
 			"MeteoPartite.Tempo, MeteoPartite.Gradi, MeteoPartite.Umidita, MeteoPartite.Pressione, Allenatori.idAllenatore, " &
 			"TempiGoalAvversari.TempiPrimoTempo, TempiGoalAvversari.TempiSecondoTempo, TempiGoalAvversari.TempiTerzoTempo, Risultati.Note, " &
 			"RisultatiAggiuntivi.Tempo1Tempo, RisultatiAggiuntivi.Tempo2Tempo, RisultatiAggiuntivi.Tempo3Tempo, RisultatiAggiuntivi.RisGiochetti, CampiEsterni.Descrizione As CampoEsterno, " &
-			"Partite.RisultatoATempi " &
-			"FROM (((((((((Partite LEFT JOIN Risultati ON Partite.idPartita = Risultati.idPartita) " &
+			"Partite.RisultatoATempi, Anni.CampoSquadra, Anni.Indirizzo As IndirizzoBase " &
+			"FROM ((((((((((Partite LEFT JOIN Risultati ON Partite.idPartita = Risultati.idPartita) " &
 			"LEFT JOIN Categorie ON (Partite.idCategoria = Categorie.idCategoria) And (Partite.idAnno = Categorie.idAnno)) " &
 			"LEFT JOIN SquadreAvversarie ON Partite.idAvversario = SquadreAvversarie.idAvversario) " &
 			"LEFT JOIN TipologiePartite ON Partite.idTipologia = TipologiePartite.idTipologia) " &
@@ -160,7 +160,8 @@
 			"LEFT JOIN MeteoPartite ON Partite.idPartita = MeteoPartite.idPartita) " &
 			"LEFT JOIN TempiGoalAvversari ON Partite.idPartita = TempiGoalAvversari.idPartita) " &
 			"LEFT JOIN CampiEsterni ON Partite.idPartita = CampiEsterni.idPartita) " &
-			"LEFT JOIN RisultatiAggiuntivi ON Partite.idPartita = RisultatiAggiuntivi.idPartita " &
+			"LEFT JOIN RisultatiAggiuntivi ON Partite.idPartita = RisultatiAggiuntivi.idPartita) " &
+			"LEFT JOIN Anni ON Partite.idanno = Anni.idAnno " &
 			"WHERE Partite.idAnno=" & idAnno & " And Partite.idPartita=" & idPartita
 		Rec = LeggeQuery(Conn, Sql, Connessione)
 		If TypeOf (Rec) Is String Then
@@ -175,10 +176,16 @@
 				Filone = Filone.Replace("***DATA ORA***", "" & Rec("DataOra").Value)
 				If "" & Rec("Casa").Value = "E" Then
 					Filone = Filone.Replace("***CAMPO***", "Campo esterno: " & Rec("CampoEsterno").Value)
+					Filone = Filone.Replace("***INDIRIZZO***", "")
 				Else
-					Filone = Filone.Replace("***CAMPO***", "" & Rec("Campo").Value)
+					If (Rec("Casa").Value = "N") Then
+						Filone = Filone.Replace("***CAMPO***", "" & Rec("CampoAvversari").Value)
+						Filone = Filone.Replace("***INDIRIZZO***", "" & Rec("IndirizzoAvversari").Value)
+					Else
+						Filone = Filone.Replace("***CAMPO***", Rec("CampoSquadra").Value)
+						Filone = Filone.Replace("***INDIRIZZO***", "" & Rec("IndirizzoBase").Value)
+					End If
 				End If
-				Filone = Filone.Replace("***INDIRIZZO***", "" & Rec("Indirizzo").Value)
 				Filone = Filone.Replace("***METEO***", "" & Meteo)
 				Filone = Filone.Replace("***NOTE***", "" & Rec("Note").Value)
 
