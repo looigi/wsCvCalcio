@@ -2189,8 +2189,8 @@ Public Class wsStatistiche
 
 									Dim Casa As String
 									Dim Fuori As String
-									Dim Imm1 As String = PathBaseImmagini & "/" & Squadra & "/Categorie/" & idAnno & "_" & idCategoria & ".Jpg?tag=" & Now.ToString.Replace(" ", "_")
-									Dim Imm2 As String = PathBaseImmagini & "/Avversari/" & Rec("idAvversario").Value & ".Jpg?tag=" & Now.ToString.Replace(" ", "_")
+									Dim Imm1 As String = PathBaseImmagini & "/" & Squadra & "/Categorie/" & idAnno & "_" & idCategoria & ".Jpg"
+									Dim Imm2 As String = PathBaseImmagini & "/Avversari/" & Rec("idAvversario").Value & ".Jpg"
 									Dim ImmCasa As String
 									Dim ImmFuori As String
 									Dim GoalCasa As String
@@ -3011,8 +3011,8 @@ Public Class wsStatistiche
 						If Not Rec.Eof Then
 							Dim Casa As String
 							Dim Fuori As String
-							Dim Imm1 As String = PathBaseImmagini & "/" & Squadra & "/Categorie/" & idAnno & "_" & idCategoria & ".Jpg?tag=" & Now.ToString.Replace(" ", "_")
-							Dim Imm2 As String = PathBaseImmagini & "/Avversari/" & Rec("idAvversario").Value & ".Jpg?tag=" & Now.ToString.Replace(" ", "_")
+							Dim Imm1 As String = PathBaseImmagini & "/" & Squadra & "/Categorie/" & idAnno & "_" & idCategoria & ".Jpg"
+							Dim Imm2 As String = PathBaseImmagini & "/Avversari/" & Rec("idAvversario").Value & ".Jpg"
 							Dim ImmCasa As String
 							Dim ImmFuori As String
 
@@ -3086,8 +3086,8 @@ Public Class wsStatistiche
 						If Not Rec.Eof Then
 							Dim Casa As String
 							Dim Fuori As String
-							Dim Imm1 As String = PathBaseImmagini & "/" & Squadra & "/Categorie/" & idAnno & "_" & idCategoria & ".Jpg?tag=" & Now.ToString.Replace(" ", "_")
-							Dim Imm2 As String = PathBaseImmagini & "/Avversari/" & Rec("idAvversario").Value & ".Jpg?tag=" & Now.ToString.Replace(" ", "_")
+							Dim Imm1 As String = PathBaseImmagini & "/" & Squadra & "/Categorie/" & idAnno & "_" & idCategoria & ".Jpg"
+							Dim Imm2 As String = PathBaseImmagini & "/Avversari/" & Rec("idAvversario").Value & ".Jpg"
 							Dim ImmCasa As String
 							Dim ImmFuori As String
 
@@ -3517,7 +3517,7 @@ Public Class wsStatistiche
 				Stringona = "<table cellspacing=""0"" style=""width: 100%;"">"
 				For Each Giocatore As String In NomiMarcatoriGeneraliCasa
 					Dim c() As String = Giocatore.Split("-")
-					Dim Path As String = PathBaseImmagini & "/" & Squadra & "/Giocatori/" & idAnno & "_" & c(0) & ".jpg?tag=" & Now.ToString.Replace(" ", "_")
+					Dim Path As String = PathBaseImmagini & "/" & Squadra & "/Giocatori/" & idAnno & "_" & c(0) & ".jpg"
 					Dim gg As String = c(2).Trim
 					If gg.Length = 1 Then gg = "&nbsp;" & gg
 
@@ -3549,7 +3549,7 @@ Public Class wsStatistiche
 				Stringona = "<table cellspacing=""0"" style=""width: 100%;"">"
 				For Each Giocatore As String In NomiMarcatoriGeneraliFuori
 					Dim c() As String = Giocatore.Split("-")
-					Dim Path As String = PathBaseImmagini & "/" & Squadra & "/Giocatori/" & idAnno & "_" & c(0) & ".jpg?tag=" & Now.ToString.Replace(" ", "_")
+					Dim Path As String = PathBaseImmagini & "/" & Squadra & "/Giocatori/" & idAnno & "_" & c(0) & ".jpg"
 					Dim gg As String = c(2).Trim
 					If gg.Length = 1 Then gg = "&nbsp;" & gg
 
@@ -3581,7 +3581,7 @@ Public Class wsStatistiche
 				Stringona &= "<table cellspacing=""0"" style=""width: 100%;"">"
 				For Each Giocatore As String In NomiMarcatoriGeneraliCampoEsterno
 					Dim c() As String = Giocatore.Split("-")
-					Dim Path As String = PathBaseImmagini & "/" & Squadra & "/Giocatori/" & idAnno & "_" & c(0) & ".jpg?tag=" & Now.ToString.Replace(" ", "_")
+					Dim Path As String = PathBaseImmagini & "/" & Squadra & "/Giocatori/" & idAnno & "_" & c(0) & ".jpg"
 					Dim gg As String = c(2).Trim
 					If gg.Length = 1 Then gg = "&nbsp;" & gg
 
@@ -3611,7 +3611,7 @@ Public Class wsStatistiche
 				Stringona &= "<table cellspacing=""0"" style=""width: 100%;"">"
 				For Each Giocatore As String In NomiMarcatoriCampionatoCasa
 					Dim c() As String = Giocatore.Split("-")
-					Dim Path As String = PathBaseImmagini & "/" & Squadra & "/Giocatori/" & idAnno & "_" & c(0) & ".jpg?tag=" & Now.ToString.Replace(" ", "_")
+					Dim Path As String = PathBaseImmagini & "/" & Squadra & "/Giocatori/" & idAnno & "_" & c(0) & ".jpg"
 					Dim gg As String = c(2).Trim
 					If gg.Length = 1 Then gg = "&nbsp;" & gg
 
@@ -3641,7 +3641,7 @@ Public Class wsStatistiche
 				Stringona &= "<table cellspacing=""0"" style=""width: 100%;"">"
 				For Each Giocatore As String In NomiMarcatoriCampionatoFuori
 					Dim c() As String = Giocatore.Split("-")
-					Dim Path As String = PathBaseImmagini & "/" & Squadra & "/Giocatori/" & idAnno & "_" & c(0) & ".jpg?tag=" & Now.ToString.Replace(" ", "_")
+					Dim Path As String = PathBaseImmagini & "/" & Squadra & "/Giocatori/" & idAnno & "_" & c(0) & ".jpg"
 					Dim gg As String = c(2).Trim
 					If gg.Length = 1 Then gg = "&nbsp;" & gg
 
@@ -3671,7 +3671,7 @@ Public Class wsStatistiche
 				Stringona &= "<table cellspacing=""0"" style=""width: 100%;"">"
 				For Each Giocatore As String In NomiMarcatoriCampionatoCampoEsterno
 					Dim c() As String = Giocatore.Split("-")
-					Dim Path As String = PathBaseImmagini & "/" & Squadra & "/Giocatori/" & idAnno & "_" & c(0) & ".jpg?tag=" & Now.ToString.Replace(" ", "_")
+					Dim Path As String = PathBaseImmagini & "/" & Squadra & "/Giocatori/" & idAnno & "_" & c(0) & ".jpg"
 					Dim gg As String = c(2).Trim
 					If gg.Length = 1 Then gg = "&nbsp;" & gg
 
@@ -3701,7 +3701,7 @@ Public Class wsStatistiche
 				Stringona &= "<table cellspacing=""0"" style=""width: 100%;"">"
 				For Each Giocatore As String In NomiMarcatoriAmichevoliCasa
 					Dim c() As String = Giocatore.Split("-")
-					Dim Path As String = PathBaseImmagini & "/" & Squadra & "/Giocatori/" & idAnno & "_" & c(0) & ".jpg?tag=" & Now.ToString.Replace(" ", "_")
+					Dim Path As String = PathBaseImmagini & "/" & Squadra & "/Giocatori/" & idAnno & "_" & c(0) & ".jpg"
 					Dim gg As String = c(2).Trim
 					If gg.Length = 1 Then gg = "&nbsp;" & gg
 
@@ -3731,7 +3731,7 @@ Public Class wsStatistiche
 				Stringona &= "<table cellspacing=""0"" style=""width: 100%;"">"
 				For Each Giocatore As String In NomiMarcatoriAmichevoliFuori
 					Dim c() As String = Giocatore.Split("-")
-					Dim Path As String = PathBaseImmagini & "/" & Squadra & "/Giocatori/" & idAnno & "_" & c(0) & ".jpg?tag=" & Now.ToString.Replace(" ", "_")
+					Dim Path As String = PathBaseImmagini & "/" & Squadra & "/Giocatori/" & idAnno & "_" & c(0) & ".jpg"
 					Dim gg As String = c(2).Trim
 					If gg.Length = 1 Then gg = "&nbsp;" & gg
 
@@ -3761,7 +3761,7 @@ Public Class wsStatistiche
 				Stringona &= "<table cellspacing=""0"" style=""width: 100%;"">"
 				For Each Giocatore As String In NomiMarcatoriAmichevoliCampoEsterno
 					Dim c() As String = Giocatore.Split("-")
-					Dim Path As String = PathBaseImmagini & "/" & Squadra & "/Giocatori/" & idAnno & "_" & c(0) & ".jpg?tag=" & Now.ToString.Replace(" ", "_")
+					Dim Path As String = PathBaseImmagini & "/" & Squadra & "/Giocatori/" & idAnno & "_" & c(0) & ".jpg"
 					Dim gg As String = c(2).Trim
 					If gg.Length = 1 Then gg = "&nbsp;" & gg
 
@@ -3791,7 +3791,7 @@ Public Class wsStatistiche
 				Stringona &= "<table cellspacing=""0"" style=""width: 100%;"">"
 				For Each Giocatore As String In NomiMarcatoriTorneiCasa
 					Dim c() As String = Giocatore.Split("-")
-					Dim Path As String = PathBaseImmagini & "/" & Squadra & "/Giocatori/" & idAnno & "_" & c(0) & ".jpg?tag=" & Now.ToString.Replace(" ", "_")
+					Dim Path As String = PathBaseImmagini & "/" & Squadra & "/Giocatori/" & idAnno & "_" & c(0) & ".jpg"
 					Dim gg As String = c(2).Trim
 					If gg.Length = 1 Then gg = "&nbsp;" & gg
 
@@ -3821,7 +3821,7 @@ Public Class wsStatistiche
 				Stringona &= "<table cellspacing=""0"" style=""width: 100%;"">"
 				For Each Giocatore As String In NomiMarcatoriTorneiFuori
 					Dim c() As String = Giocatore.Split("-")
-					Dim Path As String = PathBaseImmagini & "/" & Squadra & "/Giocatori/" & idAnno & "_" & c(0) & ".jpg?tag=" & Now.ToString.Replace(" ", "_")
+					Dim Path As String = PathBaseImmagini & "/" & Squadra & "/Giocatori/" & idAnno & "_" & c(0) & ".jpg"
 					Dim gg As String = c(2).Trim
 					If gg.Length = 1 Then gg = "&nbsp;" & gg
 
@@ -3851,7 +3851,7 @@ Public Class wsStatistiche
 				Stringona &= "<table cellspacing=""0"" style=""width: 100%;"">"
 				For Each Giocatore As String In NomiMarcatoriTorneiCampoEsterno
 					Dim c() As String = Giocatore.Split("-")
-					Dim Path As String = PathBaseImmagini & "/" & Squadra & "/Giocatori/" & idAnno & "_" & c(0) & ".jpg?tag=" & Now.ToString.Replace(" ", "_")
+					Dim Path As String = PathBaseImmagini & "/" & Squadra & "/Giocatori/" & idAnno & "_" & c(0) & ".jpg"
 					Dim gg As String = c(2).Trim
 					If gg.Length = 1 Then gg = "&nbsp;" & gg
 
@@ -3869,7 +3869,7 @@ Public Class wsStatistiche
 				Stringona &= "<table cellspacing=""0"" style=""width: 100%;"">"
 				For Each Giocatore As String In MarcatoriGenerali
 					Dim s() As String = Giocatore.Split(";")
-					Dim Path As String = PathBaseImmagini & "/" & Squadra & "/Giocatori/" & idAnno & "_" & s(0) & ".jpg?tag=" & Now.ToString.Replace(" ", "_")
+					Dim Path As String = PathBaseImmagini & "/" & Squadra & "/Giocatori/" & idAnno & "_" & s(0) & ".jpg"
 					Dim gg As String = s(2).Trim
 					If gg.Length = 1 Then gg = "&nbsp;" & gg
 
@@ -3887,7 +3887,7 @@ Public Class wsStatistiche
 				Stringona &= "<table cellspacing=""0"" style=""width: 100%;"">"
 				For Each Giocatore As String In Presenze
 					Dim s() As String = Giocatore.Split(";")
-					Dim Path As String = PathBaseImmagini & "/" & Squadra & "/Giocatori/" & idAnno & "_" & s(0) & ".jpg?tag=" & Now.ToString.Replace(" ", "_")
+					Dim Path As String = PathBaseImmagini & "/" & Squadra & "/Giocatori/" & idAnno & "_" & s(0) & ".jpg"
 					Dim gg As String = s(2).Trim
 					If gg.Length = 1 Then gg = "&nbsp;" & gg
 
@@ -3905,7 +3905,7 @@ Public Class wsStatistiche
 				Stringona &= "<table cellspacing=""0"" style=""width: 100%;"">"
 				For Each Squadra2 As String In SquadreIncontrate
 					Dim s() As String = Squadra2.Split(";")
-					Dim Imm2 As String = PathBaseImmagini & "/Avversari/" & s(0) & ".Jpg?tag=" & Now.ToString.Replace(" ", "_")
+					Dim Imm2 As String = PathBaseImmagini & "/Avversari/" & s(0) & ".Jpg"
 					Dim gg As String = s(2).Trim
 					If gg.Length = 1 Then gg = "&nbsp;" & gg
 
@@ -3924,7 +3924,7 @@ Public Class wsStatistiche
 				Stringona &= "<table cellspacing=""0"" style=""width: 100%;"">"
 				For Each Giocatore As String In MarcatoriTutte
 					Dim s() As String = Giocatore.Split(";")
-					Dim Path As String = PathBaseImmagini & "/" & Squadra & "/Giocatori/" & idAnno & "_" & s(0) & ".jpg?tag=" & Now.ToString.Replace(" ", "_")
+					Dim Path As String = PathBaseImmagini & "/" & Squadra & "/Giocatori/" & idAnno & "_" & s(0) & ".jpg"
 					Dim gg As String = s(2).Trim
 					If gg.Length = 1 Then gg = "&nbsp;" & gg
 
@@ -3942,7 +3942,7 @@ Public Class wsStatistiche
 				Stringona &= "<table cellspacing=""0"" style=""width: 100%;"">"
 				For Each Giocatore As String In PresenzeTutte
 					Dim s() As String = Giocatore.Split(";")
-					Dim Path As String = PathBaseImmagini & "/" & Squadra & "/Giocatori/" & idAnno & "_" & s(0) & ".jpg?tag=" & Now.ToString.Replace(" ", "_")
+					Dim Path As String = PathBaseImmagini & "/" & Squadra & "/Giocatori/" & idAnno & "_" & s(0) & ".jpg"
 					Dim gg As String = s(2).Trim
 					If gg.Length = 1 Then gg = "&nbsp;" & gg
 

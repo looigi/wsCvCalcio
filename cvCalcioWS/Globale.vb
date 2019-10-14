@@ -249,7 +249,7 @@
 					Ok = False
 				Else
 					If Not Rec.Eof Then
-						Dim PathArb As String = PathBaseImmagini & "/Arbitri/" & Rec("idArbitro").Value & ".jpg"
+						Dim PathArb As String = PathBaseImmagini & "/Arbitri/" & idAnno & "_" & Rec("idArbitro").Value & ".jpg"
 						Filone = Filone.Replace("***IMMAGINE ARB***", PathArb)
 						Filone = Filone.Replace("***ARBITRO***", Rec("Cognome").Value & " " & Rec("Nome").Value)
 					Else
@@ -270,7 +270,7 @@
 						Dirigenti.Append("<table style=""width: 99%; text-align: center;"">")
 
 						Do Until Rec.Eof
-							Dim Path As String = PathBaseImmagini & "/" & Squadra & "/Dirigenti/" & idAnno & "_" & Rec("idDirigente").Value & ".jpg?tag=" & Now.ToString.Replace(" ", "_")
+							Dim Path As String = PathBaseImmagini & "/" & Squadra & "/Dirigenti/" & idAnno & "_" & Rec("idDirigente").Value & ".jpg"
 
 							Dirigenti.Append("<tr>")
 							Dirigenti.Append("<td>")
@@ -306,7 +306,7 @@
 
 							Do Until Rec.Eof
 								Dim C As String = Rec("Cognome").Value & " " & Rec("Nome").Value & " (" & Rec("Ruolo").Value & ")"
-								Dim Path As String = PathBaseImmagini & "/" & Squadra & "/Giocatori/" & idAnno & "_" & Rec("idGiocatore").Value & ".jpg?tag=" & Now.ToString.Replace(" ", "_")
+								Dim Path As String = PathBaseImmagini & "/" & Squadra & "/Giocatori/" & idAnno & "_" & Rec("idGiocatore").Value & ".jpg"
 
 								Convocati.Append("<tr>")
 								Convocati.Append("<td>")
@@ -516,7 +516,7 @@
 									Rigori &= "<table style=""width: 99%; text-align: center;"">"
 									For Each s As String In Rigoristi
 										Dim c() As String = s.Split(";")
-										Dim Path2 As String = PathBaseImmagini & "/Giocatori/" & idAnno & "_" & c(6) & ".jpg?tag=" & Now.ToString.Replace(" ", "_")
+										Dim Path2 As String = PathBaseImmagini & "/Giocatori/" & idAnno & "_" & c(6) & ".jpg"
 
 										Rigori &= "<tr>"
 										Rigori &= "<td align=""left"">"
@@ -626,7 +626,7 @@
 										If m.Contains("Autorete") Then
 											Path = PathBaseImmagini & "/autorete.png"
 										Else
-											Path = PathBaseImmagini & "/" & Squadra & "/Giocatori/" & idAnno & "_" & Mm(2) & ".jpg?tag=" & Now.ToString.Replace(" ", "_")
+											Path = PathBaseImmagini & "/" & Squadra & "/Giocatori/" & idAnno & "_" & Mm(2) & ".jpg"
 										End If
 									End If
 
@@ -670,7 +670,7 @@
 										If Rec2("Giocatore").Value.Contains("Avversario") Then
 											Path = PathBaseImmScon
 										Else
-											Path = PathBaseImmagini & "/" & Squadra & "/Giocatori/" & idAnno & "_" & Rec2("idGiocatore").Value & ".jpg?tag=" & Now.ToString.Replace(" ", "_")
+											Path = PathBaseImmagini & "/" & Squadra & "/Giocatori/" & idAnno & "_" & Rec2("idGiocatore").Value & ".jpg"
 										End If
 
 										Eventi.Append("<tr>")

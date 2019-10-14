@@ -76,7 +76,7 @@ Public Class wsAllenamenti
 						"Left Join Categorie On Categorie.idCategoria=Giocatori.idCategoria2 And Categorie.idAnno=Giocatori.idAnno) " &
 						"Left Join Categorie As Cat3 On Cat3.idCategoria=Giocatori.idCategoria3 And Cat3.idAnno=Giocatori.idAnno) " &
 						"Left Join Categorie As Cat1 On Cat1.idCategoria=Giocatori.idCategoria And Cat1.idAnno=Giocatori.idAnno " &
-						"Where Giocatori.Eliminato='N' And Allenamenti.idAnno=" & idAnno & " And Allenamenti.idCategoria=" & idCategoria & " And Datella='" & Data & "'" &
+						"Where Giocatori.Eliminato='N' And Allenamenti.idAnno=" & idAnno & " And Allenamenti.idCategoria=" & idCategoria & " " &
 						"Order By Ruoli.idRuolo, Cognome, Nome"
 
 					Rec = LeggeQuery(Conn, Sql, Connessione)
