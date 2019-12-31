@@ -11,7 +11,7 @@ Public Class wsAvversari
 	<WebMethod()>
 	Public Function RitornaAvversari(Squadra As String, ByVal idAnno As String, Ricerca As String) As String
 		Dim Ritorno As String = ""
-		Dim Connessione As String = LeggeImpostazioniDiBase(Server.MapPath("."), Squadra)
+		Dim Connessione As String = LeggeImpostazioniDiBase(Server.MapPath("."), "")
 
 		If Connessione = "" Then
 			Ritorno = ErroreConnessioneNonValida
@@ -65,7 +65,7 @@ Public Class wsAvversari
 	<WebMethod()>
 	Public Function SalvaAvversario(Squadra As String, idAnno As String, idAvversario As String, idCampo As String, Avversario As String, Campo As String, Indirizzo As String, Coords As String) As String
 		Dim Ritorno As String = ""
-		Dim Connessione As String = LeggeImpostazioniDiBase(Server.MapPath("."), Squadra)
+		Dim Connessione As String = LeggeImpostazioniDiBase(Server.MapPath("."), "")
 
 		If Connessione = "" Then
 			Ritorno = ErroreConnessioneNonValida
@@ -164,7 +164,7 @@ Public Class wsAvversari
 	<WebMethod()>
 	Public Function EliminaAvversario(Squadra As String, ByVal idAnno As String, idAvversario As String) As String
 		Dim Ritorno As String = ""
-		Dim Connessione As String = LeggeImpostazioniDiBase(Server.MapPath("."), Squadra)
+		Dim Connessione As String = LeggeImpostazioniDiBase(Server.MapPath("."), "")
 
 		If Connessione = "" Then
 			Ritorno = ErroreConnessioneNonValida & ":" & Connessione

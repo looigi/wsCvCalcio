@@ -616,7 +616,7 @@ Public Class wsGenerale
 			If TypeOf (Conn) Is String Then
 				Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
 			Else
-				CreaHtmlPartita(Squadra, Conn, Connessione, idAnno, idPartita)
+				Ritorno = CreaHtmlPartita(Squadra, Conn, Connessione, idAnno, idPartita)
 			End If
 		End If
 

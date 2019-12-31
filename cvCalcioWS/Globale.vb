@@ -2,9 +2,9 @@
     Public Const ErroreConnessioneNonValida As String = "ERRORE: Stringa di connessione non valida"
     Public Const ErroreConnessioneDBNonValida As String = "ERRORE: Connessione al db non valida"
     Public Percorso As String
-    Public PercorsoSitoCV As String = "C:\inetpub\wwwroot\CVCalcio\App_Themes\Standard\Images\"
-    Public PercorsoSitoURLImmagini As String = "http://looigi.no-ip.biz:12345/CvCalcio/App_Themes/Standard/Images/"
-    Public StringaErrore As String = "ERROR: "
+	Public PercorsoSitoCV As String = "C:\GestioneCampionato\CalcioImages\" ' "C:\inetpub\wwwroot\CVCalcio\App_Themes\Standard\Images\"
+	Public PercorsoSitoURLImmagini As String = "http://loppa.duckdns.org:12345/MultiMedia/" ' "http://looigi.no-ip.biz:12345/CvCalcio/App_Themes/Standard/Images/"
+	Public StringaErrore As String = "ERROR: "
     Public RigaPari As Boolean = False
 
 	Public Function AggiungeRigoriEGoal(NomeLista As List(Of String), Rec As Object) As List(Of String)
@@ -70,11 +70,11 @@
 				Dim Provider As String = Connessioni.ProviderName
 				Dim connectionString As String = Connessioni.ConnectionString
 
-				If Nome = "MDBConnectionString" Then
+				If Nome = "SQLConnectionStringLOCALE" Then
 					Connessione = "Provider=" & Provider & ";" & connectionString
 					Connessione = Replace(Connessione, "*^*^*", Percorso & "\")
 					If Squadra <> "" Then
-						Connessione = Connessione.Replace("***NOME_DB***", "DB_" & Squadra)
+						Connessione = Connessione.Replace("***NOME_DB***", Squadra)
 					Else
 						Connessione = Connessione.Replace("***NOME_DB***", "Globale")
 					End If
@@ -128,19 +128,22 @@
 		Return Ritorno
 	End Function
 
-	Public Sub CreaHtmlPartita(Squadra As String, Conn As Object, Connessione As String, idAnno As String, idPartita As String)
+	Public Function CreaHtmlPartita(Squadra As String, Conn As Object, Connessione As String, idAnno As String, idPartita As String) As String
 		Dim Sql As String
 		Dim Rec As Object
 		Dim Rec2 As Object
 		Dim Ok As Boolean = True
 		Dim Pagina As StringBuilder = New StringBuilder
 		Dim gf As New GestioneFilesDirectory
-		Dim PathBaseImmagini As String = "http://looigi.no-ip.biz:12345/CVCalcio/App_Themes/Standard/Images"
-		Dim PathBaseImmScon As String = "http://looigi.no-ip.biz:12345/CVCalcio/App_Themes/Standard/Images/Sconosciuto.png"
+		Dim PathBaseImmagini As String = "http://loppa.duckdns.org:12345/MultiMedia" ' "http://looigi.no-ip.biz:12345/CVCalcio/App_Themes/Standard/Images"
+		Dim PathBaseImmScon As String = "http://loppa.duckdns.org:12345/MultiMedia/Sconosciuto.png" ' "http://looigi.no-ip.biz:12345/CVCalcio/App_Themes/Standard/Images/Sconosciuto.png"
+		Dim Ritorno As String = "*"
 
 		Dim Filone As String = gf.LeggeFileIntero(HttpContext.Current.Server.MapPath(".") & "\base_partita.txt")
 		gf.CreaDirectoryDaPercorso(HttpContext.Current.Server.MapPath(".") & "\Partite\" & Squadra & "\")
 		Dim NomeFileFinale As String = HttpContext.Current.Server.MapPath(".") & "\Partite\" & Squadra & "\" & idAnno & "_" & idPartita & ".html"
+
+		' Return NomeFileFinale
 
 		Filone = Filone.Replace("***SFONDO***", PathBaseImmagini & "/bg.jpg")
 
@@ -166,6 +169,7 @@
 		Rec = LeggeQuery(Conn, Sql, Connessione)
 		If TypeOf (Rec) Is String Then
 			Ok = False
+			Ritorno = "Problemi lettura generale"
 		Else
 			If Not Rec.Eof Then
 				Dim Meteo As String = "'" & MetteMaiuscoleDopoOgniSpazio(Rec("Tempo").Value) & "' Gradi: " & Rec("Gradi").Value & " Umidità: " & Rec("Umidita").Value & " Pressione: " & Rec("Pressione").Value
@@ -254,9 +258,10 @@
 				Rec = LeggeQuery(Conn, Sql, Connessione)
 				If TypeOf (Rec) Is String Then
 					Ok = False
+					Ritorno = "Problemi lettura arbitro"
 				Else
 					If Not Rec.Eof Then
-						Dim PathArb As String = PathBaseImmagini & "/Arbitri/" & idAnno & "_" & Rec("idArbitro").Value & ".jpg"
+						Dim PathArb As String = PathBaseImmagini & "/Arbitri/" & Rec("idArbitro").Value & ".jpg"
 						Filone = Filone.Replace("***IMMAGINE ARB***", PathArb)
 						Filone = Filone.Replace("***ARBITRO***", Rec("Cognome").Value & " " & Rec("Nome").Value)
 					Else
@@ -271,6 +276,7 @@
 					Rec = LeggeQuery(Conn, Sql, Connessione)
 					If TypeOf (Rec) Is String Then
 						Ok = False
+						Ritorno = "Problemi lettura dirigenti"
 					Else
 						Dim Dirigenti As New StringBuilder
 
@@ -306,6 +312,7 @@
 						Rec = LeggeQuery(Conn, Sql, Connessione)
 						If TypeOf (Rec) Is String Then
 							Ok = False
+							Ritorno = "Problemi lettura convocati"
 						Else
 							Dim Convocati As New StringBuilder
 
@@ -336,18 +343,19 @@
 							Filone = Filone.Replace("***CONVOCATI***", Convocati.ToString)
 
 							' Marcatori
-							Sql = "SELECT RisultatiAggiuntiviMarcatori.Minuto, Giocatori.NumeroMaglia, Giocatori.idGiocatore, Giocatori.Cognome, Giocatori.Nome, Ruoli.Descrizione As Ruolo, RisultatiAggiuntiviMarcatori.idTempo " &
+							Sql = "Select * From (SELECT RisultatiAggiuntiviMarcatori.Minuto, Giocatori.NumeroMaglia, Giocatori.idGiocatore, Giocatori.Cognome, Giocatori.Nome, Ruoli.Descrizione As Ruolo, RisultatiAggiuntiviMarcatori.idTempo " &
 									"FROM ((Partite INNER JOIN RisultatiAggiuntiviMarcatori ON Partite.idPartita = RisultatiAggiuntiviMarcatori.idPartita) " &
 									"INNER JOIN Giocatori ON (Partite.idAnno = Giocatori.idAnno) AND (RisultatiAggiuntiviMarcatori.idGiocatore = Giocatori.idGiocatore)) " &
 									"INNER JOIN Ruoli ON Giocatori.idRuolo = Ruoli.idRuolo " &
 									"Where Partite.idAnno=" & idAnno & " And Partite.idPartita=" & idPartita & " " &
-									"Order By idTempo, Minuto " &
 									"Union ALL " &
 									"SELECT RisultatiAggiuntiviMarcatori.Minuto, '', -1, 'Autorete', '', '' As Ruolo, RisultatiAggiuntiviMarcatori.idTempo FROM Partite INNER JOIN RisultatiAggiuntiviMarcatori ON Partite.idPartita = RisultatiAggiuntiviMarcatori.idPartita " &
-									"Where Partite.idAnno = " & idAnno & " And Partite.idPartita = " & idPartita & " And IdGiocatore = -1 Order By idTempo, Minuto"
+									"Where Partite.idAnno = " & idAnno & " And Partite.idPartita = " & idPartita & " And IdGiocatore = -1) A " &
+									"Order By idTempo, Minuto"
 							Rec = LeggeQuery(Conn, Sql, Connessione)
 							If TypeOf (Rec) Is String Then
 								Ok = False
+								Ritorno = "Problemi lettura marcatori: " & Sql
 							Else
 								Dim Marc() As String = {}
 								Dim QuantiGoal As Integer = 0
@@ -475,6 +483,7 @@
 								Rec2 = LeggeQuery(Conn, Sql, Connessione)
 								If TypeOf (Rec2) Is String Then
 									Ok = False
+									Ritorno = "Problemi lettura rigori"
 								Else
 									If Not Rec2.Eof Then
 										CiSonoRigori = True
@@ -737,7 +746,10 @@
 				End If
 			Else
 				Ok = False
+				Ritorno = "Nessun dato rilevato"
 			End If
 		End If
-	End Sub
+
+		Return Ritorno
+	End Function
 End Module

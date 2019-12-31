@@ -53,13 +53,13 @@ Public Class wsStatAllenamenti
 				End Select
 
 				Try
-					Sql = "Select B.idGiocatore, B.Cognome, B.Nome, B.Descrizione,  B.Presenze, B.Totale, B.Presenze/B.Totale*100 As Perc, B.NumeroMaglia From ( " &
+					Sql = "Select B.idGiocatore, B.Cognome, B.Nome, B.Descrizione,  B.Presenze, B.Totale, (Cast(B.Presenze As Numeric) / Cast(B.Totale As Numeric)) * 100 As Perc, B.NumeroMaglia From ( " &
 						"Select A.idGiocatore, A.Cognome, A.Nome, A.Descrizione,  A.Presenze, (SELECT Count(*) From Allenamenti " &
-						"Where idAnno=" & idAnno & " And idCategoria=" & idCategoria & " And Instr(Datella,'" & sMese & "')>0  And Progressivo=0) As Totale, A.NumeroMaglia From ( " &
+						"Where idAnno=" & idAnno & " And idCategoria=" & idCategoria & " And CharIndex(Datella,'" & sMese & "')>-1  And Progressivo=0) As Totale, A.NumeroMaglia From ( " &
 						"SELECT Giocatori.idGiocatore, Cognome, Nome, Ruoli.Descrizione,  Count(*) As Presenze, Giocatori.NumeroMaglia " &
 						"FROM (Allenamenti LEFT JOIN Giocatori ON (Allenamenti.idAnno = Giocatori.idAnno) AND (Allenamenti.idGiocatore=Giocatori.idGiocatore) AND (Allenamenti.idCategoria = Giocatori.idCategoria)) " &
 						"LEFT Join Ruoli On Giocatori.idRuolo=Ruoli.idRuolo " &
-						"WHERE Allenamenti.idCategoria=" & idCategoria & " And Allenamenti.idAnno=" & idAnno & " And Giocatori.idGiocatore Is Not Null And Instr(Datella,'" & sMese & "')>0 " &
+						"WHERE Allenamenti.idCategoria=" & idCategoria & " And Allenamenti.idAnno=" & idAnno & " And Giocatori.idGiocatore Is Not Null And CharIndex(Datella,'" & sMese & "')>-1 " &
 						"Group By Giocatori.idGiocatore, Cognome, Nome, Ruoli.Descrizione, Giocatori.NumeroMaglia " &
 						") A) B " &
 						"Order By 2"
@@ -73,13 +73,15 @@ Public Class wsStatAllenamenti
 						Else
 							Ritorno = ""
 							Do Until Rec.Eof
+								Dim perc As String = CInt(Rec("Perc").Value.ToString.Trim)
+
 								Ritorno &= Rec("idGiocatore").Value.ToString & ";" &
 									Rec("Cognome").Value.ToString.Trim & ";" &
 									Rec("Nome").Value.ToString.Trim & ";" &
 									Rec("Descrizione").Value.ToString.Trim & ";" &
 									Rec("Presenze").Value.ToString.Trim & ";" &
 									Rec("Totale").Value.ToString.Trim & ";" &
-									Rec("Perc").Value.ToString.Trim & ";" &
+									perc & ";" &
 									Rec("NumeroMaglia").Value.ToString.Trim & ";" &
 									"§"
 								Rec.MoveNext()

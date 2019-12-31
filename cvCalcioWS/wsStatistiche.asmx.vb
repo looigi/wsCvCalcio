@@ -1106,9 +1106,10 @@ Public Class wsStatistiche
 				Dim descAnno As String = ""
 				Dim nomeSquadra As String = ""
 
-				Dim PathBaseImmagini As String = "http://looigi.no-ip.biz:12345/CVCalcio/App_Themes/Standard/Images"
-				Dim PathBaseImmScon As String = "http://looigi.no-ip.biz:12345/CVCalcio/App_Themes/Standard/Images/Sconosciuto.png"
-				Dim PathImmaginiPartite As String = "C:\inetpub\wwwroot\CVCalcio\App_Themes\Standard\Images\" & Squadra & "\Partite\"
+				Dim PathBaseImmagini As String = "http://loppa.duckdns.org:12345/MultiMedia" ' "http://looigi.no-ip.biz:12345/CVCalcio/App_Themes/Standard/Images"
+				Dim PathBaseImmScon As String = "http://loppa.duckdns.org:12345/MultiMedia/Sconosciuto.png" ' "http://looigi.no-ip.biz:12345/CVCalcio/App_Themes/Standard/Images/Sconosciuto.png"
+				Dim PathImmaginiPartite As String = "C:\GestioneCampionato\CalcioImages\" & Squadra & "\Partite\" ' "C:\inetpub\wwwroot\CVCalcio\App_Themes\Standard\Images\" & Squadra & "\Partite\"
+				Dim pathImmagini As String = "http://loppa.duckdns.org:12345/MultiMedia/"
 
 				Sql = "SELECT * From Anni Where idAnno=" & idAnno
 				Try
@@ -2138,7 +2139,7 @@ Public Class wsStatistiche
 									Stringozza &= "</tr>"
 									Stringozza &= "<tr>"
 									Stringozza &= "<td style=""text-align: center; background-color: #ccc; margin: 3px; width: 55px;""> "
-									Stringozza &= "<img src=""http://looigi.no-ip.biz:12345/CVCalcio/App_Themes/Standard/Images/icona_CERCA.png"" "
+									Stringozza &= "<img src=""" & pathImmagini & "icona_CERCA.png"" "
 									Stringozza &= "style=""width: 50px; height: 50px; cursor: pointer;"""
 									Stringozza &= "onclick=""VisualizzaPartita('" & idAnno & "_" & Rec("idPartita").Value & "');"" "
 									Stringozza &= "title=""Visualizza dettaglio partita " & Rec("idPartita").Value.ToString.Trim & """ /> "
@@ -2146,7 +2147,7 @@ Public Class wsStatistiche
 										Dim sFiles As String = ""
 										For ii As Integer = 1 To qFiles
 											Dim nomeF As String = gf.TornaNomeFileDaPath(Filetti(ii))
-											nomeF = "http://looigi.no-ip.biz:12345/CVCalcio/App_Themes/Standard/Images/" & Squadra & "/Partite/" & Rec("idPartita").Value.ToString.Trim & "/" & nomeF
+											nomeF = pathImmagini & Squadra & "/Partite/" & Rec("idPartita").Value.ToString.Trim & "/" & nomeF
 											sFiles &= nomeF & "§"
 										Next
 										If sFiles <> "" Then
@@ -2154,7 +2155,7 @@ Public Class wsStatistiche
 										End If
 
 										Stringozza &= "<hr />"
-										Stringozza &= "<img src=""http://looigi.no-ip.biz:12345/CVCalcio/App_Themes/Standard/Images/Icone/visualizzato_tondo.png"" "
+										Stringozza &= "<img src=""" & pathImmagini & "Icone/visualizzato_tondo.png"" "
 										Stringozza &= "style=""width: 50px; height: 50px; cursor: pointer;"""
 										Stringozza &= "onclick=""VisualizzaImmagini('" & sFiles & "');"" "
 										Stringozza &= "title=""Visualizza multimedia della partita " & Rec("idPartita").Value.ToString.Trim & """ /> "
@@ -2230,8 +2231,8 @@ Public Class wsStatistiche
 									If Rec("Casa").Value = "S" Then
 										Casa = Rec("NomeSquadra").Value
 										Fuori = Rec("Descrizione").Value
-										ImmCasa = "<td style =""text-align: center;""><img src=""" & Imm1 & """ style=""width: 55px; height: 55px; border: 1px solid #999;"" onerror=""this.src='http://looigi.no-ip.biz:12345/CVCalcio/App_Themes/Standard/Images/Sconosciuto.png'""  /></td>"
-										ImmFuori = "<td style =""text-align: center;""><img src=""" & Imm2 & """ style=""width: 55px; height: 55px; border: 1px solid #999;"" onerror=""this.src='http://looigi.no-ip.biz:12345/CVCalcio/App_Themes/Standard/Images/Sconosciuto.png'""  /></td>"
+										ImmCasa = "<td style =""text-align: center;""><img src=""" & Imm1 & """ style=""width: 55px; height: 55px; border: 1px solid #999;"" onerror=""this.src='" & pathImmagini & "Sconosciuto.png'""  /></td>"
+										ImmFuori = "<td style =""text-align: center;""><img src=""" & Imm2 & """ style=""width: 55px; height: 55px; border: 1px solid #999;"" onerror=""this.src='" & pathImmagini & "Sconosciuto.png'""  /></td>"
 										GoalCasa = Rec("Goal").Value
 										GoalFuori = Rec("GoalAvv").Value
 
@@ -2240,8 +2241,8 @@ Public Class wsStatistiche
 									Else
 										Fuori = Rec("NomeSquadra").Value
 										Casa = Rec("Descrizione").Value
-										ImmCasa = "<td style =""text-align: center;""><img src=""" & Imm2 & """ style=""width: 55px; height: 55px; border: 1px solid #999;"" onerror=""this.src='http://looigi.no-ip.biz:12345/CVCalcio/App_Themes/Standard/Images/Sconosciuto.png'""  /></td>"
-										ImmFuori = "<td style =""text-align: center;""><img src=""" & Imm1 & """ style=""width: 55px; height: 55px; border: 1px solid #999;"" onerror=""this.src='http://looigi.no-ip.biz:12345/CVCalcio/App_Themes/Standard/Images/Sconosciuto.png'""  /></td>"
+										ImmCasa = "<td style =""text-align: center;""><img src=""" & Imm2 & """ style=""width: 55px; height: 55px; border: 1px solid #999;"" onerror=""this.src='" & pathImmagini & "Sconosciuto.png'""  /></td>"
+										ImmFuori = "<td style =""text-align: center;""><img src=""" & Imm1 & """ style=""width: 55px; height: 55px; border: 1px solid #999;"" onerror=""this.src='" & pathImmagini & "Sconosciuto.png'""  /></td>"
 										GoalCasa = Rec("GoalAvv").Value
 										GoalFuori = Rec("Goal").Value
 
@@ -3019,13 +3020,13 @@ Public Class wsStatistiche
 							If Rec("Casa").Value = "S" Then
 								Casa = Rec("NomeSquadra").Value
 								Fuori = Rec("Descrizione").Value
-								ImmCasa = "<td style ="" border: 1px solid #999; text-align: center;""><img src=""" & Imm1 & """ style=""width: 60px; height: 60px;"" onerror=""this.src='http://looigi.no-ip.biz:12345/CVCalcio/App_Themes/Standard/Images/Sconosciuto.png'""  /></td>"
-								ImmFuori = "<td style ="" border: 1px solid #999; text-align: center;""><img src=""" & Imm2 & """ style=""width: 60px; height: 60px;"" onerror=""this.src='http://looigi.no-ip.biz:12345/CVCalcio/App_Themes/Standard/Images/Sconosciuto.png'""  /></td>"
+								ImmCasa = "<td style ="" border: 1px solid #999; text-align: center;""><img src=""" & Imm1 & """ style=""width: 60px; height: 60px;"" onerror=""this.src='" & Pathimmagini & "Sconosciuto.png'""  /></td>"
+								ImmFuori = "<td style ="" border: 1px solid #999; text-align: center;""><img src=""" & Imm2 & """ style=""width: 60px; height: 60px;"" onerror=""this.src='" & PathImmagini & "Sconosciuto.png'""  /></td>"
 							Else
 								Fuori = Rec("NomeSquadra").Value
 								Casa = Rec("Descrizione").Value
-								ImmCasa = "<td style ="" border: 1px solid #999; text-align: center;""><img src=""" & Imm2 & """ style=""width: 60px; height: 60px;"" onerror=""this.src='http://looigi.no-ip.biz:12345/CVCalcio/App_Themes/Standard/Images/Sconosciuto.png'""  /></td>"
-								ImmFuori = "<td style ="" border: 1px solid #999; text-align: center;""><img src=""" & Imm1 & """ style=""width: 60px; height: 60px;"" onerror=""this.src='http://looigi.no-ip.biz:12345/CVCalcio/App_Themes/Standard/Images/Sconosciuto.png'""  /></td>"
+								ImmCasa = "<td style ="" border: 1px solid #999; text-align: center;""><img src=""" & Imm2 & """ style=""width: 60px; height: 60px;"" onerror=""this.src='" & pathImmagini & "Sconosciuto.png'""  /></td>"
+								ImmFuori = "<td style ="" border: 1px solid #999; text-align: center;""><img src=""" & Imm1 & """ style=""width: 60px; height: 60px;"" onerror=""this.src='" & pathImmagini & "Sconosciuto.png'""  /></td>"
 							End If
 
 							sPartitaConPiuGoal &= "<table cellspacing=""0"" style =""width: 100%; border: 1px solid #999;"">"
@@ -3094,13 +3095,13 @@ Public Class wsStatistiche
 							If Rec("Casa").Value = "S" Then
 								Casa = Rec("NomeSquadra").Value
 								Fuori = Rec("Descrizione").Value
-								ImmCasa = "<td style ="" border: 1px solid #999; text-align: center;""><img src=""" & Imm1 & """ style=""width: 60px; height: 60px;"" onerror=""this.src='http://looigi.no-ip.biz:12345/CVCalcio/App_Themes/Standard/Images/Sconosciuto.png'""  /></td>"
-								ImmFuori = "<td style ="" border: 1px solid #999; text-align: center;""><img src=""" & Imm2 & """ style=""width: 60px; height: 60px;"" onerror=""this.src='http://looigi.no-ip.biz:12345/CVCalcio/App_Themes/Standard/Images/Sconosciuto.png'""  /></td>"
+								ImmCasa = "<td style ="" border: 1px solid #999; text-align: center;""><img src=""" & Imm1 & """ style=""width: 60px; height: 60px;"" onerror=""this.src='" & pathImmagini & "Sconosciuto.png'""  /></td>"
+								ImmFuori = "<td style ="" border: 1px solid #999; text-align: center;""><img src=""" & Imm2 & """ style=""width: 60px; height: 60px;"" onerror=""this.src='" & pathImmagini & "Sconosciuto.png'""  /></td>"
 							Else
 								Fuori = Rec("NomeSquadra").Value
 								Casa = Rec("Descrizione").Value
-								ImmCasa = "<td style ="" border: 1px solid #999;""><img src=""" & Imm2 & """ style=""width: 60px; height: 60px;"" onerror=""this.src='http://looigi.no-ip.biz:12345/CVCalcio/App_Themes/Standard/Images/Sconosciuto.png'""  /></td>"
-								ImmFuori = "<td style ="" border: 1px solid #999;""><img src=""" & Imm1 & """ style=""width: 60px; height: 60px;"" onerror=""this.src='http://looigi.no-ip.biz:12345/CVCalcio/App_Themes/Standard/Images/Sconosciuto.png'""  /></td>"
+								ImmCasa = "<td style ="" border: 1px solid #999;""><img src=""" & Imm2 & """ style=""width: 60px; height: 60px;"" onerror=""this.src='" & pathImmagini & "Sconosciuto.png'""  /></td>"
+								ImmFuori = "<td style ="" border: 1px solid #999;""><img src=""" & Imm1 & """ style=""width: 60px; height: 60px;"" onerror=""this.src='" & pathImmagini & "Sconosciuto.png'""  /></td>"
 							End If
 
 							sPartitaConMenoGoal &= "<table cellspacing=""0"" style =""width: 100%; border: 1px solid #999;"">"
@@ -3523,7 +3524,7 @@ Public Class wsStatistiche
 
 					Stringona &= "<tr " & RitornaColoreSfondo() & ">"
 					Stringona &= "<td>" & gg.ToString & "</td>"
-					Stringona &= "<td><img src=""" & Path & """ style=""width: 50px; height: 50px;"" onerror=""this.src='http://looigi.no-ip.biz:12345/CVCalcio/App_Themes/Standard/Images/Sconosciuto.png'"" /></td>"
+					Stringona &= "<td><img src=""" & Path & """ style=""width: 50px; height: 50px;"" onerror=""this.src='" & pathImmagini & "Sconosciuto.png'"" /></td>"
 					Stringona &= "<td>" & c(1) & "</td>"
 					Stringona &= "</tr>"
 				Next
@@ -3555,7 +3556,7 @@ Public Class wsStatistiche
 
 					Stringona &= "<tr " & RitornaColoreSfondo() & ">"
 					Stringona &= "<td>" & gg & "</td>"
-					Stringona &= "<td><img src=""" & Path & """ style=""width: 50px; height: 50px;"" onerror=""this.src='http://looigi.no-ip.biz:12345/CVCalcio/App_Themes/Standard/Images/Sconosciuto.png'"" /></td>"
+					Stringona &= "<td><img src=""" & Path & """ style=""width: 50px; height: 50px;"" onerror=""this.src='" & pathImmagini & "Sconosciuto.png'"" /></td>"
 					Stringona &= "<td>" & c(1) & "</td>"
 					Stringona &= "</tr>"
 				Next
@@ -3587,7 +3588,7 @@ Public Class wsStatistiche
 
 					Stringona &= "<tr " & RitornaColoreSfondo() & ">"
 					Stringona &= "<td>" & gg & "</td>"
-					Stringona &= "<td><img src=""" & Path & """ style=""width: 50px; height: 50px;"" onerror=""this.src='http://looigi.no-ip.biz:12345/CVCalcio/App_Themes/Standard/Images/Sconosciuto.png'"" /></td>"
+					Stringona &= "<td><img src=""" & Path & """ style=""width: 50px; height: 50px;"" onerror=""this.src='" & pathImmagini & "Sconosciuto.png'"" /></td>"
 					Stringona &= "<td>" & c(1) & "</td>"
 					Stringona &= "</tr>"
 				Next
@@ -3617,7 +3618,7 @@ Public Class wsStatistiche
 
 					Stringona &= "<tr " & RitornaColoreSfondo() & ">"
 					Stringona &= "<td>" & gg & "</td>"
-					Stringona &= "<td><img src=""" & Path & """ style=""width: 50px; height: 50px;"" onerror=""this.src='http://looigi.no-ip.biz:12345/CVCalcio/App_Themes/Standard/Images/Sconosciuto.png'"" /></td>"
+					Stringona &= "<td><img src=""" & Path & """ style=""width: 50px; height: 50px;"" onerror=""this.src='" & pathImmagini & "Sconosciuto.png'"" /></td>"
 					Stringona &= "<td>" & c(1) & "</td>"
 					Stringona &= "</tr>"
 				Next
@@ -3647,7 +3648,7 @@ Public Class wsStatistiche
 
 					Stringona &= "<tr " & RitornaColoreSfondo() & ">"
 					Stringona &= "<td>" & gg & "</td>"
-					Stringona &= "<td><img src=""" & Path & """ style=""width: 50px; height: 50px;"" onerror=""this.src='http://looigi.no-ip.biz:12345/CVCalcio/App_Themes/Standard/Images/Sconosciuto.png'"" /></td>"
+					Stringona &= "<td><img src=""" & Path & """ style=""width: 50px; height: 50px;"" onerror=""this.src='" & pathImmagini & "Sconosciuto.png'"" /></td>"
 					Stringona &= "<td>" & c(1) & "</td>"
 					Stringona &= "</tr>"
 				Next
@@ -3677,7 +3678,7 @@ Public Class wsStatistiche
 
 					Stringona &= "<tr " & RitornaColoreSfondo() & ">"
 					Stringona &= "<td>" & gg & "</td>"
-					Stringona &= "<td><img src=""" & Path & """ style=""width: 50px; height: 50px;"" onerror=""this.src='http://looigi.no-ip.biz:12345/CVCalcio/App_Themes/Standard/Images/Sconosciuto.png'"" /></td>"
+					Stringona &= "<td><img src=""" & Path & """ style=""width: 50px; height: 50px;"" onerror=""this.src='" & pathImmagini & "Sconosciuto.png'"" /></td>"
 					Stringona &= "<td>" & c(1) & "</td>"
 					Stringona &= "</tr>"
 				Next
@@ -3707,7 +3708,7 @@ Public Class wsStatistiche
 
 					Stringona &= "<tr " & RitornaColoreSfondo() & ">"
 					Stringona &= "<td>" & gg & "</td>"
-					Stringona &= "<td><img src=""" & Path & """ style=""width: 50px; height: 50px;"" onerror=""this.src='http://looigi.no-ip.biz:12345/CVCalcio/App_Themes/Standard/Images/Sconosciuto.png'"" /></td>"
+					Stringona &= "<td><img src=""" & Path & """ style=""width: 50px; height: 50px;"" onerror=""this.src='" & pathImmagini & "Sconosciuto.png'"" /></td>"
 					Stringona &= "<td>" & c(1) & "</td>"
 					Stringona &= "</tr>"
 				Next
@@ -3737,7 +3738,7 @@ Public Class wsStatistiche
 
 					Stringona &= "<tr " & RitornaColoreSfondo() & ">"
 					Stringona &= "<td>" & gg & "</td>"
-					Stringona &= "<td><img src=""" & Path & """ style=""width: 50px; height: 50px;"" onerror=""this.src='http://looigi.no-ip.biz:12345/CVCalcio/App_Themes/Standard/Images/Sconosciuto.png'"" /></td>"
+					Stringona &= "<td><img src=""" & Path & """ style=""width: 50px; height: 50px;"" onerror=""this.src='" & pathImmagini & "Sconosciuto.png'"" /></td>"
 					Stringona &= "<td>" & c(1) & "</td>"
 					Stringona &= "</tr>"
 				Next
@@ -3767,7 +3768,7 @@ Public Class wsStatistiche
 
 					Stringona &= "<tr " & RitornaColoreSfondo() & ">"
 					Stringona &= "<td>" & gg & "</td>"
-					Stringona &= "<td><img src=""" & Path & """ style=""width: 50px; height: 50px;"" onerror=""this.src='http://looigi.no-ip.biz:12345/CVCalcio/App_Themes/Standard/Images/Sconosciuto.png'"" /></td>"
+					Stringona &= "<td><img src=""" & Path & """ style=""width: 50px; height: 50px;"" onerror=""this.src='" & pathImmagini & "Sconosciuto.png'"" /></td>"
 					Stringona &= "<td>" & c(1) & "</td>"
 					Stringona &= "</tr>"
 				Next
@@ -3797,7 +3798,7 @@ Public Class wsStatistiche
 
 					Stringona &= "<tr " & RitornaColoreSfondo() & ">"
 					Stringona &= "<td>" & gg & "</td>"
-					Stringona &= "<td><img src=""" & Path & """ style=""width: 50px; height: 50px;"" onerror=""this.src='http://looigi.no-ip.biz:12345/CVCalcio/App_Themes/Standard/Images/Sconosciuto.png'"" /></td>"
+					Stringona &= "<td><img src=""" & Path & """ style=""width: 50px; height: 50px;"" onerror=""this.src='" & pathImmagini & "Sconosciuto.png'"" /></td>"
 					Stringona &= "<td>" & c(1) & "</td>"
 					Stringona &= "</tr>"
 				Next
@@ -3827,7 +3828,7 @@ Public Class wsStatistiche
 
 					Stringona &= "<tr " & RitornaColoreSfondo() & ">"
 					Stringona &= "<td>" & gg & "</td>"
-					Stringona &= "<td><img src=""" & Path & """ style=""width: 50px; height: 50px;"" onerror=""this.src='http://looigi.no-ip.biz:12345/CVCalcio/App_Themes/Standard/Images/Sconosciuto.png'"" /></td>"
+					Stringona &= "<td><img src=""" & Path & """ style=""width: 50px; height: 50px;"" onerror=""this.src='" & pathImmagini & "Sconosciuto.png'"" /></td>"
 					Stringona &= "<td>" & c(1) & "</td>"
 					Stringona &= "</tr>"
 				Next
@@ -3857,7 +3858,7 @@ Public Class wsStatistiche
 
 					Stringona &= "<tr " & RitornaColoreSfondo() & ">"
 					Stringona &= "<td>" & gg & "</td>"
-					Stringona &= "<td><img src=""" & Path & """ style=""width: 50px; height: 50px;"" onerror=""this.src='http://looigi.no-ip.biz:12345/CVCalcio/App_Themes/Standard/Images/Sconosciuto.png'"" /></td>"
+					Stringona &= "<td><img src=""" & Path & """ style=""width: 50px; height: 50px;"" onerror=""this.src='" & pathImmagini & "Sconosciuto.png'"" /></td>"
 					Stringona &= "<td>" & c(1) & "</td>"
 					Stringona &= "</tr>"
 				Next
@@ -3875,7 +3876,7 @@ Public Class wsStatistiche
 
 					Stringona &= "<tr " & RitornaColoreSfondo() & ">"
 					Stringona &= "<td><span class=""testo nero"" style=""font-size: 16px;"">" & gg & "</span></td>"
-					Stringona &= "<td><img src=""" & Path & """ style=""width: 60px; height: 60px;"" onerror=""this.src='http://looigi.no-ip.biz:12345/CVCalcio/App_Themes/Standard/Images/Sconosciuto.png'""  /></td>"
+					Stringona &= "<td><img src=""" & Path & """ style=""width: 60px; height: 60px;"" onerror=""this.src='" & pathImmagini & "Sconosciuto.png'""  /></td>"
 					Stringona &= "<td><span class=""testo nero"" style=""font-size: 16px;"">" & s(1) & "</span></td>"
 					Stringona &= "</tr>"
 				Next
@@ -3893,7 +3894,7 @@ Public Class wsStatistiche
 
 					Stringona &= "<tr " & RitornaColoreSfondo() & ">"
 					Stringona &= "<td><span class=""testo nero"" style=""font-size: 16px;"">" & gg & "</span></td>"
-					Stringona &= "<td><img src=""" & Path & """ style=""width: 60px; height: 60px;"" onerror=""this.src='http://looigi.no-ip.biz:12345/CVCalcio/App_Themes/Standard/Images/Sconosciuto.png'""  /></td>"
+					Stringona &= "<td><img src=""" & Path & """ style=""width: 60px; height: 60px;"" onerror=""this.src='" & pathImmagini & "Sconosciuto.png'""  /></td>"
 					Stringona &= "<td><span class=""testo nero"" style=""font-size: 16px;"">" & s(1) & "</span></td>"
 					Stringona &= "</tr>"
 				Next
@@ -3911,7 +3912,7 @@ Public Class wsStatistiche
 
 					Stringona &= "<tr " & RitornaColoreSfondo() & ">"
 					Stringona &= "<td><span class=""testo nero"" style=""font-size: 16px;"">" & gg & "</span></td>"
-					Stringona &= "<td><img src=""" & Imm2 & """ style=""width: 60px; height: 60px;"" onerror=""this.src='http://looigi.no-ip.biz:12345/CVCalcio/App_Themes/Standard/Images/Sconosciuto.png'""  /></td>"
+					Stringona &= "<td><img src=""" & Imm2 & """ style=""width: 60px; height: 60px;"" onerror=""this.src='" & pathImmagini & "Sconosciuto.png'""  /></td>"
 					Stringona &= "<td><span class=""testo nero"" style=""font-size: 16px;"">" & s(1) & "</span></td>"
 					Stringona &= "</tr>"
 				Next
@@ -3930,7 +3931,7 @@ Public Class wsStatistiche
 
 					Stringona &= "<tr " & RitornaColoreSfondo() & ">"
 					Stringona &= "<td><span class=""testo nero"" style=""font-size: 16px;"">" & gg & "</span></td>"
-					Stringona &= "<td><img src=""" & Path & """ style=""width: 60px; height: 60px;"" onerror=""this.src='http://looigi.no-ip.biz:12345/CVCalcio/App_Themes/Standard/Images/Sconosciuto.png'""  /></td>"
+					Stringona &= "<td><img src=""" & Path & """ style=""width: 60px; height: 60px;"" onerror=""this.src='" & pathImmagini & "Sconosciuto.png'""  /></td>"
 					Stringona &= "<td><span class=""testo nero"" style=""font-size: 16px;"">" & s(1) & "</span></td>"
 					Stringona &= "</tr>"
 				Next
@@ -3948,7 +3949,7 @@ Public Class wsStatistiche
 
 					Stringona &= "<tr " & RitornaColoreSfondo() & ">"
 					Stringona &= "<td><span class=""testo nero"" style=""font-size: 16px;"">" & gg & "</span></td>"
-					Stringona &= "<td><img src=""" & Path & """ style=""width: 60px; height: 60px;"" onerror=""this.src='http://looigi.no-ip.biz:12345/CVCalcio/App_Themes/Standard/Images/Sconosciuto.png'""  /></td>"
+					Stringona &= "<td><img src=""" & Path & """ style=""width: 60px; height: 60px;"" onerror=""this.src='" & pathImmagini & "Sconosciuto.png'""  /></td>"
 					Stringona &= "<td><span class=""testo nero"" style=""font-size: 16px;"">" & s(1) & "</span></td>"
 					Stringona &= "</tr>"
 				Next
