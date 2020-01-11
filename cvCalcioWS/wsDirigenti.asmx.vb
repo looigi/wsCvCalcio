@@ -45,7 +45,7 @@ Public Class wsDirigenti
 					End Try
 				Else
 					idDir = idDirigente
-					Sql = "Delete * From Dirigenti Where idAnno=" & idAnno & " And idDirigente=" & idDir
+					Sql = "delete from Dirigenti Where idAnno=" & idAnno & " And idDirigente=" & idDir
 					Ritorno = EsegueSql(Conn, Sql, Connessione)
 				End If
 

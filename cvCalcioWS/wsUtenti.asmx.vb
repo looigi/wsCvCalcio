@@ -30,7 +30,7 @@ Public Class wsUtenti
 						"Password, EMail, Categorie.idCategoria As idCat1, idTipologia, Categorie.Descrizione As Descr1 " &
 						"FROM (UtentiMobile " &
 						"Left Join Categorie On UtentiMobile.idCategoria=Categorie.idCategoria And UtentiMobile.idAnno=Categorie.idAnno) " &
-						"Where Utente='" & Utente.Replace("'", "''") & "'"
+						"Where Utente='" & Utente.Replace("'", "''") & "' And UtentiMobile.idAnno=" & idAnno
 					Rec = LeggeQuery(Conn, Sql, Connessione)
 					If TypeOf (Rec) Is String Then
 						Ritorno = Rec

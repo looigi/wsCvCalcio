@@ -35,25 +35,25 @@
 		Dim Ritorno As String
 		Dim Sql As String
 
-		Sql = "Delete * From Anni Where idAnno=" & idAnno
+		Sql = "delete from Anni Where idAnno=" & idAnno
 		Ritorno = EsegueSql(Conn, Sql, Connessione)
 
-		Sql = "Delete * From UtentiMobile Where idAnno=" & idAnno
+		Sql = "delete from UtentiMobile Where idAnno=" & idAnno
 		Ritorno = EsegueSql(Conn, Sql, Connessione)
 
-		Sql = "Delete * From Categorie Where idAnno=" & idAnno
+		Sql = "delete from Categorie Where idAnno=" & idAnno
 		Ritorno = EsegueSql(Conn, Sql, Connessione)
 
-		Sql = "Delete * From Allenatori Where idAnno=" & idAnno
+		Sql = "delete from Allenatori Where idAnno=" & idAnno
 		Ritorno = EsegueSql(Conn, Sql, Connessione)
 
-		Sql = "Delete * From Dirigenti Where idAnno=" & idAnno
+		Sql = "delete from Dirigenti Where idAnno=" & idAnno
 		Ritorno = EsegueSql(Conn, Sql, Connessione)
 
-		Sql = "Delete * From Giocatori Where idAnno=" & idAnno
+		Sql = "delete from Giocatori Where idAnno=" & idAnno
 		Ritorno = EsegueSql(Conn, Sql, Connessione)
 
-		Sql = "Delete * From Arbitri Where idAnno=" & idAnno
+		Sql = "delete from Arbitri Where idAnno=" & idAnno
 		Ritorno = EsegueSql(Conn, Sql, Connessione)
 	End Sub
 

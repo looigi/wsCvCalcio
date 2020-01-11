@@ -119,12 +119,31 @@ Public Class wsGiocatori
 						Ritorno = StringaErrore & " " & ex.Message
 					End Try
 				Else
+					Sql = "SELECT * FROM Giocatori Where idAnno=" & idAnno & " And idGiocatore=" & idGiocatore
+					Rec = LeggeQuery(Conn, Sql, Connessione)
+					If Not Rec.Eof Then
+						Dim conta As Integer = 0
+
+						Do While Ritorno.Contains(StringaErrore) Or Ritorno = ""
+							Try
+								Sql = "Delete  From Giocatori Where idAnno=" & idAnno & " And idGiocatore=" & idGiocatore
+								Ritorno = EsegueSql(Conn, Sql, Connessione)
+							Catch ex As Exception
+								Ritorno = StringaErrore & " " & ex.Message
+							End Try
+							conta += 1
+							If (conta = 10) Then
+								Ritorno = StringaErrore & " Impossibile modificare il giocatore"
+								Exit Do
+							End If
+						Loop
+					End If
+					Rec.Close
 					idGioc = idGiocatore
-					Sql = "Delete * From Giocatori Where idAnno=" & idAnno & " And idGiocatore=" & idGioc
-					Ritorno = EsegueSql(Conn, Sql, Connessione)
 				End If
 
-				Sql = "Insert Into Giocatori Values (" &
+				If Ritorno = "" Or  Ritorno = "*" Then
+					Sql = "Insert Into Giocatori Values (" &
 					" " & idAnno & ", " &
 					" " & idGioc & ", " &
 					" " & idCategoria & ", " &
@@ -148,7 +167,8 @@ Public Class wsGiocatori
 					"'" & NumeroMaglia.Replace("'", "''") & "', " &
 					" " & idCategoria3 & " " &
 					")"
-				Ritorno = EsegueSql(Conn, Sql, Connessione)
+					Ritorno = EsegueSql(Conn, Sql, Connessione)
+				End If
 
 				Conn.Close()
 			End If

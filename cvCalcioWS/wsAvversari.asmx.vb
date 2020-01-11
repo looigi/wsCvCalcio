@@ -99,7 +99,7 @@ Public Class wsAvversari
 					End Try
 				Else
 					idAvv = idAvversario
-					Sql = "Delete * From SquadreAvversarie Where idAvversario=" & idAvv
+					Sql = "delete from SquadreAvversarie Where idAvversario=" & idAvv
 					Ritorno = EsegueSql(Conn, Sql, Connessione)
 				End If
 
@@ -122,7 +122,7 @@ Public Class wsAvversari
 					End Try
 				Else
 					idCam = idCampo
-					Sql = "Delete * From CampiAvversari Where idCampo=" & idCam
+					Sql = "delete from CampiAvversari Where idCampo=" & idCam
 					Ritorno = EsegueSql(Conn, Sql, Connessione)
 				End If
 
@@ -142,7 +142,7 @@ Public Class wsAvversari
 					")"
 				Ritorno = EsegueSql(Conn, Sql, Connessione)
 
-				Sql = "Delete * From AvversariCoord Where idAvversario=" & idAvv
+				Sql = "delete from AvversariCoord Where idAvversario=" & idAvv
 				Ritorno = EsegueSql(Conn, Sql, Connessione)
 
 				Dim cc() As String = Coords.Split(";")

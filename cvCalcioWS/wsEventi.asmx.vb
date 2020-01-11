@@ -44,7 +44,7 @@ Public Class wsEventi
 					End Try
 				Else
 					idEve = idEvento
-					Sql = "Delete * From Eventi Where idEvento=" & idEve
+					Sql = "delete from Eventi Where idEvento=" & idEve
 					Ritorno = EsegueSql(Conn, Sql, Connessione)
 				End If
 

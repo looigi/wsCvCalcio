@@ -45,7 +45,7 @@ Public Class wsAllenatori
 					End Try
 				Else
 					idAll = idAllenatore
-					Sql = "Delete * From Allenatori Where idAnno=" & idAnno & " And idAllenatore=" & idAll
+					Sql = "delete from Allenatori Where idAnno=" & idAnno & " And idAllenatore=" & idAll
 					Ritorno = EsegueSql(Conn, Sql, Connessione)
 				End If
 

@@ -45,7 +45,7 @@ Public Class wsArbitri
 					End Try
 				Else
 					idDir = idArbitro
-					Sql = "Delete * From Arbitri Where idAnno=" & idAnno & " And idArbitro=" & idDir
+					Sql = "delete from Arbitri Where idAnno=" & idAnno & " And idArbitro=" & idDir
 					Ritorno = EsegueSql(Conn, Sql, Connessione)
 				End If
 

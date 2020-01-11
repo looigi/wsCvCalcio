@@ -152,7 +152,7 @@ Public Class wsPartite
 
 				If Ok Then
 					Try
-						Sql = "Delete * From RigoriAvversari Where idPartita=" & idPartita & " And idAnno=" & idAnno
+						Sql = "delete from RigoriAvversari Where idPartita=" & idPartita & " And idAnno=" & idAnno
 						Ritorno = EsegueSql(Conn, Sql, Connessione)
 					Catch ex As Exception
 						Ritorno = StringaErrore & " " & ex.Message
@@ -162,7 +162,7 @@ Public Class wsPartite
 
 				If Ok Then
 					Try
-						Sql = "Delete * From RigoriPropri Where idPartita=" & idPartita & " And idAnno=" & idAnno
+						Sql = "delete from RigoriPropri Where idPartita=" & idPartita & " And idAnno=" & idAnno
 						Ritorno = EsegueSql(Conn, Sql, Connessione)
 					Catch ex As Exception
 						Ritorno = StringaErrore & " " & ex.Message
@@ -172,7 +172,7 @@ Public Class wsPartite
 
 				If Ok Then
 					Try
-						Sql = "Delete * From EventiPartita Where idPartita=" & idPartita & " And idAnno=" & idAnno
+						Sql = "delete from EventiPartita Where idPartita=" & idPartita & " And idAnno=" & idAnno
 						Ritorno = EsegueSql(Conn, Sql, Connessione)
 					Catch ex As Exception
 						Ritorno = StringaErrore & " " & ex.Message
@@ -1396,43 +1396,43 @@ Public Class wsPartite
 			Else
 				Dim sql As String
 
-				sql = "Delete * From Partite Where idAnno = " & idAnno & " And idPartita = " & idPartita
+				sql = "delete from Partite Where idAnno = " & idAnno & " And idPartita = " & idPartita
 				Ritorno = EsegueSql(Conn, sql, Connessione)
 
-				sql = "Delete * From AbritriPartite Where idAnno = " & idAnno & " And idPartita = " & idPartita
+				sql = "delete from AbritriPartite Where idAnno = " & idAnno & " And idPartita = " & idPartita
 				Ritorno = EsegueSql(Conn, sql, Connessione)
 
-				sql = "Delete * From Convocati Where idPartita = " & idPartita
+				sql = "delete from Convocati Where idPartita = " & idPartita
 				Ritorno = EsegueSql(Conn, sql, Connessione)
 
-				sql = "Delete * From CoordinatePartite Where idPartita = " & idPartita
+				sql = "delete from CoordinatePartite Where idPartita = " & idPartita
 				Ritorno = EsegueSql(Conn, sql, Connessione)
 
-				sql = "Delete * From EventiPartita Where idAnno = " & idAnno & " And idPartita = " & idPartita
+				sql = "delete from EventiPartita Where idAnno = " & idAnno & " And idPartita = " & idPartita
 				Ritorno = EsegueSql(Conn, sql, Connessione)
 
-				sql = "Delete * From Marcatori Where idPartita = " & idPartita
+				sql = "delete from Marcatori Where idPartita = " & idPartita
 				Ritorno = EsegueSql(Conn, sql, Connessione)
 
-				sql = "Delete * From MeteoPartite Where idPartita = " & idPartita
+				sql = "delete from MeteoPartite Where idPartita = " & idPartita
 				Ritorno = EsegueSql(Conn, sql, Connessione)
 
-				sql = "Delete * From RigoriAvversari Where idAnno = " & idAnno & " And idPartita = " & idPartita
+				sql = "delete from RigoriAvversari Where idAnno = " & idAnno & " And idPartita = " & idPartita
 				Ritorno = EsegueSql(Conn, sql, Connessione)
 
-				sql = "Delete * From RigoriPropri Where idAnno = " & idAnno & " And idPartita = " & idPartita
+				sql = "delete from RigoriPropri Where idAnno = " & idAnno & " And idPartita = " & idPartita
 				Ritorno = EsegueSql(Conn, sql, Connessione)
 
-				sql = "Delete * From Risultati Where idPartita = " & idPartita
+				sql = "delete from Risultati Where idPartita = " & idPartita
 				Ritorno = EsegueSql(Conn, sql, Connessione)
 
-				sql = "Delete * From RisultatiAggiuntivi Where idPartita = " & idPartita
+				sql = "delete from RisultatiAggiuntivi Where idPartita = " & idPartita
 				Ritorno = EsegueSql(Conn, sql, Connessione)
 
-				sql = "Delete * From RisultatiAggiuntiviMarcatori Where idPartita = " & idPartita
+				sql = "delete from RisultatiAggiuntiviMarcatori Where idPartita = " & idPartita
 				Ritorno = EsegueSql(Conn, sql, Connessione)
 
-				sql = "Delete * From TempiGoalAvversari Where idPartita = " & idPartita
+				sql = "delete from TempiGoalAvversari Where idPartita = " & idPartita
 				Ritorno = EsegueSql(Conn, sql, Connessione)
 			End If
 		End If
