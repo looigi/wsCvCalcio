@@ -148,7 +148,7 @@ Public Class wsStatAllenamenti
 				Try
 					Sql = "SELECT Allenamenti.Datella, Allenamenti.Orella " &
 						"FROM Allenamenti " &
-						"WHERE Allenamenti.idAnno=" & idAnno & " AND Allenamenti.idCategoria=" & idCategoria & " AND Allenamenti.idGiocatore=" & idGiocatore & " And Instr(Datella,'" & sMese & "')>0 " &
+						"WHERE Allenamenti.idAnno=" & idAnno & " AND Allenamenti.idCategoria=" & idCategoria & " AND Allenamenti.idGiocatore=" & idGiocatore & " And CharIndex(Datella,'" & sMese & "')>-1 " &
 						"Order By Datella, Orella"
 
 					Rec = LeggeQuery(Conn, Sql, Connessione)

@@ -11,7 +11,7 @@ Public Class wsAvversari
 	<WebMethod()>
 	Public Function RitornaAvversari(Squadra As String, ByVal idAnno As String, Ricerca As String) As String
 		Dim Ritorno As String = ""
-		Dim Connessione As String = LeggeImpostazioniDiBase(Server.MapPath("."), "")
+		Dim Connessione As String = LeggeImpostazioniDiBase(Server.MapPath("."), Squadra)
 
 		If Connessione = "" Then
 			Ritorno = ErroreConnessioneNonValida
@@ -26,7 +26,7 @@ Public Class wsAvversari
 				Dim Altro As String = ""
 
 				If Ricerca.Trim <> "" Then
-					Altro = "And (SquadreAvversarie.Descrizione Like '*" & Ricerca & "*' Or SquadreAvversarie.Descrizione Like '%" & Ricerca & "%') "
+					Altro = "And SquadreAvversarie.Descrizione Like '%" & Ricerca & "%' "
 				End If
 				Try
 					Sql = "SELECT SquadreAvversarie.idAvversario, SquadreAvversarie.idCampo, SquadreAvversarie.Descrizione, CampiAvversari.Descrizione As Campo, Indirizzo, Lat, Lon " &
@@ -65,7 +65,7 @@ Public Class wsAvversari
 	<WebMethod()>
 	Public Function SalvaAvversario(Squadra As String, idAnno As String, idAvversario As String, idCampo As String, Avversario As String, Campo As String, Indirizzo As String, Coords As String) As String
 		Dim Ritorno As String = ""
-		Dim Connessione As String = LeggeImpostazioniDiBase(Server.MapPath("."), "")
+		Dim Connessione As String = LeggeImpostazioniDiBase(Server.MapPath("."), Squadra)
 
 		If Connessione = "" Then
 			Ritorno = ErroreConnessioneNonValida
@@ -99,7 +99,7 @@ Public Class wsAvversari
 					End Try
 				Else
 					idAvv = idAvversario
-					Sql = "delete from SquadreAvversarie Where idAvversario=" & idAvv
+					Sql = "Delete from SquadreAvversarie Where idAvversario=" & idAvv
 					Ritorno = EsegueSql(Conn, Sql, Connessione)
 				End If
 
@@ -122,7 +122,7 @@ Public Class wsAvversari
 					End Try
 				Else
 					idCam = idCampo
-					Sql = "delete from CampiAvversari Where idCampo=" & idCam
+					Sql = "Delete from CampiAvversari Where idCampo=" & idCam
 					Ritorno = EsegueSql(Conn, Sql, Connessione)
 				End If
 
@@ -142,7 +142,7 @@ Public Class wsAvversari
 					")"
 				Ritorno = EsegueSql(Conn, Sql, Connessione)
 
-				Sql = "delete from AvversariCoord Where idAvversario=" & idAvv
+				Sql = "Delete From AvversariCoord Where idAvversario=" & idAvv
 				Ritorno = EsegueSql(Conn, Sql, Connessione)
 
 				Dim cc() As String = Coords.Split(";")
@@ -164,7 +164,7 @@ Public Class wsAvversari
 	<WebMethod()>
 	Public Function EliminaAvversario(Squadra As String, ByVal idAnno As String, idAvversario As String) As String
 		Dim Ritorno As String = ""
-		Dim Connessione As String = LeggeImpostazioniDiBase(Server.MapPath("."), "")
+		Dim Connessione As String = LeggeImpostazioniDiBase(Server.MapPath("."), squadra)
 
 		If Connessione = "" Then
 			Ritorno = ErroreConnessioneNonValida & ":" & Connessione
