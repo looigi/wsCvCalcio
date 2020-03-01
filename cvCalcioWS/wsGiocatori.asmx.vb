@@ -83,6 +83,78 @@ Public Class wsGiocatori
 	End Function
 
 	<WebMethod()>
+	Public Function RitornaGiocatoriCategoriaSenzaAltri(Squadra As String, ByVal idAnno As String, ByVal idCategoria As String) As String
+		Dim Ritorno As String = ""
+		Dim Connessione As String = LeggeImpostazioniDiBase(Server.MapPath("."), Squadra)
+
+		If Connessione = "" Then
+			Ritorno = ErroreConnessioneNonValida
+		Else
+			Dim Conn As Object = ApreDB(Connessione)
+
+			If TypeOf (Conn) Is String Then
+				Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
+			Else
+				Dim Rec As Object = Server.CreateObject("ADODB.Recordset")
+				Dim Sql As String = ""
+
+				Try
+					Sql = "SELECT idGiocatore, Ruoli.idRuolo As idR, Cognome, Nome, Ruoli.Descrizione, EMail, Telefono, Soprannome, DataDiNascita, Indirizzo, " &
+						"CodFiscale, Maschio, Citta, Matricola, NumeroMaglia, Giocatori.idCategoria, -1 As idCategoria2, '' As Categoria2, -1 As idCategoria3, '' As Categoria3, Categorie.Descrizione As Categoria1 " &
+						"FROM Giocatori " &
+						"Left Join Ruoli On Giocatori.idRuolo=Ruoli.idRuolo " &
+						"Left Join Categorie On Categorie.idCategoria=Giocatori.idCategoria And Categorie.idAnno=Giocatori.idAnno " &
+						"Where Giocatori.Eliminato='N' And Giocatori.idAnno=" & idAnno & " And Giocatori.idCategoria=" & idCategoria & " " &
+						"Order By Ruoli.idRuolo, Cognome, Nome"
+					Rec = LeggeQuery(Conn, Sql, Connessione)
+					If TypeOf (Rec) Is String Then
+						Ritorno = Rec
+					Else
+						If Rec.Eof Then
+							Ritorno = StringaErrore & " Nessun giocatore rilevato"
+						Else
+							Ritorno = ""
+							Do Until Rec.Eof
+								Ritorno &= Rec("idGiocatore").Value.ToString & ";" &
+									Rec("idR").Value.ToString & ";" &
+									Rec("Cognome").Value.ToString.Trim & ";" &
+									Rec("Nome").Value.ToString.Trim & ";" &
+									Rec("Descrizione").Value.ToString.Trim & ";" &
+									Rec("EMail").Value.ToString.Trim & ";" &
+									Rec("Telefono").Value.ToString.Trim & ";" &
+									Rec("Soprannome").Value.ToString.Trim & ";" &
+									Rec("DataDiNascita").Value.ToString & ";" &
+									Rec("Indirizzo").Value.ToString.Trim & ";" &
+									Rec("CodFiscale").Value.ToString.Trim & ";" &
+									Rec("Maschio").Value.ToString.Trim & ";" &
+									Rec("Citta").Value.ToString.Trim & ";" &
+									Rec("Matricola").Value.ToString.Trim & ";" &
+									Rec("NumeroMaglia").Value.ToString.Trim & ";" &
+									Rec("idCategoria").Value.ToString & ";" &
+									Rec("idCategoria2").Value.ToString & ";" &
+									Rec("Categoria2").Value.ToString & ";" &
+									Rec("idCategoria3").Value.ToString & ";" &
+									Rec("Categoria3").Value.ToString & ";" &
+									Rec("Categoria1").Value.ToString & ";" &
+									"§"
+
+								Rec.MoveNext()
+							Loop
+						End If
+						Rec.Close()
+					End If
+				Catch ex As Exception
+					Ritorno = StringaErrore & " " & ex.Message
+				End Try
+
+				Conn.Close()
+			End If
+		End If
+
+		Return Ritorno
+	End Function
+
+	<WebMethod()>
 	Public Function SalvaGiocatore(Squadra As String, idAnno As String, idCategoria As String, idGiocatore As String, idRuolo As String, Cognome As String, Nome As String, EMail As String, Telefono As String,
 								   Soprannome As String, DataDiNascita As String, Indirizzo As String, CodFiscale As String, Maschio As String, Citta As String, Matricola As String,
 								   NumeroMaglia As String, idCategoria2 As String, idCategoria3 As String) As String
