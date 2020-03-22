@@ -7,6 +7,14 @@
 	Public StringaErrore As String = "ERROR: "
     Public RigaPari As Boolean = False
 
+	Public Function SistemaNumero(Numero As String) As String
+		If Numero = "" Then
+			Return "Null"
+		Else
+			Return Numero.Replace(",", ".")
+		End If
+	End Function
+
 	Public Function AggiungeRigoriEGoal(NomeLista As List(Of String), Rec As Object) As List(Of String)
 		Dim ListaNomi As New List(Of String)
 		Dim posi As Integer = 0
@@ -25,7 +33,7 @@
 		Next
 
 		If Not Ok Then
-			ListaNomi.add(Rec(4).Value & "-" & Rec(1).Value & " " & Rec(2).Value & "-" & Rec(3).Value)
+			ListaNomi.Add(Rec(4).Value & "-" & Rec(1).Value & " " & Rec(2).Value & "-" & Rec(3).Value)
 		End If
 
 		Return ListaNomi

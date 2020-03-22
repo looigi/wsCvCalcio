@@ -81,6 +81,9 @@
     <Content Include="PathCvCalcio.txt">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Content Include="wsFunzioniRC.asmx" />
+    <Content Include="wsPermessiRC.asmx" />
+    <Content Include="wsPermessiRCVisual.asmx" />
     <Content Include="wsStatAllenamenti.asmx" />
     <Content Include="wsAllenamenti.asmx" />
     <Content Include="wsAllenatori.asmx" />
@@ -98,12 +101,25 @@
     <Content Include="wsMultimedia.asmx" />
     <Content Include="wsPartite.asmx" />
     <Content Include="wsStatistiche.asmx" />
+    <Content Include="wsUtentiLocali.asmx" />
     <Content Include="wsUtenti.asmx" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="GestioneFilesDirectory.vb" />
     <Compile Include="Globale.vb" />
     <Compile Include="mdlTrasfSMS.vb" />
+    <Compile Include="wsFunzioniRC.asmx.vb">
+      <DependentUpon>wsFunzioniRC.asmx</DependentUpon>
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="wsPermessiRC.asmx.vb">
+      <DependentUpon>wsPermessiRC.asmx</DependentUpon>
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="wsPermessiRCVisual.asmx.vb">
+      <DependentUpon>wsPermessiRCVisual.asmx</DependentUpon>
+      <SubType>Component</SubType>
+    </Compile>
     <Compile Include="wsStatAllenamenti.asmx.vb">
       <DependentUpon>wsStatAllenamenti.asmx</DependentUpon>
       <SubType>Component</SubType>
@@ -177,6 +193,10 @@
     </Compile>
     <Compile Include="wsStatistiche.asmx.vb">
       <DependentUpon>wsStatistiche.asmx</DependentUpon>
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="wsUtentiLocali.asmx.vb">
+      <DependentUpon>wsUtentiLocali.asmx</DependentUpon>
       <SubType>Component</SubType>
     </Compile>
     <Compile Include="wsUtenti.asmx.vb">

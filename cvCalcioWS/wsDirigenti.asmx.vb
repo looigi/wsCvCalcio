@@ -85,8 +85,8 @@ Public Class wsDirigenti
 				Dim Sql As String = ""
 
 				Try
-					' Sql = "SELECT * FROM Dirigenti Where idAnno=" & idAnno & " And idCategoria=" & idCategoria & " And Eliminato='N' Order By Cognome, Nome"
-					Sql = "SELECT * FROM Dirigenti Where idAnno=" & idAnno & " And Eliminato='N' Order By Cognome, Nome"
+					Sql = "SELECT * FROM Dirigenti Where idAnno=" & idAnno & " And idCategoria=" & idCategoria & " And Eliminato='N' Order By Cognome, Nome"
+					' Sql = "SELECT * FROM Dirigenti Where idAnno=" & idAnno & " And Eliminato='N' Order By Cognome, Nome"
 					Rec = LeggeQuery(Conn, Sql, Connessione)
 					If TypeOf (Rec) Is String Then
 						Ritorno = Rec

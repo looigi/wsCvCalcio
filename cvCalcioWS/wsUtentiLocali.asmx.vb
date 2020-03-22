@@ -2,11 +2,11 @@
 Imports System.Web.Services.Protocols
 Imports System.ComponentModel
 
-<System.Web.Services.WebService(Namespace:="http://cvcalcio_ute.org/")>
-<System.Web.Services.WebServiceBinding(ConformsTo:=WsiProfiles.BasicProfile1_1)> _
-<ToolboxItem(False)> _
-Public Class wsUtenti
-    Inherits System.Web.Services.WebService
+<System.Web.Services.WebService(Namespace:="http://cvcalcio_uteloc.org/")>
+<System.Web.Services.WebServiceBinding(ConformsTo:=WsiProfiles.BasicProfile1_1)>
+<ToolboxItem(False)>
+Public Class wsUtentiLocali
+	Inherits System.Web.Services.WebService
 
 	<WebMethod()>
 	Public Function RitornaUtentePerLogin(Squadra As String, ByVal idAnno As String, Utente As String, Password As String) As String
@@ -25,12 +25,12 @@ Public Class wsUtenti
 				Dim Sql As String = ""
 
 				Try
-					' Sql = "SELECT * FROM UtentiMobile Where idAnno=" & idAnno & " And Utente='" & Utente.Replace("'", "''") & "'"
-					Sql = "SELECT UtentiMobile.idAnno, idUtente, Utente, Cognome, Nome, " &
+					' Sql = "SELECT * FROM Utenti Where idAnno=" & idAnno & " And Utente='" & Utente.Replace("'", "''") & "'"
+					Sql = "SELECT Utenti.idAnno, idUtente, Utente, Cognome, Nome, " &
 						"Password, EMail, Categorie.idCategoria As idCat1, idTipologia, Categorie.Descrizione As Descr1 " &
-						"FROM (UtentiMobile " &
-						"Left Join Categorie On UtentiMobile.idCategoria=Categorie.idCategoria And UtentiMobile.idAnno=Categorie.idAnno) " &
-						"Where Utente='" & Utente.Replace("'", "''") & "' And UtentiMobile.idAnno=" & idAnno
+						"FROM (Utenti " &
+						"Left Join Categorie On Utenti.idCategoria=Categorie.idCategoria And Utenti.idAnno=Categorie.idAnno) " &
+						"Where Utente='" & Utente.Replace("'", "''") & "' And Utenti.idAnno=" & idAnno
 					Rec = LeggeQuery(Conn, Sql, Connessione)
 					If TypeOf (Rec) Is String Then
 						Ritorno = Rec
@@ -88,9 +88,9 @@ Public Class wsUtenti
 				Dim Sql As String = ""
 
 				Try
-					' Sql = "SELECT * FROM UtentiMobile Where idAnno=" & idAnno & " And idUtente=" & idUtente
-					Sql = "SELECT UtentiMobile.*, Categorie.Descrizione " &
-						"From UtentiMobile LEFT Join Categorie On (UtentiMobile.idCategoria = Categorie.idCategoria) And (UtentiMobile.idAnno = Categorie.idAnno) " &
+					' Sql = "SELECT * FROM Utenti Where idAnno=" & idAnno & " And idUtente=" & idUtente
+					Sql = "SELECT Utenti.*, Categorie.Descrizione " &
+						"From Utenti LEFT Join Categorie On (Utenti.idCategoria = Categorie.idCategoria) And (Utenti.idAnno = Categorie.idAnno) " &
 						"Where idUtente = " & idUtente
 					Rec = LeggeQuery(Conn, Sql, Connessione)
 					If TypeOf (Rec) Is String Then
@@ -145,11 +145,11 @@ Public Class wsUtenti
 				Dim Sql As String = ""
 
 				Try
-					Sql = "SELECT UtentiMobile.idAnno, UtentiMobile.idUtente, UtentiMobile.Utente, UtentiMobile.Cognome, UtentiMobile.Nome, UtentiMobile.EMail, Categorie.Descrizione As Categoria, " &
-						"UtentiMobile.idTipologia, UtentiMobile.Password, Categorie.idCategoria " &
-						"FROM (UtentiMobile LEFT JOIN Categorie ON UtentiMobile.idCategoria = Categorie.idCategoria And UtentiMobile.idAnno = Categorie.idAnno) " &
-						"Where UtentiMobile.idAnno=" & idAnno & " Order By 2,1;"
-					' "Where UtentiMobile.idAnno=" & idAnno & " Order By 2,1;"
+					Sql = "SELECT Utenti.idAnno, Utenti.idUtente, Utenti.Utente, Utenti.Cognome, Utenti.Nome, Utenti.EMail, Categorie.Descrizione As Categoria, " &
+						"Utenti.idTipologia, Utenti.Password, Categorie.idCategoria " &
+						"FROM (Utenti LEFT JOIN Categorie ON Utenti.idCategoria = Categorie.idCategoria And Utenti.idAnno = Categorie.idAnno) " &
+						"Where Utenti.idAnno=" & idAnno & " Order By 2,1;"
+					' "Where Utenti.idAnno=" & idAnno & " Order By 2,1;"
 					Rec = LeggeQuery(Conn, Sql, Connessione)
 					If TypeOf (Rec) Is String Then
 						Ritorno = Rec
@@ -223,30 +223,6 @@ Public Class wsUtenti
 	End Function
 
 	<WebMethod()>
-	Public Function EliminaUtente(Squadra As String, ByVal idAnno As String, idUtente As String) As String
-		Dim Ritorno As String = ""
-		Dim Connessione As String = LeggeImpostazioniDiBase(Server.MapPath("."), Squadra)
-
-		If Connessione = "" Then
-			Ritorno = ErroreConnessioneNonValida
-		Else
-			Dim Conn As Object = ApreDB(Connessione)
-
-			If TypeOf (Conn) Is String Then
-				Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
-			Else
-				Dim Rec As Object = Server.CreateObject("ADODB.Recordset")
-				Dim Sql As String = ""
-
-				Sql = "Delete From UtentiMobile Where idUtente=" & idUtente
-				Ritorno = EsegueSql(Conn, Sql, Connessione)
-			End If
-		End If
-
-		Return Ritorno
-	End Function
-
-	<WebMethod()>
 	Public Function SalvaUtente(Squadra As String, ByVal idAnno As String, Utente As String, Cognome As String, Nome As String, EMail As String,
 								Password As String, idCategoria As String, idTipologia As String) As String
 		Dim Ritorno As String = ""
@@ -265,13 +241,13 @@ Public Class wsUtenti
 				Dim idUtente As String = ""
 
 				Try
-					Sql = "SELECT * FROM UtentiMobile Where Utente='" & Utente.Trim.ToUpper & "' And idAnno=" & idAnno
+					Sql = "SELECT * FROM Utenti Where Utente='" & Utente.Trim.ToUpper & "' And idAnno=" & idAnno
 					Rec = LeggeQuery(Conn, Sql, Connessione)
 					If TypeOf (Rec) Is String Then
 						Ritorno = Rec
 					Else
 						If Rec.Eof Then
-							Sql = "SELECT Max(idUtente)+1 FROM UtentiMobile" ' Where idAnno=" & idAnno
+							Sql = "SELECT Max(idUtente)+1 FROM Utenti" ' Where idAnno=" & idAnno
 							Rec = LeggeQuery(Conn, Sql, Connessione)
 							If TypeOf (Rec) Is String Then
 								Ritorno = Rec
@@ -302,16 +278,6 @@ Public Class wsUtenti
 									")"
 								Ritorno = EsegueSql(Conn, Sql, Connessione)
 
-								Try
-									Sql = "Delete From AnnoAttualeUtenti Where idUtente=" & idUtente
-									Ritorno = EsegueSql(Conn, Sql, Connessione)
-
-									Sql = "Insert Into AnnoAttualeUtenti Values (" & idUtente & ", " & idAnno & ")"
-									Ritorno = EsegueSql(Conn, Sql, Connessione)
-								Catch ex As Exception
-									Ritorno = StringaErrore & " " & ex.Message
-								End Try
-
 								If Ritorno = "*" Then Ritorno = idUtente
 							Else
 								Ritorno = StringaErrore & " Problemi nel rilevamento dell'ID Utente"
@@ -326,6 +292,30 @@ Public Class wsUtenti
 				End Try
 
 				Conn.Close()
+			End If
+		End If
+
+		Return Ritorno
+	End Function
+
+	<WebMethod()>
+	Public Function EliminaUtente(Squadra As String, ByVal idAnno As String, idUtente As String) As String
+		Dim Ritorno As String = ""
+		Dim Connessione As String = LeggeImpostazioniDiBase(Server.MapPath("."), Squadra)
+
+		If Connessione = "" Then
+			Ritorno = ErroreConnessioneNonValida
+		Else
+			Dim Conn As Object = ApreDB(Connessione)
+
+			If TypeOf (Conn) Is String Then
+				Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
+			Else
+				Dim Rec As Object = Server.CreateObject("ADODB.Recordset")
+				Dim Sql As String = ""
+
+				Sql = "Delete From Utenti Where idUtente=" & idUtente
+				Ritorno = EsegueSql(Conn, Sql, Connessione)
 			End If
 		End If
 
@@ -349,12 +339,12 @@ Public Class wsUtenti
 				Dim Rec As Object = Server.CreateObject("ADODB.Recordset")
 				Dim Sql As String = ""
 
-				' Sql = "Delete From UtentiMobile Where idAnno=" & idAnno & " And idUtente=" & idUtente
-				Sql = "Delete From UtentiMobile Where idUtente=" & idUtente
+				' Sql = "Delete From Utenti Where idAnno=" & idAnno & " And idUtente=" & idUtente
+				Sql = "Delete From Utenti Where idUtente=" & idUtente
 				Ritorno = EsegueSql(Conn, Sql, Connessione)
 
 				Try
-					Sql = "Insert Into UtentiMobile Values (" &
+					Sql = "Insert Into Utenti Values (" &
 						"" & idAnno & ", " &
 						"" & idUtente & ", " &
 						"'" & Utente & "', " &
