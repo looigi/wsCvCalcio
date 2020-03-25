@@ -49,7 +49,7 @@ Public Class wsPermessiRC
 						Rec.Close()
 					End If
 				Catch ex As Exception
-					'				Ritorno = StringaErrore & " " & ex.Message
+					Ritorno = StringaErrore & " " & ex.Message
 				End Try
 
 				Conn.Close()
