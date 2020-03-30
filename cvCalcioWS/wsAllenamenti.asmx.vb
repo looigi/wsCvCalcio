@@ -24,26 +24,44 @@ Public Class wsAllenamenti
 				Dim Rec As Object = Server.CreateObject("ADODB.Recordset")
 				Dim Sql As String = ""
 
-				Sql = "Delete From Allenamenti Where idAnno=" & idAnno & " And idCategoria=" & idCategoria & " And Datella='" & Data & "' And Orella='" & Ora & "'"
+				Sql = "Begin transaction"
 				Ritorno = EsegueSql(Conn, Sql, Connessione)
 
-				Dim sGiocatori() As String = Giocatori.Split(";")
-				Dim Progressivo As Integer = 0
-
-				For Each s As String In sGiocatori
-					Sql = "Insert Into Allenamenti Values (" &
-					" " & idAnno & ", " &
-					" " & idCategoria & ", " &
-					"'" & Data & "', " &
-					"'" & Ora & "', " &
-					" " & Progressivo & ", " &
-					" " & s & " " &
-					")"
+				If Not Ritorno.Contains(StringaErrore) Then
+					Sql = "Delete From Allenamenti Where idAnno=" & idAnno & " And idCategoria=" & idCategoria & " And Datella='" & Data & "' And Orella='" & Ora & "'"
 					Ritorno = EsegueSql(Conn, Sql, Connessione)
 
-					Progressivo += 1
-				Next
-				Ritorno = "*"
+					Dim sGiocatori() As String = Giocatori.Split(";")
+					Dim Progressivo As Integer = 0
+
+					For Each s As String In sGiocatori
+						Sql = "Insert Into Allenamenti Values (" &
+							" " & idAnno & ", " &
+							" " & idCategoria & ", " &
+							"'" & Data & "', " &
+							"'" & Ora & "', " &
+							" " & Progressivo & ", " &
+							" " & s & " " &
+							")"
+						Ritorno = EsegueSql(Conn, Sql, Connessione)
+						If Ritorno.Contains(StringaErrore) Then
+							Sql = "rollback"
+							Dim Ritorno3 As String = EsegueSql(Conn, Sql, Connessione)
+							Exit For
+						End If
+
+						Progressivo += 1
+					Next
+					If Not Ritorno.Contains(StringaErrore) Then
+						Ritorno = "*"
+
+						Sql = "commit"
+						Dim Ritorno2 As String = EsegueSql(Conn, Sql, Connessione)
+					End If
+				Else
+					Sql = "rollback"
+					Dim Ritorno2 As String = EsegueSql(Conn, Sql, Connessione)
+				End If
 
 				Conn.Close()
 			End If

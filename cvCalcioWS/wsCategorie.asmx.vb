@@ -131,49 +131,64 @@ Public Class wsCategorie
 				Dim Sql As String = ""
 				Dim Ok As Boolean = True
 
-				If idCategoria = -1 Then
-					Dim Rec As Object = Server.CreateObject("ADODB.Recordset")
+				Sql = "Begin transaction"
+				Ritorno = EsegueSql(Conn, Sql, Connessione)
 
-					Try
-						Sql = "Select Max(idCategoria)+1 From Categorie Where idAnno=" & idAnno
-						Rec = LeggeQuery(Conn, Sql, Connessione)
-						If TypeOf (Rec) Is String Then
-							Ritorno = Rec
-						Else
-							If Rec(0).Value Is DBNull.Value Then
-								idCategoria = 1
+				If Not Ritorno.Contains(StringaErrore) Then
+					If idCategoria = -1 Then
+						Dim Rec As Object = Server.CreateObject("ADODB.Recordset")
+
+						Try
+							Sql = "Select Max(idCategoria)+1 From Categorie Where idAnno=" & idAnno
+							Rec = LeggeQuery(Conn, Sql, Connessione)
+							If TypeOf (Rec) Is String Then
+								Ritorno = Rec
 							Else
-								idCategoria = Rec(0).Value
+								If Rec(0).Value Is DBNull.Value Then
+									idCategoria = 1
+								Else
+									idCategoria = Rec(0).Value
+								End If
 							End If
-						End If
-					Catch ex As Exception
-						Ritorno = StringaErrore & " " & ex.Message
-						Ok = False
-					End Try
+						Catch ex As Exception
+							Ritorno = StringaErrore & " " & ex.Message
+							Ok = False
+						End Try
+					Else
+						Try
+							Sql = "Delete From Categorie Where idAnno=" & idAnno & " And idCategoria=" & idCategoria
+							Ritorno = EsegueSql(Conn, Sql, Connessione)
+						Catch ex As Exception
+							Ritorno = StringaErrore & " " & ex.Message
+							Ok = False
+						End Try
+					End If
+
+					If Ok Then
+						Try
+							Sql = "Insert Into Categorie Values (" &
+								" " & idAnno & ", " &
+								" " & idCategoria & ", " &
+								"'" & Categoria.Replace("'", "''") & "', " &
+								"'N', " &
+								"1" &
+								")"
+							Ritorno = EsegueSql(Conn, Sql, Connessione)
+						Catch ex As Exception
+							Ritorno = StringaErrore & " " & ex.Message
+							Ok = False
+						End Try
+					End If
 				Else
-					Try
-						Sql = "Delete From Categorie Where idAnno=" & idAnno & " And idCategoria=" & idCategoria
-						Ritorno = EsegueSql(Conn, Sql, Connessione)
-					Catch ex As Exception
-						Ritorno = StringaErrore & " " & ex.Message
-						Ok = False
-					End Try
+					Ok = False
 				End If
 
 				If Ok Then
-					Try
-						Sql = "Insert Into Categorie Values (" &
-						" " & idAnno & ", " &
-						" " & idCategoria & ", " &
-						"'" & Categoria.Replace("'", "''") & "', " &
-						"'N', " &
-						"1" &
-						")"
-						Ritorno = EsegueSql(Conn, Sql, Connessione)
-					Catch ex As Exception
-						Ritorno = StringaErrore & " " & ex.Message
-						Ok = False
-					End Try
+					Sql = "commit"
+					Dim Ritorno2 As String = EsegueSql(Conn, Sql, Connessione)
+				Else
+					Sql = "rollback"
+					Dim Ritorno2 As String = EsegueSql(Conn, Sql, Connessione)
 				End If
 
 				Conn.Close()

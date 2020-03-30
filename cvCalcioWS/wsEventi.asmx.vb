@@ -24,36 +24,57 @@ Public Class wsEventi
 				Dim Rec As Object = Server.CreateObject("ADODB.Recordset")
 				Dim Sql As String = ""
 				Dim idEve As Integer = -1
+				Dim Ok As Boolean = True
 
-				If idEvento = -1 Then
-					Try
-						Sql = "SELECT Max(idEvento)+1 FROM Eventi"
-						Rec = LeggeQuery(Conn, Sql, Connessione)
-						If TypeOf (Rec) Is String Then
-							Ritorno = Rec
-						Else
-							If Rec(0).Value Is DBNull.Value Then
-								idEve = 1
+				Sql = "Begin transaction"
+				Ritorno = EsegueSql(Conn, Sql, Connessione)
+
+				If Not Ritorno.Contains(StringaErrore) Then
+					If idEvento = -1 Then
+						Try
+							Sql = "SELECT Max(idEvento)+1 FROM Eventi"
+							Rec = LeggeQuery(Conn, Sql, Connessione)
+							If TypeOf (Rec) Is String Then
+								Ritorno = Rec
 							Else
-								idEve = Rec(0).Value
+								If Rec(0).Value Is DBNull.Value Then
+									idEve = 1
+								Else
+									idEve = Rec(0).Value
+								End If
+								Rec.Close()
 							End If
-							Rec.Close()
+						Catch ex As Exception
+							Ritorno = StringaErrore & " " & ex.Message
+							Ok = False
+						End Try
+					Else
+						idEve = idEvento
+						Sql = "Delete from Eventi Where idEvento=" & idEve
+						Ritorno = EsegueSql(Conn, Sql, Connessione)
+						Ok = False
+					End If
+
+					If Ok Then
+						Sql = "Insert Into Eventi Values (" &
+							" " & idEve & ", " &
+							"'" & Evento.Replace("'", "''") & "', " &
+							"'N'" &
+							")"
+						Ritorno = EsegueSql(Conn, Sql, Connessione)
+						If Ritorno.Contains(StringaErrore) Then
+							Ok = False
 						End If
-					Catch ex As Exception
-						Ritorno = StringaErrore & " " & ex.Message
-					End Try
-				Else
-					idEve = idEvento
-					Sql = "delete from Eventi Where idEvento=" & idEve
-					Ritorno = EsegueSql(Conn, Sql, Connessione)
+					End If
 				End If
 
-				Sql = "Insert Into Eventi Values (" &
-					" " & idEve & ", " &
-					"'" & Evento.Replace("'", "''") & "', " &
-					"'N'" &
-					")"
-				Ritorno = EsegueSql(Conn, Sql, Connessione)
+				If Ok Then
+					Sql = "commit"
+					Dim Ritorno2 As String = EsegueSql(Conn, Sql, Connessione)
+				Else
+					Sql = "rollback"
+					Dim Ritorno2 As String = EsegueSql(Conn, Sql, Connessione)
+				End If
 
 				Conn.Close()
 			End If
@@ -123,13 +144,28 @@ Public Class wsEventi
 				Dim Sql As String = ""
 				Dim Ok As Boolean = True
 
-				Try
-					Sql = "Update Eventi Set Eliminato='S' Where idEvento=" & idEvento
-					Ritorno = EsegueSql(Conn, Sql, Connessione)
-				Catch ex As Exception
-					Ritorno = StringaErrore & " " & ex.Message
+				Sql = "Begin transaction"
+				Ritorno = EsegueSql(Conn, Sql, Connessione)
+
+				If Not Ritorno.Contains(StringaErrore) Then
+					Try
+						Sql = "Update Eventi Set Eliminato='S' Where idEvento=" & idEvento
+						Ritorno = EsegueSql(Conn, Sql, Connessione)
+					Catch ex As Exception
+						Ritorno = StringaErrore & " " & ex.Message
+						Ok = False
+					End Try
+				Else
 					Ok = False
-				End Try
+				End If
+
+				If Ok Then
+					Sql = "commit"
+					Dim Ritorno2 As String = EsegueSql(Conn, Sql, Connessione)
+				Else
+					Sql = "rollback"
+					Dim Ritorno2 As String = EsegueSql(Conn, Sql, Connessione)
+				End If
 
 				Conn.Close()
 			End If

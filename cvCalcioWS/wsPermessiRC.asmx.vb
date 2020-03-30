@@ -156,50 +156,65 @@ Public Class wsPermessiRC
 				Dim Rec As Object = Server.CreateObject("ADODB.Recordset")
 				Dim ProgPerm As Integer = -1
 
-				Try
-					Sql = "SELECT Max(progressivo)+1 FROM Permesso Where IDutente=" & IDutente
-					Rec = LeggeQuery(Conn, Sql, Connessione)
-					If TypeOf (Rec) Is String Then
-						Ritorno = Rec
-					Else
-						If Rec(0).Value Is DBNull.Value Then
-							ProgPerm = 1
-						Else
-							ProgPerm = Rec(0).Value
-						End If
-						'Rec.Close()
-					End If
-				Catch ex As Exception
-					Ritorno = StringaErrore & " " & ex.Message
-					Ok = False
-				End Try
+				Sql = "Begin transaction"
+				Ritorno = EsegueSql(Conn, Sql, Connessione)
 
 				If Not Ritorno.Contains(StringaErrore) Then
 					Try
-						If Not Ritorno.Contains(StringaErrore) Then
-							Sql = "Insert Into Permesso Values (" &
-							" " & SistemaNumero(IDutente) & "," &
-							" " & SistemaNumero(ProgPerm) & "," &
-							" " & SistemaNumero(permesso) & " " &
-							")"
-
-							Ritorno = EsegueSql(Conn, Sql, Connessione)
+						Sql = "SELECT Max(progressivo)+1 FROM Permesso Where IDutente=" & IDutente
+						Rec = LeggeQuery(Conn, Sql, Connessione)
+						If TypeOf (Rec) Is String Then
+							Ritorno = Rec
+						Else
+							If Rec(0).Value Is DBNull.Value Then
+								ProgPerm = 1
+							Else
+								ProgPerm = Rec(0).Value
+							End If
+							'Rec.Close()
 						End If
 					Catch ex As Exception
 						Ritorno = StringaErrore & " " & ex.Message
 						Ok = False
 					End Try
+
+					If Not Ritorno.Contains(StringaErrore) Then
+						Try
+							If Not Ritorno.Contains(StringaErrore) Then
+								Sql = "Insert Into Permesso Values (" &
+									" " & SistemaNumero(IDutente) & "," &
+									" " & SistemaNumero(ProgPerm) & "," &
+									" " & SistemaNumero(permesso) & " " &
+									")"
+
+								Ritorno = EsegueSql(Conn, Sql, Connessione)
+								If Ritorno.Contains(StringaErrore) Then
+									Ok = False
+								End If
+							End If
+						Catch ex As Exception
+							Ritorno = StringaErrore & " " & ex.Message
+							Ok = False
+						End Try
+					End If
+
+					If Ritorno.Contains(StringaErrore) Then
+						Dim Ritorno2 As String
+
+						Sql = "Delete From Permesso Where IDutente=" & IDutente
+						Ritorno2 = EsegueSql(Conn, Sql, Connessione)
+					End If
 				End If
 
-				If Ritorno.Contains(StringaErrore) Then
-					Dim Ritorno2 As String
-
-					Sql = "Delete From Permesso Where IDutente=" & IDutente
-					Ritorno2 = EsegueSql(Conn, Sql, Connessione)
-
+				If Ok Then
+					Sql = "commit"
+					Dim Ritorno2 As String = EsegueSql(Conn, Sql, Connessione)
+				Else
+					Sql = "rollback"
+					Dim Ritorno2 As String = EsegueSql(Conn, Sql, Connessione)
 				End If
 
-				'Conn.Close()
+				Conn.Close()
 			End If
 		End If
 
@@ -221,21 +236,42 @@ Public Class wsPermessiRC
 			Else
 				Dim Rec As Object = Server.CreateObject("ADODB.Recordset")
 				Dim Sql As String = ""
+				Dim Ok As Boolean = True
 
-				Sql = "Delete From Permesso Where IDutente=" & IDutente & " AND progressivo=" & progressivo
-				Ritorno = EsegueSql(Conn, Sql, Connessione)
-				'End If
-
-				Sql = "Insert Into Permesso Values (" &
-							" " & SistemaNumero(IDutente) & "," &
-							" " & SistemaNumero(progressivo) & "," &
-							" " & SistemaNumero(permesso) & " " &
-							")"
-
-
+				Sql = "Begin transaction"
 				Ritorno = EsegueSql(Conn, Sql, Connessione)
 
-				''Conn.Close()
+				If Not Ritorno.Contains(StringaErrore) Then
+					Sql = "Delete From Permesso Where IDutente=" & IDutente & " AND progressivo=" & progressivo
+					Ritorno = EsegueSql(Conn, Sql, Connessione)
+					If Ritorno.Contains(StringaErrore) Then
+						Ok = False
+					End If
+
+					If Ok Then
+						Sql = "Insert Into Permesso Values (" &
+								" " & SistemaNumero(IDutente) & "," &
+								" " & SistemaNumero(progressivo) & "," &
+								" " & SistemaNumero(permesso) & " " &
+								")"
+						Ritorno = EsegueSql(Conn, Sql, Connessione)
+						If Ritorno.Contains(StringaErrore) Then
+							Ok = False
+						End If
+					End If
+				Else
+					Ok = False
+				End If
+
+				If Ok Then
+					Sql = "commit"
+					Dim Ritorno2 As String = EsegueSql(Conn, Sql, Connessione)
+				Else
+					Sql = "rollback"
+					Dim Ritorno2 As String = EsegueSql(Conn, Sql, Connessione)
+				End If
+
+				Conn.Close()
 			End If
 		End If
 

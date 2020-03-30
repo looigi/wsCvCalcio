@@ -26,40 +26,57 @@ Public Class wsArbitri
 				Dim Sql As String = ""
 				Dim idDir As Integer = -1
 
-				If idArbitro = "-1" Then
-					Try
-						Sql = "SELECT Max(idArbitro)+1 FROM Arbitri Where idAnno=" & idAnno
-						Rec = LeggeQuery(Conn, Sql, Connessione)
-						If TypeOf (Rec) Is String Then
-							Ritorno = Rec
-						Else
-							If Rec(0).Value Is DBNull.Value Then
-								idDir = 1
-							Else
-								idDir = Rec(0).Value
-							End If
-							Rec.Close()
-						End If
-					Catch ex As Exception
-						Ritorno = StringaErrore & " " & ex.Message
-					End Try
-				Else
-					idDir = idArbitro
-					Sql = "delete from Arbitri Where idAnno=" & idAnno & " And idArbitro=" & idDir
-					Ritorno = EsegueSql(Conn, Sql, Connessione)
-				End If
-
-				Sql = "Insert Into Arbitri Values (" &
-					" " & idAnno & ", " &
-					" " & idCategoria & ", " &
-					" " & idDir & ", " &
-					"'" & Cognome.Replace("'", "''") & "', " &
-					"'" & Nome.Replace("'", "''") & "', " &
-					"'" & EMail.Replace("'", "''") & "', " &
-					"'" & Telefono.Replace("'", "''") & "', " &
-					"'N' " &
-					")"
+				Sql = "Begin transaction"
 				Ritorno = EsegueSql(Conn, Sql, Connessione)
+
+				If Not Ritorno.Contains(StringaErrore) Then
+					If idArbitro = "-1" Then
+						Try
+							Sql = "SELECT Max(idArbitro)+1 FROM Arbitri Where idAnno=" & idAnno
+							Rec = LeggeQuery(Conn, Sql, Connessione)
+							If TypeOf (Rec) Is String Then
+								Ritorno = Rec
+							Else
+								If Rec(0).Value Is DBNull.Value Then
+									idDir = 1
+								Else
+									idDir = Rec(0).Value
+								End If
+								Rec.Close()
+							End If
+						Catch ex As Exception
+							Ritorno = StringaErrore & " " & ex.Message
+						End Try
+					Else
+						idDir = idArbitro
+						Sql = "Delete from Arbitri Where idAnno=" & idAnno & " And idArbitro=" & idDir
+						Ritorno = EsegueSql(Conn, Sql, Connessione)
+					End If
+
+					Sql = "Insert Into Arbitri Values (" &
+						" " & idAnno & ", " &
+						" " & idCategoria & ", " &
+						" " & idDir & ", " &
+						"'" & Cognome.Replace("'", "''") & "', " &
+						"'" & Nome.Replace("'", "''") & "', " &
+						"'" & EMail.Replace("'", "''") & "', " &
+						"'" & Telefono.Replace("'", "''") & "', " &
+						"'N' " &
+						")"
+					Ritorno = EsegueSql(Conn, Sql, Connessione)
+					If Not Ritorno.Contains(StringaErrore) Then
+						Ritorno = "*"
+
+						Sql = "commit"
+						Dim Ritorno2 As String = EsegueSql(Conn, Sql, Connessione)
+					Else
+						Sql = "rollback"
+						Dim Ritorno2 As String = EsegueSql(Conn, Sql, Connessione)
+					End If
+				Else
+					Sql = "rollback"
+					Dim Ritorno2 As String = EsegueSql(Conn, Sql, Connessione)
+				End If
 
 				Conn.Close()
 			End If

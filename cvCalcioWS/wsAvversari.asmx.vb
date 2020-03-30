@@ -76,6 +76,7 @@ Public Class wsAvversari
 			Ritorno = ErroreConnessioneNonValida
 		Else
 			Dim Conn As Object = ApreDB(Connessione)
+			Dim Ok As Boolean = True
 
 			If TypeOf (Conn) Is String Then
 				Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
@@ -85,83 +86,127 @@ Public Class wsAvversari
 				Dim idAvv As Integer = -1
 				Dim idCam As Integer = -1
 
-				If idAvversario = "-1" Then
-					Try
-						Sql = "SELECT Max(idAvversario)+1 FROM SquadreAvversarie"
-						Rec = LeggeQuery(Conn, Sql, Connessione)
-						If TypeOf (Rec) Is String Then
-							Ritorno = Rec
-						Else
-							If Rec(0).Value Is DBNull.Value Then
-								idAvv = 1
+				Sql = "Begin transaction"
+				Ritorno = EsegueSql(Conn, Sql, Connessione)
+
+				If Not Ritorno.Contains(StringaErrore) Then
+					If idAvversario = "-1" Then
+						Try
+							Sql = "SELECT Max(idAvversario)+1 FROM SquadreAvversarie"
+							Rec = LeggeQuery(Conn, Sql, Connessione)
+							If TypeOf (Rec) Is String Then
+								Ritorno = Rec
 							Else
-								idAvv = Rec(0).Value
+								If Rec(0).Value Is DBNull.Value Then
+									idAvv = 1
+								Else
+									idAvv = Rec(0).Value
+								End If
+								Rec.Close()
 							End If
-							Rec.Close()
+						Catch ex As Exception
+							Ritorno = StringaErrore & " " & ex.Message
+							Ok = False
+						End Try
+					Else
+						idAvv = idAvversario
+						Sql = "Delete from SquadreAvversarie Where idAvversario=" & idAvv
+						Ritorno = EsegueSql(Conn, Sql, Connessione)
+						If Ritorno.Contains(StringaErrore) Then
+							Ok = False
 						End If
-					Catch ex As Exception
-						Ritorno = StringaErrore & " " & ex.Message
-					End Try
+					End If
+
+					If Ok = True And idCampo = "-1" Then
+						Try
+							Sql = "SELECT Max(idCampo)+1 FROM CampiAvversari"
+							Rec = LeggeQuery(Conn, Sql, Connessione)
+							If TypeOf (Rec) Is String Then
+								Ritorno = Rec
+							Else
+								If Rec(0).Value Is DBNull.Value Then
+									idCam = 1
+								Else
+									idCam = Rec(0).Value
+								End If
+								Rec.Close()
+							End If
+						Catch ex As Exception
+							Ritorno = StringaErrore & " " & ex.Message
+							Ok = False
+						End Try
+					Else
+						idCam = idCampo
+						Sql = "Delete from CampiAvversari Where idCampo=" & idCam
+						Ritorno = EsegueSql(Conn, Sql, Connessione)
+						If Ritorno.Contains(StringaErrore) Then
+							Ok = False
+						End If
+					End If
+
+					If Ok Then
+						Sql = "Insert Into SquadreAvversarie Values (" &
+						" " & idCam & ", " &
+						" " & idAvv & ", " &
+						"'" & Avversario.Replace("'", "''") & "', " &
+						"'N', " &
+						"'" & Telefono.Replace("'", "''") & "', " &
+						"'" & Referente.Replace("'", "''") & "', " &
+						"'" & EMail.Replace("'", "''") & "', " &
+						"'" & Fax.Replace("'", "''") & "' " &
+						")"
+						Ritorno = EsegueSql(Conn, Sql, Connessione)
+						If Ritorno.Contains(StringaErrore) Then
+							Ok = False
+						End If
+					End If
+
+					If Ok Then
+						Sql = "Insert Into CampiAvversari Values (" &
+						" " & idCam & ", " &
+						"'" & Campo.Replace("'", "''") & "', " &
+						"'" & Indirizzo.Replace("'", "''") & "', " &
+						"'N' " &
+						")"
+						Ritorno = EsegueSql(Conn, Sql, Connessione)
+						If Ritorno.Contains(StringaErrore) Then
+							Ok = False
+						End If
+					End If
+
+					If Ok Then
+						Sql = "Delete From AvversariCoord Where idAvversario=" & idAvv
+						Ritorno = EsegueSql(Conn, Sql, Connessione)
+						If Ritorno.Contains(StringaErrore) Then
+							Ok = False
+						End If
+					End If
+
+					If Ok Then
+						Dim cc() As String = Coords.Split(";")
+
+						Sql = "Insert Into AvversariCoord Values (" &
+							" " & idAvv & ", " &
+							"'" & cc(0) & "', " &
+							"'" & cc(1) & "' " &
+						")"
+
+						Ritorno = EsegueSql(Conn, Sql, Connessione)
+						If Ritorno.Contains(StringaErrore) Then
+							Ok = False
+						End If
+					End If
 				Else
-					idAvv = idAvversario
-					Sql = "Delete from SquadreAvversarie Where idAvversario=" & idAvv
-					Ritorno = EsegueSql(Conn, Sql, Connessione)
+					Ok = False
 				End If
 
-				If idCampo = "-1" Then
-					Try
-						Sql = "SELECT Max(idCampo)+1 FROM CampiAvversari"
-						Rec = LeggeQuery(Conn, Sql, Connessione)
-						If TypeOf (Rec) Is String Then
-							Ritorno = Rec
-						Else
-							If Rec(0).Value Is DBNull.Value Then
-								idCam = 1
-							Else
-								idCam = Rec(0).Value
-							End If
-							Rec.Close()
-						End If
-					Catch ex As Exception
-						Ritorno = StringaErrore & " " & ex.Message
-					End Try
+				If Ok Then
+					Sql = "commit"
+					Dim Ritorno2 As String = EsegueSql(Conn, Sql, Connessione)
 				Else
-					idCam = idCampo
-					Sql = "Delete from CampiAvversari Where idCampo=" & idCam
-					Ritorno = EsegueSql(Conn, Sql, Connessione)
+					Sql = "rollback"
+					Dim Ritorno2 As String = EsegueSql(Conn, Sql, Connessione)
 				End If
-
-				Sql = "Insert Into SquadreAvversarie Values (" &
-					" " & idCam & ", " &
-					" " & idAvv & ", " &
-					"'" & Avversario.Replace("'", "''") & "', " &
-					"'N', " &
-					"'" & Telefono.Replace("'", "''") & "', " &
-					"'" & Referente.Replace("'", "''") & "', " &
-					"'" & EMail.Replace("'", "''") & "', " &
-					"'" & Fax.Replace("'", "''") & "' " &
-					")"
-				Ritorno = EsegueSql(Conn, Sql, Connessione)
-
-				Sql = "Insert Into CampiAvversari Values (" &
-					" " & idCam & ", " &
-					"'" & Campo.Replace("'", "''") & "', " &
-					"'" & Indirizzo.Replace("'", "''") & "', " &
-					"'N' " &
-					")"
-				Ritorno = EsegueSql(Conn, Sql, Connessione)
-
-				Sql = "Delete From AvversariCoord Where idAvversario=" & idAvv
-				Ritorno = EsegueSql(Conn, Sql, Connessione)
-
-				Dim cc() As String = Coords.Split(";")
-
-				Sql = "Insert Into AvversariCoord Values (" &
-					" " & idAvv & ", " &
-					"'" & cc(0) & "', " &
-					"'" & cc(1) & "' " &
-					")"
-				Ritorno = EsegueSql(Conn, Sql, Connessione)
 
 				Conn.Close()
 			End If

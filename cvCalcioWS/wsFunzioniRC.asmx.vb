@@ -75,13 +75,28 @@ Public Class wsFunzioniRC
 				Dim Sql As String = ""
 				Dim Ok As Boolean = True
 
-				Try
-					Sql = "Delete Funzione Where IDfunzione=" & IDfunzione
-					Ritorno = EsegueSql(Conn, Sql, Connessione)
-				Catch ex As Exception
-					Ritorno = StringaErrore & " " & ex.Message
+				Sql = "Begin transaction"
+				Ritorno = EsegueSql(Conn, Sql, Connessione)
+
+				If Not Ritorno.Contains(StringaErrore) Then
+					Try
+						Sql = "Delete Funzione Where IDfunzione=" & IDfunzione
+						Ritorno = EsegueSql(Conn, Sql, Connessione)
+					Catch ex As Exception
+						Ritorno = StringaErrore & " " & ex.Message
+						Ok = False
+					End Try
+				Else
 					Ok = False
-				End Try
+				End If
+
+				If Ok Then
+					Sql = "commit"
+					Dim Ritorno2 As String = EsegueSql(Conn, Sql, Connessione)
+				Else
+					Sql = "rollback"
+					Dim Ritorno2 As String = EsegueSql(Conn, Sql, Connessione)
+				End If
 
 				Conn.Close()
 			End If
@@ -89,7 +104,6 @@ Public Class wsFunzioniRC
 
 		Return Ritorno
 	End Function
-
 
 	<WebMethod()>
 	Public Function InserisciFunzione(Squadra As String, IDfunzione As Integer, descrizione As String) As String
@@ -109,56 +123,66 @@ Public Class wsFunzioniRC
 				Dim Rec As Object = Server.CreateObject("ADODB.Recordset")
 				Dim ProgFunz As Integer = -1
 
-				Try
-					Sql = "SELECT Max(IDfunzione)+1 FROM Funzione"
-					Rec = LeggeQuery(Conn, Sql, Connessione)
-					If TypeOf (Rec) Is String Then
-						Ritorno = Rec
-					Else
-						If Rec(0).Value Is DBNull.Value Then
-							ProgFunz = 1
-						Else
-							ProgFunz = Rec(0).Value
-						End If
-						Rec.Close()
-					End If
-				Catch ex As Exception
-					Ritorno = StringaErrore & " " & ex.Message
-					Ok = False
-				End Try
+				Sql = "Begin transaction"
+				Ritorno = EsegueSql(Conn, Sql, Connessione)
 
 				If Not Ritorno.Contains(StringaErrore) Then
 					Try
-						If Not Ritorno.Contains(StringaErrore) Then
-							Sql = "Insert Into Funzione Values (" &
-								" " & IDfunzione & "," &
-								"'" & descrizione.Replace("'", "''") & "' " &
-								")"
-
-							Ritorno = EsegueSql(Conn, Sql, Connessione)
+						Sql = "SELECT Max(IDfunzione)+1 FROM Funzione"
+						Rec = LeggeQuery(Conn, Sql, Connessione)
+						If TypeOf (Rec) Is String Then
+							Ritorno = Rec
+						Else
+							If Rec(0).Value Is DBNull.Value Then
+								ProgFunz = 1
+							Else
+								ProgFunz = Rec(0).Value
+							End If
+							Rec.Close()
 						End If
 					Catch ex As Exception
 						Ritorno = StringaErrore & " " & ex.Message
 						Ok = False
 					End Try
+
+					If Ok Then
+						Try
+							If Not Ritorno.Contains(StringaErrore) Then
+								Sql = "Insert Into Funzione Values (" &
+									" " & IDfunzione & "," &
+									"'" & descrizione.Replace("'", "''") & "' " &
+									")"
+
+								Ritorno = EsegueSql(Conn, Sql, Connessione)
+							End If
+						Catch ex As Exception
+							Ritorno = StringaErrore & " " & ex.Message
+							Ok = False
+						End Try
+					End If
+
+					If Ritorno.Contains(StringaErrore) Then
+						Dim Ritorno2 As String
+
+						Sql = "Delete From Funzione Where IDfunzione=" & IDfunzione
+						Ritorno2 = EsegueSql(Conn, Sql, Connessione)
+					End If
 				End If
 
-				If Ritorno.Contains(StringaErrore) Then
-					Dim Ritorno2 As String
-
-					Sql = "Delete From Funzione Where IDfunzione=" & IDfunzione
-					Ritorno2 = EsegueSql(Conn, Sql, Connessione)
-
+				If Ok Then
+					Sql = "commit"
+					Dim Ritorno2 As String = EsegueSql(Conn, Sql, Connessione)
+				Else
+					Sql = "rollback"
+					Dim Ritorno2 As String = EsegueSql(Conn, Sql, Connessione)
 				End If
 
-				'Conn.Close()
+				Conn.Close()
 			End If
 		End If
 
 		Return Ritorno
 	End Function
-
-
 
 	<WebMethod()>
 	Public Function ModificaFunzione(Squadra As String, IDfunzione As Integer, descrizione As String) As String
@@ -176,43 +200,64 @@ Public Class wsFunzioniRC
 				Dim Rec As Object = Server.CreateObject("ADODB.Recordset")
 				Dim Sql As String = ""
 				Dim ProgFunz As Integer = -1
+				Dim Ok As Boolean = True
 
-				If IDfunzione = -1 Then
-					Try
-						Sql = "SELECT Max(IDfunzione)+1 FROM Funzione"
-						Rec = LeggeQuery(Conn, Sql, Connessione)
-						If TypeOf (Rec) Is String Then
-							Ritorno = Rec
-						Else
-							If Rec(0).Value Is DBNull.Value Then
-								ProgFunz = 1
-							Else
-								ProgFunz = Rec(0).Value
-							End If
-							Rec.Close()
-						End If
-					Catch ex As Exception
-						Ritorno = StringaErrore & " " & ex.Message
-					End Try
-				Else
-					ProgFunz = IDfunzione
-					Sql = "Delete From Funzione Where IDfunzione=" & IDfunzione
-					Ritorno = EsegueSql(Conn, Sql, Connessione)
-				End If
-
-				Sql = "Insert Into Funzione Values (" &
-								" " & IDfunzione & "," &
-								"'" & descrizione.Replace("'", "''") & "' " &
-								")"
-
+				Sql = "Begin transaction"
 				Ritorno = EsegueSql(Conn, Sql, Connessione)
 
-				''Conn.Close()
+				If Not Ritorno.Contains(StringaErrore) Then
+					If IDfunzione = -1 Then
+						Try
+							Sql = "SELECT Max(IDfunzione)+1 FROM Funzione"
+							Rec = LeggeQuery(Conn, Sql, Connessione)
+							If TypeOf (Rec) Is String Then
+								Ritorno = Rec
+							Else
+								If Rec(0).Value Is DBNull.Value Then
+									ProgFunz = 1
+								Else
+									ProgFunz = Rec(0).Value
+								End If
+								Rec.Close()
+							End If
+						Catch ex As Exception
+							Ritorno = StringaErrore & " " & ex.Message
+							Ok = False
+						End Try
+					Else
+						ProgFunz = IDfunzione
+						Sql = "Delete From Funzione Where IDfunzione=" & IDfunzione
+						Ritorno = EsegueSql(Conn, Sql, Connessione)
+						Ok = False
+					End If
+
+					If Ok Then
+						Sql = "Insert Into Funzione Values (" &
+									" " & IDfunzione & "," &
+									"'" & descrizione.Replace("'", "''") & "' " &
+									")"
+
+						Ritorno = EsegueSql(Conn, Sql, Connessione)
+						If Ritorno.Contains(StringaErrore) Then
+							Ok = False
+						End If
+					End If
+				Else
+					Ok = False
+				End If
+
+				If Ok Then
+					Sql = "commit"
+					Dim Ritorno2 As String = EsegueSql(Conn, Sql, Connessione)
+				Else
+					Sql = "rollback"
+					Dim Ritorno2 As String = EsegueSql(Conn, Sql, Connessione)
+				End If
+
+				Conn.Close()
 			End If
 		End If
 
 		Return Ritorno
 	End Function
-
-
 End Class

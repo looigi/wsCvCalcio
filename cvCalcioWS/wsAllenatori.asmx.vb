@@ -26,40 +26,55 @@ Public Class wsAllenatori
 				Dim Sql As String = ""
 				Dim idAll As Integer = -1
 
-				If idAllenatore = "-1" Then
-					Try
-						Sql = "SELECT Max(idAllenatore)+1 FROM Allenatori Where idAnno=" & idAnno
-						Rec = LeggeQuery(Conn, Sql, Connessione)
-						If TypeOf (Rec) Is String Then
-							Ritorno = Rec
-						Else
-							If Rec(0).Value Is DBNull.Value Then
-								idAll = 1
+				Sql = "Begin transaction"
+				Ritorno = EsegueSql(Conn, Sql, Connessione)
+
+				If Not Ritorno.Contains(StringaErrore) Then
+					If idAllenatore = "-1" Then
+						Try
+							Sql = "SELECT Max(idAllenatore)+1 FROM Allenatori Where idAnno=" & idAnno
+							Rec = LeggeQuery(Conn, Sql, Connessione)
+							If TypeOf (Rec) Is String Then
+								Ritorno = Rec
 							Else
-								idAll = Rec(0).Value
+								If Rec(0).Value Is DBNull.Value Then
+									idAll = 1
+								Else
+									idAll = Rec(0).Value
+								End If
+								Rec.Close()
 							End If
-							Rec.Close()
-						End If
-					Catch ex As Exception
-						Ritorno = StringaErrore & " " & ex.Message
-					End Try
+						Catch ex As Exception
+							Ritorno = StringaErrore & " " & ex.Message
+						End Try
+					Else
+						idAll = idAllenatore
+						Sql = "Delete from Allenatori Where idAnno=" & idAnno & " And idAllenatore=" & idAll
+						Ritorno = EsegueSql(Conn, Sql, Connessione)
+					End If
+
+					Sql = "Insert Into Allenatori Values (" &
+						" " & idAnno & ", " &
+						" " & idCategoria & ", " &
+						" " & idAll & ", " &
+						"'" & Cognome.Replace("'", "''") & "', " &
+						"'" & Nome.Replace("'", "''") & "', " &
+						"'" & EMail.Replace("'", "''") & "', " &
+						"'" & Telefono.Replace("'", "''") & "', " &
+						"'N' " &
+						")"
+					Ritorno = EsegueSql(Conn, Sql, Connessione)
+					If Not Ritorno.Contains(StringaErrore) Then
+						Sql = "commit"
+						Ritorno = EsegueSql(Conn, Sql, Connessione)
+					Else
+						Sql = "rollback"
+						Ritorno = EsegueSql(Conn, Sql, Connessione)
+					End If
 				Else
-					idAll = idAllenatore
-					Sql = "delete from Allenatori Where idAnno=" & idAnno & " And idAllenatore=" & idAll
+					Sql = "rollback"
 					Ritorno = EsegueSql(Conn, Sql, Connessione)
 				End If
-
-				Sql = "Insert Into Allenatori Values (" &
-					" " & idAnno & ", " &
-					" " & idCategoria & ", " &
-					" " & idAll & ", " &
-					"'" & Cognome.Replace("'", "''") & "', " &
-					"'" & Nome.Replace("'", "''") & "', " &
-					"'" & EMail.Replace("'", "''") & "', " &
-					"'" & Telefono.Replace("'", "''") & "', " &
-					"'N' " &
-					")"
-				Ritorno = EsegueSql(Conn, Sql, Connessione)
 
 				Conn.Close()
 			End If

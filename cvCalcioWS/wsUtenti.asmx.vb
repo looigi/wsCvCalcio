@@ -263,67 +263,88 @@ Public Class wsUtenti
 				Dim Rec As Object = Server.CreateObject("ADODB.Recordset")
 				Dim Sql As String = ""
 				Dim idUtente As String = ""
+				Dim Ok As Boolean = True
 
-				Try
-					Sql = "SELECT * FROM UtentiMobile Where Utente='" & Utente.Trim.ToUpper & "' And idAnno=" & idAnno
-					Rec = LeggeQuery(Conn, Sql, Connessione)
-					If TypeOf (Rec) Is String Then
-						Ritorno = Rec
-					Else
-						If Rec.Eof Then
-							Sql = "SELECT Max(idUtente)+1 FROM UtentiMobile" ' Where idAnno=" & idAnno
-							Rec = LeggeQuery(Conn, Sql, Connessione)
-							If TypeOf (Rec) Is String Then
-								Ritorno = Rec
-							Else
-								If Rec.Eof Then
-									Ritorno = StringaErrore & " Nessun utente rilevato"
-								Else
-									If Rec(0).Value Is DBNull.Value Then
-										idUtente = "1"
-									Else
-										idUtente = Rec(0).Value.ToString
-									End If
-								End If
-								Rec.Close()
-							End If
+				Sql = "Begin transaction"
+				Ritorno = EsegueSql(Conn, Sql, Connessione)
 
-							If idUtente <> "" Then
-								Sql = "Insert Into Utenti Values (" &
-									" " & idAnno & ", " &
-									" " & idUtente & ", " &
-									"'" & Utente.Replace("'", "''") & "', " &
-									"'" & Cognome.Replace("'", "''") & "', " &
-									"'" & Nome.Replace("'", "''") & "', " &
-									"'" & Password.Replace("'", "''") & "', " &
-									"'" & EMail.Replace("'", "''") & "', " &
-									" " & idCategoria & ", " &
-									" " & idTipologia & " " &
-									")"
-								Ritorno = EsegueSql(Conn, Sql, Connessione)
-
-								Try
-									Sql = "Delete From AnnoAttualeUtenti Where idUtente=" & idUtente
-									Ritorno = EsegueSql(Conn, Sql, Connessione)
-
-									Sql = "Insert Into AnnoAttualeUtenti Values (" & idUtente & ", " & idAnno & ")"
-									Ritorno = EsegueSql(Conn, Sql, Connessione)
-								Catch ex As Exception
-									Ritorno = StringaErrore & " " & ex.Message
-								End Try
-
-								If Ritorno = "*" Then Ritorno = idUtente
-							Else
-								Ritorno = StringaErrore & " Problemi nel rilevamento dell'ID Utente"
-							End If
+				If Not Ritorno.Contains(StringaErrore) Then
+					Try
+						Sql = "SELECT * FROM UtentiMobile Where Utente='" & Utente.Trim.ToUpper & "' And idAnno=" & idAnno
+						Rec = LeggeQuery(Conn, Sql, Connessione)
+						If TypeOf (Rec) Is String Then
+							Ritorno = Rec
 						Else
-							Ritorno = StringaErrore & " Utente già esistente per l'anno in corso"
-						End If
-					End If
+							If Rec.Eof Then
+								Sql = "SELECT Max(idUtente)+1 FROM UtentiMobile" ' Where idAnno=" & idAnno
+								Rec = LeggeQuery(Conn, Sql, Connessione)
+								If TypeOf (Rec) Is String Then
+									Ritorno = Rec
+								Else
+									If Rec.Eof Then
+										Ritorno = StringaErrore & " Nessun utente rilevato"
+									Else
+										If Rec(0).Value Is DBNull.Value Then
+											idUtente = "1"
+										Else
+											idUtente = Rec(0).Value.ToString
+										End If
+									End If
+									Rec.Close()
+								End If
 
-				Catch ex As Exception
-					Ritorno = StringaErrore & " " & ex.Message
-				End Try
+								If idUtente <> "" Then
+									Sql = "Insert Into Utenti Values (" &
+										" " & idAnno & ", " &
+										" " & idUtente & ", " &
+										"'" & Utente.Replace("'", "''") & "', " &
+										"'" & Cognome.Replace("'", "''") & "', " &
+										"'" & Nome.Replace("'", "''") & "', " &
+										"'" & Password.Replace("'", "''") & "', " &
+										"'" & EMail.Replace("'", "''") & "', " &
+										" " & idCategoria & ", " &
+										" " & idTipologia & " " &
+										")"
+									Ritorno = EsegueSql(Conn, Sql, Connessione)
+									If Ritorno.Contains(StringaErrore) Then
+										Ok = False
+									End If
+
+									Try
+										Sql = "Delete From AnnoAttualeUtenti Where idUtente=" & idUtente
+										Ritorno = EsegueSql(Conn, Sql, Connessione)
+
+										Sql = "Insert Into AnnoAttualeUtenti Values (" & idUtente & ", " & idAnno & ")"
+										Ritorno = EsegueSql(Conn, Sql, Connessione)
+									Catch ex As Exception
+										Ritorno = StringaErrore & " " & ex.Message
+										Ok = False
+									End Try
+
+									If Ritorno = "*" Then Ritorno = idUtente
+								Else
+									Ritorno = StringaErrore & " Problemi nel rilevamento dell'ID Utente"
+									Ok = False
+								End If
+							Else
+								Ritorno = StringaErrore & " Utente già esistente per l'anno in corso"
+								Ok = False
+							End If
+						End If
+					Catch ex As Exception
+						Ritorno = StringaErrore & " " & ex.Message
+					End Try
+				Else
+					Ok = False
+				End If
+
+				If Ok Then
+					Sql = "commit"
+					Dim Ritorno2 As String = EsegueSql(Conn, Sql, Connessione)
+				Else
+					Sql = "rollback"
+					Dim Ritorno2 As String = EsegueSql(Conn, Sql, Connessione)
+				End If
 
 				Conn.Close()
 			End If
@@ -348,38 +369,65 @@ Public Class wsUtenti
 			Else
 				Dim Rec As Object = Server.CreateObject("ADODB.Recordset")
 				Dim Sql As String = ""
+				Dim Ok As Boolean = True
 
-				' Sql = "Delete From UtentiMobile Where idAnno=" & idAnno & " And idUtente=" & idUtente
-				Sql = "Delete From UtentiMobile Where idUtente=" & idUtente
+				Sql = "Begin transaction"
 				Ritorno = EsegueSql(Conn, Sql, Connessione)
 
-				Try
-					Sql = "Insert Into UtentiMobile Values (" &
-						"" & idAnno & ", " &
-						"" & idUtente & ", " &
-						"'" & Utente & "', " &
-						"'" & Cognome & "', " &
-						"'" & Nome & "', " &
-						"'" & Password & "', " &
-						"'" & EMail & "', " &
-						" " & idCategoria & ", " &
-						"" & idTipologia & ")"
+				If Not Ritorno.Contains(StringaErrore) Then
+					' Sql = "Delete From UtentiMobile Where idAnno=" & idAnno & " And idUtente=" & idUtente
+					Sql = "Delete From UtentiMobile Where idUtente=" & idUtente
 					Ritorno = EsegueSql(Conn, Sql, Connessione)
+					If Ritorno.Contains(StringaErrore) Then
+						Ok = False
+					End If
 
-					Try
-						Sql = "Delete From AnnoAttualeUtenti Where idUtente=" & idUtente
-						Ritorno = EsegueSql(Conn, Sql, Connessione)
+					If Ok Then
+						Try
+							Sql = "Insert Into UtentiMobile Values (" &
+							"" & idAnno & ", " &
+							"" & idUtente & ", " &
+							"'" & Utente & "', " &
+							"'" & Cognome & "', " &
+							"'" & Nome & "', " &
+							"'" & Password & "', " &
+							"'" & EMail & "', " &
+							" " & idCategoria & ", " &
+							"" & idTipologia & ")"
+							Ritorno = EsegueSql(Conn, Sql, Connessione)
+							If Ritorno.Contains(StringaErrore) Then
+								Ok = False
+							End If
 
-						Sql = "Insert Into AnnoAttualeUtenti Values (" & idUtente & ", " & idAnno & ")"
-						Ritorno = EsegueSql(Conn, Sql, Connessione)
-					Catch ex As Exception
-						Ritorno = StringaErrore & " " & ex.Message
-					End Try
+							If Ok Then
+								Try
+									Sql = "Delete From AnnoAttualeUtenti Where idUtente=" & idUtente
+									Ritorno = EsegueSql(Conn, Sql, Connessione)
 
-					If Ritorno = "*" Then Ritorno = idUtente
-				Catch ex As Exception
-					Ritorno = StringaErrore & " " & ex.Message
-				End Try
+									Sql = "Insert Into AnnoAttualeUtenti Values (" & idUtente & ", " & idAnno & ")"
+									Ritorno = EsegueSql(Conn, Sql, Connessione)
+								Catch ex As Exception
+									Ritorno = StringaErrore & " " & ex.Message
+									Ok = False
+								End Try
+							End If
+
+							If Ritorno = "*" Then Ritorno = idUtente
+						Catch ex As Exception
+							Ritorno = StringaErrore & " " & ex.Message
+						End Try
+					End If
+				Else
+					Ok = False
+				End If
+
+				If Ok Then
+					Sql = "commit"
+					Dim Ritorno2 As String = EsegueSql(Conn, Sql, Connessione)
+				Else
+					Sql = "rollback"
+					Dim Ritorno2 As String = EsegueSql(Conn, Sql, Connessione)
+				End If
 
 				Conn.Close()
 			End If

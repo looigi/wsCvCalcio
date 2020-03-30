@@ -172,74 +172,97 @@ Public Class wsGiocatori
 				Dim Rec As Object = Server.CreateObject("ADODB.Recordset")
 				Dim Sql As String = ""
 				Dim idGioc As Integer = -1
+				Dim Ok As Boolean = True
 
-				If idGiocatore = "-1" Then
-					Try
-						Sql = "SELECT Max(idGiocatore)+1 FROM Giocatori"
-						Rec = LeggeQuery(Conn, Sql, Connessione)
-						If TypeOf (Rec) Is String Then
-							Ritorno = Rec
-						Else
-							If Rec(0).Value Is DBNull.Value Then
-								idGioc = 1
+				Sql = "Begin transaction"
+				Ritorno = EsegueSql(Conn, Sql, Connessione)
+
+				If Not Ritorno.Contains(StringaErrore) Then
+					If idGiocatore = "-1" Then
+						Try
+							Sql = "SELECT Max(idGiocatore)+1 FROM Giocatori"
+							Rec = LeggeQuery(Conn, Sql, Connessione)
+							If TypeOf (Rec) Is String Then
+								Ritorno = Rec
 							Else
-								idGioc = Rec(0).Value
+								If Rec(0).Value Is DBNull.Value Then
+									idGioc = 1
+								Else
+									idGioc = Rec(0).Value
+								End If
+								Rec.Close()
 							End If
-							Rec.Close()
-						End If
-					Catch ex As Exception
-						Ritorno = StringaErrore & " " & ex.Message
-					End Try
-				Else
-					Sql = "SELECT * FROM Giocatori Where idAnno=" & idAnno & " And idGiocatore=" & idGiocatore
-					Rec = LeggeQuery(Conn, Sql, Connessione)
-					If Not Rec.Eof Then
-						Dim conta As Integer = 0
+						Catch ex As Exception
+							Ritorno = StringaErrore & " " & ex.Message
+							Ok = False
+						End Try
+					Else
+						Sql = "SELECT * FROM Giocatori Where idAnno=" & idAnno & " And idGiocatore=" & idGiocatore
+						Rec = LeggeQuery(Conn, Sql, Connessione)
+						If Not Rec.Eof Then
+							Dim conta As Integer = 0
 
-						Do While Ritorno.Contains(StringaErrore) Or Ritorno = ""
-							Try
-								Sql = "Delete  From Giocatori Where idAnno=" & idAnno & " And idGiocatore=" & idGiocatore
-								Ritorno = EsegueSql(Conn, Sql, Connessione)
-							Catch ex As Exception
-								Ritorno = StringaErrore & " " & ex.Message
-							End Try
-							conta += 1
-							If (conta = 10) Then
-								Ritorno = StringaErrore & " Impossibile modificare il giocatore"
-								Exit Do
-							End If
-						Loop
+							Do While Ritorno.Contains(StringaErrore) Or Ritorno = ""
+								Try
+									Sql = "Delete  From Giocatori Where idAnno=" & idAnno & " And idGiocatore=" & idGiocatore
+									Ritorno = EsegueSql(Conn, Sql, Connessione)
+								Catch ex As Exception
+									Ritorno = StringaErrore & " " & ex.Message
+									Ok = False
+									Exit Do
+								End Try
+								conta += 1
+								If (conta = 10) Then
+									Ritorno = StringaErrore & " Impossibile modificare il giocatore"
+									Ok = False
+									Exit Do
+								End If
+							Loop
+						End If
+						Rec.Close
+						idGioc = idGiocatore
 					End If
-					Rec.Close
-					idGioc = idGiocatore
+
+					If Ok = True Then
+						Sql = "Insert Into Giocatori Values (" &
+							" " & idAnno & ", " &
+							" " & idGioc & ", " &
+							" " & idCategoria & ", " &
+							" " & idRuolo & ", " &
+							"'" & Cognome.Replace("'", "''") & "', " &
+							"'" & Nome.Replace("'", "''") & "', " &
+							"'" & EMail.Replace("'", "''") & "', " &
+							"'" & Telefono.Replace("'", "''") & "', " &
+							"'" & Soprannome.Replace("'", "''") & "', " &
+							"'" & DataDiNascita.Replace("'", "''") & "', " &
+							"'" & Indirizzo.Replace("'", "''") & "', " &
+							"'" & CodFiscale.Replace("'", "''") & "', " &
+							"'N', " &
+							"null, " &
+							"'" & Maschio & "', " &
+							"'', " &
+							"'" & Citta.Replace("'", "''") & "', " &
+							"0, " &
+							" " & idCategoria2 & ", " &
+							"'" & Matricola.Replace("'", "''") & "', " &
+							"'" & NumeroMaglia.Replace("'", "''") & "', " &
+							" " & idCategoria3 & " " &
+							")"
+						Ritorno = EsegueSql(Conn, Sql, Connessione)
+						If Ritorno.Contains(StringaErrore) Then
+							Ok = False
+						End If
+					End If
+				Else
+					Ok = False
 				End If
 
-				If Ritorno = "" Or  Ritorno = "*" Then
-					Sql = "Insert Into Giocatori Values (" &
-					" " & idAnno & ", " &
-					" " & idGioc & ", " &
-					" " & idCategoria & ", " &
-					" " & idRuolo & ", " &
-					"'" & Cognome.Replace("'", "''") & "', " &
-					"'" & Nome.Replace("'", "''") & "', " &
-					"'" & EMail.Replace("'", "''") & "', " &
-					"'" & Telefono.Replace("'", "''") & "', " &
-					"'" & Soprannome.Replace("'", "''") & "', " &
-					"'" & DataDiNascita.Replace("'", "''") & "', " &
-					"'" & Indirizzo.Replace("'", "''") & "', " &
-					"'" & CodFiscale.Replace("'", "''") & "', " &
-					"'N', " &
-					"null, " &
-					"'" & Maschio & "', " &
-					"'', " &
-					"'" & Citta.Replace("'", "''") & "', " &
-					"0, " &
-					" " & idCategoria2 & ", " &
-					"'" & Matricola.Replace("'", "''") & "', " &
-					"'" & NumeroMaglia.Replace("'", "''") & "', " &
-					" " & idCategoria3 & " " &
-					")"
-					Ritorno = EsegueSql(Conn, Sql, Connessione)
+				If Ok Then
+					Sql = "commit"
+					Dim Ritorno2 As String = EsegueSql(Conn, Sql, Connessione)
+				Else
+					Sql = "rollback"
+					Dim Ritorno2 As String = EsegueSql(Conn, Sql, Connessione)
 				End If
 
 				Conn.Close()
@@ -265,13 +288,28 @@ Public Class wsGiocatori
 				Dim Sql As String = ""
 				Dim Ok As Boolean = True
 
-				Try
-					Sql = "Update Giocatori Set Eliminato='S' Where idAnno=" & idAnno & " And idGiocatore=" & idGiocatore
-					Ritorno = EsegueSql(Conn, Sql, Connessione)
-				Catch ex As Exception
-					Ritorno = StringaErrore & " " & ex.Message
+				Sql = "Begin transaction"
+				Ritorno = EsegueSql(Conn, Sql, Connessione)
+
+				If Not Ritorno.Contains(StringaErrore) Then
+					Try
+						Sql = "Update Giocatori Set Eliminato='S' Where idAnno=" & idAnno & " And idGiocatore=" & idGiocatore
+						Ritorno = EsegueSql(Conn, Sql, Connessione)
+					Catch ex As Exception
+						Ritorno = StringaErrore & " " & ex.Message
+						Ok = False
+					End Try
+				Else
 					Ok = False
-				End Try
+				End If
+
+				If Ok Then
+					Sql = "commit"
+					Dim Ritorno2 As String = EsegueSql(Conn, Sql, Connessione)
+				Else
+					Sql = "rollback"
+					Dim Ritorno2 As String = EsegueSql(Conn, Sql, Connessione)
+				End If
 
 				Conn.Close()
 			End If

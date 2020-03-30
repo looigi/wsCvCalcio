@@ -516,39 +516,60 @@ Public Class wsCampionato
 				Dim Rec As Object = Server.CreateObject("ADODB.Recordset")
 				Dim Sql As String = ""
 				Dim ProgressivoSquadra As String = ""
+				Dim Ok As Boolean = True
 
-				Try
-					Sql = "SELECT Max(idProgressivo)+1 FROM AvversariCalendario Where idAnno=" & idAnno & " And idCategoria=" & idCategoria
-					Rec = LeggeQuery(Conn, Sql, Connessione)
-					If TypeOf (Rec) Is String Then
-						Ritorno = Rec
-					Else
-						If Rec.Eof Then
-							Ritorno = StringaErrore & " Nessun avversario rilevato"
+				Sql = "Begin transaction"
+				Ritorno = EsegueSql(Conn, Sql, Connessione)
+
+				If Not Ritorno.Contains(StringaErrore) Then
+					Try
+						Sql = "SELECT Max(idProgressivo)+1 FROM AvversariCalendario Where idAnno=" & idAnno & " And idCategoria=" & idCategoria
+						Rec = LeggeQuery(Conn, Sql, Connessione)
+						If TypeOf (Rec) Is String Then
+							Ritorno = Rec
 						Else
-							If Rec(0).Value Is DBNull.Value Then
-								ProgressivoSquadra = "1"
+							If Rec.Eof Then
+								Ritorno = StringaErrore & " Nessun avversario rilevato"
 							Else
-								ProgressivoSquadra = Rec(0).Value.ToString
+								If Rec(0).Value Is DBNull.Value Then
+									ProgressivoSquadra = "1"
+								Else
+									ProgressivoSquadra = Rec(0).Value.ToString
+								End If
 							End If
+							Rec.Close()
 						End If
-						Rec.Close()
-					End If
 
-					If ProgressivoSquadra <> "" Then
-						Sql = "Insert Into AvversariCalendario Values (" &
+						If ProgressivoSquadra <> "" Then
+							Sql = "Insert Into AvversariCalendario Values (" &
 							" " & idAnno & ", " &
 							" " & idCategoria & ", " &
 							" " & ProgressivoSquadra & ", " &
 							" " & idAvversario & " " &
 							")"
-						Ritorno = EsegueSql(Conn, Sql, Connessione)
-					Else
-						Ritorno = StringaErrore & " Problemi nel rilevamento del progressivo squadra"
-					End If
-				Catch ex As Exception
-					Ritorno = StringaErrore & " " & ex.Message
-				End Try
+							Ritorno = EsegueSql(Conn, Sql, Connessione)
+							If Ritorno.Contains(StringaErrore) Then
+								Ok = False
+							End If
+						Else
+							Ritorno = StringaErrore & " Problemi nel rilevamento del progressivo squadra"
+							Ok = False
+						End If
+					Catch ex As Exception
+						Ritorno = StringaErrore & " " & ex.Message
+						Ok = False
+					End Try
+				Else
+					Ok = False
+				End If
+
+				If Ok Then
+					Sql = "commit"
+					Dim Ritorno2 As String = EsegueSql(Conn, Sql, Connessione)
+				Else
+					Sql = "rollback"
+					Dim Ritorno2 As String = EsegueSql(Conn, Sql, Connessione)
+				End If
 
 				Conn.Close()
 			End If
@@ -572,13 +593,28 @@ Public Class wsCampionato
 			Else
 				Dim Rec As Object = Server.CreateObject("ADODB.Recordset")
 				Dim Sql As String = ""
+				Dim Ok As Boolean = True
 
-				Try
-					Sql = "Delete From AvversariCalendario Where idAnno=" & idAnno & " And idCategoria=" & idCategoria & " And idAvversario=" & idAvversario
-					Ritorno = EsegueSql(Conn, Sql, Connessione)
-				Catch ex As Exception
-					Ritorno = StringaErrore & " " & ex.Message
-				End Try
+				Sql = "Begin transaction"
+				Ritorno = EsegueSql(Conn, Sql, Connessione)
+
+				If Not Ritorno.Contains(StringaErrore) Then
+					Try
+						Sql = "Delete From AvversariCalendario Where idAnno=" & idAnno & " And idCategoria=" & idCategoria & " And idAvversario=" & idAvversario
+						Ritorno = EsegueSql(Conn, Sql, Connessione)
+					Catch ex As Exception
+						Ritorno = StringaErrore & " " & ex.Message
+						Ok = False
+					End Try
+				End If
+
+				If Ok Then
+					Sql = "commit"
+					Dim Ritorno2 As String = EsegueSql(Conn, Sql, Connessione)
+				Else
+					Sql = "rollback"
+					Dim Ritorno2 As String = EsegueSql(Conn, Sql, Connessione)
+				End If
 
 				Conn.Close()
 			End If
@@ -606,212 +642,229 @@ Public Class wsCampionato
 			Else
 				Dim Rec As Object = Server.CreateObject("ADODB.Recordset")
 				Dim Sql As String = ""
+				Dim Ok As Boolean = True
 
-				Try
-					Sql = "SELECT Max(idPartita)+1 FROM Partite"
-					Rec = LeggeQuery(Conn, Sql, Connessione)
-					If TypeOf (Rec) Is String Then
-						Ritorno = Rec
-					Else
-						If Rec.Eof Then
-							Ritorno = StringaErrore & " Nessun progressivo partita rilevato"
-						Else
-							If Rec(0).Value Is DBNull.Value Then
-								idNuovaPartita = "1"
-							Else
-								idNuovaPartita = Rec(0).Value.ToString
-							End If
-						End If
-						Rec.Close()
-					End If
-				Catch ex As Exception
-					Ritorno = StringaErrore & " " & ex.Message
-				End Try
+				Sql = "Begin transaction"
+				Ritorno = EsegueSql(Conn, Sql, Connessione)
 
-				Try
-					Sql = "SELECT Max(idPartita)+1 FROM CalendarioPartite Where idAnno=" & idAnno & " And idCategoria=" & idCategoria & " And idGiornata=" & idGiornata
-					Rec = LeggeQuery(Conn, Sql, Connessione)
-					If TypeOf (Rec) Is String Then
-						Ritorno = Rec
-					Else
-						If Rec.Eof Then
-							Ritorno = StringaErrore & " Nessun progressivo rilevato"
-						Else
-							If Rec(0).Value Is DBNull.Value Then
-								ProgressivoPartita = "1"
-							Else
-								ProgressivoPartita = Rec(0).Value.ToString
-							End If
-						End If
-						Rec.Close()
-					End If
-				Catch ex As Exception
-					Ritorno = StringaErrore & " " & ex.Message
-				End Try
-
-				Dim c() As String = Casa.Split(";")
-				Dim f() As String = Fuori.Split(";")
-
-				Try
-					Sql = "SELECT Max(idPartitaGen)+1 FROM CalendarioPartite"
-					Rec = LeggeQuery(Conn, Sql, Connessione)
-					If TypeOf (Rec) Is String Then
-						Ritorno = Rec
-					Else
-						If Rec.Eof Then
-							Ritorno = StringaErrore & " Nessun progressivo generale rilevato"
-						Else
-							If Rec(0).Value Is DBNull.Value Then
-								idUnioneCalendario = "1"
-							Else
-								idUnioneCalendario = Rec(0).Value.ToString
-							End If
-						End If
-						Rec.Close()
-					End If
-				Catch ex As Exception
-					Ritorno = StringaErrore & " " & ex.Message
-				End Try
-
-				If Not Ritorno.Contains(StringaErrore & "") Then
+				If Not Ritorno.Contains(StringaErrore) Then
 					Try
-						Sql = "Insert Into CalendarioPartite Values (" & idAnno & ", " & idCategoria & ", " & idGiornata & ", " & ProgressivoPartita & ", " & c(0) & ", " & f(0) & ", " & idUnioneCalendario & ", 'N', '')"
-						Ritorno = EsegueSql(Conn, Sql, Connessione)
+						Sql = "SELECT Max(idPartita)+1 FROM Partite"
+						Rec = LeggeQuery(Conn, Sql, Connessione)
+						If TypeOf (Rec) Is String Then
+							Ritorno = Rec
+						Else
+							If Rec.Eof Then
+								Ritorno = StringaErrore & " Nessun progressivo partita rilevato"
+							Else
+								If Rec(0).Value Is DBNull.Value Then
+									idNuovaPartita = "1"
+								Else
+									idNuovaPartita = Rec(0).Value.ToString
+								End If
+							End If
+							Rec.Close()
+						End If
 					Catch ex As Exception
 						Ritorno = StringaErrore & " " & ex.Message
+						Ok = False
 					End Try
 
-					If Not Ritorno.Contains(StringaErrore & "") Then
-						If Mid(Ora, 1, 3) = "24:" Then Ora = "00:" & Mid(Ora, 4, Ora.Length)
+					If Ok Then
 						Try
-							Sql = "Insert Into CalendarioDate Values (" & idAnno & ", " & idCategoria & ", " & ProgressivoPartita & ", " & idGiornata & ", '" & Data & " " & Ora & "')"
-							Ritorno = EsegueSql(Conn, Sql, Connessione)
+							Sql = "SELECT Max(idPartita)+1 FROM CalendarioPartite Where idAnno=" & idAnno & " And idCategoria=" & idCategoria & " And idGiornata=" & idGiornata
+							Rec = LeggeQuery(Conn, Sql, Connessione)
+							If TypeOf (Rec) Is String Then
+								Ritorno = Rec
+							Else
+								If Rec.Eof Then
+									Ritorno = StringaErrore & " Nessun progressivo rilevato"
+								Else
+									If Rec(0).Value Is DBNull.Value Then
+										ProgressivoPartita = "1"
+									Else
+										ProgressivoPartita = Rec(0).Value.ToString
+									End If
+								End If
+								Rec.Close()
+							End If
 						Catch ex As Exception
 							Ritorno = StringaErrore & " " & ex.Message
+							Ok = False
+						End Try
+					End If
+
+					If Ok Then
+						Dim c() As String = Casa.Split(";")
+						Dim f() As String = Fuori.Split(";")
+
+						Try
+							Sql = "SELECT Max(idPartitaGen)+1 FROM CalendarioPartite"
+							Rec = LeggeQuery(Conn, Sql, Connessione)
+							If TypeOf (Rec) Is String Then
+								Ritorno = Rec
+							Else
+								If Rec.Eof Then
+									Ritorno = StringaErrore & " Nessun progressivo generale rilevato"
+								Else
+									If Rec(0).Value Is DBNull.Value Then
+										idUnioneCalendario = "1"
+									Else
+										idUnioneCalendario = Rec(0).Value.ToString
+									End If
+								End If
+								Rec.Close()
+							End If
+						Catch ex As Exception
+							Ritorno = StringaErrore & " " & ex.Message
+							Ok = False
 						End Try
 
-						If Not Ritorno.Contains(StringaErrore & "") Then
-							'Try
-							'    Sql = "Insert Into CalendarioRisultati Values (" & idNuovaPartita & ", '')"
-							'    Ritorno = EsegueSql(Conn, Sql, Connessione)
-							'Catch ex As Exception
-							'    Ritorno = StringaErrore & " " & ex.Message
-							'End Try
+						If Ok Then
+							Try
+								Sql = "Insert Into CalendarioPartite Values (" & idAnno & ", " & idCategoria & ", " & idGiornata & ", " & ProgressivoPartita & ", " & c(0) & ", " & f(0) & ", " & idUnioneCalendario & ", 'N', '')"
+								Ritorno = EsegueSql(Conn, Sql, Connessione)
+							Catch ex As Exception
+								Ritorno = StringaErrore & " " & ex.Message
+								Ok = False
+							End Try
 
-							If Not Ritorno.Contains(StringaErrore & "") Then
-								If Val(c(0)) = -1 Or Val(f(0)) = -1 Then
-									Dim idAvversario As Integer
-									Dim Datella As Date = Data & " " & Ora
-									Dim dOraConv As Date = Datella.AddMinutes(-45)
-									Dim OraConv As String = dOraConv.Hour & ":" & dOraConv.Minute
-									Dim inCasa As String = ""
+							If Ok Then
+								If Mid(Ora, 1, 3) = "24:" Then Ora = "00:" & Mid(Ora, 4, Ora.Length)
+								Try
+									Sql = "Insert Into CalendarioDate Values (" & idAnno & ", " & idCategoria & ", " & ProgressivoPartita & ", " & idGiornata & ", '" & Data & " " & Ora & "')"
+									Ritorno = EsegueSql(Conn, Sql, Connessione)
+								Catch ex As Exception
+									Ritorno = StringaErrore & " " & ex.Message
+									Ok = False
+								End Try
 
-									If Val(c(0)) = -1 Then
-										idAvversario = f(0)
-										inCasa = "S"
-									Else
-										idAvversario = c(0)
-										inCasa = "N"
-									End If
+								If Ok Then
+									'Try
+									'    Sql = "Insert Into CalendarioRisultati Values (" & idNuovaPartita & ", '')"
+									'    Ritorno = EsegueSql(Conn, Sql, Connessione)
+									'Catch ex As Exception
+									'    Ritorno = StringaErrore & " " & ex.Message
+									'End Try
 
-									Dim idCampo As Integer
+									If Not Ritorno.Contains(StringaErrore & "") Then
+										If Val(c(0)) = -1 Or Val(f(0)) = -1 Then
+											Dim idAvversario As Integer
+											Dim Datella As Date = Data & " " & Ora
+											Dim dOraConv As Date = Datella.AddMinutes(-45)
+											Dim OraConv As String = dOraConv.Hour & ":" & dOraConv.Minute
+											Dim inCasa As String = ""
 
-									Try
-										Sql = "SELECT idCampo FROM SquadreAvversarie Where idAvversario=" & idAvversario & " And Eliminato='N'"
-										Rec = LeggeQuery(Conn, Sql, Connessione)
-										If TypeOf (Rec) Is String Then
-											Ritorno = Rec
-										Else
-											If Rec.Eof Then
-												Ritorno = StringaErrore & " Nessun campo rilevato"
+											If Val(c(0)) = -1 Then
+												idAvversario = f(0)
+												inCasa = "S"
 											Else
-												idCampo = Rec(0).Value.ToString
+												idAvversario = c(0)
+												inCasa = "N"
 											End If
-											Rec.Close()
-										End If
-									Catch ex As Exception
-										Ritorno = StringaErrore & " " & ex.Message
-									End Try
 
-									If Not Ritorno.Contains("ERROR") Then
-										Dim idAllenatore As Integer
+											Dim idCampo As Integer
 
-										Try
-											Sql = "SELECT idAllenatore FROM Allenatori Where idAnno=" & idAnno & " And idCategoria=" & idCategoria & " And Eliminato='N'"
-											Rec = LeggeQuery(Conn, Sql, Connessione)
-											If TypeOf (Rec) Is String Then
-												Ritorno = Rec
-											Else
-												If Rec.Eof Then
-													Ritorno = StringaErrore & " Nessun allenatore rilevato"
-												Else
-													idAllenatore = Rec(0).Value.ToString
-												End If
-												Rec.Close()
-											End If
-										Catch ex As Exception
-											Ritorno = StringaErrore & " " & ex.Message
-										End Try
-
-										If Not Ritorno.Contains("ERROR") Then
 											Try
-												Sql = "Insert Into Partite Values (" & idAnno & ", " & idNuovaPartita & ", " & idCategoria & ", " &
-													"" & idAvversario & ", " & idAllenatore & ", '" & Data & " " & Ora & "', " &
-													"'N', '" & inCasa & "', 1, " & idCampo & ", '" & OraConv & "', " & idUnioneCalendario & ")"
-												Ritorno = EsegueSql(Conn, Sql, Connessione)
+												Sql = "SELECT idCampo FROM SquadreAvversarie Where idAvversario=" & idAvversario & " And Eliminato='N'"
+												Rec = LeggeQuery(Conn, Sql, Connessione)
+												If TypeOf (Rec) Is String Then
+													Ritorno = Rec
+												Else
+													If Rec.Eof Then
+														Ritorno = StringaErrore & " Nessun campo rilevato"
+													Else
+														idCampo = Rec(0).Value.ToString
+													End If
+													Rec.Close()
+												End If
 											Catch ex As Exception
 												Ritorno = StringaErrore & " " & ex.Message
+												Ok = False
 											End Try
+
+											If Ok Then
+												Dim idAllenatore As Integer
+
+												Try
+													Sql = "SELECT idAllenatore FROM Allenatori Where idAnno=" & idAnno & " And idCategoria=" & idCategoria & " And Eliminato='N'"
+													Rec = LeggeQuery(Conn, Sql, Connessione)
+													If TypeOf (Rec) Is String Then
+														Ritorno = Rec
+													Else
+														If Rec.Eof Then
+															Ritorno = StringaErrore & " Nessun allenatore rilevato"
+														Else
+															idAllenatore = Rec(0).Value.ToString
+														End If
+														Rec.Close()
+													End If
+												Catch ex As Exception
+													Ritorno = StringaErrore & " " & ex.Message
+													Ok = False
+												End Try
+
+												If Ok Then
+													Try
+														Sql = "Insert Into Partite Values (" & idAnno & ", " & idNuovaPartita & ", " & idCategoria & ", " &
+															"" & idAvversario & ", " & idAllenatore & ", '" & Data & " " & Ora & "', " &
+															"'N', '" & inCasa & "', 1, " & idCampo & ", '" & OraConv & "', " & idUnioneCalendario & ")"
+														Ritorno = EsegueSql(Conn, Sql, Connessione)
+													Catch ex As Exception
+														Ritorno = StringaErrore & " " & ex.Message
+														Ok = False
+													End Try
+												End If
+											End If
 										End If
 									End If
 								End If
 							End If
 						End If
+
+						If Ok Then
+							Ritorno = idGiornata & ";" & idUnioneCalendario & ";" & ProgressivoPartita & ";" & Data & ";" & Ora & ";" & Casa & Fuori & idNuovaPartita & ";"
+						Else
+							Dim Appoggio As String = Ritorno
+
+							If ProgressivoPartita <> "" Then
+								Try
+									Sql = "Delete From CalendarioPartite Where idAnno=" & idAnno & " And idCategoria=" & idCategoria & " And idGiornata=" & idGiornata & " And idPartita=" & ProgressivoPartita
+									Ritorno = EsegueSql(Conn, Sql, Connessione)
+								Catch ex As Exception
+
+								End Try
+							End If
+
+							If idNuovaPartita <> -1 Then
+								Try
+									Sql = "Delete From CalendarioDate Where idAnno=" & idAnno & " And idCategoria=" & idCategoria & " And idGiornata=" & idGiornata & " And idPartita=" & idNuovaPartita
+									Ritorno = EsegueSql(Conn, Sql, Connessione)
+								Catch ex As Exception
+								End Try
+							End If
+
+							If idNuovaPartita <> -1 And idUnioneCalendario <> "" Then
+								Try
+									Sql = "Delete From Partite Where idAnno=" & idAnno & " And idPartita=" & idNuovaPartita & " And idCategoria=" & idCategoria & " And idUnioneCalendario=" & idUnioneCalendario
+									Ritorno = EsegueSql(Conn, Sql, Connessione)
+								Catch ex As Exception
+								End Try
+							End If
+
+							Ritorno = Appoggio
+						End If
 					End If
+				Else
+					Ok = False
 				End If
 
-				If Not Ritorno.Contains("ERROR") Then
-					Ritorno = idGiornata & ";" & idUnioneCalendario & ";" & ProgressivoPartita & ";" & Data & ";" & Ora & ";" & Casa & Fuori & idNuovaPartita & ";"
+				If Ok Then
+					Sql = "commit"
+					Dim Ritorno2 As String = EsegueSql(Conn, Sql, Connessione)
 				Else
-					Dim Appoggio As String = Ritorno
-
-					If ProgressivoPartita <> "" Then
-						Try
-							Sql = "Delete From CalendarioPartite Where idAnno=" & idAnno & " And idCategoria=" & idCategoria & " And idGiornata=" & idGiornata & " And idPartita=" & ProgressivoPartita
-							Ritorno = EsegueSql(Conn, Sql, Connessione)
-						Catch ex As Exception
-
-						End Try
-					End If
-
-					If idNuovaPartita <> -1 Then
-						Try
-							Sql = "Delete From CalendarioDate Where idAnno=" & idAnno & " And idCategoria=" & idCategoria & " And idGiornata=" & idGiornata & " And idPartita=" & idNuovaPartita
-							Ritorno = EsegueSql(Conn, Sql, Connessione)
-						Catch ex As Exception
-
-						End Try
-					End If
-
-					'If idNuovaPartita <> -1 Then
-					'    Try
-					'        Sql = "Delete From CalendarioRisultati Where idPartita=" & idNuovaPartita
-					'        Ritorno = EsegueSql(Conn, Sql, Connessione)
-					'    Catch ex As Exception
-
-					'    End Try
-					'End If
-
-					If idNuovaPartita <> -1 And idUnioneCalendario <> "" Then
-						Try
-							Sql = "Delete From Partite Where idAnno=" & idAnno & " And idPartita=" & idNuovaPartita & " And idCategoria=" & idCategoria & " And idUnioneCalendario=" & idUnioneCalendario
-							Ritorno = EsegueSql(Conn, Sql, Connessione)
-						Catch ex As Exception
-
-						End Try
-					End If
-
-					Ritorno = Appoggio
+					Sql = "rollback"
+					Dim Ritorno2 As String = EsegueSql(Conn, Sql, Connessione)
 				End If
 
 				Conn.Close()
@@ -819,7 +872,7 @@ Public Class wsCampionato
 		End If
 
 		Return Ritorno
-	End Function
+    End Function
 
 	<WebMethod()>
 	Public Function EliminaPartita(Squadra As String, ByVal idAnno As String, idGiornata As String, idCategoria As String, idPartita As String) As String
@@ -836,82 +889,107 @@ Public Class wsCampionato
 			Else
 				Dim Rec As Object = Server.CreateObject("ADODB.Recordset")
 				Dim idUnioneCalendario As Integer = -1
-				Dim Sql As String = "Select * From Partite Where idAnno=" & idAnno & " And idUnioneCalendario=" & idPartita
+				Dim Sql As String = ""
+				Dim Ok As Boolean = True
 
-				Try
-					Rec = LeggeQuery(Conn, Sql, Connessione)
-					If TypeOf (Rec) Is String Then
-						Ritorno = Rec
-					Else
-						If Rec.Eof Then
-							Ritorno = "*"
+				Sql = "Begin transaction"
+				Ritorno = EsegueSql(Conn, Sql, Connessione)
+
+				If Not Ritorno.Contains(StringaErrore) Then
+					Sql = "Select * From Partite Where idAnno=" & idAnno & " And idUnioneCalendario=" & idPartita
+					Try
+						Rec = LeggeQuery(Conn, Sql, Connessione)
+						If TypeOf (Rec) Is String Then
+							Ritorno = Rec
 						Else
-							idUnioneCalendario = Rec("idUnioneCalendario").Value
-						End If
-						Rec.Close()
-					End If
-				Catch ex As Exception
-					Ritorno = StringaErrore & " " & ex.Message
-				End Try
-
-				If idUnioneCalendario <> -1 Then
-					Try
-						Sql = "Delete From Partite Where idAnno=" & idAnno & " And idUnioneCalendario=" & idPartita
-						Ritorno = EsegueSql(Conn, Sql, Connessione)
-					Catch ex As Exception
-						Ritorno = StringaErrore & " " & ex.Message
-					End Try
-				End If
-
-				If Not Ritorno.Contains(StringaErrore & "") Then
-					Try
-						Sql = "Delete From CalendarioRisultati Where idPartita=" & idPartita
-						Ritorno = EsegueSql(Conn, Sql, Connessione)
-					Catch ex As Exception
-						Ritorno = StringaErrore & " " & ex.Message
-					End Try
-
-					If Not Ritorno.Contains(StringaErrore & "") Then
-						Dim idPartitaGiornata As Integer = -1
-						Sql = "Select * From CalendarioPartite Where idAnno=" & idAnno & " And idPartitaGen=" & idPartita
-						Try
-							Rec = LeggeQuery(Conn, Sql, Connessione)
-							If TypeOf (Rec) Is String Then
-								Ritorno = Rec
+							If Rec.Eof Then
+								Ritorno = "*"
 							Else
-								If Rec.Eof Then
-									Ritorno = StringaErrore & " nessun idPartita della giornata rilevato"
-								Else
-									idPartitaGiornata = Rec("idPartita").Value
-								End If
-								Rec.Close()
+								idUnioneCalendario = Rec("idUnioneCalendario").Value
 							End If
-						Catch ex As Exception
-							Ritorno = StringaErrore & " " & ex.Message
-						End Try
+							Rec.Close()
+						End If
+					Catch ex As Exception
+						Ritorno = StringaErrore & " " & ex.Message
+						Ok = False
+					End Try
 
-						If Not Ritorno.Contains(StringaErrore & "") Then
+					If Ok Then
+						If idUnioneCalendario <> -1 Then
 							Try
-								Sql = "Delete From CalendarioDate Where idAnno=" & idAnno & " And idCategoria=" & idCategoria & " And idGiornata=" & idGiornata & " And idPartita=" & idPartitaGiornata
+								Sql = "Delete From Partite Where idAnno=" & idAnno & " And idUnioneCalendario=" & idPartita
 								Ritorno = EsegueSql(Conn, Sql, Connessione)
 							Catch ex As Exception
 								Ritorno = StringaErrore & " " & ex.Message
+								Ok = False
+							End Try
+						End If
+					End If
+
+					If Ok Then
+						Try
+							Sql = "Delete From CalendarioRisultati Where idPartita=" & idPartita
+							Ritorno = EsegueSql(Conn, Sql, Connessione)
+						Catch ex As Exception
+							Ritorno = StringaErrore & " " & ex.Message
+							Ok = False
+						End Try
+
+						If Ok Then
+							Dim idPartitaGiornata As Integer = -1
+							Sql = "Select * From CalendarioPartite Where idAnno=" & idAnno & " And idPartitaGen=" & idPartita
+							Try
+								Rec = LeggeQuery(Conn, Sql, Connessione)
+								If TypeOf (Rec) Is String Then
+									Ritorno = Rec
+								Else
+									If Rec.Eof Then
+										Ritorno = StringaErrore & " nessun idPartita della giornata rilevato"
+									Else
+										idPartitaGiornata = Rec("idPartita").Value
+									End If
+									Rec.Close()
+								End If
+							Catch ex As Exception
+								Ritorno = StringaErrore & " " & ex.Message
+								Ok = False
 							End Try
 
-							If Not Ritorno.Contains(StringaErrore & "") Then
+							If Ok Then
 								Try
-									Sql = "Delete From CalendarioPartite Where idAnno=" & idAnno & " And idCategoria=" & idCategoria & " And idGiornata=" & idGiornata & " And idPartita=" & idPartitaGiornata
+									Sql = "Delete From CalendarioDate Where idAnno=" & idAnno & " And idCategoria=" & idCategoria & " And idGiornata=" & idGiornata & " And idPartita=" & idPartitaGiornata
 									Ritorno = EsegueSql(Conn, Sql, Connessione)
 								Catch ex As Exception
 									Ritorno = StringaErrore & " " & ex.Message
+									Ok = False
 								End Try
 
-								If Not Ritorno.Contains("ERROR") Then
-									Ritorno = idGiornata & ";" & idPartitaGiornata & ";"
+								If Ok Then
+									Try
+										Sql = "Delete From CalendarioPartite Where idAnno=" & idAnno & " And idCategoria=" & idCategoria & " And idGiornata=" & idGiornata & " And idPartita=" & idPartitaGiornata
+										Ritorno = EsegueSql(Conn, Sql, Connessione)
+									Catch ex As Exception
+										Ritorno = StringaErrore & " " & ex.Message
+										Ok = False
+									End Try
+
+									If Ok Then
+										Ritorno = idGiornata & ";" & idPartitaGiornata & ";"
+									End If
 								End If
 							End If
 						End If
 					End If
+				Else
+					Ok = False
+				End If
+
+				If Ok Then
+					Sql = "commit"
+					Dim Ritorno2 As String = EsegueSql(Conn, Sql, Connessione)
+				Else
+					Sql = "rollback"
+					Dim Ritorno2 As String = EsegueSql(Conn, Sql, Connessione)
 				End If
 
 				Conn.Close()
@@ -939,59 +1017,78 @@ Public Class wsCampionato
 			Else
 				Dim Rec As Object = Server.CreateObject("ADODB.Recordset")
 				Dim Sql As String = ""
+				Dim Ok As Boolean = True
 
-				Dim c() As String = Casa.Split(";")
-				Dim f() As String = Fuori.Split(";")
+				Sql = "Begin transaction"
+				Ritorno = EsegueSql(Conn, Sql, Connessione)
 
-				If Risultato <> "" Then
-					Giocata = "S"
-				Else
-					Giocata = "N"
-				End If
+				If Not Ritorno.Contains(StringaErrore) Then
+					Dim c() As String = Casa.Split(";")
+					Dim f() As String = Fuori.Split(";")
 
-				Try
-					Sql = "Update CalendarioPartite Set " &
-						"idSqCasa=" & c(0) & ", " &
-						"idSqFuori=" & f(0) & ", " &
-						"Giocata='" & Giocata & "', " &
-						"Risultato='" & Risultato & "' " &
-						"Where idPartitaGen=" & idUnioneCalendario
-					Ritorno = EsegueSql(Conn, Sql, Connessione)
-				Catch ex As Exception
-					Ritorno = StringaErrore & " " & ex.Message
-				End Try
+					If Risultato <> "" Then
+						Giocata = "S"
+					Else
+						Giocata = "N"
+					End If
 
-				If Not Ritorno.Contains(StringaErrore & "") Then
 					Try
-						Sql = "Update CalendarioDate Set " &
-							"Datella='" & Data & " " & Ora & "' " &
-							"Where idAnno=" & idAnno & " And idCategoria=" & idCategoria & " And idGiornata=" & idGiornata & " And idPartita=" & ProgressivoPartita
+						Sql = "Update CalendarioPartite Set " &
+							"idSqCasa=" & c(0) & ", " &
+							"idSqFuori=" & f(0) & ", " &
+							"Giocata='" & Giocata & "', " &
+							"Risultato='" & Risultato & "' " &
+							"Where idPartitaGen=" & idUnioneCalendario
 						Ritorno = EsegueSql(Conn, Sql, Connessione)
 					Catch ex As Exception
 						Ritorno = StringaErrore & " " & ex.Message
+						Ok = False
 					End Try
-				End If
 
-				If Not Ritorno.Contains(StringaErrore & "") Then
-					If Risultato <> "" Then
+					If Ok Then
 						Try
-							Sql = "Delete From CalendarioRisultati Where idPartita=" & idUnioneCalendario
-							Ritorno = EsegueSql(Conn, Sql, Connessione)
-						Catch ex As Exception
-						End Try
-
-						Try
-							Sql = "Insert Into CalendarioRisultati Values (" & idUnioneCalendario & ", '" & Risultato & "')"
+							Sql = "Update CalendarioDate Set " &
+								"Datella='" & Data & " " & Ora & "' " &
+								"Where idAnno=" & idAnno & " And idCategoria=" & idCategoria & " And idGiornata=" & idGiornata & " And idPartita=" & ProgressivoPartita
 							Ritorno = EsegueSql(Conn, Sql, Connessione)
 						Catch ex As Exception
 							Ritorno = StringaErrore & " " & ex.Message
+							Ok = False
 						End Try
 					End If
-				End If
-			End If
 
-			If Not Ritorno.Contains("ERROR") Then
-				Ritorno = idGiornata & ";" & idUnioneCalendario & ";" & ProgressivoPartita & ";" & Data & ";" & Ora & ";" & Casa & Fuori & Giocata & ";" & Risultato & ";"
+					If Ok Then
+						If Risultato <> "" Then
+							Try
+								Sql = "Delete From CalendarioRisultati Where idPartita=" & idUnioneCalendario
+								Ritorno = EsegueSql(Conn, Sql, Connessione)
+							Catch ex As Exception
+							End Try
+
+							Try
+								Sql = "Insert Into CalendarioRisultati Values (" & idUnioneCalendario & ", '" & Risultato & "')"
+								Ritorno = EsegueSql(Conn, Sql, Connessione)
+							Catch ex As Exception
+								Ritorno = StringaErrore & " " & ex.Message
+								Ok = False
+							End Try
+						End If
+					End If
+				Else
+					Ok = False
+				End If
+
+				If Not Ritorno.Contains("ERROR") Then
+					Ritorno = idGiornata & ";" & idUnioneCalendario & ";" & ProgressivoPartita & ";" & Data & ";" & Ora & ";" & Casa & Fuori & Giocata & ";" & Risultato & ";"
+				End If
+
+				If Ok Then
+					Sql = "commit"
+					Dim Ritorno2 As String = EsegueSql(Conn, Sql, Connessione)
+				Else
+					Sql = "rollback"
+					Dim Ritorno2 As String = EsegueSql(Conn, Sql, Connessione)
+				End If
 			End If
 
 			Conn.Close()
@@ -1054,20 +1151,38 @@ Public Class wsCampionato
 			Else
 				Dim Rec As Object = Server.CreateObject("ADODB.Recordset")
 				Dim Sql As String = ""
+				Dim Ok As Boolean = True
 
-				Try
-					Sql = "Delete From Giornata Where idUtente=" & idUtente & " And idAnno=" & idAnno & " And idCategoria=" & idCategoria
-					Ritorno = EsegueSql(Conn, Sql, Connessione)
-				Catch ex As Exception
-					Ritorno = StringaErrore & " " & ex.Message
-				End Try
+				Sql = "Begin transaction"
+				Ritorno = EsegueSql(Conn, Sql, Connessione)
 
-				Try
-					Sql = "Insert Into Giornata Values (" & idUtente & ", " & idAnno & ", " & idCategoria & ", " & idGiornata & ")"
-					Ritorno = EsegueSql(Conn, Sql, Connessione)
-				Catch ex As Exception
-					Ritorno = StringaErrore & " " & ex.Message
-				End Try
+				If Not Ritorno.Contains(StringaErrore) Then
+					Try
+						Sql = "Delete From Giornata Where idUtente=" & idUtente & " And idAnno=" & idAnno & " And idCategoria=" & idCategoria
+						Ritorno = EsegueSql(Conn, Sql, Connessione)
+					Catch ex As Exception
+						Ritorno = StringaErrore & " " & ex.Message
+						Ok = False
+					End Try
+
+					Try
+						Sql = "Insert Into Giornata Values (" & idUtente & ", " & idAnno & ", " & idCategoria & ", " & idGiornata & ")"
+						Ritorno = EsegueSql(Conn, Sql, Connessione)
+					Catch ex As Exception
+						Ritorno = StringaErrore & " " & ex.Message
+						Ok = False
+					End Try
+				Else
+					Ok = False
+				End If
+
+				If Ok Then
+					Sql = "commit"
+					Dim Ritorno2 As String = EsegueSql(Conn, Sql, Connessione)
+				Else
+					Sql = "rollback"
+					Dim Ritorno2 As String = EsegueSql(Conn, Sql, Connessione)
+				End If
 
 				Conn.Close()
 			End If

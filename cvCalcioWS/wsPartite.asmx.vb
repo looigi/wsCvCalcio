@@ -32,13 +32,21 @@ Public Class wsPartite
 				Dim Rec As Object = Server.CreateObject("ADODB.Recordset")
 				Dim Sql As String = ""
 
-				Try
-					Sql = "Delete From Partite Where idPartita=" & idPartita
-					Ritorno = EsegueSql(Conn, Sql, Connessione)
-				Catch ex As Exception
-					Ritorno = StringaErrore & " " & ex.Message
+				Sql = "Begin transaction"
+				Ritorno = EsegueSql(Conn, Sql, Connessione)
+				If Ritorno <> "*" Then
 					Ok = False
-				End Try
+				End If
+
+				If Ok Then
+					Try
+						Sql = "Delete From Partite Where idPartita=" & idPartita
+						Ritorno = EsegueSql(Conn, Sql, Connessione)
+					Catch ex As Exception
+						Ritorno = StringaErrore & " " & ex.Message
+						Ok = False
+					End Try
+				End If
 
 				If Ok Then
 					Try
@@ -192,7 +200,7 @@ Public Class wsPartite
 							" " & idCategoria & ", " &
 							" " & idAvversario & ", " &
 							" " & idAllenatore & ", " &
-							"'" & DataOra.Replace("%20", " ") & "', " &
+							"'" & DataOra.Replace("%20", " ").Replace("-", "") & "', " &
 							"'S', " &
 							"'" & Casa & "', " &
 							" " & idTipologia & ", " &
@@ -202,6 +210,9 @@ Public Class wsPartite
 							"'" & RisultatoATempi & "' " &
 							")"
 						Ritorno = EsegueSql(Conn, Sql, Connessione)
+						If Ritorno.Contains(StringaErrore) Then
+							Ok = False
+						End If
 					Catch ex As Exception
 						Ritorno = StringaErrore & " " & ex.Message
 						Ok = False
@@ -212,10 +223,13 @@ Public Class wsPartite
 					If Casa = "E" And Campo <> "" Then
 						Try
 							Sql = "Insert Into CampiEsterni Values (" &
-							" " & idPartita & ", " &
-							"'" & Campo.Replace("'", "''") & "' " &
-							")"
+								" " & idPartita & ", " &
+								"'" & Campo.Replace("'", "''") & "' " &
+								")"
 							Ritorno = EsegueSql(Conn, Sql, Connessione)
+							If Ritorno.Contains(StringaErrore) Then
+								Ok = False
+							End If
 						Catch ex As Exception
 							Ritorno = StringaErrore & " " & ex.Message
 							Ok = False
@@ -231,6 +245,9 @@ Public Class wsPartite
 							"'" & Notelle.Replace("'", "''") & "' " &
 							")"
 						Ritorno = EsegueSql(Conn, Sql, Connessione)
+						If Ritorno.Contains(StringaErrore) Then
+							Ok = False
+						End If
 					Catch ex As Exception
 						Ritorno = StringaErrore & " " & ex.Message
 						Ok = False
@@ -238,69 +255,87 @@ Public Class wsPartite
 				End If
 
 				If Ok Then
-					Dim GA() As String = RisAvv.Split(";")
+					If RisAvv <> "" Then
+						Dim GA() As String = RisAvv.Split(";")
 
-					Try
-						Sql = "Insert Into RisultatiAggiuntivi Values (" &
-							" " & idPartita & ", " &
-							"'" & RisGiochetti & "', " &
-							" " & GA(0) & ", " &
-							" " & GA(1) & ", " &
-							" " & GA(2) & ", " &
-							"'" & Tempo1Tempo & "', " &
-							"'" & Tempo2Tempo & "', " &
-							"'" & Tempo3Tempo & "' " &
-							")"
-						Ritorno = EsegueSql(Conn, Sql, Connessione)
-					Catch ex As Exception
-						Ritorno = StringaErrore & " " & ex.Message
-						Ok = False
-					End Try
+						Try
+							Sql = "Insert Into RisultatiAggiuntivi Values (" &
+								" " & idPartita & ", " &
+								"'" & RisGiochetti & "', " &
+								" " & GA(0) & ", " &
+								" " & GA(1) & ", " &
+								" " & GA(2) & ", " &
+								"'" & Tempo1Tempo & "', " &
+								"'" & Tempo2Tempo & "', " &
+								"'" & Tempo3Tempo & "' " &
+								")"
+							Ritorno = EsegueSql(Conn, Sql, Connessione)
+							If Ritorno.Contains(StringaErrore) Then
+								Ok = False
+							End If
+						Catch ex As Exception
+							Ritorno = StringaErrore & " " & ex.Message
+							Ok = False
+						End Try
+					End If
 				End If
 
 				If Ok Then
-					Dim CC() As String = Coordinate.Split(";")
+					If Coordinate <> "" Then
+						Dim CC() As String = Coordinate.Split(";")
 
-					Try
-						Sql = "Insert Into CoordinatePartite Values (" &
-							" " & idPartita & ", " &
-							"'" & CC(0) & "', " &
-							"'" & CC(1) & "' " &
-							")"
-						Ritorno = EsegueSql(Conn, Sql, Connessione)
-					Catch ex As Exception
-						Ritorno = StringaErrore & " " & ex.Message
-						Ok = False
-					End Try
+						Try
+							Sql = "Insert Into CoordinatePartite Values (" &
+								" " & idPartita & ", " &
+								"'" & CC(0) & "', " &
+								"'" & CC(1) & "' " &
+								")"
+							Ritorno = EsegueSql(Conn, Sql, Connessione)
+							If Ritorno.Contains(StringaErrore) Then
+								Ok = False
+							End If
+						Catch ex As Exception
+							Ritorno = StringaErrore & " " & ex.Message
+							Ok = False
+						End Try
+					End If
 				End If
 
 				If Ok Then
-					Dim TT() As String = sTempo.Split(";")
+					If sTempo <> "" Then
+						Dim TT() As String = sTempo.Split(";")
 
-					Try
-						Sql = "Insert Into MeteoPartite Values (" &
-							" " & idPartita & ", " &
-							"'" & TT(0) & "', " &
-							"'" & TT(1) & "', " &
-							"'" & TT(2) & "', " &
-							"'" & TT(3) & "' " &
-							")"
-						Ritorno = EsegueSql(Conn, Sql, Connessione)
-					Catch ex As Exception
-						Ritorno = StringaErrore & " " & ex.Message
-						Ok = False
-					End Try
+						Try
+							Sql = "Insert Into MeteoPartite Values (" &
+								" " & idPartita & ", " &
+								"'" & TT(0) & "', " &
+								"'" & TT(1) & "', " &
+								"'" & TT(2) & "', " &
+								"'" & TT(3) & "' " &
+								")"
+							Ritorno = EsegueSql(Conn, Sql, Connessione)
+							If Ritorno.Contains(StringaErrore) Then
+								Ok = False
+							End If
+						Catch ex As Exception
+							Ritorno = StringaErrore & " " & ex.Message
+							Ok = False
+						End Try
+					End If
 				End If
 
 				If Ok Then
 					Try
 						Sql = "Insert Into TempiGoalAvversari Values (" &
 							" " & idPartita & ", " &
-							"'" & TGA1 & "', " &
-							"'" & TGA2 & "', " &
-							"'" & TGA3 & "' " &
+							"'" & TGA1.Replace("$", "#") & "', " &
+							"'" & TGA2.Replace("$", "#") & "', " &
+							"'" & TGA3.Replace("$", "#") & "' " &
 							")"
 						Ritorno = EsegueSql(Conn, Sql, Connessione)
+						If Ritorno.Contains(StringaErrore) Then
+							Ok = False
+						End If
 					Catch ex As Exception
 						Ritorno = StringaErrore & " " & ex.Message
 						Ok = False
@@ -308,167 +343,159 @@ Public Class wsPartite
 				End If
 
 				If Ok Then
-					Try
-						For Each M As String In Marcatori.Split("§")
-							If M <> "" Then
-								Dim Campi() As String = M.Split(";")
-								Dim Tempo As String = Campi(0)
-								Dim idMarcatore As String = Campi(1)
-								If Campi(3) = "Autorete" Then
-									idMarcatore = -1
-								End If
-								Dim Minuto As String = ""
-								If Campi.Length > 4 Then
-									Minuto = Campi(5)
-								End If
-
-								If Minuto = "" Then Minuto = "null"
-
-								Dim Progressivo As Integer = -1
-
-								'Sql = "SELECT Max(idProgressivo)+1 FROM Marcatori Where idPartita=" & idPartita & " And idGiocatore=" & idMarcatore
-								'Rec = LeggeQuery(Conn, Sql, Connessione)
-								'If TypeOf (Rec) Is String Then
-								'    Ritorno = Rec
-								'    Ok = False
-								'Else
-								'    If Rec(0).Value Is DBNull.Value Then
-								'        Progressivo = 1
-								'    Else
-								'        Progressivo = Rec(0).Value
-								'    End If
-								'    Rec.Close()
-								'End If
-
-								'If Ok Then
-								'    Sql = "Insert Into Marcatori Values (" & _
-								'        " " & idPartita & ", " &
-								'        " " & idMarcatore & ", " &
-								'        " " & Progressivo & ", " &
-								'        " " & Minuto & " " &
-								'        ")"
-								'    Ritorno = EsegueSql(Conn, Sql, Connessione)
-								'Else
-								'    Exit For
-								'End If
-
-								If Ok Then
-									Sql = "SELECT Max(Progressivo)+1 FROM RisultatiAggiuntiviMarcatori Where idPartita=" & idPartita & " And idTempo=" & Tempo
-									Rec = LeggeQuery(Conn, Sql, Connessione)
-									If TypeOf (Rec) Is String Then
-										Ritorno = Rec
-										Ok = False
-									Else
-										If Rec(0).Value Is DBNull.Value Then
-											Progressivo = 1
-										Else
-											Progressivo = Rec(0).Value
-										End If
-										Rec.Close()
+					If Marcatori <> "" Then
+						Try
+							For Each M As String In Marcatori.Split("§")
+								If M <> "" Then
+									Dim Campi() As String = M.Split(";")
+									Dim Tempo As String = Campi(0)
+									Dim idMarcatore As String = Campi(1)
+									If Campi(3) = "Autorete" Then
+										idMarcatore = -1
+									End If
+									Dim Minuto As String = ""
+									If Campi.Length > 4 Then
+										Minuto = Campi(5)
 									End If
 
-									Sql = "Insert Into RisultatiAggiuntiviMarcatori Values (" &
-										" " & idPartita & ", " &
-										" " & Tempo & ", " &
-										" " & Progressivo & ", " &
-										" " & idMarcatore & ", " &
-										" " & Minuto & " " &
-										")"
-									Ritorno = EsegueSql(Conn, Sql, Connessione)
+									If Minuto = "" Then Minuto = "null"
+
+									Dim Progressivo As Integer = -1
+
+									If Ok Then
+										Sql = "SELECT Max(Progressivo)+1 FROM RisultatiAggiuntiviMarcatori Where idPartita=" & idPartita & " And idTempo=" & Tempo
+										Rec = LeggeQuery(Conn, Sql, Connessione)
+										If TypeOf (Rec) Is String Then
+											Ritorno = Rec
+											Ok = False
+										Else
+											If Rec(0).Value Is DBNull.Value Then
+												Progressivo = 1
+											Else
+												Progressivo = Rec(0).Value
+											End If
+											Rec.Close()
+										End If
+
+										Sql = "Insert Into RisultatiAggiuntiviMarcatori Values (" &
+											" " & idPartita & ", " &
+											" " & Tempo & ", " &
+											" " & Progressivo & ", " &
+											" " & idMarcatore & ", " &
+											" " & Minuto & " " &
+											")"
+										Ritorno = EsegueSql(Conn, Sql, Connessione)
+										If Ritorno.Contains(StringaErrore) Then
+											Ok = False
+											Exit For
+										End If
+									End If
 								End If
-							End If
-						Next
-					Catch ex As Exception
-						Ritorno = StringaErrore & " " & ex.Message
-						Ok = False
-					End Try
+							Next
+						Catch ex As Exception
+							Ritorno = StringaErrore & " " & ex.Message
+							Ok = False
+						End Try
+					End If
 				End If
 
 				If Ok Then
-					Dim Progressivo As Integer = -1
+					If Convocati <> "" Then
+						Dim Progressivo As Integer = -1
 
-					Sql = "SELECT Max(idProgressivo)+1 FROM Convocati Where idPartita=" & idPartita
-					Rec = LeggeQuery(Conn, Sql, Connessione)
-					If TypeOf (Rec) Is String Then
-						Ritorno = Rec
-						Ok = False
-					Else
-						If Rec(0).Value Is DBNull.Value Then
-							Progressivo = 1
+						Sql = "SELECT Max(idProgressivo)+1 FROM Convocati Where idPartita=" & idPartita
+						Rec = LeggeQuery(Conn, Sql, Connessione)
+						If TypeOf (Rec) Is String Then
+							Ritorno = Rec
+							Ok = False
 						Else
-							Progressivo = Rec(0).Value
-						End If
-						Rec.Close()
-					End If
-
-					Try
-						For Each C As String In Convocati.Split("§")
-							If C <> "" Then
-								Dim Campi() As String = C.Split(";")
-								Dim idGioc As String = Campi(0)
-
-								If Ok Then
-									Sql = "Insert Into Convocati Values (" &
-										" " & idPartita & ", " &
-										" " & Progressivo & ", " &
-										" " & idGioc & " " &
-										")"
-									Ritorno = EsegueSql(Conn, Sql, Connessione)
-
-									Progressivo += 1
-								Else
-									Exit For
-								End If
+							If Rec(0).Value Is DBNull.Value Then
+								Progressivo = 1
+							Else
+								Progressivo = Rec(0).Value
 							End If
-						Next
-					Catch ex As Exception
-						Ritorno = StringaErrore & " " & ex.Message
-						Ok = False
-					End Try
+							Rec.Close()
+						End If
+
+						Try
+							For Each C As String In Convocati.Split("§")
+								If C <> "" Then
+									Dim Campi() As String = C.Split(";")
+									Dim idGioc As String = Campi(0)
+
+									If Ok Then
+										Sql = "Insert Into Convocati Values (" &
+											" " & idPartita & ", " &
+											" " & Progressivo & ", " &
+											" " & idGioc & " " &
+											")"
+										Ritorno = EsegueSql(Conn, Sql, Connessione)
+										If Ritorno.Contains(StringaErrore) Then
+											Ok = False
+											Exit For
+										End If
+
+										Progressivo += 1
+									Else
+										Exit For
+									End If
+								End If
+							Next
+						Catch ex As Exception
+							Ritorno = StringaErrore & " " & ex.Message
+							Ok = False
+						End Try
+					End If
 				End If
 
 				If Ok Then
-					Dim Progressivo As Integer = -1
+					If Dirigenti <> "" Then
+						Dim Progressivo As Integer = -1
 
-					Sql = "SELECT Max(Progressivo)+1 FROM DirigentiPartite Where idPartita=" & idPartita & " And idAnno=" & idAnno
-					Rec = LeggeQuery(Conn, Sql, Connessione)
-					If TypeOf (Rec) Is String Then
-						Ritorno = Rec
-						Ok = False
-					Else
-						If Rec(0).Value Is DBNull.Value Then
-							Progressivo = 1
+						Sql = "SELECT Max(Progressivo)+1 FROM DirigentiPartite Where idPartita=" & idPartita & " And idAnno=" & idAnno
+						Rec = LeggeQuery(Conn, Sql, Connessione)
+						If TypeOf (Rec) Is String Then
+							Ritorno = Rec
+							Ok = False
 						Else
-							Progressivo = Rec(0).Value
-						End If
-						Rec.Close()
-					End If
-
-					Try
-						For Each C As String In Dirigenti.Split("§")
-							If C <> "" Then
-								Dim Campi() As String = C.Split(";")
-								Dim idDirigente As String = Campi(0)
-
-								If Ok Then
-									Sql = "Insert Into DirigentiPartite Values (" &
-										" " & idAnno & ", " &
-										" " & idPartita & ", " &
-										" " & Progressivo & ", " &
-										" " & idDirigente & " " &
-										")"
-									Ritorno = EsegueSql(Conn, Sql, Connessione)
-
-									Progressivo += 1
-								Else
-									Exit For
-								End If
+							If Rec(0).Value Is DBNull.Value Then
+								Progressivo = 1
+							Else
+								Progressivo = Rec(0).Value
 							End If
-						Next
-					Catch ex As Exception
-						Ritorno = StringaErrore & " " & ex.Message
-						Ok = False
-					End Try
+							Rec.Close()
+						End If
+
+						Try
+							For Each C As String In Dirigenti.Split("§")
+								If C <> "" Then
+									Dim Campi() As String = C.Split(";")
+									Dim idDirigente As String = Campi(0)
+
+									If Ok Then
+										Sql = "Insert Into DirigentiPartite Values (" &
+											" " & idAnno & ", " &
+											" " & idPartita & ", " &
+											" " & Progressivo & ", " &
+											" " & idDirigente & " " &
+											")"
+										Ritorno = EsegueSql(Conn, Sql, Connessione)
+										If Ritorno.Contains(StringaErrore) Then
+											Ok = False
+											Exit For
+										End If
+
+										Progressivo += 1
+									Else
+										Exit For
+									End If
+								End If
+							Next
+						Catch ex As Exception
+							Ritorno = StringaErrore & " " & ex.Message
+							Ok = False
+						End Try
+					End If
 				End If
 
 				If Ok Then
@@ -476,56 +503,14 @@ Public Class wsPartite
 						If idArbitro = 0 Then idArbitro = 1
 
 						Sql = "Insert Into ArbitriPartite Values (" &
-										" " & idAnno & ", " &
-										" " & idPartita & ", " &
-										"1, " &
-										" " & idArbitro & " " &
-										")"
-						Ritorno = EsegueSql(Conn, Sql, Connessione)
-					Catch ex As Exception
-						Ritorno = StringaErrore & " " & ex.Message
-						Ok = False
-					End Try
-				End If
-
-				If Ok Then
-					Try
-						Dim RigPropri() As String = RigoriPropri.Split("§")
-						Dim Conta As Integer = 0
-
-						For Each s As String In RigPropri
-							If s.Trim <> "" Then
-								Dim c() As String = s.Split(";")
-
-								Conta += 1
-								Sql = "Insert Into RigoriPropri Values (" &
-										" " & idAnno & ", " &
-										" " & idPartita & ", " &
-										" " & Conta & ", " &
-										" " & c(0) & ", " &
-										" " & c(6) & " " &
-										")"
-								Ritorno = EsegueSql(Conn, Sql, Connessione)
-							End If
-						Next
-					Catch ex As Exception
-						Ritorno = StringaErrore & " " & ex.Message
-						Ok = False
-					End Try
-				End If
-
-				If Ok Then
-					Try
-						If RigoriAvv <> "" Then
-							Dim a() As String = RigoriAvv.Split("§")
-
-							Sql = "Insert Into RigoriAvversari Values (" &
 									" " & idAnno & ", " &
 									" " & idPartita & ", " &
-									" " & a(0) & ", " &
-									" " & a(1) & " " &
+									"1, " &
+									" " & idArbitro & " " &
 									")"
-							Ritorno = EsegueSql(Conn, Sql, Connessione)
+						Ritorno = EsegueSql(Conn, Sql, Connessione)
+						If Ritorno.Contains(StringaErrore) Then
+							Ok = False
 						End If
 					Catch ex As Exception
 						Ritorno = StringaErrore & " " & ex.Message
@@ -534,50 +519,112 @@ Public Class wsPartite
 				End If
 
 				If Ok Then
-					Try
-						Dim e() As String = EventiPrimoTempo.Split("§")
-						Dim progr As Integer = 0
+					If RigoriPropri <> "" And RigoriAvv.Contains("§") Then
+						Try
+							Dim RigPropri() As String = RigoriPropri.Split("§")
+							Dim Conta As Integer = 0
 
-						For Each ee As String In e
-							If ee <> "" Then
-								Dim eee() As String = ee.Split(";")
-								Dim idEvento As String = eee(1)
-								Dim idGiocatore As String = eee(3)
-								Dim Minuto As String = eee(0)
+							For Each s As String In RigPropri
+								If s.Trim <> "" Then
+									Dim c() As String = s.Split(";")
 
-								progr += 1
-								Sql = "Insert Into EventiPartita Values (" &
-									" " & idAnno & ", " &
-									" " & idPartita & ", " &
-									"1, " &
-									" " & progr & ", " &
-									" " & idEvento & ", " &
-									" " & idGiocatore & ", " &
-									" " & Minuto & " " &
-									")"
-								Ritorno = EsegueSql(Conn, Sql, Connessione)
-							End If
-						Next
-					Catch ex As Exception
-						Ritorno = StringaErrore & " " & ex.Message
-						Ok = False
-					End Try
+									Conta += 1
+									Sql = "Insert Into RigoriPropri Values (" &
+										" " & idAnno & ", " &
+										" " & idPartita & ", " &
+										" " & Conta & ", " &
+										" " & c(0) & ", " &
+										" " & c(6) & " " &
+										")"
+									Ritorno = EsegueSql(Conn, Sql, Connessione)
+									If Ritorno.Contains(StringaErrore) Then
+										Ok = False
+									End If
+								End If
+							Next
+						Catch ex As Exception
+							Ritorno = StringaErrore & " " & ex.Message
+							Ok = False
+						End Try
+					End If
 				End If
 
 				If Ok Then
-					Try
-						Dim e() As String = EventiSecondoTempo.Split("§")
-						Dim progr As Integer = 0
+					If RigoriAvv <> "" Then
+						Try
+							If RigoriAvv <> "" And RigoriAvv.Contains("§") Then
+								Dim a() As String = RigoriAvv.Split("§")
 
-						For Each ee As String In e
-							If ee <> "" Then
-								Dim eee() As String = ee.Split(";")
-								Dim idEvento As String = eee(1)
-								Dim idGiocatore As String = eee(3)
-								Dim Minuto As String = eee(0)
+								Sql = "Insert Into RigoriAvversari Values (" &
+								" " & idAnno & ", " &
+								" " & idPartita & ", " &
+								" " & a(0) & ", " &
+								" " & a(1) & " " &
+								")"
+								Ritorno = EsegueSql(Conn, Sql, Connessione)
+								If Ritorno.Contains(StringaErrore) Then
+									Ok = False
+								End If
+							End If
+						Catch ex As Exception
+							Ritorno = StringaErrore & " " & ex.Message
+							Ok = False
+						End Try
+					End If
+				End If
 
-								progr += 1
-								Sql = "Insert Into EventiPartita Values (" &
+				If Ok Then
+					If EventiPrimoTempo <> "" Then
+						Try
+							Dim e() As String = EventiPrimoTempo.Split("§")
+							Dim progr As Integer = 0
+
+							For Each ee As String In e
+								If ee <> "" Then
+									Dim eee() As String = ee.Split(";")
+									Dim idEvento As String = eee(1)
+									Dim idGiocatore As String = eee(3)
+									Dim Minuto As String = eee(0)
+
+									progr += 1
+									Sql = "Insert Into EventiPartita Values (" &
+										" " & idAnno & ", " &
+										" " & idPartita & ", " &
+										"1, " &
+										" " & progr & ", " &
+										" " & idEvento & ", " &
+										" " & idGiocatore & ", " &
+										" " & Minuto & " " &
+										")"
+									Ritorno = EsegueSql(Conn, Sql, Connessione)
+									If Ritorno.Contains(StringaErrore) Then
+										Ok = False
+										Exit For
+									End If
+								End If
+							Next
+						Catch ex As Exception
+							Ritorno = StringaErrore & " " & ex.Message
+							Ok = False
+						End Try
+					End If
+				End If
+
+				If Ok Then
+					If EventiSecondoTempo <> "" Then
+						Try
+							Dim e() As String = EventiSecondoTempo.Split("§")
+							Dim progr As Integer = 0
+
+							For Each ee As String In e
+								If ee <> "" Then
+									Dim eee() As String = ee.Split(";")
+									Dim idEvento As String = eee(1)
+									Dim idGiocatore As String = eee(3)
+									Dim Minuto As String = eee(0)
+
+									progr += 1
+									Sql = "Insert Into EventiPartita Values (" &
 										" " & idAnno & ", " &
 										" " & idPartita & ", " &
 										"2, " &
@@ -586,29 +633,35 @@ Public Class wsPartite
 										" " & idGiocatore & ", " &
 										" " & Minuto & " " &
 										")"
-								Ritorno = EsegueSql(Conn, Sql, Connessione)
-							End If
-						Next
-					Catch ex As Exception
-						Ritorno = StringaErrore & " " & ex.Message
-						Ok = False
-					End Try
+									Ritorno = EsegueSql(Conn, Sql, Connessione)
+									If Ritorno.Contains(StringaErrore) Then
+										Ok = False
+										Exit For
+									End If
+								End If
+							Next
+						Catch ex As Exception
+							Ritorno = StringaErrore & " " & ex.Message
+							Ok = False
+						End Try
+					End If
 				End If
 
 				If Ok Then
-					Try
-						Dim e() As String = EventiTerzoTempo.Split("§")
-						Dim progr As Integer = 0
+					If EventiTerzoTempo <> "" Then
+						Try
+							Dim e() As String = EventiTerzoTempo.Split("§")
+							Dim progr As Integer = 0
 
-						For Each ee As String In e
-							If ee <> "" Then
-								Dim eee() As String = ee.Split(";")
-								Dim idEvento As String = eee(1)
-								Dim idGiocatore As String = eee(3)
-								Dim Minuto As String = eee(0)
+							For Each ee As String In e
+								If ee <> "" Then
+									Dim eee() As String = ee.Split(";")
+									Dim idEvento As String = eee(1)
+									Dim idGiocatore As String = eee(3)
+									Dim Minuto As String = eee(0)
 
-								progr += 1
-								Sql = "Insert Into EventiPartita Values (" &
+									progr += 1
+									Sql = "Insert Into EventiPartita Values (" &
 										" " & idAnno & ", " &
 										" " & idPartita & ", " &
 										"3, " &
@@ -617,19 +670,30 @@ Public Class wsPartite
 										" " & idGiocatore & ", " &
 										" " & Minuto & " " &
 										")"
-								Ritorno = EsegueSql(Conn, Sql, Connessione)
-							End If
-						Next
-					Catch ex As Exception
-						Ritorno = StringaErrore & " " & ex.Message
-						Ok = False
-					End Try
+									Ritorno = EsegueSql(Conn, Sql, Connessione)
+									If Ritorno.Contains(StringaErrore) Then
+										Ok = False
+										Exit For
+									End If
+								End If
+							Next
+						Catch ex As Exception
+							Ritorno = StringaErrore & " " & ex.Message
+							Ok = False
+						End Try
+					End If
 				End If
-
-				CreaHtmlPartita(Squadra, Conn, Connessione, idAnno, idPartita)
 
 				If Ok Then
 					Ritorno = "*"
+					Sql = "Commit"
+					Dim Ritorno2 As String = EsegueSql(Conn, Sql, Connessione)
+					If Not Ritorno2.Contains(StringaErrore) Then
+						CreaHtmlPartita(Squadra, Conn, Connessione, idAnno, idPartita)
+					End If
+				Else
+					Sql = "Rollback"
+					Dim Ritorno2 As String = EsegueSql(Conn, Sql, Connessione)
 				End If
 			End If
 
@@ -1108,6 +1172,7 @@ Public Class wsPartite
 								Ritorno &= EventiSecondoTempo & ";"
 								Ritorno &= EventiTerzoTempo & ";"
 
+								Ritorno &= Rec("Risultato").Value & ";"
 								Ritorno &= "§"
 
 								Rec.MoveNext()
@@ -1262,7 +1327,6 @@ Public Class wsPartite
 		Return Ritorno
 	End Function
 
-
 	<WebMethod()>
 	Public Function CreaFoglioConvocazioni(Squadra As String, idAnno As String, idPartita As String) As String
 		Dim Ritorno As String = ""
@@ -1289,91 +1353,101 @@ Public Class wsPartite
 				If TypeOf (Rec) Is String Then
 					Ritorno = Rec
 				Else
-					Dim Filetto As String = gf.LeggeFileIntero(Server.MapPath(".") & "\base_convocazioni.txt")
-					Dim Datella As Date = Rec("DataOra").Value
-					Dim DatellaConv As Date = Datella.AddHours(-1)
+					If Not Rec.Eof Then
+						If Not Rec("DataOra").Value Is DBNull.Value Then
+							Dim Filetto As String = gf.LeggeFileIntero(Server.MapPath(".") & "\base_convocazioni.txt")
+							Dim Datella As Date = Rec("DataOra").Value
+							Dim DatellaConv As Date = Datella.AddHours(-1)
 
-					Filetto = Filetto.Replace("***SQUADRA***", Rec("Categoria").Value)
-					Filetto = Filetto.Replace("***GARA***", Rec("Categoria").Value & " - " & Rec("Avversario").Value)
-					Filetto = Filetto.Replace("***DATA***", Format(Datella.Day, "00") & "/" & Format(Datella.Month, "00") & "/" & Datella.Year)
-					If Rec("CampoEsterno").Value = "" Then
-						Filetto = Filetto.Replace("***CAMPO***", Rec("CampoEsterno").Value)
-						Filetto = Filetto.Replace("***INDIRIZZO***", "")
-					Else
-						Filetto = Filetto.Replace("***CAMPO***", Rec("Campo").Value)
-						Filetto = Filetto.Replace("***INDIRIZZO***", Rec("Indirizzo").Value)
-					End If
-					Filetto = Filetto.Replace("***ORARIO1***", Format(DatellaConv.Hour, "00") & ":" & Format(DatellaConv.Minute, "00"))
-					Filetto = Filetto.Replace("***ORARIO2***", Rec("OraConv").Value)
-
-					Filetto = Filetto.Replace("***MISTER***", Rec("Mister").Value)
-					Filetto = Filetto.Replace("***Telefono***", Rec("Telefono").Value)
-
-					Rec.Close()
-
-					Dim Convocati As String = ""
-					Sql = "SELECT Giocatori.Cognome+' '+Giocatori.Nome AS Giocatore, Ruoli.idRuolo " &
-						"FROM (Convocati LEFT JOIN Giocatori ON Convocati.idGiocatore = Giocatori.idGiocatore) LEFT JOIN Ruoli ON Giocatori.idRuolo = Ruoli.idRuolo " &
-						"WHERE Convocati.idPartita=" & idPartita & " AND Giocatori.idAnno=" & idAnno & " " &
-						"ORDER BY Ruoli.idRuolo, Giocatori.Cognome, Giocatori.Nome"
-					Rec = LeggeQuery(Conn, Sql, Connessione)
-					If TypeOf (Rec) Is String Then
-						Ritorno = Rec
-					Else
-						Dim Giocatori As List(Of String) = New List(Of String)
-
-						Do Until Rec.Eof
-							Giocatori.Add(Rec("Giocatore").Value)
-
-							Rec.MoveNext
-						Loop
-						Rec.Close
-
-						Convocati &= "<table style=""width: 100%;"" cellpadding=""0px"" cellspacing=""0px"">"
-						For i As Integer = 1 To 12
-							Dim Riga As String = "<tr>"
-
-							Riga &= "<td colspan=""1"" class=""adestra"">"
-							Riga &= "<span class=""titolo3"">" & i & "</span>"
-							Riga &= "</td>"
-
-							Riga &= "<td style=""width:10px;"">"
-							Riga &= "&nbsp;"
-							Riga &= "</td>"
-
-							Riga &= "<td colspan=""4"">"
-							If i < Giocatori.Count Then
-								Riga &= "<span class=""titolo3"">" & Giocatori.Item(i) & "</span>"
+							Filetto = Filetto.Replace("***SQUADRA***", Rec("Categoria").Value)
+							Filetto = Filetto.Replace("***GARA***", Rec("Categoria").Value & " - " & Rec("Avversario").Value)
+							Filetto = Filetto.Replace("***DATA***", Format(Datella.Day, "00") & "/" & Format(Datella.Month, "00") & "/" & Datella.Year)
+							If Not Rec("CampoEsterno").Value Is DBNull.Value And "" & Rec("CampoEsterno").Value <> "" Then
+								Filetto = Filetto.Replace("***CAMPO***", Rec("CampoEsterno").Value)
+								Filetto = Filetto.Replace("***INDIRIZZO***", "")
 							Else
-								Riga &= "&nbsp;"
+								Filetto = Filetto.Replace("***CAMPO***", Rec("Campo").Value)
+								Filetto = Filetto.Replace("***INDIRIZZO***", Rec("Indirizzo").Value)
 							End If
-							Riga &= "</td>"
+							Filetto = Filetto.Replace("***ORARIO1***", Format(Datella.Hour, "00") & ":" & Format(Datella.Minute, "00"))
+							Filetto = Filetto.Replace("***ORARIO2***", Rec("OraConv").Value)
 
-							Riga &= "<td colspan=""1"" class=""adestra"">"
-							Riga &= "<span class=""titolo3"">" & i + 12 & "</span>"
-							Riga &= "</td>"
+							Filetto = Filetto.Replace("***MISTER***", Rec("Mister").Value)
+							Filetto = Filetto.Replace("***CELL***", Rec("Telefono").Value)
 
-							Riga &= "<td style=""width:10px;"">"
-							Riga &= "&nbsp;"
-							Riga &= "</td>"
+							Rec.Close()
 
-							Riga &= "<td colspan=""4"">"
-							If i + 12 < Giocatori.Count Then
-								Riga &= "<span class=""titolo3"">" & Giocatori.Item(i + 12) & "</span>"
+							Dim Convocati As String = ""
+							Sql = "SELECT Giocatori.Cognome+' '+Giocatori.Nome AS Giocatore, Ruoli.idRuolo " &
+								"FROM (Convocati LEFT JOIN Giocatori ON Convocati.idGiocatore = Giocatori.idGiocatore) LEFT JOIN Ruoli ON Giocatori.idRuolo = Ruoli.idRuolo " &
+								"WHERE Convocati.idPartita=" & idPartita & " AND Giocatori.idAnno=" & idAnno & " " &
+								"ORDER BY Ruoli.idRuolo, Giocatori.Cognome, Giocatori.Nome"
+							Rec = LeggeQuery(Conn, Sql, Connessione)
+							If TypeOf (Rec) Is String Then
+								Ritorno = Rec
 							Else
-								Riga &= "&nbsp;"
+								Dim Giocatori As List(Of String) = New List(Of String)
+
+								Do Until Rec.Eof
+									Giocatori.Add(Rec("Giocatore").Value)
+
+									Rec.MoveNext
+								Loop
+								Rec.Close
+
+								Convocati &= "<table style=""width: 100%;"" cellpadding=""0px"" cellspacing=""0px"">"
+								For i As Integer = 1 To 12
+									Dim Riga As String = "<tr>"
+
+									Riga &= "<td style=""width: 10%;"" class=""adestra"">"
+									Riga &= "<span class=""titolo3"">" & i & "</span>"
+									Riga &= "</td>"
+
+									Riga &= "<td style=""width:10px;"">"
+									Riga &= "&nbsp;"
+									Riga &= "</td>"
+
+									Riga &= "<td  style=""width: 35%;"">"
+									If i < Giocatori.Count Then
+										Riga &= "<span class=""titolo3"">" & Giocatori.Item(i) & "</span>"
+									Else
+										Riga &= "<span class=""titolo3"">&nbsp;</span>"
+									End If
+									Riga &= "</td>"
+
+									Riga &= "<td style=""width: 10%;"" class=""adestra"">"
+									Riga &= "<span class=""titolo3"">" & i + 12 & "</span>"
+									Riga &= "</td>"
+
+									Riga &= "<td style=""width:10px;"">"
+									Riga &= "&nbsp;"
+									Riga &= "</td>"
+
+									Riga &= "<td style=""width: 35%;"">"
+									If i + 12 < Giocatori.Count Then
+										Riga &= "<span class=""titolo3"">" & Giocatori.Item(i + 12) & "</span>"
+									Else
+										Riga &= "<span class=""titolo3"">&nbsp;</span>"
+									End If
+									Riga &= "</td>"
+									Riga &= "</tr>"
+
+									Convocati &= Riga
+								Next
+								Convocati &= "</table>"
 							End If
-							Riga &= "</td>"
-							Riga &= "</tr>"
+							Filetto = Filetto.Replace("***CONVOCATI***", Convocati)
 
-							Convocati &= Riga
-						Next
-						Convocati &= "</table>"
+							gf.CreaDirectoryDaPercorso(Server.MapPath(".") & "\Convocazioni\" & Squadra)
+							gf.CreaAggiornaFile(Server.MapPath(".") & "\Convocazioni\" & Squadra & "\" & idPartita & ".html", Filetto)
+
+							Ritorno = "Convocazioni/" & Squadra & "/" & idPartita & ".html"
+						Else
+							Ritorno = StringaErrore & " Data non valida"
+						End If
+					Else
+						Ritorno = StringaErrore & " Nessun dato rilevato"
 					End If
-					Filetto = Filetto.Replace("***CONVOCATI***", Convocati)
-
-					gf.CreaDirectoryDaPercorso(Server.MapPath(".") & "\Convocazioni\")
-					gf.CreaAggiornaFile(Server.MapPath(".") & "\Convocazioni\" & idPartita & ".html", Filetto)
 				End If
 			End If
 		End If
@@ -1395,45 +1469,124 @@ Public Class wsPartite
 				Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
 			Else
 				Dim sql As String
+				Dim Ok As Boolean = True
 
-				sql = "delete from Partite Where idAnno = " & idAnno & " And idPartita = " & idPartita
+				sql = "Begin transaction"
 				Ritorno = EsegueSql(Conn, sql, Connessione)
 
-				sql = "delete from AbritriPartite Where idAnno = " & idAnno & " And idPartita = " & idPartita
-				Ritorno = EsegueSql(Conn, sql, Connessione)
+				If Not Ritorno.Contains(StringaErrore) Then
+					sql = "delete from Partite Where idAnno = " & idAnno & " And idPartita = " & idPartita
+					Ritorno = EsegueSql(Conn, sql, Connessione)
+					If Ritorno.Contains(StringaErrore) Then
+						Ok = False
+					End If
 
-				sql = "delete from Convocati Where idPartita = " & idPartita
-				Ritorno = EsegueSql(Conn, sql, Connessione)
+					If Ok Then
+						sql = "delete from AbritriPartite Where idAnno = " & idAnno & " And idPartita = " & idPartita
+						Ritorno = EsegueSql(Conn, sql, Connessione)
+						If Ritorno.Contains(StringaErrore) Then
+							Ok = False
+						End If
+					End If
 
-				sql = "delete from CoordinatePartite Where idPartita = " & idPartita
-				Ritorno = EsegueSql(Conn, sql, Connessione)
+					If Ok Then
+						sql = "delete from Convocati Where idPartita = " & idPartita
+						Ritorno = EsegueSql(Conn, sql, Connessione)
+						If Ritorno.Contains(StringaErrore) Then
+							Ok = False
+						End If
+					End If
 
-				sql = "delete from EventiPartita Where idAnno = " & idAnno & " And idPartita = " & idPartita
-				Ritorno = EsegueSql(Conn, sql, Connessione)
+					If Ok Then
+						sql = "delete from CoordinatePartite Where idPartita = " & idPartita
+						Ritorno = EsegueSql(Conn, sql, Connessione)
+						If Ritorno.Contains(StringaErrore) Then
+							Ok = False
+						End If
+					End If
 
-				sql = "delete from Marcatori Where idPartita = " & idPartita
-				Ritorno = EsegueSql(Conn, sql, Connessione)
+					If Ok Then
+						sql = "delete from EventiPartita Where idAnno = " & idAnno & " And idPartita = " & idPartita
+						Ritorno = EsegueSql(Conn, sql, Connessione)
+						If Ritorno.Contains(StringaErrore) Then
+							Ok = False
+						End If
+					End If
 
-				sql = "delete from MeteoPartite Where idPartita = " & idPartita
-				Ritorno = EsegueSql(Conn, sql, Connessione)
+					If Ok Then
+						sql = "delete from Marcatori Where idPartita = " & idPartita
+						Ritorno = EsegueSql(Conn, sql, Connessione)
+						If Ritorno.Contains(StringaErrore) Then
+							Ok = False
+						End If
+					End If
 
-				sql = "delete from RigoriAvversari Where idAnno = " & idAnno & " And idPartita = " & idPartita
-				Ritorno = EsegueSql(Conn, sql, Connessione)
+					If Ok Then
+						sql = "delete from MeteoPartite Where idPartita = " & idPartita
+						Ritorno = EsegueSql(Conn, sql, Connessione)
+						If Ritorno.Contains(StringaErrore) Then
+							Ok = False
+						End If
+					End If
 
-				sql = "delete from RigoriPropri Where idAnno = " & idAnno & " And idPartita = " & idPartita
-				Ritorno = EsegueSql(Conn, sql, Connessione)
+					If Ok Then
+						sql = "delete from RigoriAvversari Where idAnno = " & idAnno & " And idPartita = " & idPartita
+						Ritorno = EsegueSql(Conn, sql, Connessione)
+						If Ritorno.Contains(StringaErrore) Then
+							Ok = False
+						End If
+					End If
 
-				sql = "delete from Risultati Where idPartita = " & idPartita
-				Ritorno = EsegueSql(Conn, sql, Connessione)
+					If Ok Then
+						sql = "delete from RigoriPropri Where idAnno = " & idAnno & " And idPartita = " & idPartita
+						Ritorno = EsegueSql(Conn, sql, Connessione)
+						If Ritorno.Contains(StringaErrore) Then
+							Ok = False
+						End If
+					End If
 
-				sql = "delete from RisultatiAggiuntivi Where idPartita = " & idPartita
-				Ritorno = EsegueSql(Conn, sql, Connessione)
+					If Ok Then
+						sql = "delete from Risultati Where idPartita = " & idPartita
+						Ritorno = EsegueSql(Conn, sql, Connessione)
+						If Ritorno.Contains(StringaErrore) Then
+							Ok = False
+						End If
+					End If
 
-				sql = "delete from RisultatiAggiuntiviMarcatori Where idPartita = " & idPartita
-				Ritorno = EsegueSql(Conn, sql, Connessione)
+					If Ok Then
+						sql = "delete from RisultatiAggiuntivi Where idPartita = " & idPartita
+						Ritorno = EsegueSql(Conn, sql, Connessione)
+						If Ritorno.Contains(StringaErrore) Then
+							Ok = False
+						End If
+					End If
 
-				sql = "delete from TempiGoalAvversari Where idPartita = " & idPartita
-				Ritorno = EsegueSql(Conn, sql, Connessione)
+					If Ok Then
+						sql = "delete from RisultatiAggiuntiviMarcatori Where idPartita = " & idPartita
+						Ritorno = EsegueSql(Conn, sql, Connessione)
+						If Ritorno.Contains(StringaErrore) Then
+							Ok = False
+						End If
+					End If
+
+					If Ok Then
+						sql = "delete from TempiGoalAvversari Where idPartita = " & idPartita
+						Ritorno = EsegueSql(Conn, sql, Connessione)
+						If Ritorno.Contains(StringaErrore) Then
+							Ok = False
+						End If
+					End If
+				Else
+					Ok = False
+				End If
+
+				If Ok Then
+					sql = "commit"
+					Dim Ritorno2 As String = EsegueSql(Conn, sql, Connessione)
+				Else
+					sql = "rollback"
+					Dim Ritorno2 As String = EsegueSql(Conn, sql, Connessione)
+				End If
 			End If
 		End If
 
