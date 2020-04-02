@@ -50,7 +50,7 @@ Public Class wsCategorie
 								Else
 									Ritorno = ""
 									Do Until Rec.Eof
-										Ritorno &= Rec("idCategoria").Value.ToString & ";" & Rec("Descrizione").Value.ToString & "§"
+										Ritorno &= Rec("idCategoria").Value.ToString & ";" & Rec("Descrizione").Value.ToString & ";" & Rec("AnticipoConvocazione").Value & "§"
 
 										Rec.MoveNext()
 									Loop
@@ -97,7 +97,7 @@ Public Class wsCategorie
 						Else
 							Ritorno = ""
 							Do Until Rec.Eof
-								Ritorno &= Rec("idCategoria").Value.ToString & ";" & Rec("Descrizione").Value.ToString & "§"
+								Ritorno &= Rec("idCategoria").Value.ToString & ";" & Rec("Descrizione").Value.ToString & ";" & Rec("AnticipoConvocazione").Value & "§"
 
 								Rec.MoveNext()
 							Loop
@@ -116,7 +116,7 @@ Public Class wsCategorie
 	End Function
 
 	<WebMethod()>
-	Public Function SalvaCategoria(Squadra As String, ByVal idAnno As String, idCategoria As String, Categoria As String) As String
+	Public Function SalvaCategoria(Squadra As String, ByVal idAnno As String, idCategoria As String, Categoria As String, AnticipoConvocazione As String) As String
 		Dim Ritorno As String = ""
 		Dim Connessione As String = LeggeImpostazioniDiBase(Server.MapPath("."), Squadra)
 
@@ -158,6 +158,9 @@ Public Class wsCategorie
 						Try
 							Sql = "Delete From Categorie Where idAnno=" & idAnno & " And idCategoria=" & idCategoria
 							Ritorno = EsegueSql(Conn, Sql, Connessione)
+							If Ritorno.Contains(StringaErrore) Then
+								Ok = False
+							End If
 						Catch ex As Exception
 							Ritorno = StringaErrore & " " & ex.Message
 							Ok = False
@@ -171,9 +174,13 @@ Public Class wsCategorie
 								" " & idCategoria & ", " &
 								"'" & Categoria.Replace("'", "''") & "', " &
 								"'N', " &
-								"1" &
+								"1," &
+								" " & AnticipoConvocazione & " " &
 								")"
 							Ritorno = EsegueSql(Conn, Sql, Connessione)
+							If Ritorno.Contains(StringaErrore) Then
+								Ok = False
+							End If
 						Catch ex As Exception
 							Ritorno = StringaErrore & " " & ex.Message
 							Ok = False

@@ -734,7 +734,7 @@ Public Class wsStatistiche
 				Sql &= "Select Partite.idPartita, Partite.Casa, Count(*) As GoalPropri, 0 As GoalAvversari "
 				Sql &= "From RisultatiAggiuntiviMarcatori Left Join Partite On Partite.idPartita=RisultatiAggiuntiviMarcatori.idPartita "
 				Sql &= "Where Partite.idAnno=" & idAnno & " And idCategoria=" & idCategoria & " "
-				Sql &= "Group By Partite.idPartita, Partite.Casa, 0 "
+				Sql &= "Group By Partite.idPartita, Partite.Casa "
 				Sql &= ") As A Group By idPartita, Casa Order By idPartita"
 
 				Dim Punti As Integer = 0

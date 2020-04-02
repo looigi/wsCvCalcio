@@ -602,6 +602,10 @@ Public Class wsCampionato
 					Try
 						Sql = "Delete From AvversariCalendario Where idAnno=" & idAnno & " And idCategoria=" & idCategoria & " And idAvversario=" & idAvversario
 						Ritorno = EsegueSql(Conn, Sql, Connessione)
+						If Ritorno.Contains(StringaErrore) Then
+							Ok = False
+						End If
+
 					Catch ex As Exception
 						Ritorno = StringaErrore & " " & ex.Message
 						Ok = False
@@ -724,6 +728,10 @@ Public Class wsCampionato
 							Try
 								Sql = "Insert Into CalendarioPartite Values (" & idAnno & ", " & idCategoria & ", " & idGiornata & ", " & ProgressivoPartita & ", " & c(0) & ", " & f(0) & ", " & idUnioneCalendario & ", 'N', '')"
 								Ritorno = EsegueSql(Conn, Sql, Connessione)
+								If Ritorno.Contains(StringaErrore) Then
+									Ok = False
+								End If
+
 							Catch ex As Exception
 								Ritorno = StringaErrore & " " & ex.Message
 								Ok = False
@@ -734,6 +742,10 @@ Public Class wsCampionato
 								Try
 									Sql = "Insert Into CalendarioDate Values (" & idAnno & ", " & idCategoria & ", " & ProgressivoPartita & ", " & idGiornata & ", '" & Data & " " & Ora & "')"
 									Ritorno = EsegueSql(Conn, Sql, Connessione)
+									If Ritorno.Contains(StringaErrore) Then
+										Ok = False
+									End If
+
 								Catch ex As Exception
 									Ritorno = StringaErrore & " " & ex.Message
 									Ok = False
@@ -810,6 +822,10 @@ Public Class wsCampionato
 															"" & idAvversario & ", " & idAllenatore & ", '" & Data & " " & Ora & "', " &
 															"'N', '" & inCasa & "', 1, " & idCampo & ", '" & OraConv & "', " & idUnioneCalendario & ")"
 														Ritorno = EsegueSql(Conn, Sql, Connessione)
+														If Ritorno.Contains(StringaErrore) Then
+															Ok = False
+														End If
+
 													Catch ex As Exception
 														Ritorno = StringaErrore & " " & ex.Message
 														Ok = False
@@ -919,6 +935,10 @@ Public Class wsCampionato
 							Try
 								Sql = "Delete From Partite Where idAnno=" & idAnno & " And idUnioneCalendario=" & idPartita
 								Ritorno = EsegueSql(Conn, Sql, Connessione)
+								If Ritorno.Contains(StringaErrore) Then
+									Ok = False
+								End If
+
 							Catch ex As Exception
 								Ritorno = StringaErrore & " " & ex.Message
 								Ok = False
@@ -930,6 +950,10 @@ Public Class wsCampionato
 						Try
 							Sql = "Delete From CalendarioRisultati Where idPartita=" & idPartita
 							Ritorno = EsegueSql(Conn, Sql, Connessione)
+							If Ritorno.Contains(StringaErrore) Then
+								Ok = False
+							End If
+
 						Catch ex As Exception
 							Ritorno = StringaErrore & " " & ex.Message
 							Ok = False
@@ -959,6 +983,10 @@ Public Class wsCampionato
 								Try
 									Sql = "Delete From CalendarioDate Where idAnno=" & idAnno & " And idCategoria=" & idCategoria & " And idGiornata=" & idGiornata & " And idPartita=" & idPartitaGiornata
 									Ritorno = EsegueSql(Conn, Sql, Connessione)
+									If Ritorno.Contains(StringaErrore) Then
+										Ok = False
+									End If
+
 								Catch ex As Exception
 									Ritorno = StringaErrore & " " & ex.Message
 									Ok = False
@@ -968,6 +996,10 @@ Public Class wsCampionato
 									Try
 										Sql = "Delete From CalendarioPartite Where idAnno=" & idAnno & " And idCategoria=" & idCategoria & " And idGiornata=" & idGiornata & " And idPartita=" & idPartitaGiornata
 										Ritorno = EsegueSql(Conn, Sql, Connessione)
+										If Ritorno.Contains(StringaErrore) Then
+											Ok = False
+										End If
+
 									Catch ex As Exception
 										Ritorno = StringaErrore & " " & ex.Message
 										Ok = False
@@ -1040,6 +1072,10 @@ Public Class wsCampionato
 							"Risultato='" & Risultato & "' " &
 							"Where idPartitaGen=" & idUnioneCalendario
 						Ritorno = EsegueSql(Conn, Sql, Connessione)
+						If Ritorno.Contains(StringaErrore) Then
+							Ok = False
+						End If
+
 					Catch ex As Exception
 						Ritorno = StringaErrore & " " & ex.Message
 						Ok = False
@@ -1051,6 +1087,10 @@ Public Class wsCampionato
 								"Datella='" & Data & " " & Ora & "' " &
 								"Where idAnno=" & idAnno & " And idCategoria=" & idCategoria & " And idGiornata=" & idGiornata & " And idPartita=" & ProgressivoPartita
 							Ritorno = EsegueSql(Conn, Sql, Connessione)
+							If Ritorno.Contains(StringaErrore) Then
+								Ok = False
+							End If
+
 						Catch ex As Exception
 							Ritorno = StringaErrore & " " & ex.Message
 							Ok = False
@@ -1068,6 +1108,10 @@ Public Class wsCampionato
 							Try
 								Sql = "Insert Into CalendarioRisultati Values (" & idUnioneCalendario & ", '" & Risultato & "')"
 								Ritorno = EsegueSql(Conn, Sql, Connessione)
+								If Ritorno.Contains(StringaErrore) Then
+									Ok = False
+								End If
+
 							Catch ex As Exception
 								Ritorno = StringaErrore & " " & ex.Message
 								Ok = False
@@ -1160,6 +1204,10 @@ Public Class wsCampionato
 					Try
 						Sql = "Delete From Giornata Where idUtente=" & idUtente & " And idAnno=" & idAnno & " And idCategoria=" & idCategoria
 						Ritorno = EsegueSql(Conn, Sql, Connessione)
+						If Ritorno.Contains(StringaErrore) Then
+							Ok = False
+						End If
+
 					Catch ex As Exception
 						Ritorno = StringaErrore & " " & ex.Message
 						Ok = False
@@ -1168,6 +1216,10 @@ Public Class wsCampionato
 					Try
 						Sql = "Insert Into Giornata Values (" & idUtente & ", " & idAnno & ", " & idCategoria & ", " & idGiornata & ")"
 						Ritorno = EsegueSql(Conn, Sql, Connessione)
+						If Ritorno.Contains(StringaErrore) Then
+							Ok = False
+						End If
+
 					Catch ex As Exception
 						Ritorno = StringaErrore & " " & ex.Message
 						Ok = False
@@ -1207,6 +1259,7 @@ Public Class wsCampionato
 			Else
 				Dim Rec As Object = Server.CreateObject("ADODB.Recordset")
 				Dim Sql As String = ""
+				Dim Ok As Boolean = True
 
 				Sql = "Select * From Giornata Where idUtente=" & idUtente & " And idAnno=" & idAnno & " And idCategoria=" & idCategoria
 				Try
@@ -1219,7 +1272,11 @@ Public Class wsCampionato
 							Try
 								Sql = "Insert Into Giornata Values (" & idUtente & ", " & idAnno & ", " & idCategoria & ", " & idGiornata & ")"
 								Ritorno = EsegueSql(Conn, Sql, Connessione)
-								Ritorno = idGiornata
+								If Ritorno.Contains(StringaErrore) Then
+									Ok = False
+								Else
+									Ritorno = idGiornata
+								End If
 							Catch ex As Exception
 								Ritorno = StringaErrore & " " & ex.Message
 							End Try

@@ -126,6 +126,10 @@ Public Class wsPermessiRC
 				Try
 					Sql = "Delete Permesso Where IDutente=" & IDutente & " AND progressivo=" & progressivo
 					Ritorno = EsegueSql(Conn, Sql, Connessione)
+					If Ritorno.Contains(StringaErrore) Then
+						Ok = False
+					End If
+
 				Catch ex As Exception
 					Ritorno = StringaErrore & " " & ex.Message
 					Ok = False

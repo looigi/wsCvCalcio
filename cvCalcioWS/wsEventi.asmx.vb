@@ -52,7 +52,9 @@ Public Class wsEventi
 						idEve = idEvento
 						Sql = "Delete from Eventi Where idEvento=" & idEve
 						Ritorno = EsegueSql(Conn, Sql, Connessione)
-						Ok = False
+						If Ritorno.Contains(StringaErrore) Then
+							Ok = False
+						End If
 					End If
 
 					If Ok Then
@@ -151,6 +153,10 @@ Public Class wsEventi
 					Try
 						Sql = "Update Eventi Set Eliminato='S' Where idEvento=" & idEvento
 						Ritorno = EsegueSql(Conn, Sql, Connessione)
+						If Ritorno.Contains(StringaErrore) Then
+							Ok = False
+						End If
+
 					Catch ex As Exception
 						Ritorno = StringaErrore & " " & ex.Message
 						Ok = False

@@ -23,6 +23,7 @@ Public Class wsAllenamenti
 			Else
 				Dim Rec As Object = Server.CreateObject("ADODB.Recordset")
 				Dim Sql As String = ""
+				Dim Ok As Boolean = True
 
 				Sql = "Begin transaction"
 				Ritorno = EsegueSql(Conn, Sql, Connessione)
@@ -30,36 +31,46 @@ Public Class wsAllenamenti
 				If Not Ritorno.Contains(StringaErrore) Then
 					Sql = "Delete From Allenamenti Where idAnno=" & idAnno & " And idCategoria=" & idCategoria & " And Datella='" & Data & "' And Orella='" & Ora & "'"
 					Ritorno = EsegueSql(Conn, Sql, Connessione)
+					If Ritorno.Contains(StringaErrore) Then
+						Ok = False
+					End If
 
-					Dim sGiocatori() As String = Giocatori.Split(";")
-					Dim Progressivo As Integer = 0
+					If Ok Then
+						Dim sGiocatori() As String = Giocatori.Split(";")
+						Dim Progressivo As Integer = 0
 
-					For Each s As String In sGiocatori
-						Sql = "Insert Into Allenamenti Values (" &
-							" " & idAnno & ", " &
-							" " & idCategoria & ", " &
-							"'" & Data & "', " &
-							"'" & Ora & "', " &
-							" " & Progressivo & ", " &
-							" " & s & " " &
-							")"
-						Ritorno = EsegueSql(Conn, Sql, Connessione)
-						If Ritorno.Contains(StringaErrore) Then
-							Sql = "rollback"
-							Dim Ritorno3 As String = EsegueSql(Conn, Sql, Connessione)
-							Exit For
+						For Each s As String In sGiocatori
+							If s <> "" Then
+								Sql = "Insert Into Allenamenti Values (" &
+									" " & idAnno & ", " &
+									" " & idCategoria & ", " &
+									"'" & Data & "', " &
+									"'" & Ora & "', " &
+									" " & Progressivo & ", " &
+									" " & s & " " &
+									")"
+								Ritorno = EsegueSql(Conn, Sql, Connessione)
+								If Ritorno.Contains(StringaErrore) Then
+									Sql = "rollback"
+									Dim Ritorno3 As String = EsegueSql(Conn, Sql, Connessione)
+									Exit For
+								End If
+
+								Progressivo += 1
+							End If
+						Next
+						If Not Ritorno.Contains(StringaErrore) Then
+							Ritorno = "*"
+
+							Sql = "commit"
+							Dim Ritorno2 As String = EsegueSql(Conn, Sql, Connessione)
 						End If
-
-						Progressivo += 1
-					Next
-					If Not Ritorno.Contains(StringaErrore) Then
-						Ritorno = "*"
-
-						Sql = "commit"
+					Else
+						Sql = "rollback"
 						Dim Ritorno2 As String = EsegueSql(Conn, Sql, Connessione)
 					End If
 				Else
-					Sql = "rollback"
+						Sql = "rollback"
 					Dim Ritorno2 As String = EsegueSql(Conn, Sql, Connessione)
 				End If
 

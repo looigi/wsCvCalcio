@@ -313,9 +313,17 @@ Public Class wsUtenti
 									Try
 										Sql = "Delete From AnnoAttualeUtenti Where idUtente=" & idUtente
 										Ritorno = EsegueSql(Conn, Sql, Connessione)
+										If Ritorno.Contains(StringaErrore) Then
+											Ok = False
+										End If
 
-										Sql = "Insert Into AnnoAttualeUtenti Values (" & idUtente & ", " & idAnno & ")"
-										Ritorno = EsegueSql(Conn, Sql, Connessione)
+										If Ok Then
+											Sql = "Insert Into AnnoAttualeUtenti Values (" & idUtente & ", " & idAnno & ")"
+											Ritorno = EsegueSql(Conn, Sql, Connessione)
+											If Ritorno.Contains(StringaErrore) Then
+												Ok = False
+											End If
+										End If
 									Catch ex As Exception
 										Ritorno = StringaErrore & " " & ex.Message
 										Ok = False
@@ -403,9 +411,18 @@ Public Class wsUtenti
 								Try
 									Sql = "Delete From AnnoAttualeUtenti Where idUtente=" & idUtente
 									Ritorno = EsegueSql(Conn, Sql, Connessione)
+									If Ritorno.Contains(StringaErrore) Then
+										Ok = False
+									End If
 
-									Sql = "Insert Into AnnoAttualeUtenti Values (" & idUtente & ", " & idAnno & ")"
-									Ritorno = EsegueSql(Conn, Sql, Connessione)
+									If Ok Then
+										Sql = "Insert Into AnnoAttualeUtenti Values (" & idUtente & ", " & idAnno & ")"
+										Ritorno = EsegueSql(Conn, Sql, Connessione)
+										If Ritorno.Contains(StringaErrore) Then
+											Ok = False
+										End If
+
+									End If
 								Catch ex As Exception
 									Ritorno = StringaErrore & " " & ex.Message
 									Ok = False

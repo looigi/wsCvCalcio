@@ -87,6 +87,85 @@ Public Class wsGenerale
 	End Function
 
 	<WebMethod()>
+	Public Function SalvaImpostazioni(idAnno As String, Descrizione As String, NomeSquadra As String, Lat As String, Lon As String,
+									  Indirizzo As String, CampoSquadra As String, NomePolisportiva As String) As String
+		Dim Ritorno As String = ""
+		Dim Connessione As String = LeggeImpostazioniDiBase(Server.MapPath("."), NomeSquadra)
+
+		If Connessione = "" Then
+			Ritorno = ErroreConnessioneNonValida & ":" & Connessione
+		Else
+			Dim Conn As Object = ApreDB(Connessione)
+
+			If TypeOf (Conn) Is String Then
+				Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
+			Else
+				Dim Sql As String = ""
+
+				Sql = "Update Anni Set " &
+					"Descrizione = '" & Descrizione.Replace("'", "''") & "', " &
+					"NomeSquadra = '" & NomeSquadra.Replace("_", " ").Replace("'", "''") & "', " &
+					"Lat= '" & Lat & "', " &
+					"Lon = '" & Lon & "', " &
+					"Indirizzo = '" & Indirizzo.Replace("'", "''") & "', " &
+					"CampoSquadra = '" & CampoSquadra.Replace("'", "''") & "', " &
+					"NomePolisportiva = '" & NomePolisportiva.Replace("'", "''") & "' " &
+					"Where idAnno = " & idAnno
+				Ritorno = EsegueSql(Conn, Sql, Connessione)
+			End If
+		End If
+
+		Return Ritorno
+	End Function
+
+	<WebMethod()>
+	Public Function RitornaImpostazioni() As String
+		Dim Ritorno As String = ""
+		Dim gf As New GestioneFilesDirectory
+		Dim nomeSquadra As String = gf.LeggeFileIntero(Server.MapPath(".") & "\NomeSquadraBase.txt")
+		nomeSquadra = nomeSquadra.Replace(vbCrLf, "")
+		nomeSquadra = nomeSquadra.Replace(" ", "_")
+		gf = Nothing
+		Dim Connessione As String = LeggeImpostazioniDiBase(Server.MapPath("."), nomeSquadra)
+
+		If Connessione = "" Then
+			Ritorno = ErroreConnessioneNonValida
+		Else
+			Dim Conn As Object = ApreDB(Connessione)
+
+			If TypeOf (Conn) Is String Then
+				Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
+			Else
+				Dim Rec As Object = Server.CreateObject("ADODB.Recordset")
+				Dim Sql As String = ""
+
+				Sql = "Select * From Anni Order By idAnno Desc"
+				Rec = LeggeQuery(Conn, Sql, Connessione)
+				If TypeOf (Rec) Is String Then
+					Ritorno = Rec
+				Else
+					Ritorno = ""
+					Do Until Rec.Eof
+						Ritorno &= Rec("idAnno").Value & ";" &
+								Rec("Descrizione").Value & ";" &
+								Rec("NomeSquadra").Value & ";" &
+								Rec("Lat").Value & ";" &
+								Rec("Lon").Value & ";" &
+								Rec("Indirizzo").Value & ";" &
+								Rec("CampoSquadra").Value & ";" &
+								Rec("NomePolisportiva").Value & ";" &
+								"§"
+						Rec.MoveNext()
+					Loop
+					Rec.Close()
+				End If
+			End If
+		End If
+
+		Return Ritorno
+	End Function
+
+	<WebMethod()>
 	Public Function RitornaAnni(Squadra As String) As String
 		Dim Ritorno As String = ""
 		Dim Connessione As String = LeggeImpostazioniDiBase(Server.MapPath("."), Squadra)
@@ -560,22 +639,43 @@ Public Class wsGenerale
 			Ritorno = ErroreConnessioneNonValida
 		Else
 			Dim Conn As Object = ApreDB(Connessione)
+			Dim Sql As String = ""
+
+			Sql = "Begin transaction"
+			Ritorno = EsegueSql(Conn, Sql, Connessione)
 
 			If TypeOf (Conn) Is String Then
 				Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
 			Else
 				Dim Rec As Object = Server.CreateObject("ADODB.Recordset")
-				Dim Sql As String = ""
+				Dim Ok As Boolean = True
 
 				Try
 					Sql = "Delete From AnnoAttualeUtenti Where idUtente=" & idUtente
 					Ritorno = EsegueSql(Conn, Sql, Connessione)
+					If Ritorno.Contains(StringaErrore) Then
+						Ok = False
+					End If
 
-					Sql = "Insert Into AnnoAttualeUtenti Values (" & idUtente & ", " & idAnno & ")"
-					Ritorno = EsegueSql(Conn, Sql, Connessione)
+					If Ok Then
+						Sql = "Insert Into AnnoAttualeUtenti Values (" & idUtente & ", " & idAnno & ")"
+						Ritorno = EsegueSql(Conn, Sql, Connessione)
+						If Ritorno.Contains(StringaErrore) Then
+							Ok = False
+						End If
+					End If
 				Catch ex As Exception
 					Ritorno = StringaErrore & " " & ex.Message
+					Ok = False
 				End Try
+
+				If Ok Then
+					Sql = "commit"
+					Dim Ritorno2 As String = EsegueSql(Conn, Sql, Connessione)
+				Else
+					Sql = "rollback"
+					Dim Ritorno2 As String = EsegueSql(Conn, Sql, Connessione)
+				End If
 
 				Conn.Close()
 			End If

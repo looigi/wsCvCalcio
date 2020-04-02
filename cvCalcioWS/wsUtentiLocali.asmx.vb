@@ -338,13 +338,18 @@ Public Class wsUtentiLocali
 			Else
 				Dim Rec As Object = Server.CreateObject("ADODB.Recordset")
 				Dim Sql As String = ""
+				Dim Ok As Boolean = True
 
 				' Sql = "Delete From Utenti Where idAnno=" & idAnno & " And idUtente=" & idUtente
 				Sql = "Delete From Utenti Where idUtente=" & idUtente
 				Ritorno = EsegueSql(Conn, Sql, Connessione)
+				If Ritorno.Contains(StringaErrore) Then
+					Ok = False
+				End If
 
-				Try
-					Sql = "Insert Into Utenti Values (" &
+				If Ok Then
+					Try
+						Sql = "Insert Into Utenti Values (" &
 						"" & idAnno & ", " &
 						"" & idUtente & ", " &
 						"'" & Utente & "', " &
@@ -354,24 +359,39 @@ Public Class wsUtentiLocali
 						"'" & EMail & "', " &
 						" " & idCategoria & ", " &
 						"" & idTipologia & ")"
-					Ritorno = EsegueSql(Conn, Sql, Connessione)
-
-					Try
-						Sql = "Delete From AnnoAttualeUtenti Where idUtente=" & idUtente
 						Ritorno = EsegueSql(Conn, Sql, Connessione)
+						If Ritorno.Contains(StringaErrore) Then
+							Ok = False
+						End If
 
-						Sql = "Insert Into AnnoAttualeUtenti Values (" & idUtente & ", " & idAnno & ")"
-						Ritorno = EsegueSql(Conn, Sql, Connessione)
+						If Ok Then
+							Try
+								Sql = "Delete From AnnoAttualeUtenti Where idUtente=" & idUtente
+								Ritorno = EsegueSql(Conn, Sql, Connessione)
+								If Ritorno.Contains(StringaErrore) Then
+									Ok = False
+								End If
+
+								If Ok Then
+									Sql = "Insert Into AnnoAttualeUtenti Values (" & idUtente & ", " & idAnno & ")"
+									Ritorno = EsegueSql(Conn, Sql, Connessione)
+									If Ritorno.Contains(StringaErrore) Then
+										Ok = False
+									End If
+
+								End If
+							Catch ex As Exception
+								Ritorno = StringaErrore & " " & ex.Message
+							End Try
+						End If
+
+						If Ritorno = "*" Then Ritorno = idUtente
 					Catch ex As Exception
 						Ritorno = StringaErrore & " " & ex.Message
 					End Try
 
-					If Ritorno = "*" Then Ritorno = idUtente
-				Catch ex As Exception
-					Ritorno = StringaErrore & " " & ex.Message
-				End Try
-
-				Conn.Close()
+					Conn.Close()
+				End If
 			End If
 		End If
 

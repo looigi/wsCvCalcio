@@ -32,8 +32,9 @@ Public Class wsGiocatori
 						"Left Join Categorie On Categorie.idCategoria=Giocatori.idCategoria2 And Categorie.idAnno=Giocatori.idAnno) " &
 						"Left Join Categorie As Cat3 On Cat3.idCategoria=Giocatori.idCategoria3 And Cat3.idAnno=Giocatori.idAnno) " &
 						"Left Join Categorie As Cat1 On Cat1.idCategoria=Giocatori.idCategoria And Cat1.idAnno=Giocatori.idAnno " &
-						"Where Giocatori.Eliminato='N' And Giocatori.idAnno=" & idAnno & " And (Giocatori.idCategoria=" & idCategoria & " Or Giocatori.idCategoria2=" & idCategoria & " Or Giocatori.idCategoria3=" & idCategoria & ") " &
+						"Where Giocatori.Eliminato='N' And Giocatori.idAnno=" & idAnno & " And CharIndex('" & idCategoria & ";', Categorie) > 0 " &
 						"Order By Ruoli.idRuolo, Cognome, Nome"
+					' "Where Giocatori.Eliminato='N' And Giocatori.idAnno=" & idAnno & " And (Giocatori.idCategoria=" & idCategoria & " Or Giocatori.idCategoria2=" & idCategoria & " Or Giocatori.idCategoria3=" & idCategoria & ") " &
 					Rec = LeggeQuery(Conn, Sql, Connessione)
 					If TypeOf (Rec) Is String Then
 						Ritorno = Rec
@@ -155,6 +156,154 @@ Public Class wsGiocatori
 	End Function
 
 	<WebMethod()>
+	Public Function RitornaGiocatoriNonInCategoria(Squadra As String, ByVal idAnno As String, ByVal idCategoria As String) As String
+		Dim Ritorno As String = ""
+		Dim Connessione As String = LeggeImpostazioniDiBase(Server.MapPath("."), Squadra)
+
+		If Connessione = "" Then
+			Ritorno = ErroreConnessioneNonValida
+		Else
+			Dim Conn As Object = ApreDB(Connessione)
+
+			If TypeOf (Conn) Is String Then
+				Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
+			Else
+				Dim Rec As Object = Server.CreateObject("ADODB.Recordset")
+				Dim Sql As String = ""
+
+				Try
+					Sql = "SELECT idGiocatore, Ruoli.idRuolo As idR, Cognome, Nome, Ruoli.Descrizione, EMail, Telefono, Soprannome, DataDiNascita, Indirizzo, " &
+						"CodFiscale, Maschio, Citta, Matricola, NumeroMaglia, Giocatori.idCategoria, -1 As idCategoria2, '' As Categoria2, -1 As idCategoria3, '' As Categoria3, Categorie.Descrizione As Categoria1 " &
+						"FROM Giocatori " &
+						"Left Join Ruoli On Giocatori.idRuolo=Ruoli.idRuolo " &
+						"Left Join Categorie On Categorie.idCategoria=Giocatori.idCategoria And Categorie.idAnno=Giocatori.idAnno " &
+						"Where Giocatori.Eliminato='N' And Giocatori.idAnno=" & idAnno & " And CharIndex('" & idCategoria & ";', Giocatori.idCategoria) = 0 " &
+						"Order By Ruoli.idRuolo, Cognome, Nome"
+					' "Where Giocatori.Eliminato='N' And Giocatori.idAnno=" & idAnno & " And Giocatori.idCategoria<>" & idCategoria & " " &
+					Rec = LeggeQuery(Conn, Sql, Connessione)
+					If TypeOf (Rec) Is String Then
+						Ritorno = Rec
+					Else
+						If Rec.Eof Then
+							Ritorno = StringaErrore & " Nessun giocatore rilevato"
+						Else
+							Ritorno = ""
+							Do Until Rec.Eof
+								Ritorno &= Rec("idGiocatore").Value.ToString & ";" &
+									Rec("idR").Value.ToString & ";" &
+									Rec("Cognome").Value.ToString.Trim & ";" &
+									Rec("Nome").Value.ToString.Trim & ";" &
+									Rec("Descrizione").Value.ToString.Trim & ";" &
+									Rec("EMail").Value.ToString.Trim & ";" &
+									Rec("Telefono").Value.ToString.Trim & ";" &
+									Rec("Soprannome").Value.ToString.Trim & ";" &
+									Rec("DataDiNascita").Value.ToString & ";" &
+									Rec("Indirizzo").Value.ToString.Trim & ";" &
+									Rec("CodFiscale").Value.ToString.Trim & ";" &
+									Rec("Maschio").Value.ToString.Trim & ";" &
+									Rec("Citta").Value.ToString.Trim & ";" &
+									Rec("Matricola").Value.ToString.Trim & ";" &
+									Rec("NumeroMaglia").Value.ToString.Trim & ";" &
+									Rec("idCategoria").Value.ToString & ";" &
+									Rec("idCategoria2").Value.ToString & ";" &
+									Rec("Categoria2").Value.ToString & ";" &
+									Rec("idCategoria3").Value.ToString & ";" &
+									Rec("Categoria3").Value.ToString & ";" &
+									Rec("Categoria1").Value.ToString & ";" &
+									"§"
+
+								Rec.MoveNext()
+							Loop
+						End If
+						Rec.Close()
+					End If
+				Catch ex As Exception
+					Ritorno = StringaErrore & " " & ex.Message
+				End Try
+
+				Conn.Close()
+			End If
+		End If
+
+		Return Ritorno
+	End Function
+
+	<WebMethod()>
+	Public Function RitornaGiocatoriCategoriaTutti(Squadra As String, ByVal idAnno As String) As String
+		Dim Ritorno As String = ""
+		Dim Connessione As String = LeggeImpostazioniDiBase(Server.MapPath("."), Squadra)
+
+		If Connessione = "" Then
+			Ritorno = ErroreConnessioneNonValida
+		Else
+			Dim Conn As Object = ApreDB(Connessione)
+
+			If TypeOf (Conn) Is String Then
+				Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
+			Else
+				Dim Rec As Object = Server.CreateObject("ADODB.Recordset")
+				Dim Sql As String = ""
+
+				Try
+					Sql = "SELECT idGiocatore, Ruoli.idRuolo As idR, Cognome, Nome, Ruoli.Descrizione, EMail, Telefono, Soprannome, DataDiNascita, Indirizzo, " &
+						"CodFiscale, Maschio, Citta, Matricola, NumeroMaglia, Giocatori.idCategoria, Giocatori.idCategoria2 As idCategoria2, Categorie2.Descrizione As Categoria2, " &
+						"Giocatori.idCategoria3 As idCategoria3, Categorie3.Descrizione As Categoria3, Categorie.Descrizione As Categoria1 " &
+						"FROM Giocatori " &
+						"Left Join Ruoli On Giocatori.idRuolo=Ruoli.idRuolo " &
+						"Left Join Categorie On Categorie.idCategoria=Giocatori.idCategoria And Categorie.idAnno=Giocatori.idAnno " &
+						"Left Join Categorie As Categorie2 On Categorie2.idCategoria=Giocatori.idCategoria2 And Categorie2.idAnno=Giocatori.idAnno " &
+						"Left Join Categorie As Categorie3 On Categorie3.idCategoria=Giocatori.idCategoria3 And Categorie3.idAnno=Giocatori.idAnno " &
+						"Where Giocatori.Eliminato='N' And Giocatori.idAnno=" & idAnno & " " &
+						"Order By Ruoli.idRuolo, Cognome, Nome"
+					Rec = LeggeQuery(Conn, Sql, Connessione)
+					If TypeOf (Rec) Is String Then
+						Ritorno = Rec
+					Else
+						If Rec.Eof Then
+							Ritorno = StringaErrore & " Nessun giocatore rilevato"
+						Else
+							Ritorno = ""
+							Do Until Rec.Eof
+								Ritorno &= Rec("idGiocatore").Value.ToString & ";" &
+									Rec("idR").Value.ToString & ";" &
+									Rec("Cognome").Value.ToString.Trim & ";" &
+									Rec("Nome").Value.ToString.Trim & ";" &
+									Rec("Descrizione").Value.ToString.Trim & ";" &
+									Rec("EMail").Value.ToString.Trim & ";" &
+									Rec("Telefono").Value.ToString.Trim & ";" &
+									Rec("Soprannome").Value.ToString.Trim & ";" &
+									Rec("DataDiNascita").Value.ToString & ";" &
+									Rec("Indirizzo").Value.ToString.Trim & ";" &
+									Rec("CodFiscale").Value.ToString.Trim & ";" &
+									Rec("Maschio").Value.ToString.Trim & ";" &
+									Rec("Citta").Value.ToString.Trim & ";" &
+									Rec("Matricola").Value.ToString.Trim & ";" &
+									Rec("NumeroMaglia").Value.ToString.Trim & ";" &
+									Rec("idCategoria").Value.ToString & ";" &
+									Rec("idCategoria2").Value.ToString & ";" &
+									Rec("Categoria2").Value.ToString & ";" &
+									Rec("idCategoria3").Value.ToString & ";" &
+									Rec("Categoria3").Value.ToString & ";" &
+									Rec("Categoria1").Value.ToString & ";" &
+									"§"
+
+								Rec.MoveNext()
+							Loop
+						End If
+						Rec.Close()
+					End If
+				Catch ex As Exception
+					Ritorno = StringaErrore & " " & ex.Message
+				End Try
+
+				Conn.Close()
+			End If
+		End If
+
+		Return Ritorno
+	End Function
+
+	<WebMethod()>
 	Public Function SalvaGiocatore(Squadra As String, idAnno As String, idCategoria As String, idGiocatore As String, idRuolo As String, Cognome As String, Nome As String, EMail As String, Telefono As String,
 								   Soprannome As String, DataDiNascita As String, Indirizzo As String, CodFiscale As String, Maschio As String, Citta As String, Matricola As String,
 								   NumeroMaglia As String, idCategoria2 As String, idCategoria3 As String) As String
@@ -206,6 +355,10 @@ Public Class wsGiocatori
 								Try
 									Sql = "Delete  From Giocatori Where idAnno=" & idAnno & " And idGiocatore=" & idGiocatore
 									Ritorno = EsegueSql(Conn, Sql, Connessione)
+									If Ritorno.Contains(StringaErrore) Then
+										Ok = False
+									End If
+
 								Catch ex As Exception
 									Ritorno = StringaErrore & " " & ex.Message
 									Ok = False
@@ -246,7 +399,8 @@ Public Class wsGiocatori
 							" " & idCategoria2 & ", " &
 							"'" & Matricola.Replace("'", "''") & "', " &
 							"'" & NumeroMaglia.Replace("'", "''") & "', " &
-							" " & idCategoria3 & " " &
+							" " & idCategoria3 & ", " &
+							"'" & idCategoria & ";' " &
 							")"
 						Ritorno = EsegueSql(Conn, Sql, Connessione)
 						If Ritorno.Contains(StringaErrore) Then
@@ -295,6 +449,139 @@ Public Class wsGiocatori
 					Try
 						Sql = "Update Giocatori Set Eliminato='S' Where idAnno=" & idAnno & " And idGiocatore=" & idGiocatore
 						Ritorno = EsegueSql(Conn, Sql, Connessione)
+						If Ritorno.Contains(StringaErrore) Then
+							Ok = False
+						End If
+
+					Catch ex As Exception
+						Ritorno = StringaErrore & " " & ex.Message
+						Ok = False
+					End Try
+				Else
+					Ok = False
+				End If
+
+				If Ok Then
+					Sql = "commit"
+					Dim Ritorno2 As String = EsegueSql(Conn, Sql, Connessione)
+				Else
+					Sql = "rollback"
+					Dim Ritorno2 As String = EsegueSql(Conn, Sql, Connessione)
+				End If
+
+				Conn.Close()
+			End If
+		End If
+
+		Return Ritorno
+	End Function
+
+	<WebMethod()>
+	Public Function AggiungeCategoriaAGiocatore(Squadra As String, ByVal idAnno As String, idGiocatore As String, idCategoria As String) As String
+		Dim Ritorno As String = ""
+		Dim Connessione As String = LeggeImpostazioniDiBase(Server.MapPath("."), Squadra)
+
+		If Connessione = "" Then
+			Ritorno = ErroreConnessioneNonValida & ":" & Connessione
+		Else
+			Dim Conn As Object = ApreDB(Connessione)
+
+			If TypeOf (Conn) Is String Then
+				Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
+			Else
+				Dim Sql As String = ""
+				Dim Ok As Boolean = True
+
+				Sql = "Begin transaction"
+				Ritorno = EsegueSql(Conn, Sql, Connessione)
+
+				If Not Ritorno.Contains(StringaErrore) Then
+					Dim Giocatori() As String = idGiocatore.Split(";")
+
+					For Each g As String In Giocatori
+						If g <> "" Then
+							Try
+								Sql = "Update Giocatori Set Categorie = Categorie + '" & idCategoria & ";' Where idAnno=" & idAnno & " And idGiocatore=" & g
+								Ritorno = EsegueSql(Conn, Sql, Connessione)
+								If Ritorno.Contains(StringaErrore) Then
+									Ok = False
+									Exit For
+								End If
+
+							Catch ex As Exception
+								Ritorno = StringaErrore & " " & ex.Message
+								Ok = False
+								Exit For
+							End Try
+						End If
+					Next
+				Else
+					Ok = False
+				End If
+
+				If Ok Then
+					Sql = "commit"
+					Dim Ritorno2 As String = EsegueSql(Conn, Sql, Connessione)
+				Else
+					Sql = "rollback"
+					Dim Ritorno2 As String = EsegueSql(Conn, Sql, Connessione)
+				End If
+
+				Conn.Close()
+			End If
+		End If
+
+		Return Ritorno
+	End Function
+
+	<WebMethod()>
+	Public Function EliminaGiocatoreDallaCategoria(Squadra As String, ByVal idAnno As String, idGiocatore As String, idCategoria As String) As String
+		Dim Ritorno As String = ""
+		Dim Connessione As String = LeggeImpostazioniDiBase(Server.MapPath("."), Squadra)
+
+		If Connessione = "" Then
+			Ritorno = ErroreConnessioneNonValida & ":" & Connessione
+		Else
+			Dim Conn As Object = ApreDB(Connessione)
+
+			If TypeOf (Conn) Is String Then
+				Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
+			Else
+				Dim Sql As String = ""
+				Dim Ok As Boolean = True
+
+				Sql = "Begin transaction"
+				Ritorno = EsegueSql(Conn, Sql, Connessione)
+
+				If Not Ritorno.Contains(StringaErrore) Then
+					Try
+						Sql = "Update Giocatori Set Categorie = Replace(Categorie, '" & idCategoria & ";', '') Where idAnno=" & idAnno & " And idGiocatore=" & idGiocatore
+						Ritorno = EsegueSql(Conn, Sql, Connessione)
+						If Ritorno.Contains(StringaErrore) Then
+							Ok = False
+						End If
+
+						Sql = "Update Giocatori Set idCategoria=-1 Where idAnno=" & idAnno & " And idGiocatore=" & idGiocatore & " And idCategoria=" & idCategoria
+						Ritorno = EsegueSql(Conn, Sql, Connessione)
+						If Ritorno.Contains(StringaErrore) Then
+							Ok = False
+						End If
+
+						If Ok Then
+							Sql = "Update Giocatori Set idCategoria2=-1 Where idAnno=" & idAnno & " And idGiocatore=" & idGiocatore & " And idCategoria2=" & idCategoria
+							Ritorno = EsegueSql(Conn, Sql, Connessione)
+							If Ritorno.Contains(StringaErrore) Then
+								Ok = False
+							End If
+						End If
+
+						If Ok Then
+							Sql = "Update Giocatori Set idCategoria3=-1 Where idAnno=" & idAnno & " And idGiocatore=" & idGiocatore & " And idCategoria3=" & idCategoria
+							Ritorno = EsegueSql(Conn, Sql, Connessione)
+							If Ritorno.Contains(StringaErrore) Then
+								Ok = False
+							End If
+						End If
 					Catch ex As Exception
 						Ritorno = StringaErrore & " " & ex.Message
 						Ok = False

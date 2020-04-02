@@ -166,6 +166,10 @@ Public Class wsDirigenti
 					Try
 						Sql = "Update Dirigenti Set Eliminato='S' Where idAnno=" & idAnno & " And idDirigente=" & idDirigente
 						Ritorno = EsegueSql(Conn, Sql, Connessione)
+						If Ritorno.Contains(StringaErrore) Then
+							Ok = False
+						End If
+
 					Catch ex As Exception
 						Ritorno = StringaErrore & " " & ex.Message
 						Ok = False

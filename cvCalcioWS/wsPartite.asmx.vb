@@ -42,6 +42,10 @@ Public Class wsPartite
 					Try
 						Sql = "Delete From Partite Where idPartita=" & idPartita
 						Ritorno = EsegueSql(Conn, Sql, Connessione)
+						If Ritorno.Contains(StringaErrore) Then
+							Ok = False
+						End If
+
 					Catch ex As Exception
 						Ritorno = StringaErrore & " " & ex.Message
 						Ok = False
@@ -52,6 +56,10 @@ Public Class wsPartite
 					Try
 						Sql = "Delete From Risultati Where idPartita=" & idPartita
 						Ritorno = EsegueSql(Conn, Sql, Connessione)
+						If Ritorno.Contains(StringaErrore) Then
+							Ok = False
+						End If
+
 					Catch ex As Exception
 						Ritorno = StringaErrore & " " & ex.Message
 						Ok = False
@@ -62,6 +70,10 @@ Public Class wsPartite
 					Try
 						Sql = "Delete From Marcatori Where idPartita=" & idPartita
 						Ritorno = EsegueSql(Conn, Sql, Connessione)
+						If Ritorno.Contains(StringaErrore) Then
+							Ok = False
+						End If
+
 					Catch ex As Exception
 						Ritorno = StringaErrore & " " & ex.Message
 						Ok = False
@@ -72,6 +84,10 @@ Public Class wsPartite
 					Try
 						Sql = "Delete From Convocati Where idPartita=" & idPartita
 						Ritorno = EsegueSql(Conn, Sql, Connessione)
+						If Ritorno.Contains(StringaErrore) Then
+							Ok = False
+						End If
+
 					Catch ex As Exception
 						Ritorno = StringaErrore & " " & ex.Message
 						Ok = False
@@ -82,6 +98,10 @@ Public Class wsPartite
 					Try
 						Sql = "Delete From RisultatiAggiuntivi Where idPartita=" & idPartita
 						Ritorno = EsegueSql(Conn, Sql, Connessione)
+						If Ritorno.Contains(StringaErrore) Then
+							Ok = False
+						End If
+
 					Catch ex As Exception
 						Ritorno = StringaErrore & " " & ex.Message
 						Ok = False
@@ -92,6 +112,10 @@ Public Class wsPartite
 					Try
 						Sql = "Delete From RisultatiAggiuntiviMarcatori Where idPartita=" & idPartita
 						Ritorno = EsegueSql(Conn, Sql, Connessione)
+						If Ritorno.Contains(StringaErrore) Then
+							Ok = False
+						End If
+
 					Catch ex As Exception
 						Ritorno = StringaErrore & " " & ex.Message
 						Ok = False
@@ -102,6 +126,10 @@ Public Class wsPartite
 					Try
 						Sql = "Delete From CampiEsterni Where idPartita=" & idPartita
 						Ritorno = EsegueSql(Conn, Sql, Connessione)
+						If Ritorno.Contains(StringaErrore) Then
+							Ok = False
+						End If
+
 					Catch ex As Exception
 						Ritorno = StringaErrore & " " & ex.Message
 						Ok = False
@@ -112,6 +140,10 @@ Public Class wsPartite
 					Try
 						Sql = "Delete From CoordinatePartite Where idPartita=" & idPartita
 						Ritorno = EsegueSql(Conn, Sql, Connessione)
+						If Ritorno.Contains(StringaErrore) Then
+							Ok = False
+						End If
+
 					Catch ex As Exception
 						Ritorno = StringaErrore & " " & ex.Message
 						Ok = False
@@ -122,6 +154,10 @@ Public Class wsPartite
 					Try
 						Sql = "Delete From MeteoPartite Where idPartita=" & idPartita
 						Ritorno = EsegueSql(Conn, Sql, Connessione)
+						If Ritorno.Contains(StringaErrore) Then
+							Ok = False
+						End If
+
 					Catch ex As Exception
 						Ritorno = StringaErrore & " " & ex.Message
 						Ok = False
@@ -132,6 +168,10 @@ Public Class wsPartite
 					Try
 						Sql = "Delete From TempiGoalAvversari Where idPartita=" & idPartita
 						Ritorno = EsegueSql(Conn, Sql, Connessione)
+						If Ritorno.Contains(StringaErrore) Then
+							Ok = False
+						End If
+
 					Catch ex As Exception
 						Ritorno = StringaErrore & " " & ex.Message
 						Ok = False
@@ -142,6 +182,10 @@ Public Class wsPartite
 					Try
 						Sql = "Delete From DirigentiPartite Where idPartita=" & idPartita & " And idAnno=" & idAnno
 						Ritorno = EsegueSql(Conn, Sql, Connessione)
+						If Ritorno.Contains(StringaErrore) Then
+							Ok = False
+						End If
+
 					Catch ex As Exception
 						Ritorno = StringaErrore & " " & ex.Message
 						Ok = False
@@ -152,6 +196,10 @@ Public Class wsPartite
 					Try
 						Sql = "Delete From ArbitriPartite Where idPartita=" & idPartita & " And idAnno=" & idAnno
 						Ritorno = EsegueSql(Conn, Sql, Connessione)
+						If Ritorno.Contains(StringaErrore) Then
+							Ok = False
+						End If
+
 					Catch ex As Exception
 						Ritorno = StringaErrore & " " & ex.Message
 						Ok = False
@@ -162,6 +210,10 @@ Public Class wsPartite
 					Try
 						Sql = "delete from RigoriAvversari Where idPartita=" & idPartita & " And idAnno=" & idAnno
 						Ritorno = EsegueSql(Conn, Sql, Connessione)
+						If Ritorno.Contains(StringaErrore) Then
+							Ok = False
+						End If
+
 					Catch ex As Exception
 						Ritorno = StringaErrore & " " & ex.Message
 						Ok = False
@@ -172,6 +224,10 @@ Public Class wsPartite
 					Try
 						Sql = "delete from RigoriPropri Where idPartita=" & idPartita & " And idAnno=" & idAnno
 						Ritorno = EsegueSql(Conn, Sql, Connessione)
+						If Ritorno.Contains(StringaErrore) Then
+							Ok = False
+						End If
+
 					Catch ex As Exception
 						Ritorno = StringaErrore & " " & ex.Message
 						Ok = False
@@ -182,6 +238,10 @@ Public Class wsPartite
 					Try
 						Sql = "delete from EventiPartita Where idPartita=" & idPartita & " And idAnno=" & idAnno
 						Ritorno = EsegueSql(Conn, Sql, Connessione)
+						If Ritorno.Contains(StringaErrore) Then
+							Ok = False
+						End If
+
 					Catch ex As Exception
 						Ritorno = StringaErrore & " " & ex.Message
 						Ok = False
@@ -1345,19 +1405,29 @@ Public Class wsPartite
 				Dim Rec2 As Object = Server.CreateObject("ADODB.Recordset")
 				Dim Sql As String = ""
 
-				Sql = "SELECT Partite.idPartita, Partite.DataOra, Categorie.Descrizione As Categoria, SquadreAvversarie.Descrizione As Avversario, '' + CampiAvversari.Descrizione As Campo, " &
-					"CampiAvversari.Indirizzo, '' + CampiEsterni.Descrizione As CampoEsterno, Allenatori.Cognome + ' ' + Allenatori.Nome As Mister, Allenatori.Telefono, Partite.OraConv " &
-					"FROM ((((Partite LEFT JOIN SquadreAvversarie ON Partite.idAvversario = SquadreAvversarie.idAvversario) LEFT JOIN CampiAvversari ON SquadreAvversarie.idCampo = CampiAvversari.idCampo) LEFT JOIN Categorie ON (Partite.idAnno = Categorie.idAnno) AND (Partite.idCategoria = Categorie.idCategoria)) LEFT JOIN CampiEsterni ON Partite.idPartita = CampiEsterni.idPartita) LEFT JOIN Allenatori ON (Partite.idAllenatore = Allenatori.idAllenatore) AND (Partite.idCategoria = Allenatori.idCategoria) AND (Partite.idAnno = Allenatori.idAnno) " &
-					"WHERE Partite.idAnno=" & idAnno & " AND Partite.idPartita=" & idPartita
+				Sql = "SELECT Partite.Casa, Partite.idPartita, Partite.DataOra, Categorie.Descrizione As Categoria, SquadreAvversarie.Descrizione As Avversario, '' + CampiAvversari.Descrizione As Campo, " &
+					"CampiAvversari.Indirizzo, '' + CampiEsterni.Descrizione As CampoEsterno, Allenatori.Cognome + ' ' + Allenatori.Nome As Mister, Allenatori.Telefono, Partite.OraConv, " &
+					"Anni.CampoSquadra, Anni.Indirizzo As IndirizzoCasa, Categorie.AnticipoConvocazione " &
+					"FROM (((((Partite LEFT JOIN SquadreAvversarie ON Partite.idAvversario = SquadreAvversarie.idAvversario) " &
+					"LEFT JOIN CampiAvversari ON SquadreAvversarie.idCampo = CampiAvversari.idCampo) " &
+					"LEFT JOIN Categorie ON (Partite.idAnno = Categorie.idAnno) And (Partite.idCategoria = Categorie.idCategoria)) " &
+					"LEFT JOIN CampiEsterni ON Partite.idPartita = CampiEsterni.idPartita) " &
+					"LEFT JOIN Allenatori ON (Partite.idAllenatore = Allenatori.idAllenatore) And (Partite.idCategoria = Allenatori.idCategoria) And (Partite.idAnno = Allenatori.idAnno)) " &
+					"LEFT JOIN Anni On Partite.idAnno = Anni.idAnno " &
+					"WHERE Partite.idAnno=" & idAnno & " And Partite.idPartita=" & idPartita
 				Rec = LeggeQuery(Conn, Sql, Connessione)
 				If TypeOf (Rec) Is String Then
 					Ritorno = Rec
 				Else
 					If Not Rec.Eof Then
 						If Not Rec("DataOra").Value Is DBNull.Value Then
+							Dim Anticipo As Single = ("" & Rec("AnticipoConvocazione").Value).replace(",", ".")
+							If Anticipo = 0 Then
+								Anticipo = 1
+							End If
 							Dim Filetto As String = gf.LeggeFileIntero(Server.MapPath(".") & "\base_convocazioni.txt")
 							Dim Datella As Date = Rec("DataOra").Value
-							Dim DatellaConv As Date = Datella.AddHours(-1)
+							Dim DatellaConv As Date = Datella.AddHours(-Anticipo)
 
 							Filetto = Filetto.Replace("***SQUADRA***", Rec("Categoria").Value)
 							Filetto = Filetto.Replace("***GARA***", Rec("Categoria").Value & " - " & Rec("Avversario").Value)
@@ -1366,9 +1436,15 @@ Public Class wsPartite
 								Filetto = Filetto.Replace("***CAMPO***", Rec("CampoEsterno").Value)
 								Filetto = Filetto.Replace("***INDIRIZZO***", "")
 							Else
-								Filetto = Filetto.Replace("***CAMPO***", Rec("Campo").Value)
-								Filetto = Filetto.Replace("***INDIRIZZO***", Rec("Indirizzo").Value)
+								If Rec("Casa").Value = "S" Then
+									Filetto = Filetto.Replace("***CAMPO***", Rec("CampoSquadra").Value)
+									Filetto = Filetto.Replace("***INDIRIZZO***", Rec("IndirizzoCasa").Value)
+								Else
+									Filetto = Filetto.Replace("***CAMPO***", Rec("Campo").Value)
+									Filetto = Filetto.Replace("***INDIRIZZO***", Rec("Indirizzo").Value)
+								End If
 							End If
+
 							Filetto = Filetto.Replace("***ORARIO1***", Format(Datella.Hour, "00") & ":" & Format(Datella.Minute, "00"))
 							Filetto = Filetto.Replace("***ORARIO2***", Rec("OraConv").Value)
 
@@ -1378,10 +1454,11 @@ Public Class wsPartite
 							Rec.Close()
 
 							Dim Convocati As String = ""
+
 							Sql = "SELECT Giocatori.Cognome+' '+Giocatori.Nome AS Giocatore, Ruoli.idRuolo " &
-								"FROM (Convocati LEFT JOIN Giocatori ON Convocati.idGiocatore = Giocatori.idGiocatore) LEFT JOIN Ruoli ON Giocatori.idRuolo = Ruoli.idRuolo " &
-								"WHERE Convocati.idPartita=" & idPartita & " AND Giocatori.idAnno=" & idAnno & " " &
-								"ORDER BY Ruoli.idRuolo, Giocatori.Cognome, Giocatori.Nome"
+							"FROM (Convocati LEFT JOIN Giocatori ON Convocati.idGiocatore = Giocatori.idGiocatore) LEFT JOIN Ruoli ON Giocatori.idRuolo = Ruoli.idRuolo " &
+							"WHERE Convocati.idPartita=" & idPartita & " AND Giocatori.idAnno=" & idAnno & " " &
+							"ORDER BY Ruoli.idRuolo, Giocatori.Cognome, Giocatori.Nome"
 							Rec = LeggeQuery(Conn, Sql, Connessione)
 							If TypeOf (Rec) Is String Then
 								Ritorno = Rec

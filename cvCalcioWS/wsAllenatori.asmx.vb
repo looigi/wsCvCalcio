@@ -25,6 +25,7 @@ Public Class wsAllenatori
 				Dim Rec As Object = Server.CreateObject("ADODB.Recordset")
 				Dim Sql As String = ""
 				Dim idAll As Integer = -1
+				Dim Ok As Boolean = True
 
 				Sql = "Begin transaction"
 				Ritorno = EsegueSql(Conn, Sql, Connessione)
@@ -51,9 +52,14 @@ Public Class wsAllenatori
 						idAll = idAllenatore
 						Sql = "Delete from Allenatori Where idAnno=" & idAnno & " And idAllenatore=" & idAll
 						Ritorno = EsegueSql(Conn, Sql, Connessione)
+						If Ritorno.Contains(StringaErrore) Then
+							Ok = False
+						End If
+
 					End If
 
-					Sql = "Insert Into Allenatori Values (" &
+					If Ok Then
+						Sql = "Insert Into Allenatori Values (" &
 						" " & idAnno & ", " &
 						" " & idCategoria & ", " &
 						" " & idAll & ", " &
@@ -63,17 +69,19 @@ Public Class wsAllenatori
 						"'" & Telefono.Replace("'", "''") & "', " &
 						"'N' " &
 						")"
-					Ritorno = EsegueSql(Conn, Sql, Connessione)
+						Ritorno = EsegueSql(Conn, Sql, Connessione)
+					End If
+
 					If Not Ritorno.Contains(StringaErrore) Then
 						Sql = "commit"
-						Ritorno = EsegueSql(Conn, Sql, Connessione)
+						Dim Ritorno2 As String = EsegueSql(Conn, Sql, Connessione)
 					Else
 						Sql = "rollback"
-						Ritorno = EsegueSql(Conn, Sql, Connessione)
+						Dim Ritorno2 As String = EsegueSql(Conn, Sql, Connessione)
 					End If
 				Else
 					Sql = "rollback"
-					Ritorno = EsegueSql(Conn, Sql, Connessione)
+					Dim Ritorno2 As String = EsegueSql(Conn, Sql, Connessione)
 				End If
 
 				Conn.Close()

@@ -78,6 +78,7 @@
     <Content Include="base_convocazioni.txt" />
     <Content Include="base_partita.txt" />
     <Content Include="base_statistiche.txt" />
+    <Content Include="NomeSquadraBase.txt" />
     <Content Include="PathCvCalcio.txt">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>

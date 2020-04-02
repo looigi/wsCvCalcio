@@ -25,6 +25,7 @@ Public Class wsArbitri
 				Dim Rec As Object = Server.CreateObject("ADODB.Recordset")
 				Dim Sql As String = ""
 				Dim idDir As Integer = -1
+				Dim Ok As Boolean = True
 
 				Sql = "Begin transaction"
 				Ritorno = EsegueSql(Conn, Sql, Connessione)
@@ -51,9 +52,14 @@ Public Class wsArbitri
 						idDir = idArbitro
 						Sql = "Delete from Arbitri Where idAnno=" & idAnno & " And idArbitro=" & idDir
 						Ritorno = EsegueSql(Conn, Sql, Connessione)
+						If Ritorno.Contains(StringaErrore) Then
+							Ok = False
+						End If
+
 					End If
 
-					Sql = "Insert Into Arbitri Values (" &
+					If Ok Then
+						Sql = "Insert Into Arbitri Values (" &
 						" " & idAnno & ", " &
 						" " & idCategoria & ", " &
 						" " & idDir & ", " &
@@ -63,7 +69,9 @@ Public Class wsArbitri
 						"'" & Telefono.Replace("'", "''") & "', " &
 						"'N' " &
 						")"
-					Ritorno = EsegueSql(Conn, Sql, Connessione)
+						Ritorno = EsegueSql(Conn, Sql, Connessione)
+					End If
+
 					If Not Ritorno.Contains(StringaErrore) Then
 						Ritorno = "*"
 

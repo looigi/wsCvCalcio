@@ -82,6 +82,10 @@ Public Class wsFunzioniRC
 					Try
 						Sql = "Delete Funzione Where IDfunzione=" & IDfunzione
 						Ritorno = EsegueSql(Conn, Sql, Connessione)
+						If Ritorno.Contains(StringaErrore) Then
+							Ok = False
+						End If
+
 					Catch ex As Exception
 						Ritorno = StringaErrore & " " & ex.Message
 						Ok = False
@@ -154,6 +158,10 @@ Public Class wsFunzioniRC
 									")"
 
 								Ritorno = EsegueSql(Conn, Sql, Connessione)
+								If Ritorno.Contains(StringaErrore) Then
+									Ok = False
+								End If
+
 							End If
 						Catch ex As Exception
 							Ritorno = StringaErrore & " " & ex.Message
