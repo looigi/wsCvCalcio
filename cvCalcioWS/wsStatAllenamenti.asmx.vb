@@ -55,11 +55,11 @@ Public Class wsStatAllenamenti
 				Try
 					Sql = "Select B.idGiocatore, B.Cognome, B.Nome, B.Descrizione,  B.Presenze, B.Totale, (Cast(B.Presenze As Numeric) / Cast(B.Totale As Numeric)) * 100 As Perc, B.NumeroMaglia From ( " &
 						"Select A.idGiocatore, A.Cognome, A.Nome, A.Descrizione,  A.Presenze, (SELECT Count(*) From Allenamenti " &
-						"Where idAnno=" & idAnno & " And idCategoria=" & idCategoria & " And CharIndex(Datella,'" & sMese & "')>-1  And Progressivo=0) As Totale, A.NumeroMaglia From ( " &
+						"Where idAnno=" & idAnno & " And idCategoria=" & idCategoria & " And CharIndex('" & sMese & "', Datella)>0  And Progressivo=0) As Totale, A.NumeroMaglia From ( " &
 						"SELECT Giocatori.idGiocatore, Cognome, Nome, Ruoli.Descrizione,  Count(*) As Presenze, Giocatori.NumeroMaglia " &
 						"FROM (Allenamenti LEFT JOIN Giocatori ON (Allenamenti.idAnno = Giocatori.idAnno) AND (Allenamenti.idGiocatore=Giocatori.idGiocatore) AND (Allenamenti.idCategoria = Giocatori.idCategoria)) " &
 						"LEFT Join Ruoli On Giocatori.idRuolo=Ruoli.idRuolo " &
-						"WHERE Allenamenti.idCategoria=" & idCategoria & " And Allenamenti.idAnno=" & idAnno & " And Giocatori.idGiocatore Is Not Null And CharIndex(Datella,'" & sMese & "')>-1 " &
+						"WHERE Allenamenti.idCategoria=" & idCategoria & " And Allenamenti.idAnno=" & idAnno & " And Giocatori.idGiocatore Is Not Null And CharIndex('" & sMese & "', Datella)>0 " &
 						"Group By Giocatori.idGiocatore, Cognome, Nome, Ruoli.Descrizione, Giocatori.NumeroMaglia " &
 						") A) B " &
 						"Order By 2"
@@ -148,7 +148,7 @@ Public Class wsStatAllenamenti
 				Try
 					Sql = "SELECT Allenamenti.Datella, Allenamenti.Orella " &
 						"FROM Allenamenti " &
-						"WHERE Allenamenti.idAnno=" & idAnno & " AND Allenamenti.idCategoria=" & idCategoria & " AND Allenamenti.idGiocatore=" & idGiocatore & " And CharIndex(Datella,'" & sMese & "')>-1 " &
+						"WHERE Allenamenti.idAnno=" & idAnno & " AND Allenamenti.idCategoria=" & idCategoria & " AND Allenamenti.idGiocatore=" & idGiocatore & " And CharIndex('" & sMese & "', Datella)>0 " &
 						"Order By Datella, Orella"
 
 					Rec = LeggeQuery(Conn, Sql, Connessione)
