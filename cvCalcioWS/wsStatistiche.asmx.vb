@@ -1106,10 +1106,10 @@ Public Class wsStatistiche
 				Dim descAnno As String = ""
 				Dim nomeSquadra As String = ""
 
-				Dim PathBaseImmagini As String = "http://loppa.duckdns.org:12345/MultiMedia" ' "http://looigi.no-ip.biz:12345/CVCalcio/App_Themes/Standard/Images"
-				Dim PathBaseImmScon As String = "http://loppa.duckdns.org:12345/MultiMedia/Sconosciuto.png" ' "http://looigi.no-ip.biz:12345/CVCalcio/App_Themes/Standard/Images/Sconosciuto.png"
+				Dim PathBaseImmagini As String = "http://loppa.duckdns.org:90/MultiMedia" ' "http://looigi.no-ip.biz:90/CVCalcio/App_Themes/Standard/Images"
+				Dim PathBaseImmScon As String = "http://loppa.duckdns.org:90/MultiMedia/Sconosciuto.png" ' "http://looigi.no-ip.biz:90/CVCalcio/App_Themes/Standard/Images/Sconosciuto.png"
 				Dim PathImmaginiPartite As String = "C:\GestioneCampionato\CalcioImages\" & Squadra & "\Partite\" ' "C:\inetpub\wwwroot\CVCalcio\App_Themes\Standard\Images\" & Squadra & "\Partite\"
-				Dim pathImmagini As String = "http://loppa.duckdns.org:12345/MultiMedia/"
+				Dim pathImmagini As String = "http://loppa.duckdns.org:90/MultiMedia/"
 
 				Sql = "SELECT * From Anni Where idAnno=" & idAnno
 				Try

@@ -8,7 +8,6 @@ Imports System.ComponentModel
 Public Class wsCampionato
     Inherits System.Web.Services.WebService
 
-
 	<WebMethod()>
 	Public Function RitornaCampionatoCategoria(Squadra As String, ByVal idAnno As String, idCategoria As String, idUtente As String) As String
 		Dim Ritorno As String = ""
@@ -522,43 +521,57 @@ Public Class wsCampionato
 				Ritorno = EsegueSql(Conn, Sql, Connessione)
 
 				If Not Ritorno.Contains(StringaErrore) Then
-					Try
-						Sql = "SELECT Max(idProgressivo)+1 FROM AvversariCalendario Where idAnno=" & idAnno & " And idCategoria=" & idCategoria
-						Rec = LeggeQuery(Conn, Sql, Connessione)
-						If TypeOf (Rec) Is String Then
-							Ritorno = Rec
-						Else
-							If Rec.Eof Then
-								Ritorno = StringaErrore & " Nessun avversario rilevato"
-							Else
-								If Rec(0).Value Is DBNull.Value Then
-									ProgressivoSquadra = "1"
-								Else
-									ProgressivoSquadra = Rec(0).Value.ToString
-								End If
-							End If
-							Rec.Close()
-						End If
+					Dim idAvv() As String = {}
+					If idAvversario.Contains(";") Then
+						idAvv = idAvversario.Split(";")
+					Else
+						ReDim idAvv(0)
+						idAvv(0) = idAvversario
+					End If
 
-						If ProgressivoSquadra <> "" Then
-							Sql = "Insert Into AvversariCalendario Values (" &
-							" " & idAnno & ", " &
-							" " & idCategoria & ", " &
-							" " & ProgressivoSquadra & ", " &
-							" " & idAvversario & " " &
-							")"
-							Ritorno = EsegueSql(Conn, Sql, Connessione)
-							If Ritorno.Contains(StringaErrore) Then
+					For Each id As String In idAvv
+						If id <> "" Then
+							Try
+								Sql = "SELECT Max(idProgressivo)+1 FROM AvversariCalendario Where idAnno=" & idAnno & " And idCategoria=" & idCategoria
+								Rec = LeggeQuery(Conn, Sql, Connessione)
+								If TypeOf (Rec) Is String Then
+									Ritorno = Rec
+								Else
+									If Rec.Eof Then
+										ProgressivoSquadra = "1"
+									Else
+										If Rec(0).Value Is DBNull.Value Then
+											ProgressivoSquadra = "1"
+										Else
+											ProgressivoSquadra = Rec(0).Value.ToString
+										End If
+									End If
+									Rec.Close()
+								End If
+
+								If ProgressivoSquadra <> "" Then
+									Sql = "Insert Into AvversariCalendario Values (" &
+										" " & idAnno & ", " &
+										" " & idCategoria & ", " &
+										" " & ProgressivoSquadra & ", " &
+										" " & id & " " &
+										")"
+									Ritorno = EsegueSql(Conn, Sql, Connessione)
+									If Ritorno.Contains(StringaErrore) Then
+										Ok = False
+									End If
+								Else
+									Ritorno = StringaErrore & " Problemi nel rilevamento del progressivo squadra"
+									Ok = False
+									Exit For
+								End If
+							Catch ex As Exception
+								Ritorno = StringaErrore & " " & ex.Message
 								Ok = False
-							End If
-						Else
-							Ritorno = StringaErrore & " Problemi nel rilevamento del progressivo squadra"
-							Ok = False
+								Exit For
+							End Try
 						End If
-					Catch ex As Exception
-						Ritorno = StringaErrore & " " & ex.Message
-						Ok = False
-					End Try
+					Next
 				Else
 					Ok = False
 				End If
@@ -739,8 +752,17 @@ Public Class wsCampionato
 
 							If Ok Then
 								If Mid(Ora, 1, 3) = "24:" Then Ora = "00:" & Mid(Ora, 4, Ora.Length)
+								Dim dd As String = Data
+								Dim oo As String = Ora
+								If dd.Contains("/") Then
+									Dim dc() As String = dd.Split("/")
+									dd = dc(0) & "-" & dc(1) & "-" & dc(2)
+								End If
+								Dim ddoo As String = dd & " " & Ora
+
 								Try
-									Sql = "Insert Into CalendarioDate Values (" & idAnno & ", " & idCategoria & ", " & ProgressivoPartita & ", " & idGiornata & ", '" & Data & " " & Ora & "')"
+									Sql = "Insert Into CalendarioDate Values (" & idAnno & ", " & idCategoria & ", " & ProgressivoPartita & ", " &
+											idGiornata & ", '" & ddoo & "')"
 									Ritorno = EsegueSql(Conn, Sql, Connessione)
 									If Ritorno.Contains(StringaErrore) Then
 										Ok = False
@@ -759,11 +781,29 @@ Public Class wsCampionato
 									'    Ritorno = StringaErrore & " " & ex.Message
 									'End Try
 
+									Dim Anticipo As Integer = 45
+
 									If Not Ritorno.Contains(StringaErrore & "") Then
 										If Val(c(0)) = -1 Or Val(f(0)) = -1 Then
+											Try
+												Sql = "SELECT AnticipoConvocazione FROM Categorie Where idAnno=" & idAnno & " And idCategoria=" & idCategoria
+												Rec = LeggeQuery(Conn, Sql, Connessione)
+												If TypeOf (Rec) Is String Then
+													Ritorno = Rec
+												Else
+													If Not Rec.Eof Then
+														Anticipo = Rec(0).Value.ToString * 90
+													End If
+													Rec.Close()
+												End If
+											Catch ex As Exception
+												Ritorno = StringaErrore & " " & ex.Message
+												Ok = False
+											End Try
+
 											Dim idAvversario As Integer
 											Dim Datella As Date = Data & " " & Ora
-											Dim dOraConv As Date = Datella.AddMinutes(-45)
+											Dim dOraConv As Date = Datella.AddMinutes(-Anticipo)
 											Dim OraConv As String = dOraConv.Hour & ":" & dOraConv.Minute
 											Dim inCasa As String = ""
 
@@ -818,9 +858,23 @@ Public Class wsCampionato
 
 												If Ok Then
 													Try
+														Sql = "Insert Into ArbitriPartite Values (" & idAnno & ", " & idNuovaPartita & ", 1, 3)"
+														Ritorno = EsegueSql(Conn, Sql, Connessione)
+														If Ritorno.Contains(StringaErrore) Then
+															Ok = False
+														End If
+
+													Catch ex As Exception
+														Ritorno = StringaErrore & " " & ex.Message
+														Ok = False
+													End Try
+												End If
+
+												If Ok Then
+													Try
 														Sql = "Insert Into Partite Values (" & idAnno & ", " & idNuovaPartita & ", " & idCategoria & ", " &
 															"" & idAvversario & ", " & idAllenatore & ", '" & Data & " " & Ora & "', " &
-															"'N', '" & inCasa & "', 1, " & idCampo & ", '" & OraConv & "', " & idUnioneCalendario & ")"
+															"'N', '" & inCasa & "', 1, " & idCampo & ", '" & OraConv & "', " & idUnioneCalendario & ", 'N')"
 														Ritorno = EsegueSql(Conn, Sql, Connessione)
 														If Ritorno.Contains(StringaErrore) Then
 															Ok = False

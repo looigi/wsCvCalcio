@@ -139,7 +139,7 @@ Public Class wsGenerale
 				Dim Rec As Object = Server.CreateObject("ADODB.Recordset")
 				Dim Sql As String = ""
 
-				Sql = "Select * From Anni Order By idAnno Desc"
+				Sql = "Select A.*, B.idAvversario, B.idCampo From Anni A Left Join SquadreAvversarie B On A.NomeSquadra = B.Descrizione Order By idAnno Desc"
 				Rec = LeggeQuery(Conn, Sql, Connessione)
 				If TypeOf (Rec) Is String Then
 					Ritorno = Rec
@@ -154,6 +154,8 @@ Public Class wsGenerale
 								Rec("Indirizzo").Value & ";" &
 								Rec("CampoSquadra").Value & ";" &
 								Rec("NomePolisportiva").Value & ";" &
+								Rec("idAvversario").Value & ";" &
+								Rec("idCampo").Value & ";" &
 								"§"
 						Rec.MoveNext()
 					Loop

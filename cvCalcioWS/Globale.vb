@@ -3,9 +3,9 @@
     Public Const ErroreConnessioneDBNonValida As String = "ERRORE: Connessione al db non valida"
     Public Percorso As String
 	Public PercorsoSitoCV As String = "C:\GestioneCampionato\CalcioImages\" ' "C:\inetpub\wwwroot\CVCalcio\App_Themes\Standard\Images\"
-	Public PercorsoSitoURLImmagini As String = "http://loppa.duckdns.org:12345/MultiMedia/" ' "http://looigi.no-ip.biz:12345/CvCalcio/App_Themes/Standard/Images/"
+	Public PercorsoSitoURLImmagini As String = "http://loppa.duckdns.org:90/MultiMedia/" ' "http://looigi.no-ip.biz:90/CvCalcio/App_Themes/Standard/Images/"
 	Public StringaErrore As String = "ERROR: "
-    Public RigaPari As Boolean = False
+	Public RigaPari As Boolean = False
 
 	Public Function SistemaNumero(Numero As String) As String
 		If Numero = "" Then
@@ -143,8 +143,8 @@
 		Dim Ok As Boolean = True
 		Dim Pagina As StringBuilder = New StringBuilder
 		Dim gf As New GestioneFilesDirectory
-		Dim PathBaseImmagini As String = "http://loppa.duckdns.org:12345/MultiMedia" ' "http://looigi.no-ip.biz:12345/CVCalcio/App_Themes/Standard/Images"
-		Dim PathBaseImmScon As String = "http://loppa.duckdns.org:12345/MultiMedia/Sconosciuto.png" ' "http://looigi.no-ip.biz:12345/CVCalcio/App_Themes/Standard/Images/Sconosciuto.png"
+		Dim PathBaseImmagini As String = "http://loppa.duckdns.org:90/MultiMedia" ' "http://looigi.no-ip.biz:90/CVCalcio/App_Themes/Standard/Images"
+		Dim PathBaseImmScon As String = "http://loppa.duckdns.org:90/MultiMedia/Sconosciuto.png" ' "http://looigi.no-ip.biz:90/CVCalcio/App_Themes/Standard/Images/Sconosciuto.png"
 		Dim Ritorno As String = "*"
 
 		Dim Filone As String = gf.LeggeFileIntero(HttpContext.Current.Server.MapPath(".") & "\base_partita.txt")

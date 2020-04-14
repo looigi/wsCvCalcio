@@ -322,9 +322,9 @@ Public Class wsPartite
 							Sql = "Insert Into RisultatiAggiuntivi Values (" &
 								" " & idPartita & ", " &
 								"'" & RisGiochetti & "', " &
-								" " & GA(0) & ", " &
-								" " & GA(1) & ", " &
-								" " & GA(2) & ", " &
+								" " & IIf(GA(0).Trim <> "", GA(0), "0") & ", " &
+								" " & IIf(GA(1).Trim <> "", GA(1), "0") & ", " &
+								" " & IIf(GA(2).Trim <> "", GA(2), "0") & ", " &
 								"'" & Tempo1Tempo & "', " &
 								"'" & Tempo2Tempo & "', " &
 								"'" & Tempo3Tempo & "' " &
@@ -795,8 +795,9 @@ Public Class wsPartite
 						"LEFT JOIN AvversariCoord ON Partite.idAvversario = AvversariCoord.idAvversario) " &
 						"LEFT JOIN ArbitriPartite ON (Partite.idPartita = ArbitriPartite.idPartita And Partite.idAnno=ArbitriPartite.idAnno)) " &
 						"LEFT JOIN Arbitri ON (Arbitri.idArbitro = ArbitriPartite.idArbitro And ArbitriPartite.idAnno = Arbitri.idAnno)) " &
-						"WHERE Partite.idAnno=" & idAnno & " And Arbitri.idAnno=" & idAnno & " And Partite.Giocata='S' " &
+						"WHERE Partite.idAnno=" & idAnno & "  " &
 						"And Partite.idCategoria=" & idCategoria & " Order By DataOra Desc"
+					' And Arbitri.idAnno=" & idAnno & " And Partite.Giocata='S'
 					Rec = LeggeQuery(Conn, Sql, Connessione)
 					If TypeOf (Rec) Is String Then
 						Ritorno = Rec
@@ -889,7 +890,7 @@ Public Class wsPartite
 
 								Dim MultiMediaPartite As String = RitornaMultimediaPerTipologia(Squadra, idAnno, Rec("idPartita").Value, "Partite")
 
-								If MultiMediaPartite <> "" Then
+								If MultiMediaPartite <> "" And MultiMediaPartite.Contains("§") Then
 									Dim QuanteImmagini() As String = MultiMediaPartite.Split("§")
 									Ritorno &= QuanteImmagini.Length.ToString & ";"
 								Else
@@ -1559,7 +1560,7 @@ Public Class wsPartite
 					End If
 
 					If Ok Then
-						sql = "delete from AbritriPartite Where idAnno = " & idAnno & " And idPartita = " & idPartita
+						sql = "delete from ArbitriPartite Where idAnno = " & idAnno & " And idPartita = " & idPartita
 						Ritorno = EsegueSql(Conn, sql, Connessione)
 						If Ritorno.Contains(StringaErrore) Then
 							Ok = False

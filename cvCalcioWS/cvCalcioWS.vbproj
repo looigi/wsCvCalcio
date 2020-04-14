@@ -83,6 +83,7 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="wsFunzioniRC.asmx" />
+    <Content Include="wsKit.asmx" />
     <Content Include="wsPermessiRC.asmx" />
     <Content Include="wsPermessiRCVisual.asmx" />
     <Content Include="wsStatAllenamenti.asmx" />
@@ -111,6 +112,10 @@
     <Compile Include="mdlTrasfSMS.vb" />
     <Compile Include="wsFunzioniRC.asmx.vb">
       <DependentUpon>wsFunzioniRC.asmx</DependentUpon>
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="wsKit.asmx.vb">
+      <DependentUpon>wsKit.asmx</DependentUpon>
       <SubType>Component</SubType>
     </Compile>
     <Compile Include="wsPermessiRC.asmx.vb">
