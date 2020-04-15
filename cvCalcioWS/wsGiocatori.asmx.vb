@@ -260,7 +260,7 @@ Public Class wsGiocatori
 					Sql = "SELECT idGiocatore, Ruoli.idRuolo As idR, Cognome, Nome, Ruoli.Descrizione, EMail, Telefono, Soprannome, DataDiNascita, Indirizzo, " &
 						"CodFiscale, Maschio, Citta, Matricola, NumeroMaglia, Giocatori.idCategoria, Giocatori.idCategoria2 As idCategoria2, Categorie2.Descrizione As Categoria2, " &
 						"Giocatori.idCategoria3 As idCategoria3, Categorie3.Descrizione As Categoria3, Categorie.Descrizione As Categoria1, Giocatori.Categorie, " &
-						"Giocatori.RapportoCompleto " &
+						"Giocatori.RapportoCompleto, Giocatori.idTaglia " &
 						"FROM Giocatori " &
 						"Left Join Ruoli On Giocatori.idRuolo=Ruoli.idRuolo " &
 						"Left Join Categorie On Categorie.idCategoria=Giocatori.idCategoria And Categorie.idAnno=Giocatori.idAnno " &
@@ -300,6 +300,7 @@ Public Class wsGiocatori
 									Rec("Categoria1").Value.ToString & ";" &
 									Rec("Categorie").Value.ToString & ";" &
 									Rec("RapportoCompleto").Value.ToString & ";" &
+									Rec("idTaglia").Value.ToString & ";" &
 									"§"
 
 								Rec.MoveNext()
@@ -563,7 +564,8 @@ Public Class wsGiocatori
 	<WebMethod()>
 	Public Function SalvaGiocatore(Squadra As String, idAnno As String, idCategoria As String, idGiocatore As String, idRuolo As String, Cognome As String, Nome As String, EMail As String, Telefono As String,
 								   Soprannome As String, DataDiNascita As String, Indirizzo As String, CodFiscale As String, Maschio As String, Citta As String, Matricola As String,
-								   NumeroMaglia As String, idCategoria2 As String, idCategoria3 As String, Categorie As String, RapportoCompleto As String) As String
+								   NumeroMaglia As String, idCategoria2 As String, idCategoria3 As String, Categorie As String, RapportoCompleto As String,
+								   idTaglia As String) As String
 		Dim Ritorno As String = ""
 		Dim Connessione As String = LeggeImpostazioniDiBase(Server.MapPath("."), Squadra)
 
@@ -652,7 +654,7 @@ Public Class wsGiocatori
 							"'" & Maschio & "', " &
 							"'', " &
 							"'" & Citta.Replace("'", "''") & "', " &
-							"0, " &
+							" " & idTaglia & ", " &
 							" " & idCategoria2 & ", " &
 							"'" & Matricola.Replace("'", "''") & "', " &
 							"'" & NumeroMaglia.Replace("'", "''") & "', " &

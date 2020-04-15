@@ -103,6 +103,7 @@
     <Content Include="wsMultimedia.asmx" />
     <Content Include="wsPartite.asmx" />
     <Content Include="wsStatistiche.asmx" />
+    <Content Include="wsTaglie.asmx" />
     <Content Include="wsUtentiLocali.asmx" />
     <Content Include="wsUtenti.asmx" />
   </ItemGroup>
@@ -199,6 +200,10 @@
     </Compile>
     <Compile Include="wsStatistiche.asmx.vb">
       <DependentUpon>wsStatistiche.asmx</DependentUpon>
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="wsTaglie.asmx.vb">
+      <DependentUpon>wsTaglie.asmx</DependentUpon>
       <SubType>Component</SubType>
     </Compile>
     <Compile Include="wsUtentiLocali.asmx.vb">
