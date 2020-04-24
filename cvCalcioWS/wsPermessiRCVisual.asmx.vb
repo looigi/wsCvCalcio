@@ -27,7 +27,7 @@ Public Class wsPermessiRCVisual
 				Dim Sql As String = ""
 
 				Try
-					Sql = "SELECT A.*, B.descrizione From PermessoVisual A , Visualizza B
+					Sql = "SELECT A.*, B.descrizione, B.NomePerCodice From PermessoVisual A , Visualizza B
 							where IDutente=" & IDutente & " 
 							and   permesso = IDfunzione
 							Order By progressivo"
@@ -41,7 +41,7 @@ Public Class wsPermessiRCVisual
 							Ritorno = ""
 							Do Until Rec.Eof
 								Ritorno &= Rec("IDutente").Value.ToString & ";" & Rec("progressivo").Value.ToString & ";" & Rec("permesso").Value.ToString & ";" &
-										   Rec("descrizione").Value.ToString & "§"
+										   Rec("descrizione").Value.ToString & ";" & Rec("NomePerCodice").Value.ToString & "§"
 
 								Rec.MoveNext()
 							Loop
@@ -58,7 +58,6 @@ Public Class wsPermessiRCVisual
 
 		Return Ritorno
 	End Function
-
 
 	<WebMethod()>
 	Public Function RitornaTuttiPermessiVisual(Squadra As String) As String

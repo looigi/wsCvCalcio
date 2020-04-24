@@ -79,9 +79,9 @@
     <Content Include="base_partita.txt" />
     <Content Include="base_statistiche.txt" />
     <Content Include="NomeSquadraBase.txt" />
-    <Content Include="PathCvCalcio.txt">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
+    <Content Include="PathAllegati.txt" />
+    <Content Include="PathCvCalcio.txt" />
+    <Content Include="wsAllegati.asmx" />
     <Content Include="wsFunzioniRC.asmx" />
     <Content Include="wsKit.asmx" />
     <Content Include="wsPermessiRC.asmx" />
@@ -111,6 +111,10 @@
     <Compile Include="GestioneFilesDirectory.vb" />
     <Compile Include="Globale.vb" />
     <Compile Include="mdlTrasfSMS.vb" />
+    <Compile Include="wsAllegati.asmx.vb">
+      <DependentUpon>wsAllegati.asmx</DependentUpon>
+      <SubType>Component</SubType>
+    </Compile>
     <Compile Include="wsFunzioniRC.asmx.vb">
       <DependentUpon>wsFunzioniRC.asmx</DependentUpon>
       <SubType>Component</SubType>

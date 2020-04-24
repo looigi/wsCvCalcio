@@ -10,6 +10,374 @@ Public Class wsGenerale
     Inherits System.Web.Services.WebService
 
 	<WebMethod()>
+	Public Function SistemaImmagini(Squadra As String, idAnno As String) As String
+		Dim Ritorno As String = ""
+		Dim Connessione As String = LeggeImpostazioniDiBase(Server.MapPath("."), Squadra)
+
+		If Connessione = "" Then
+			Ritorno = ErroreConnessioneNonValida & ":" & Connessione
+		Else
+			Dim Conn As Object = ApreDB(Connessione)
+
+			If TypeOf (Conn) Is String Then
+				Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
+			Else
+				Dim gf As New GestioneFilesDirectory
+				Dim PathBase As String = gf.LeggeFileIntero(Server.MapPath(".") & "\PathCvCalcio.txt")
+				PathBase = PathBase.Replace(vbCrLf, "")
+				PathBase = PathBase.Replace(Chr(13), "")
+				PathBase = PathBase.Replace(Chr(10), "")
+				If Strings.Right(PathBase, 1) = "\" Then
+					PathBase = Mid(PathBase, 1, PathBase.Length - 1)
+				End If
+				PathBase &= "\" & Squadra.Replace(" ", "_")
+
+				Dim Sql As String = "Select idGiocatore From Giocatori Where idAnno=" & idAnno
+				Dim Rec As Object = Server.CreateObject("ADODB.Recordset")
+				Dim Sconosciuto As String = PathBase & "\Giocatori\Sconosciuto.png"
+				Dim Ok As Boolean = True
+				Dim Aggiunte As Integer = 0
+				Dim Eliminate As Integer = 0
+
+				Rec = LeggeQuery(Conn, Sql, Connessione)
+				If TypeOf (Rec) Is String Then
+					Ritorno = Rec
+					Ok = False
+				Else
+					Do Until Rec.Eof
+						Dim Percorso As String = PathBase & "\Giocatori\" & idAnno & "_" & Rec("idGiocatore").Value.ToString & ".jpg"
+						If Not File.Exists(Percorso) Then
+							Try
+								File.Copy(Sconosciuto, Percorso)
+								Aggiunte += 1
+							Catch ex As Exception
+								Ritorno = StringaErrore & ex.Message
+								Ok = False
+								Exit Do
+							End Try
+						End If
+
+						Rec.MoveNext()
+					Loop
+					Rec.Close()
+				End If
+
+				If Ok Then
+					Sql = "Select idAllenatore From Allenatori Where idAnno=" & idAnno
+					Rec = LeggeQuery(Conn, Sql, Connessione)
+					If TypeOf (Rec) Is String Then
+						Ritorno = Rec
+						Ok = False
+					Else
+						Do Until Rec.Eof
+							Dim Percorso As String = PathBase & "\Allenatori\" & idAnno & "_" & Rec("idAllenatore").Value.ToString & ".jpg"
+							If Not File.Exists(Percorso) Then
+								Try
+									File.Copy(Sconosciuto, Percorso)
+									Aggiunte += 1
+								Catch ex As Exception
+									Ritorno = StringaErrore & ex.Message
+									Ok = False
+									Exit Do
+								End Try
+							End If
+
+							Rec.MoveNext()
+						Loop
+						Rec.Close()
+					End If
+				End If
+
+				If Ok Then
+					Sql = "Select idArbitro From Arbitri Where idAnno=" & idAnno
+					Rec = LeggeQuery(Conn, Sql, Connessione)
+					If TypeOf (Rec) Is String Then
+						Ritorno = Rec
+						Ok = False
+					Else
+						Do Until Rec.Eof
+							Dim Percorso As String = PathBase & "\Arbitri\" & Rec("idArbitro").Value.ToString & ".jpg"
+							If Not File.Exists(Percorso) Then
+								Try
+									File.Copy(Sconosciuto, Percorso)
+									Aggiunte += 1
+								Catch ex As Exception
+									Ritorno = StringaErrore & ex.Message
+									Ok = False
+									Exit Do
+								End Try
+							End If
+
+							Rec.MoveNext()
+						Loop
+						Rec.Close()
+					End If
+				End If
+
+				If Ok Then
+					Sql = "Select idAvversario From SquadreAvversarie"
+					Rec = LeggeQuery(Conn, Sql, Connessione)
+					If TypeOf (Rec) Is String Then
+						Ritorno = Rec
+						Ok = False
+					Else
+						Do Until Rec.Eof
+							Dim Percorso As String = PathBase & "\Avversari\" & Rec("idAvversario").Value.ToString & ".jpg"
+							If Not File.Exists(Percorso) Then
+								Try
+									File.Copy(Sconosciuto, Percorso)
+									Aggiunte += 1
+								Catch ex As Exception
+									Ritorno = StringaErrore & ex.Message
+									Ok = False
+									Exit Do
+								End Try
+							End If
+
+							Rec.MoveNext()
+						Loop
+						Rec.Close()
+					End If
+				End If
+
+				If Ok Then
+					Sql = "Select idCategoria From Categorie Where idAnno=" & idAnno
+					Rec = LeggeQuery(Conn, Sql, Connessione)
+					If TypeOf (Rec) Is String Then
+						Ritorno = Rec
+						Ok = False
+					Else
+						Do Until Rec.Eof
+							Dim Percorso As String = PathBase & "\Categorie\" & idAnno & "_" & Rec("idCategoria").Value.ToString & ".jpg"
+							If Not File.Exists(Percorso) Then
+								Try
+									File.Copy(Sconosciuto, Percorso)
+									Aggiunte += 1
+								Catch ex As Exception
+									Ritorno = StringaErrore & ex.Message
+									Ok = False
+									Exit Do
+								End Try
+							End If
+
+							Rec.MoveNext()
+						Loop
+						Rec.Close()
+					End If
+				End If
+
+				If Ok Then
+					Sql = "Select idDirigente From Dirigenti Where idAnno=" & idAnno
+					Rec = LeggeQuery(Conn, Sql, Connessione)
+					If TypeOf (Rec) Is String Then
+						Ritorno = Rec
+						Ok = False
+					Else
+						Do Until Rec.Eof
+							Dim Percorso As String = PathBase & "\Dirigenti\" & idAnno & "_" & Rec("idDirigente").Value.ToString & ".jpg"
+							If Not File.Exists(Percorso) Then
+								Try
+									File.Copy(Sconosciuto, Percorso)
+									Aggiunte += 1
+								Catch ex As Exception
+									Ritorno = StringaErrore & ex.Message
+									Ok = False
+									Exit Do
+								End Try
+							End If
+
+							Rec.MoveNext()
+						Loop
+						Rec.Close()
+					End If
+				End If
+
+				If Ok Then
+					Dim Percorso As String = PathBase & "\Allenatori"
+					gf.ScansionaDirectorySingola(Percorso)
+					Dim Filetti() As String = gf.RitornaFilesRilevati
+					Dim qFiletti As Integer = gf.RitornaQuantiFilesRilevati
+
+					For i As Integer = 1 To qFiletti
+						Dim c() As String = Filetti(i).Replace(Percorso & "\", "").ToUpper().Replace(".JPG", "").Split("_")
+						Sql = "Select * From Allenatori Where idAnno=" & c(0) & " And idAllenatore=" & c(1)
+						Rec = LeggeQuery(Conn, Sql, Connessione)
+						If TypeOf (Rec) Is String Then
+							Ritorno = Rec
+							Ok = False
+							Exit For
+						Else
+							If Rec.Eof Then
+								Try
+									Kill(Filetti(i))
+									Eliminate += 1
+								Catch ex As Exception
+									Ok = False
+									Ritorno = StringaErrore & ex.Message
+								End Try
+							End If
+							Rec.Close
+						End If
+					Next
+				End If
+
+				If Ok Then
+					Dim Percorso As String = PathBase & "\Arbitri"
+					gf.ScansionaDirectorySingola(Percorso)
+					Dim Filetti() As String = gf.RitornaFilesRilevati
+					Dim qFiletti As Integer = gf.RitornaQuantiFilesRilevati
+
+					For i As Integer = 1 To qFiletti
+						Dim c As String = Filetti(i).Replace(Percorso & "\", "").ToUpper().Replace(".JPG", "")
+						Sql = "Select * From Arbitri Where idAnno=" & idAnno & " And idArbitro=" & c
+						Rec = LeggeQuery(Conn, Sql, Connessione)
+						If TypeOf (Rec) Is String Then
+							Ritorno = Rec
+							Ok = False
+							Exit For
+						Else
+							If Rec.Eof Then
+								Try
+									Kill(Filetti(i))
+									Eliminate += 1
+								Catch ex As Exception
+									Ok = False
+									Ritorno = StringaErrore & ex.Message
+								End Try
+							End If
+							Rec.Close
+						End If
+					Next
+				End If
+
+				If Ok Then
+					Dim Percorso As String = PathBase & "\Avversari"
+					gf.ScansionaDirectorySingola(Percorso)
+					Dim Filetti() As String = gf.RitornaFilesRilevati
+					Dim qFiletti As Integer = gf.RitornaQuantiFilesRilevati
+
+					For i As Integer = 1 To qFiletti
+						Dim c As String = Filetti(i).Replace(Percorso & "\", "").ToUpper().Replace(".JPG", "")
+						Sql = "Select * From SquadreAvversarie Where idAvversario=" & c
+						Rec = LeggeQuery(Conn, Sql, Connessione)
+						If TypeOf (Rec) Is String Then
+							Ritorno = Rec
+							Ok = False
+							Exit For
+						Else
+							If Rec.Eof Then
+								Try
+									Kill(Filetti(i))
+									Eliminate += 1
+								Catch ex As Exception
+									Ok = False
+									Ritorno = StringaErrore & ex.Message
+								End Try
+							End If
+							Rec.Close
+						End If
+					Next
+				End If
+
+				If Ok Then
+					Dim Percorso As String = PathBase & "\Categorie"
+					gf.ScansionaDirectorySingola(Percorso)
+					Dim Filetti() As String = gf.RitornaFilesRilevati
+					Dim qFiletti As Integer = gf.RitornaQuantiFilesRilevati
+
+					For i As Integer = 1 To qFiletti
+						Dim c() As String = Filetti(i).Replace(Percorso & "\", "").ToUpper().Replace(".JPG", "").Split("_")
+						Sql = "Select * From Categorie Where idAnno=" & c(0) & " And idCategoria=" & c(1)
+						Rec = LeggeQuery(Conn, Sql, Connessione)
+						If TypeOf (Rec) Is String Then
+							Ritorno = Rec
+							Ok = False
+							Exit For
+						Else
+							If Rec.Eof Then
+								Try
+									Kill(Filetti(i))
+									Eliminate += 1
+								Catch ex As Exception
+									Ok = False
+									Ritorno = StringaErrore & ex.Message
+								End Try
+							End If
+							Rec.Close
+						End If
+					Next
+				End If
+
+				If Ok Then
+					Dim Percorso As String = PathBase & "\Dirigenti"
+					gf.ScansionaDirectorySingola(Percorso)
+					Dim Filetti() As String = gf.RitornaFilesRilevati
+					Dim qFiletti As Integer = gf.RitornaQuantiFilesRilevati
+
+					For i As Integer = 1 To qFiletti
+						Dim c() As String = Filetti(i).Replace(Percorso & "\", "").ToUpper().Replace(".JPG", "").Split("_")
+						Sql = "Select * From Dirigenti Where idAnno=" & c(0) & " And idDirigente=" & c(1)
+						Rec = LeggeQuery(Conn, Sql, Connessione)
+						If TypeOf (Rec) Is String Then
+							Ritorno = Rec
+							Ok = False
+							Exit For
+						Else
+							If Rec.Eof Then
+								Try
+									Kill(Filetti(i))
+									Eliminate += 1
+								Catch ex As Exception
+									Ok = False
+									Ritorno = StringaErrore & ex.Message
+								End Try
+							End If
+							Rec.Close
+						End If
+					Next
+				End If
+
+				If Ok Then
+					Dim Percorso As String = PathBase & "\Giocatori"
+					gf.ScansionaDirectorySingola(Percorso)
+					Dim Filetti() As String = gf.RitornaFilesRilevati
+					Dim qFiletti As Integer = gf.RitornaQuantiFilesRilevati
+
+					For i As Integer = 1 To qFiletti
+						If Not Filetti(i).Contains("Sconosciuto") Then
+							Dim c() As String = Filetti(i).Replace(Percorso & "\", "").ToUpper().Replace(".JPG", "").Split("_")
+							Sql = "Select * From Giocatori Where idAnno=" & c(0) & " And idGiocatore=" & c(1)
+							Rec = LeggeQuery(Conn, Sql, Connessione)
+							If TypeOf (Rec) Is String Then
+								Ritorno = Rec
+								Ok = False
+								Exit For
+							Else
+								If Rec.Eof Then
+									Try
+										Kill(Filetti(i))
+										Eliminate += 1
+									Catch ex As Exception
+										Ok = False
+										Ritorno = StringaErrore & ex.Message
+									End Try
+								End If
+								Rec.Close
+							End If
+						End If
+					Next
+				End If
+
+				If Ok Then
+					Ritorno = "Immagini Aggiunte: " & Aggiunte & " - Eliminate: " & Eliminate
+				End If
+			End If
+		End If
+
+		Return Ritorno
+	End Function
+
+	<WebMethod()>
 	Public Function AggiornaDB(Squadra As String, ByVal Numero As String) As String
 		Dim Ritorno As String = ""
 		Dim Connessione As String = LeggeImpostazioniDiBase(Server.MapPath("."), Squadra)

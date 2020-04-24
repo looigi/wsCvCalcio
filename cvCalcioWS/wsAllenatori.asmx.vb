@@ -60,15 +60,15 @@ Public Class wsAllenatori
 
 					If Ok Then
 						Sql = "Insert Into Allenatori Values (" &
-						" " & idAnno & ", " &
-						" " & idCategoria & ", " &
-						" " & idAll & ", " &
-						"'" & Cognome.Replace("'", "''") & "', " &
-						"'" & Nome.Replace("'", "''") & "', " &
-						"'" & EMail.Replace("'", "''") & "', " &
-						"'" & Telefono.Replace("'", "''") & "', " &
-						"'N' " &
-						")"
+							" " & idAnno & ", " &
+							" " & idCategoria & ", " &
+							" " & idAll & ", " &
+							"'" & Cognome.Replace("'", "''") & "', " &
+							"'" & Nome.Replace("'", "''") & "', " &
+							"'" & EMail.Replace("'", "''") & "', " &
+							"'" & Telefono.Replace("'", "''") & "', " &
+							"'N' " &
+							")"
 						Ritorno = EsegueSql(Conn, Sql, Connessione)
 					End If
 
