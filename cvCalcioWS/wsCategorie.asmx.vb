@@ -25,7 +25,7 @@ Public Class wsCategorie
 				Dim Sql As String = ""
 
 				Try
-					Sql = "Select * From UtentiMobile Where idAnno=" & idAnno & " And idUtente=" & idUtente
+					Sql = "Select * From Utenti Where idAnno=" & idAnno & " And idUtente=" & idUtente
 					Rec = LeggeQuery(Conn, Sql, Connessione)
 					If TypeOf (Rec) Is String Then
 						Ritorno = Rec

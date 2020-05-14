@@ -84,7 +84,7 @@
 					If Squadra <> "" Then
 						Connessione = Connessione.Replace("***NOME_DB***", Squadra)
 					Else
-						Connessione = Connessione.Replace("***NOME_DB***", "Globale")
+						Connessione = Connessione.Replace("***NOME_DB***", "Generale")
 					End If
 					Exit For
 				End If

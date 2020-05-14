@@ -193,6 +193,58 @@ Public Class wsGenerale
 				End If
 
 				If Ok Then
+					Sql = "Select idUtente From Utenti Where idAnno=" & idAnno
+					Rec = LeggeQuery(Conn, Sql, Connessione)
+					If TypeOf (Rec) Is String Then
+						Ritorno = Rec
+						Ok = False
+					Else
+						Do Until Rec.Eof
+							Dim Percorso As String = PathBase & "\Utenti\" & idAnno & "_" & Rec("idUtente").Value.ToString & ".jpg"
+							If Not File.Exists(Percorso) Then
+								Try
+									File.Copy(Sconosciuto, Percorso)
+									Aggiunte += 1
+								Catch ex As Exception
+									Ritorno = StringaErrore & ex.Message
+									Ok = False
+									Exit Do
+								End Try
+							End If
+
+							Rec.MoveNext()
+						Loop
+						Rec.Close()
+					End If
+				End If
+
+				If Ok Then
+					Sql = "Select idUtente From UtentiMobile Where idAnno=" & idAnno
+					Rec = LeggeQuery(Conn, Sql, Connessione)
+					If TypeOf (Rec) Is String Then
+						Ritorno = Rec
+						Ok = False
+					Else
+						Do Until Rec.Eof
+							Dim Percorso As String = PathBase & "\UtentiMobile\" & idAnno & "_" & Rec("idUtente").Value.ToString & ".jpg"
+							If Not File.Exists(Percorso) Then
+								Try
+									File.Copy(Sconosciuto, Percorso)
+									Aggiunte += 1
+								Catch ex As Exception
+									Ritorno = StringaErrore & ex.Message
+									Ok = False
+									Exit Do
+								End Try
+							End If
+
+							Rec.MoveNext()
+						Loop
+						Rec.Close()
+					End If
+				End If
+
+				If Ok Then
 					Dim Percorso As String = PathBase & "\Allenatori"
 					gf.ScansionaDirectorySingola(Percorso)
 					Dim Filetti() As String = gf.RitornaFilesRilevati
@@ -364,6 +416,64 @@ Public Class wsGenerale
 								End If
 								Rec.Close
 							End If
+						End If
+					Next
+				End If
+
+				If Ok Then
+					Dim Percorso As String = PathBase & "\Utenti"
+					gf.ScansionaDirectorySingola(Percorso)
+					Dim Filetti() As String = gf.RitornaFilesRilevati
+					Dim qFiletti As Integer = gf.RitornaQuantiFilesRilevati
+
+					For i As Integer = 1 To qFiletti
+						Dim c() As String = Filetti(i).Replace(Percorso & "\", "").ToUpper().Replace(".JPG", "").Split("_")
+						Sql = "Select * From Utenti Where idAnno=" & c(0) & " And idUtente=" & c(1)
+						Rec = LeggeQuery(Conn, Sql, Connessione)
+						If TypeOf (Rec) Is String Then
+							Ritorno = Rec
+							Ok = False
+							Exit For
+						Else
+							If Rec.Eof Then
+								Try
+									Kill(Filetti(i))
+									Eliminate += 1
+								Catch ex As Exception
+									Ok = False
+									Ritorno = StringaErrore & ex.Message
+								End Try
+							End If
+							Rec.Close
+						End If
+					Next
+				End If
+
+				If Ok Then
+					Dim Percorso As String = PathBase & "\UtentiMobile"
+					gf.ScansionaDirectorySingola(Percorso)
+					Dim Filetti() As String = gf.RitornaFilesRilevati
+					Dim qFiletti As Integer = gf.RitornaQuantiFilesRilevati
+
+					For i As Integer = 1 To qFiletti
+						Dim c() As String = Filetti(i).Replace(Percorso & "\", "").ToUpper().Replace(".JPG", "").Split("_")
+						Sql = "Select * From UtentiMobile Where idAnno=" & c(0) & " And idUtente=" & c(1)
+						Rec = LeggeQuery(Conn, Sql, Connessione)
+						If TypeOf (Rec) Is String Then
+							Ritorno = Rec
+							Ok = False
+							Exit For
+						Else
+							If Rec.Eof Then
+								Try
+									Kill(Filetti(i))
+									Eliminate += 1
+								Catch ex As Exception
+									Ok = False
+									Ritorno = StringaErrore & ex.Message
+								End Try
+							End If
+							Rec.Close
 						End If
 					Next
 				End If
@@ -827,7 +937,7 @@ Public Class wsGenerale
 				Dim ind As String = ""
 
 				Try
-					Sql = "Select * From Anni Where Ucase(Trim(NomeSquadra))= '" & nomeSquadra.Trim.ToUpper & "'"
+					Sql = "Select * From Anni Where Upper(Trim(NomeSquadra))= '" & nomeSquadra.Trim.ToUpper & "'"
 					Dim Rec As Object = Server.CreateObject("ADODB.Recordset")
 					Rec = LeggeQuery(Conn, Sql, Connessione)
 					If TypeOf (Rec) Is String Then

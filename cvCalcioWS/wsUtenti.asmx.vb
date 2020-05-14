@@ -16,7 +16,6 @@ Public Class wsUtenti
 		Return s
 	End Function
 
-	<WebMethod()>
 	Public Function RitornaUtentePerLogin(Squadra As String, ByVal idAnno As String, Utente As String, Password As String) As String
 		Dim Ritorno As String = ""
 		Dim Connessione As String = LeggeImpostazioniDiBase(Server.MapPath("."), Squadra)
@@ -46,7 +45,7 @@ Public Class wsUtenti
 						If Rec.Eof Then
 							Ritorno = StringaErrore & " Nessun utente rilevato"
 						Else
-							If Password <> DecriptaStringa(Rec("Password").Value.ToString) Then
+							If Password <> Rec("Password").Value.ToString Then
 								Ritorno = StringaErrore & " Password non valida"
 							Else
 								Ritorno = ""
@@ -56,7 +55,7 @@ Public Class wsUtenti
 										Rec("Utente").Value & ";" &
 										Rec("Cognome").Value & ";" &
 										Rec("Nome").Value & ";" &
-										DecriptaStringa(Rec("Password").Value) & ";" &
+										Rec("Password").Value & ";" &
 										Rec("EMail").Value & ";" &
 										Rec("idCat1").Value & ";" &
 										Rec("idTipologia").Value & ";" &
@@ -114,7 +113,7 @@ Public Class wsUtenti
 									Rec("Utente").Value & ";" &
 									Rec("Cognome").Value & ";" &
 									Rec("Nome").Value & ";" &
-									DecriptaStringa(Rec("Password").Value) & ";" &
+									Rec("Password").Value & ";" &
 									Rec("EMail").Value & ";" &
 									Rec("idCategoria").Value & ";" &
 									Rec("idTipologia").Value & ";" &
@@ -187,7 +186,7 @@ Public Class wsUtenti
 									Rec("EMail").Value & ";" &
 									NomeSquadra & ";" &
 									Rec("idTipologia").Value & ";" &
-									DecriptaStringa(Rec("Password").Value) & ";" &
+									Rec("Password").Value & ";" &
 									Rec("idCategoria").Value & ";" &
 									Rec("Categoria").Value & ";" &
 									"§"
@@ -308,7 +307,7 @@ Public Class wsUtenti
 										"'" & Utente.Replace("'", "''") & "', " &
 										"'" & Cognome.Replace("'", "''") & "', " &
 										"'" & Nome.Replace("'", "''") & "', " &
-										"'" & CriptaStringa(Password).Replace("'", "''") & "', " &
+										"'" & Password.Replace("'", "''") & "', " &
 										"'" & EMail.Replace("'", "''") & "', " &
 										" " & idCategoria & ", " &
 										" " & idTipologia & " " &
@@ -406,7 +405,7 @@ Public Class wsUtenti
 							"'" & Utente.Replace("'", "''") & "', " &
 							"'" & Cognome.Replace("'", "''") & "', " &
 							"'" & Nome.Replace("'", "''") & "', " &
-							"'" & CriptaStringa(Password).Replace("'", "''") & "', " &
+							"'" & Password.Replace("'", "''") & "', " &
 							"'" & EMail.Replace("'", "''") & "', " &
 							" " & idCategoria & ", " &
 							"" & idTipologia & ")"

@@ -84,6 +84,7 @@
     <Content Include="wsAllegati.asmx" />
     <Content Include="wsFunzioniRC.asmx" />
     <Content Include="wsKit.asmx" />
+    <Content Include="wsMaschere.asmx" />
     <Content Include="wsPermessiRC.asmx" />
     <Content Include="wsPermessiRCVisual.asmx" />
     <Content Include="wsStatAllenamenti.asmx" />
@@ -121,6 +122,10 @@
     </Compile>
     <Compile Include="wsKit.asmx.vb">
       <DependentUpon>wsKit.asmx</DependentUpon>
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="wsMaschere.asmx.vb">
+      <DependentUpon>wsMaschere.asmx</DependentUpon>
       <SubType>Component</SubType>
     </Compile>
     <Compile Include="wsPermessiRC.asmx.vb">
