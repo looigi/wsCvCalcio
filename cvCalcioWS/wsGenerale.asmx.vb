@@ -565,10 +565,10 @@ Public Class wsGenerale
 	End Function
 
 	<WebMethod()>
-	Public Function SalvaImpostazioni(idAnno As String, Descrizione As String, NomeSquadra As String, Lat As String, Lon As String,
+	Public Function SalvaImpostazioni(Cod_Squadra As String, idAnno As String, Descrizione As String, NomeSquadra As String, Lat As String, Lon As String,
 									  Indirizzo As String, CampoSquadra As String, NomePolisportiva As String) As String
 		Dim Ritorno As String = ""
-		Dim Connessione As String = LeggeImpostazioniDiBase(Server.MapPath("."), NomeSquadra)
+		Dim Connessione As String = LeggeImpostazioniDiBase(Server.MapPath("."), Cod_Squadra)
 
 		If Connessione = "" Then
 			Ritorno = ErroreConnessioneNonValida & ":" & Connessione
@@ -597,14 +597,14 @@ Public Class wsGenerale
 	End Function
 
 	<WebMethod()>
-	Public Function RitornaImpostazioni() As String
+	Public Function RitornaImpostazioni(Squadra As String) As String
 		Dim Ritorno As String = ""
 		Dim gf As New GestioneFilesDirectory
-		Dim nomeSquadra As String = gf.LeggeFileIntero(Server.MapPath(".") & "\NomeSquadraBase.txt")
-		nomeSquadra = nomeSquadra.Replace(vbCrLf, "")
-		nomeSquadra = nomeSquadra.Replace(" ", "_")
+		'Dim nomeSquadra As String = gf.LeggeFileIntero(Server.MapPath(".") & "\NomeSquadraBase.txt")
+		'nomeSquadra = nomeSquadra.Replace(vbCrLf, "")
+		'nomeSquadra = nomeSquadra.Replace(" ", "_")
 		gf = Nothing
-		Dim Connessione As String = LeggeImpostazioniDiBase(Server.MapPath("."), nomeSquadra)
+		Dim Connessione As String = LeggeImpostazioniDiBase(Server.MapPath("."), Squadra)
 
 		If Connessione = "" Then
 			Ritorno = ErroreConnessioneNonValida

@@ -25,7 +25,7 @@ Public Class wsCategorie
 				Dim Sql As String = ""
 
 				Try
-					Sql = "Select * From Utenti Where idAnno=" & idAnno & " And idUtente=" & idUtente
+					Sql = "Select * From [Generale].[dbo].Utenti Where idAnno=" & idAnno & " And idUtente=" & idUtente
 					Rec = LeggeQuery(Conn, Sql, Connessione)
 					If TypeOf (Rec) Is String Then
 						Ritorno = Rec
@@ -36,7 +36,7 @@ Public Class wsCategorie
 							Dim idTipologia As String = Rec("idTipologia").Value
 							Dim idCategoria As String = Rec("idCategoria").Value
 
-							If idTipologia = "1" Then
+							If idTipologia = "1" Or idTipologia = "0" Then
 								Sql = "SELECT * FROM Categorie Where idAnno=" & idAnno & " And Eliminato='N' Order By Descrizione"
 							Else
 								Sql = "SELECT * FROM Categorie Where idAnno=" & idAnno & " And idCategoria=" & idCategoria & " And Eliminato='N' Order By Descrizione"

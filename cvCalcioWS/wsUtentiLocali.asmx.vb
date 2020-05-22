@@ -72,52 +72,52 @@ Public Class wsUtentiLocali
 
 				Conn.Close()
 
-				If Not Ritorno.Contains(StringaErrore) Then
-					Dim Connessione2 As String = LeggeImpostazioniDiBase(Server.MapPath("."), Squadra.Replace(" ", "_"))
+				'If Not Ritorno.Contains(StringaErrore) And Squadra <> "" Then
+				'	Dim Connessione2 As String = LeggeImpostazioniDiBase(Server.MapPath("."), Squadra.Replace(" ", "_"))
 
-					If Connessione2 = "" Then
-						Ritorno = ErroreConnessioneNonValida
-					Else
-						Dim Conn2 As Object = ApreDB(Connessione2)
-						Dim Ritorno2 As String = ""
+				'	If Connessione2 = "" Then
+				'		Ritorno = ErroreConnessioneNonValida
+				'	Else
+				'		Dim Conn2 As Object = ApreDB(Connessione2)
+				'		Dim Ritorno2 As String = ""
 
-						If TypeOf (Conn) Is String Then
-							Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
-						Else
-							Dim Rec2 As Object = Server.CreateObject("ADODB.Recordset")
-							Dim Sql2 As String = ""
-							Dim Campi() As String = UtenteDaSalvare.Split(";")
+				'		If TypeOf (Conn) Is String Then
+				'			Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
+				'		Else
+				'			Dim Rec2 As Object = Server.CreateObject("ADODB.Recordset")
+				'			Dim Sql2 As String = ""
+				'			Dim Campi() As String = UtenteDaSalvare.Split(";")
 
-							Sql2 = "Select * From Utenti Where Upper(Utente) = '" & Utente.ToUpper.Replace("'", "''") & "' And idAnno=" & Campi(0)
-							Rec2 = LeggeQuery(Conn2, Sql2, Connessione2)
-							If TypeOf (Rec) Is String Then
-								' Ritorno = Rec2
-							Else
-								If Rec2.Eof Then
-									' Aggiungo l'utente rilevato nel db generale e non in quello di lavoro
-									Sql2 = "Insert Into Utenti Values (" &
-										" " & Campi(0) & ", " &
-										" " & Campi(1) & ", " &
-										"'" & Campi(2).Replace("'", "''") & "', " &
-										"'" & Campi(3).Replace("'", "''") & "', " &
-										"'" & Campi(4).Replace("'", "''") & "', " &
-										"'" & CriptaStringa(Campi(5)).Replace("'", "''") & "', " &
-										"'" & Campi(6).Replace("'", "''") & "', " &
-										" " & Campi(7) & ", " &
-										" " & Campi(8) & " " &
-										")"
-									Ritorno2 = EsegueSql(Conn2, Sql2, Connessione2)
+				'			Sql2 = "Select * From Utenti Where Upper(Utente) = '" & Utente.ToUpper.Replace("'", "''") & "' And idAnno=" & Campi(0)
+				'			Rec2 = LeggeQuery(Conn2, Sql2, Connessione2)
+				'			If TypeOf (Rec) Is String Then
+				'				' Ritorno = Rec2
+				'			Else
+				'				If Rec2.Eof Then
+				'					' Aggiungo l'utente rilevato nel db generale e non in quello di lavoro
+				'					Sql2 = "Insert Into Utenti Values (" &
+				'						" " & Campi(0) & ", " &
+				'						" " & Campi(1) & ", " &
+				'						"'" & Campi(2).Replace("'", "''") & "', " &
+				'						"'" & Campi(3).Replace("'", "''") & "', " &
+				'						"'" & Campi(4).Replace("'", "''") & "', " &
+				'						"'" & CriptaStringa(Campi(5)).Replace("'", "''") & "', " &
+				'						"'" & Campi(6).Replace("'", "''") & "', " &
+				'						" " & Campi(7) & ", " &
+				'						" " & Campi(8) & " " &
+				'						")"
+				'					Ritorno2 = EsegueSql(Conn2, Sql2, Connessione2)
 
-									If Not Ritorno2.Contains(StringaErrore) Then
+				'					If Not Ritorno2.Contains(StringaErrore) Then
 
-									End If
-								End If
-								Rec2.Close()
+				'					End If
+				'				End If
+				'				Rec2.Close()
 
-							End If
-						End If
-					End If
-				End If
+				'			End If
+				'		End If
+				'	End If
+				'End If
 			End If
 		End If
 
@@ -190,7 +190,7 @@ Public Class wsUtentiLocali
 	<WebMethod()>
 	Public Function RitornaUtenteDaID(Squadra As String, ByVal idAnno As String, idUtente As String) As String
 		Dim Ritorno As String = ""
-		Dim Connessione As String = LeggeImpostazioniDiBase(Server.MapPath("."), Squadra)
+		Dim Connessione As String = LeggeImpostazioniDiBase(Server.MapPath("."), "")
 
 		If Connessione = "" Then
 			Ritorno = ErroreConnessioneNonValida
@@ -247,7 +247,7 @@ Public Class wsUtentiLocali
 	<WebMethod()>
 	Public Function RitornaListaUtenti(Squadra As String, idAnno As String) As String
 		Dim Ritorno As String = ""
-		Dim Connessione As String = LeggeImpostazioniDiBase(Server.MapPath("."), Squadra)
+		Dim Connessione As String = LeggeImpostazioniDiBase(Server.MapPath("."), "")
 
 		If Connessione = "" Then
 			Ritorno = ErroreConnessioneNonValida
@@ -259,12 +259,16 @@ Public Class wsUtentiLocali
 			Else
 				Dim Rec As Object = Server.CreateObject("ADODB.Recordset")
 				Dim Sql As String = ""
+				Dim NomeDb As String = ""
+				Dim cod() As String = Squadra.Split("_")
+				Dim Anno As String = Val(cod(0)).ToString
+				Dim idSquadra As String = Val(cod(1)).ToString
 
 				Try
 					Sql = "SELECT Utenti.idAnno, Utenti.idUtente, Utenti.Utente, Utenti.Cognome, Utenti.Nome, Utenti.EMail, Categorie.Descrizione As Categoria, " &
-						"Utenti.idTipologia, Utenti.Password, Categorie.idCategoria " &
-						"FROM (Utenti LEFT JOIN Categorie ON Utenti.idCategoria = Categorie.idCategoria And Utenti.idAnno = Categorie.idAnno) " &
-						"Where Utenti.idAnno=" & idAnno & " Order By 2,1;"
+						"Utenti.idTipologia, Utenti.Password, Categorie.idCategoria, idSquadra " &
+						"FROM (Utenti LEFT JOIN [" & Squadra & "].[dbo].Categorie ON Utenti.idCategoria = Categorie.idCategoria And Utenti.idAnno = Categorie.idAnno) " &
+						"Where Utenti.idAnno=" & Anno & " And idSquadra=" & idSquadra & " Order By 2,1;"
 					' "Where Utenti.idAnno=" & idAnno & " Order By 2,1;"
 					Rec = LeggeQuery(Conn, Sql, Connessione)
 					If TypeOf (Rec) Is String Then
@@ -275,17 +279,15 @@ Public Class wsUtentiLocali
 						Else
 							Ritorno = ""
 							Do Until Rec.Eof
-								Dim Rec2 As Object = Server.CreateObject("ADODB.Recordset")
+								'Sql = " Select * From AnnoAttualeUtenti Where idUtente=" & Rec("idUtente").Value
+								'Rec = LeggeQuery(Conn, Sql, Connessione)
+								'Dim AnnoUtente As Integer = Rec("idAnno").Value
+								'Rec.Close
 
-								Sql = " Select * From AnnoAttualeUtenti Where idUtente=" & Rec("idUtente").Value
-								Rec2 = LeggeQuery(Conn, Sql, Connessione)
-								Dim AnnoUtente As Integer = Rec2("idAnno").Value
-								Rec2.Close
-
-								Sql = " Select * From Anni Where idAnno=" & AnnoUtente.ToString
-								Rec2 = LeggeQuery(Conn, Sql, Connessione)
-								Dim NomeSquadra As String = Rec2("NomeSquadra").Value
-								Rec2.Close
+								'Sql = " Select * From Anni Where idAnno=" & AnnoUtente.ToString
+								'Rec = LeggeQuery(Conn, Sql, Connessione)
+								'Dim NomeSquadra As String = Rec("NomeSquadra").Value
+								'Rec.Close
 
 								Ritorno &= "0;" &
 									Rec("idUtente").Value & ";" &
@@ -293,7 +295,7 @@ Public Class wsUtentiLocali
 									Rec("Cognome").Value & ";" &
 									Rec("Nome").Value & ";" &
 									Rec("EMail").Value & ";" &
-									NomeSquadra & ";" &
+									Rec("idSquadra").Value & ";" &
 									Rec("idTipologia").Value & ";" &
 									DecriptaStringa(Rec("Password").Value) & ";" &
 									Rec("idCategoria").Value & ";" &
@@ -381,20 +383,21 @@ Public Class wsUtentiLocali
 							End If
 
 							If idUtente <> "" Then
-								Dim idSquadra As Integer
+								Dim sq() As String = Squadra.Split("_")
+								Dim idSquadra As Integer = sq(1)
 
-								Sql = "Select idSquadra From Squadre Where Descrizione='" & Squadra.Replace("_", " ").Replace("'", "''") & "'"
-								Rec = LeggeQuery(Conn, Sql, Connessione)
-								If TypeOf (Rec) Is String Then
-									Ritorno = Rec
-								Else
-									If Rec.Eof Then
-										Ritorno = StringaErrore & " Nessuna squadra rilevata"
-									Else
-										idSquadra = Rec(0).Value
-										Rec.Close()
+								'Sql = "Select idSquadra From Squadre Where Descrizione='" & Squadra.Replace("_", " ").Replace("'", "''") & "'"
+								'Rec = LeggeQuery(Conn, Sql, Connessione)
+								'If TypeOf (Rec) Is String Then
+								'	Ritorno = Rec
+								'Else
+								'	If Rec.Eof Then
+								'		Ritorno = StringaErrore & " Nessuna squadra rilevata"
+								'	Else
+								'		idSquadra = Rec(0).Value
+								'		Rec.Close()
 
-										Sql = "Insert Into Utenti Values (" &
+								Sql = "Insert Into Utenti Values (" &
 											" " & idAnno & ", " &
 											" " & idUtente & ", " &
 											"'" & Utente.Replace("'", "''") & "', " &
@@ -406,46 +409,46 @@ Public Class wsUtentiLocali
 											" " & idTipologia & ", " &
 											" " & idSquadra & " " &
 											")"
-										Ritorno = EsegueSql(Conn, Sql, Connessione)
-									End If
-								End If
+								Ritorno = EsegueSql(Conn, Sql, Connessione)
+								'End If
+								'End If
 
-								If Ritorno = "*" Then
-									Ritorno = idUtente
+								'If Ritorno = "*" Then
+								'	Ritorno = idUtente
 
-									Dim Connessione2 As String = LeggeImpostazioniDiBase(Server.MapPath("."), Squadra)
-									Dim Ritorno2 As String = ""
+								'	Dim Connessione2 As String = LeggeImpostazioniDiBase(Server.MapPath("."), Squadra)
+								'	Dim Ritorno2 As String = ""
 
-									If Connessione2 = "" Then
-										Ritorno2 = ErroreConnessioneNonValida
-									Else
-										Dim Conn2 As Object = ApreDB(Connessione2)
+								'	If Connessione2 = "" Then
+								'		Ritorno2 = ErroreConnessioneNonValida
+								'	Else
+								'		Dim Conn2 As Object = ApreDB(Connessione2)
 
-										If TypeOf (Conn2) Is String Then
-											Ritorno2 = ErroreConnessioneDBNonValida & ":" & Conn2
-										Else
-											Dim Rec2 As Object = Server.CreateObject("ADODB.Recordset")
-											Dim Sql2 As String = ""
+								'		If TypeOf (Conn2) Is String Then
+								'			Ritorno2 = ErroreConnessioneDBNonValida & ":" & Conn2
+								'		Else
+								'			Dim Rec2 As Object = Server.CreateObject("ADODB.Recordset")
+								'			Dim Sql2 As String = ""
 
-											Sql2 = "Insert Into Utenti Values (" &
-												" " & idAnno & ", " &
-												" " & idUtente & ", " &
-												"'" & Utente.Replace("'", "''") & "', " &
-												"'" & Cognome.Replace("'", "''") & "', " &
-												"'" & Nome.Replace("'", "''") & "', " &
-												"'" & CriptaStringa(Password).Replace("'", "''") & "', " &
-												"'" & EMail.Replace("'", "''") & "', " &
-												" " & idCategoria & ", " &
-												" " & idTipologia & " " &
-												")"
-											Ritorno2 = EsegueSql(Conn2, Sql2, Connessione2)
+								'			Sql2 = "Insert Into Utenti Values (" &
+								'				" " & idAnno & ", " &
+								'				" " & idUtente & ", " &
+								'				"'" & Utente.Replace("'", "''") & "', " &
+								'				"'" & Cognome.Replace("'", "''") & "', " &
+								'				"'" & Nome.Replace("'", "''") & "', " &
+								'				"'" & CriptaStringa(Password).Replace("'", "''") & "', " &
+								'				"'" & EMail.Replace("'", "''") & "', " &
+								'				" " & idCategoria & ", " &
+								'				" " & idTipologia & " " &
+								'				")"
+								'			Ritorno2 = EsegueSql(Conn2, Sql2, Connessione2)
 
-											If Ritorno2 <> "*" Then
-												Ritorno = Ritorno2
-											End If
-										End If
-									End If
-								End If
+								'			If Ritorno2 <> "*" Then
+								'				Ritorno = Ritorno2
+								'			End If
+								'		End If
+								'	End If
+								'End If
 							Else
 								Ritorno = StringaErrore & " Problemi nel rilevamento dell'ID Utente"
 							End If
@@ -484,25 +487,25 @@ Public Class wsUtentiLocali
 				Sql = "Delete From Utenti Where idUtente=" & idUtente & " And idAnno=" & idAnno
 				Ritorno = EsegueSql(Conn, Sql, Connessione)
 
-				If Ritorno = "*" Then
-					Conn.Close()
+				'If Ritorno = "*" Then
+				'	Conn.Close()
 
-					Connessione = LeggeImpostazioniDiBase(Server.MapPath("."), Squadra)
+				'	Connessione = LeggeImpostazioniDiBase(Server.MapPath("."), Squadra)
 
-					If Connessione = "" Then
-						Ritorno = ErroreConnessioneNonValida
-					Else
-						Conn = ApreDB(Connessione)
+				'	If Connessione = "" Then
+				'		Ritorno = ErroreConnessioneNonValida
+				'	Else
+				'		Conn = ApreDB(Connessione)
 
-						If TypeOf (Conn) Is String Then
-							Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
-						Else
-							Sql = "Delete From Utenti Where idUtente=" & idUtente & " And idAnno=" & idAnno
-							Ritorno = EsegueSql(Conn, Sql, Connessione)
-						End If
-					End If
-				End If
-					End If
+				'		If TypeOf (Conn) Is String Then
+				'			Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
+				'		Else
+				'			Sql = "Delete From Utenti Where idUtente=" & idUtente & " And idAnno=" & idAnno
+				'			Ritorno = EsegueSql(Conn, Sql, Connessione)
+				'		End If
+				'	End If
+				'End If
+			End If
 		End If
 
 		Return Ritorno
@@ -526,6 +529,9 @@ Public Class wsUtentiLocali
 				Dim Sql As String = ""
 				Dim Ok As Boolean = True
 
+				Sql = "Begin transaction"
+				Ritorno = EsegueSql(Conn, Sql, Connessione)
+
 				' Sql = "Delete From Utenti Where idAnno=" & idAnno & " And idUtente=" & idUtente
 				Sql = "Delete From Utenti Where idUtente=" & idUtente & " And idAnno=" & idAnno
 				Ritorno = EsegueSql(Conn, Sql, Connessione)
@@ -534,107 +540,60 @@ Public Class wsUtentiLocali
 				End If
 
 				If Ok Then
-					Dim idSquadra As Integer
+					'Dim idSquadra As Integer
+					Dim sq() As String = Squadra.Split("_")
 
-					Sql = "Select idSquadra From Squadre Where Descrizione='" & Squadra.Replace("_", " ").Replace("'", "''") & "'"
-					Rec = LeggeQuery(Conn, Sql, Connessione)
-					If TypeOf (Rec) Is String Then
-						Ritorno = Rec
-					Else
-						If Rec.Eof Then
-							Ritorno = StringaErrore & " Nessuna squadra rilevata"
-						Else
-							idSquadra = Rec(0).Value
-							Rec.Close()
 
-							Try
-								Sql = "Insert Into Utenti Values (" &
-									"" & idAnno & ", " &
-									"" & idUtente & ", " &
-									"'" & Utente.Replace("'", "''") & "', " &
-									"'" & Cognome.Replace("'", "''") & "', " &
-									"'" & Nome.Replace("'", "''") & "', " &
-									"'" & CriptaStringa(Password).Replace("'", "''") & "', " &
-									"'" & EMail.Replace("'", "''") & "', " &
-									" " & idCategoria & ", " &
-									"" & idTipologia & ", " &
-									"" & idSquadra & ")"
-								Ritorno = EsegueSql(Conn, Sql, Connessione)
-								If Ritorno.Contains(StringaErrore) Then
-									Ok = False
-								End If
+					'Sql = "Select idSquadra From Squadre Where Descrizione='" & Sql(1) & "'"
+					'Sql = "rollback"
+					'Dim Ritorno4 As String = EsegueSql(Conn, Sql, Connessione)
+					'Return StringaErrore & " " & sq(0) & " " & sq(1) & " " & Squadra
 
-								If Ok Then
-									Conn.Close
+					'Rec = LeggeQuery(Conn, Sql, Connessione)
+					'If TypeOf (Rec) Is String Then
+					'	Ritorno = Rec
+					'Else
+					'	If Rec.Eof Then
+					'		Ritorno = StringaErrore & " Nessuna squadra rilevata"
+					'		Ok = False
+					'	Else
+					'idSquadra = Rec(0).Value
+					'Rec.Close()
 
-									Connessione = LeggeImpostazioniDiBase(Server.MapPath("."), Squadra)
-
-									If Connessione = "" Then
-										Ritorno = ErroreConnessioneNonValida
-									Else
-										Conn = ApreDB(Connessione)
-
-										If TypeOf (Conn) Is String Then
-											Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
-										Else
-											Try
-												Sql = "Delete From Utenti Where idUtente=" & idUtente & " And idAnno=" & idAnno
-												Ritorno = EsegueSql(Conn, Sql, Connessione)
-												If Ritorno.Contains(StringaErrore) Then
-													Ok = False
-												End If
-
-												If Ok Then
-													Sql = "Insert Into Utenti Values (" &
-														"" & idAnno & ", " &
-														"" & idUtente & ", " &
-														"'" & Utente.Replace("'", "''") & "', " &
-														"'" & Cognome.Replace("'", "''") & "', " &
-														"'" & Nome.Replace("'", "''") & "', " &
-														"'" & CriptaStringa(Password).Replace("'", "''") & "', " &
-														"'" & EMail.Replace("'", "''") & "', " &
-														" " & idCategoria & ", " &
-														" " & idTipologia & " )"
-													Ritorno = EsegueSql(Conn, Sql, Connessione)
-
-													If Ritorno <> "*" Then
-														Ok = False
-													End If
-
-													If Ok Then
-														Sql = "Delete From AnnoAttualeUtenti Where idUtente=" & idUtente
-														Ritorno = EsegueSql(Conn, Sql, Connessione)
-														If Ritorno.Contains(StringaErrore) Then
-															Ok = False
-														End If
-
-														If Ok Then
-															Sql = "Insert Into AnnoAttualeUtenti Values (" & idUtente & ", " & idAnno & ")"
-															Ritorno = EsegueSql(Conn, Sql, Connessione)
-															If Ritorno.Contains(StringaErrore) Then
-																Ok = False
-															End If
-
-														End If
-													End If
-												End If
-											Catch ex As Exception
-												Ritorno = StringaErrore & " " & ex.Message
-											End Try
-										End If
-									End If
-								End If
-
-								If Ritorno = "*" Then Ritorno = idUtente
-							Catch ex As Exception
-								Ritorno = StringaErrore & " " & ex.Message
-							End Try
+					Try
+						Sql = "Insert Into Utenti Values (" &
+							"" & idAnno & ", " &
+							"" & idUtente & ", " &
+							"'" & Utente.Replace("'", "''") & "', " &
+							"'" & Cognome.Replace("'", "''") & "', " &
+							"'" & Nome.Replace("'", "''") & "', " &
+							"'" & CriptaStringa(Password).Replace("'", "''") & "', " &
+							"'" & EMail.Replace("'", "''") & "', " &
+							" " & idCategoria & ", " &
+							"" & idTipologia & ", " &
+							"" & Val(sq(1)).ToString & ")"
+						Ritorno = EsegueSql(Conn, Sql, Connessione)
+						If Ritorno.Contains(StringaErrore) Then
+							Ok = False
 						End If
-					End If
 
-					Conn.Close()
+						If Ritorno = "*" Then Ritorno = idUtente
+					Catch ex As Exception
+						Ritorno = StringaErrore & " " & ex.Message
+					End Try
 				End If
+
+				If Ok Then
+					Sql = "commit"
+					Dim Ritorno2 As String = EsegueSql(Conn, Sql, Connessione)
+				Else
+					Sql = "rollback"
+					Dim Ritorno2 As String = EsegueSql(Conn, Sql, Connessione)
+				End If
+
+				Conn.Close()
 			End If
+			'		End If
 		End If
 
 		Return Ritorno

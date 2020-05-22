@@ -450,7 +450,8 @@ Public Class wsGiocatori
 	<WebMethod()>
 	Public Function SalvaDettaglioGiocatore(Squadra As String, idAnno As String, idGiocatore As String, Genitore1 As String,
 											Genitore2 As String, FirmaGenitore1 As String, FirmaGenitore2 As String, CertificatoMedico As String,
-											TotalePagamento As String, TelefonoGenitore1 As String, TelefonoGenitore2 As String) As String
+											TotalePagamento As String, TelefonoGenitore1 As String, TelefonoGenitore2 As String,
+											ScadenzaCertificatoMedico As String) As String
 		Dim Ritorno As String = ""
 		Dim Connessione As String = LeggeImpostazioniDiBase(Server.MapPath("."), Squadra)
 
@@ -479,7 +480,8 @@ Public Class wsGiocatori
 							"CertificatoMedico='" & Replace(CertificatoMedico, "'", "''") & "', " &
 							"TotalePagamento=" & TotalePagamento & ", " &
 							"TelefonoGenitore1='" & Replace(TelefonoGenitore1, "'", "''") & "', " &
-							"TelefonoGenitore2='" & Replace(TelefonoGenitore2, "'", "''") & "' " &
+							"TelefonoGenitore2='" & Replace(TelefonoGenitore2, "'", "''") & "', " &
+							"ScadenzaCertificatoMedico='" & ScadenzaCertificatoMedico & "' " &
 							"Where idAnno=" & idAnno & " And idGiocatore=" & idGiocatore
 						Ritorno = EsegueSql(Conn, Sql, Connessione)
 						If Ritorno.Contains(StringaErrore) Then
@@ -538,7 +540,8 @@ Public Class wsGiocatori
 							"'N', " &
 							"0, " &
 							"'', " &
-							"'' " &
+							"'', " &
+							"null " &
 							")"
 						Ritorno = EsegueSql(Conn, Sql, Connessione)
 						If Not Ritorno.Contains(StringaErrore) Then
@@ -553,6 +556,7 @@ Public Class wsGiocatori
 						Ritorno &= Rec("TotalePagamento").Value & ";"
 						Ritorno &= Rec("TelefonoGenitore1").Value & ";"
 						Ritorno &= Rec("TelefonoGenitore2").Value & ";"
+						Ritorno &= Rec("ScadenzaCertificatoMedico").Value & ";"
 					End If
 				End If
 			End If
@@ -866,7 +870,7 @@ Public Class wsGiocatori
 	End Function
 
 	<WebMethod()>
-	Public Function SalvaPagamento(Squadra As String, idAnno As String, idGiocatore As String, Pagamento As String) As String
+	Public Function SalvaPagamento(Squadra As String, idAnno As String, idGiocatore As String, Pagamento As String, Commento As String) As String
 		Dim Ritorno As String = ""
 		Dim Connessione As String = LeggeImpostazioniDiBase(Server.MapPath("."), Squadra)
 
@@ -906,7 +910,8 @@ Public Class wsGiocatori
 							" " & Progressivo & ", " &
 							" " & Pagamento & ", " &
 							"'" & DataPagamento & "', " &
-							"'N'" &
+							"'N', " &
+							"'" & Commento.Replace("'", "''") & "' " &
 							")"
 						Ritorno = EsegueSql(Conn, Sql, Connessione)
 						If Ritorno.Contains(StringaErrore) Then
@@ -1017,7 +1022,7 @@ Public Class wsGiocatori
 						Ritorno = "Totale a pagare;" & Format(TotPag, "#0.#0") & ";;§"
 
 						Do Until Rec.Eof
-							Ritorno &= Rec("Progressivo").Value & ";" & Rec("Pagamento").Value & ";" & Rec("DataPagamento").Value & ";§"
+							Ritorno &= Rec("Progressivo").Value & ";" & Rec("Pagamento").Value & ";" & Rec("DataPagamento").Value & ";" & Rec("Commento").Value & ";§"
 							Totale += (Rec("Pagamento").Value)
 
 							Rec.MoveNext
