@@ -9,6 +9,130 @@ Public Class wsCategorie
     Inherits System.Web.Services.WebService
 
 	<WebMethod()>
+	Public Function SalvaCategorieUtente(Squadra As String, IDutente As Integer, Categorie As String) As String
+		Dim Ritorno As String = ""
+		Dim Connessione As String = LeggeImpostazioniDiBase(Server.MapPath("."), Squadra)
+		Dim Ok As Boolean = True
+		Dim Sql As String = ""
+
+		If Connessione = "" Then
+			Ritorno = ErroreConnessioneNonValida
+		Else
+			Dim Conn As Object = ApreDB(Connessione)
+
+			If TypeOf (Conn) Is String Then
+				Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
+			Else
+				Dim Rec As Object = Server.CreateObject("ADODB.Recordset")
+
+				Sql = "Begin transaction"
+				Ritorno = EsegueSql(Conn, Sql, Connessione)
+
+				If Not Ritorno.Contains(StringaErrore) Then
+					Try
+						Sql = "Delete From UtentiCategorie Where Idutente = " & IDutente
+						Ritorno = EsegueSql(Conn, Sql, Connessione)
+						If Ritorno.Contains(StringaErrore) Then
+							Ok = False
+						End If
+					Catch ex As Exception
+						Ritorno = StringaErrore & " " & ex.Message
+						Ok = False
+					End Try
+
+					If Ok Then
+						If Categorie.Length > 0 Then
+							Dim Cate() As String = Categorie.Split(",")
+							Dim Progressivo As Integer = 0
+
+							For Each p As String In Cate
+								If p <> "" Then
+									Progressivo += 1
+
+									Try
+										Sql = "Insert Into UtentiCategorie Values (" &
+											" " & IDutente & ", " &
+											" " & Progressivo & ", " &
+											" " & p & " " &
+											")"
+										Ritorno = EsegueSql(Conn, Sql, Connessione)
+										If Ritorno.Contains(StringaErrore) Then
+											Ok = False
+											Exit For
+										End If
+									Catch ex As Exception
+										Ritorno = StringaErrore & ex.Message
+										Ok = False
+										Exit For
+									End Try
+								End If
+							Next
+
+						End If
+					End If
+				End If
+			End If
+
+			If Ok Then
+				Sql = "commit"
+				Dim Ritorno2 As String = EsegueSql(Conn, Sql, Connessione)
+			Else
+				Sql = "rollback"
+				Dim Ritorno2 As String = EsegueSql(Conn, Sql, Connessione)
+			End If
+
+			Conn.Close()
+		End If
+
+		Return Ritorno
+	End Function
+
+	<WebMethod()>
+	Public Function RitornaTutteCategorieUtente(Squadra As String, idUtente As String) As String
+		Dim Ritorno As String = ""
+		Dim Connessione As String = LeggeImpostazioniDiBase(Server.MapPath("."), Squadra)
+
+		If Connessione = "" Then
+			Ritorno = ErroreConnessioneNonValida
+		Else
+			Dim Conn As Object = ApreDB(Connessione)
+
+			If TypeOf (Conn) Is String Then
+				Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
+			Else
+				Dim Rec As Object = Server.CreateObject("ADODB.Recordset")
+				Dim Sql As String = ""
+
+				Try
+					Sql = "SELECT * From UtentiCategorie Where idUtente=" & idUtente
+					Rec = LeggeQuery(Conn, Sql, Connessione)
+					If TypeOf (Rec) Is String Then
+						Ritorno = Rec
+					Else
+						If Rec.Eof Then
+							' Ritorno = StringaErrore & " Nessun permesso ritornato"
+						Else
+							Ritorno = ""
+							Do Until Rec.Eof
+								Ritorno &= Rec("idCategoria").Value.ToString & "§"
+
+								Rec.MoveNext()
+							Loop
+						End If
+						Rec.Close()
+					End If
+				Catch ex As Exception
+					'				Ritorno = StringaErrore & " " & ex.Message
+				End Try
+
+				Conn.Close()
+			End If
+		End If
+
+		Return Ritorno
+	End Function
+
+	<WebMethod()>
 	Public Function RitornaCategorie(Squadra As String, ByVal idAnno As String, idUtente As String) As String
 		Dim Ritorno As String = ""
 		Dim Connessione As String = LeggeImpostazioniDiBase(Server.MapPath("."), Squadra)
@@ -37,9 +161,12 @@ Public Class wsCategorie
 							Dim idCategoria As String = Rec("idCategoria").Value
 
 							If idTipologia = "1" Or idTipologia = "0" Then
-								Sql = "SELECT * FROM Categorie Where idAnno=" & idAnno & " And Eliminato='N' Order By Descrizione"
+								Sql = "SELECT idCategoria, Descrizione, AnticipoConvocazione FROM Categorie " &
+									"Where idAnno=" & idAnno & " And Eliminato='N' Order By Descrizione"
 							Else
-								Sql = "SELECT * FROM Categorie Where idAnno=" & idAnno & " And idCategoria=" & idCategoria & " And Eliminato='N' Order By Descrizione"
+								Sql = "Select A.idCategoria, B.Descrizione, AnticipoConvocazione From UtentiCategorie A " &
+									"Left Join Categorie B On A.idCategoria = B.idCategoria " &
+									"Where B.idAnno = " & idAnno & " And A.idUtente = " & idUtente & " And Eliminato='N' Order By Descrizione"
 							End If
 							Rec = LeggeQuery(Conn, Sql, Connessione)
 							If TypeOf (Rec) Is String Then

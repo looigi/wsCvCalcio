@@ -8,6 +8,13 @@ Imports System.ComponentModel
 Public Class wsUtentiLocali
 	Inherits System.Web.Services.WebService
 
+	<WebMethod()>
+	Public Function CreaStringaCriptata(Stringa As String) As String
+		Dim wrapper As New CryptEncrypt("WPippoBaudo227!")
+		Dim Ritorno As String = wrapper.EncryptData(Stringa)
+
+		Return Ritorno
+	End Function
 
 	<WebMethod()>
 	Public Function RitornaUtentePerLoginNuovo(Utente As String) As String
@@ -341,7 +348,43 @@ Public Class wsUtentiLocali
 	End Function
 
 	<WebMethod()>
-	Public Function SalvaUtente(Squadra As String, ByVal idAnno As String, Utente As String, Cognome As String, Nome As String, EMail As String,
+	Public Function RitornaNuovoID(ByVal idAnno As String) As String
+		Dim Ritorno As String = ""
+		Dim Connessione As String = LeggeImpostazioniDiBase(Server.MapPath("."), "")
+		Dim idUtente As String = "-1"
+
+		If Connessione = "" Then
+			Ritorno = ErroreConnessioneNonValida
+		Else
+			Dim Conn As Object = ApreDB(Connessione)
+
+			If TypeOf (Conn) Is String Then
+				Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
+			Else
+				Dim Rec As Object = Server.CreateObject("ADODB.Recordset")
+				Dim Sql As String = ""
+				'Dim idUtente As String = ""
+
+				Sql = "SELECT Max(idUtente)+1 FROM Utenti Where idAnno=" & idAnno
+				Rec = LeggeQuery(Conn, Sql, Connessione)
+				If TypeOf (Rec) Is String Then
+					Ritorno = Rec
+				Else
+					If Rec(0).Value Is DBNull.Value Then
+						idUtente = "1"
+					Else
+						idUtente = Rec(0).Value.ToString
+					End If
+				End If
+				Rec.Close()
+			End If
+		End If
+
+		Return idUtente
+	End Function
+
+	<WebMethod()>
+	Public Function SalvaUtente(Squadra As String, ByVal idAnno As String, idUtente As String, Utente As String, Cognome As String, Nome As String, EMail As String,
 								Password As String, idCategoria As String, idTipologia As String) As String
 		Dim Ritorno As String = ""
 		Dim Connessione As String = LeggeImpostazioniDiBase(Server.MapPath("."), "")
@@ -356,32 +399,15 @@ Public Class wsUtentiLocali
 			Else
 				Dim Rec As Object = Server.CreateObject("ADODB.Recordset")
 				Dim Sql As String = ""
-				Dim idUtente As String = ""
+				'Dim idUtente As String = ""
 
-				Try
-					Sql = "SELECT * FROM Utenti Where Upper(Utente)='" & Utente.Trim.ToUpper & "' And idAnno=" & idAnno
-					Rec = LeggeQuery(Conn, Sql, Connessione)
-					If TypeOf (Rec) Is String Then
-						Ritorno = Rec
-					Else
-						If Rec.Eof Then
-							Sql = "SELECT Max(idUtente)+1 FROM Utenti Where idAnno=" & idAnno
-							Rec = LeggeQuery(Conn, Sql, Connessione)
-							If TypeOf (Rec) Is String Then
-								Ritorno = Rec
-							Else
-								If Rec.Eof Then
-									Ritorno = StringaErrore & " Nessun utente rilevato"
-								Else
-									If Rec(0).Value Is DBNull.Value Then
-										idUtente = "1"
-									Else
-										idUtente = Rec(0).Value.ToString
-									End If
-								End If
-								Rec.Close()
-							End If
-
+				Sql = "SELECT * FROM Utenti Where Upper(Utente)='" & Utente.Trim.ToUpper & "' And idAnno=" & idAnno
+				Rec = LeggeQuery(Conn, Sql, Connessione)
+				If TypeOf (Rec) Is String Then
+					Ritorno = Rec
+				Else
+					If Rec.Eof Then
+						Try
 							If idUtente <> "" Then
 								Dim sq() As String = Squadra.Split("_")
 								Dim idSquadra As Integer = sq(1)
@@ -398,17 +424,17 @@ Public Class wsUtentiLocali
 								'		Rec.Close()
 
 								Sql = "Insert Into Utenti Values (" &
-											" " & idAnno & ", " &
-											" " & idUtente & ", " &
-											"'" & Utente.Replace("'", "''") & "', " &
-											"'" & Cognome.Replace("'", "''") & "', " &
-											"'" & Nome.Replace("'", "''") & "', " &
-											"'" & CriptaStringa(Password).Replace("'", "''") & "', " &
-											"'" & EMail.Replace("'", "''") & "', " &
-											" " & idCategoria & ", " &
-											" " & idTipologia & ", " &
-											" " & idSquadra & " " &
-											")"
+													" " & idAnno & ", " &
+													" " & idUtente & ", " &
+													"'" & Utente.Replace("'", "''") & "', " &
+													"'" & Cognome.Replace("'", "''") & "', " &
+													"'" & Nome.Replace("'", "''") & "', " &
+													"'" & CriptaStringa(Password).Replace("'", "''") & "', " &
+													"'" & EMail.Replace("'", "''") & "', " &
+													" " & idCategoria & ", " &
+													" " & idTipologia & ", " &
+													" " & idSquadra & " " &
+													")"
 								Ritorno = EsegueSql(Conn, Sql, Connessione)
 								'End If
 								'End If
@@ -449,17 +475,14 @@ Public Class wsUtentiLocali
 								'		End If
 								'	End If
 								'End If
-							Else
-								Ritorno = StringaErrore & " Problemi nel rilevamento dell'ID Utente"
 							End If
-						Else
-							Ritorno = StringaErrore & " Utente già esistente per l'anno in corso"
-						End If
+						Catch ex As Exception
+							Ritorno = StringaErrore & " " & ex.Message
+						End Try
+					Else
+						Ritorno = StringaErrore & " Utente già esistente per l'anno in corso"
 					End If
-
-				Catch ex As Exception
-					Ritorno = StringaErrore & " " & ex.Message
-				End Try
+				End If
 
 				Conn.Close()
 			End If
@@ -542,23 +565,6 @@ Public Class wsUtentiLocali
 				If Ok Then
 					'Dim idSquadra As Integer
 					Dim sq() As String = Squadra.Split("_")
-
-
-					'Sql = "Select idSquadra From Squadre Where Descrizione='" & Sql(1) & "'"
-					'Sql = "rollback"
-					'Dim Ritorno4 As String = EsegueSql(Conn, Sql, Connessione)
-					'Return StringaErrore & " " & sq(0) & " " & sq(1) & " " & Squadra
-
-					'Rec = LeggeQuery(Conn, Sql, Connessione)
-					'If TypeOf (Rec) Is String Then
-					'	Ritorno = Rec
-					'Else
-					'	If Rec.Eof Then
-					'		Ritorno = StringaErrore & " Nessuna squadra rilevata"
-					'		Ok = False
-					'	Else
-					'idSquadra = Rec(0).Value
-					'Rec.Close()
 
 					Try
 						Sql = "Insert Into Utenti Values (" &

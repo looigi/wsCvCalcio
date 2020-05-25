@@ -1,7 +1,7 @@
 ﻿Module Globale
-    Public Const ErroreConnessioneNonValida As String = "ERRORE: Stringa di connessione non valida"
-    Public Const ErroreConnessioneDBNonValida As String = "ERRORE: Connessione al db non valida"
-    Public Percorso As String
+	Public Const ErroreConnessioneNonValida As String = "ERRORE: Stringa di connessione non valida"
+	Public Const ErroreConnessioneDBNonValida As String = "ERRORE: Connessione al db non valida"
+	Public Percorso As String
 	Public PercorsoSitoCV As String = "C:\GestioneCampionato\CalcioImages\" ' "C:\inetpub\wwwroot\CVCalcio\App_Themes\Standard\Images\"
 	Public PercorsoSitoURLImmagini As String = "http://loppa.duckdns.org:90/MultiMedia/" ' "http://looigi.no-ip.biz:90/CvCalcio/App_Themes/Standard/Images/"
 	Public StringaErrore As String = "ERROR: "
@@ -762,52 +762,63 @@
 	End Function
 
 	Public Function CriptaStringa(Stringa As String) As String
-		Dim Ancora As Boolean = True
+		'Dim Ancora As Boolean = True
 		Dim Ritorno As String = ""
 
-		Do While Ancora = True
-			Dim rnd1 As New Random(CInt(Date.Now.Ticks And &HFFFF))
-			Dim Chiave As Integer = rnd1.Next(32) + 32
-			Ritorno = Chr(Chiave)
-			For i As Integer = 1 To 13
-				Dim x As Integer = 64 + rnd1.Next(48)
-				Ritorno &= Chr(x)
-			Next
-			Ritorno &= Chr(32 + Stringa.Length)
-			Dim Contatore As Integer = 0
-			For i As Integer = 1 To Stringa.Length
-				Dim carattere As String = Mid(Stringa, i, 1)
-				Dim ascii As Integer = Asc(carattere) + Chiave + Contatore
-				Dim ascii2 As String = Chr(ascii)
-				Ritorno &= ascii2
-				Contatore += 2
-			Next
-			For i As Integer = 1 To 7
-				Dim x As Integer = 64 + rnd1.Next(48)
-				Ritorno &= Chr(x)
-			Next
+		'Do While Ancora = True
+		'	Dim rnd1 As New Random(CInt(Date.Now.Ticks And &HFFFF))
+		'	Dim Chiave As Integer = rnd1.Next(32) + 32
+		'	Ritorno = Chr(Chiave)
+		'	For i As Integer = 1 To 13
+		'		Dim x As Integer = 64 + rnd1.Next(48)
+		'		Ritorno &= Chr(x)
+		'	Next
+		'	Ritorno &= Chr(32 + Stringa.Length)
+		'	Dim Contatore As Integer = 0
+		'	For i As Integer = 1 To Stringa.Length
+		'		Dim carattere As String = Mid(Stringa, i, 1)
+		'		Dim ascii As Integer = Asc(carattere) + Chiave + Contatore
+		'		Dim ascii2 As String = Chr(ascii)
+		'		Ritorno &= ascii2
+		'		Contatore += 2
+		'	Next
+		'	For i As Integer = 1 To 7
+		'		Dim x As Integer = 64 + rnd1.Next(48)
+		'		Ritorno &= Chr(x)
+		'	Next
 
-			If Not Ritorno.Contains(";") And Not Ritorno.Contains("'") Then
-				Ancora = False
-			End If
-		Loop
+		'	If Not Ritorno.Contains(";") And Not Ritorno.Contains("'") Then
+		'		Ancora = False
+		'	End If
+		'Loop
+
+		Dim wrapper As New CryptEncrypt("WPippoBaudo227!")
+		Ritorno = wrapper.EncryptData(Stringa)
 
 		Return Ritorno
 	End Function
 
 	Public Function DecriptaStringa(Stringa As String) As String
 		Dim Ritorno As String = ""
-		Dim Chiave As Integer = Asc(Mid(Stringa, 1, 1))
-		' Dim Chiave As Integer = Asc(car)
-		Dim Lunghezza As Integer = Asc(Mid(Stringa, 15, 1)) - 32
-		Dim Contatore As Integer = 0
-		For i As Integer = 16 To 16 + Lunghezza - 1
-			Dim Car As String = Mid(Stringa, i, 1)
-			Dim Car1 As Integer = Asc(Car) - Chiave - Contatore
-			Dim c As String = Chr(Car1)
-			Ritorno &= c
-			Contatore += 2
-		Next
+		'Dim Chiave As Integer = Asc(Mid(Stringa, 1, 1))
+		'' Dim Chiave As Integer = Asc(car)
+		'Dim Lunghezza As Integer = Asc(Mid(Stringa, 15, 1)) - 32
+		'Dim Contatore As Integer = 0
+		'For i As Integer = 16 To 16 + Lunghezza - 1
+		'	Dim Car As String = Mid(Stringa, i, 1)
+		'	Dim Car1 As Integer = Asc(Car) - Chiave - Contatore
+		'	Dim c As String = Chr(Car1)
+		'	Ritorno &= c
+		'	Contatore += 2
+		'Next
+
+		Dim wrapper As New CryptEncrypt("WPippoBaudo227!")
+
+		Try
+			Ritorno = wrapper.DecryptData(Stringa)
+		Catch ex As System.Security.Cryptography.CryptographicException
+			Ritorno = ""
+		End Try
 
 		Return Ritorno
 	End Function

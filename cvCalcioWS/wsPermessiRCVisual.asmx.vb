@@ -11,6 +11,86 @@ Public Class wsPermessiRCVisual
 	Inherits System.Web.Services.WebService
 
 	<WebMethod()>
+	Public Function SalvaPermessiVisual(Squadra As String, IDutente As Integer, Permessi As String) As String
+		Dim Ritorno As String = ""
+		Dim Connessione As String = LeggeImpostazioniDiBase(Server.MapPath("."), Squadra)
+		Dim Ok As Boolean = True
+		Dim Sql As String = ""
+
+		If Connessione = "" Then
+			Ritorno = ErroreConnessioneNonValida
+		Else
+			Dim Conn As Object = ApreDB(Connessione)
+
+			If TypeOf (Conn) Is String Then
+				Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
+			Else
+				Dim Rec As Object = Server.CreateObject("ADODB.Recordset")
+
+				Sql = "Begin transaction"
+				Ritorno = EsegueSql(Conn, Sql, Connessione)
+
+				If Not Ritorno.Contains(StringaErrore) Then
+					Try
+						Sql = "Delete From PermessoVisual Where Idutente = " & IDutente
+						Ritorno = EsegueSql(Conn, Sql, Connessione)
+						If Ritorno.Contains(StringaErrore) Then
+							Ok = False
+						End If
+					Catch ex As Exception
+						Ritorno = StringaErrore & " " & ex.Message
+						Ok = False
+					End Try
+
+					If Ok Then
+						If Permessi.Length > 0 Then
+							Dim Perm() As String = Permessi.Split(",")
+							Dim Progressivo As Integer = 0
+
+							For Each p As String In Perm
+								If p <> "" Then
+									Progressivo += 1
+
+									Try
+										Sql = "Insert Into PermessoVisual Values (" &
+											" " & IDutente & ", " &
+											" " & Progressivo & ", " &
+											" " & p & " " &
+											")"
+										Ritorno = EsegueSql(Conn, Sql, Connessione)
+										If Ritorno.Contains(StringaErrore) Then
+											Ok = False
+											Exit For
+										End If
+									Catch ex As Exception
+										Ritorno = StringaErrore & ex.Message
+										Ok = False
+										Exit For
+									End Try
+								End If
+							Next
+
+						End If
+					End If
+				End If
+
+			End If
+
+			If Ok Then
+				Sql = "commit"
+				Dim Ritorno2 As String = EsegueSql(Conn, Sql, Connessione)
+			Else
+				Sql = "rollback"
+				Dim Ritorno2 As String = EsegueSql(Conn, Sql, Connessione)
+			End If
+
+			Conn.Close()
+		End If
+
+		Return Ritorno
+	End Function
+
+	<WebMethod()>
 	Public Function RitornaPermessiVisual(Squadra As String, IDutente As Integer) As String
 		Dim Ritorno As String = ""
 		Dim Connessione As String = LeggeImpostazioniDiBase(Server.MapPath("."), Squadra)
@@ -36,7 +116,7 @@ Public Class wsPermessiRCVisual
 						Ritorno = Rec
 					Else
 						If Rec.Eof Then
-							Ritorno = StringaErrore & " Nessun permesso ritornato"
+							Ritorno = "" ' StringaErrore & " Nessun permesso ritornato"
 						Else
 							Ritorno = ""
 							Do Until Rec.Eof
@@ -83,7 +163,7 @@ Public Class wsPermessiRCVisual
 						Ritorno = Rec
 					Else
 						If Rec.Eof Then
-							Ritorno = StringaErrore & " Nessun permesso ritornato"
+							' Ritorno = StringaErrore & " Nessun permesso ritornato"
 						Else
 							Ritorno = ""
 							Do Until Rec.Eof

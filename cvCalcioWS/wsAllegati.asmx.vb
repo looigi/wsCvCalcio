@@ -34,7 +34,7 @@ Public Class wsAllegati
 		'Dim NomeFileLog As String = pathLog & "\LogDocumenti.txt"
 		'ga.ApreFileDiTestoPerScrittura(NomeFileLog)
 
-		path &= "\" & Categoria & "\Anno" & idAnno & "\" & ID
+		path &= "\" & Squadra & "\" & Categoria & "\Anno" & idAnno & "\" & ID
 		'ga.ScriveTestoSuFileAperto(Now & "->Cartella di ricerca: " & path)
 		ga.CreaDirectoryDaPercorso(path & "\")
 		ga.LeggeFilesDaDirectory(path)
@@ -69,7 +69,7 @@ Public Class wsAllegati
 		Dim NomeFileLog As String = pathLog & "\LogDocumenti.txt"
 		ga.ApreFileDiTestoPerScrittura(NomeFileLog)
 
-		path &= "\" & Categoria & "\Anno" & idAnno & "\" & ID & "\" & NomeDocumento
+		path &= "\" & Squadra & "\" & Categoria & "\Anno" & idAnno & "\" & ID & "\" & NomeDocumento
 		ga.ScriveTestoSuFileAperto(Now & "->Eliminazione allegato: " & path)
 
 		Try

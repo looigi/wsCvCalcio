@@ -451,7 +451,7 @@ Public Class wsGiocatori
 	Public Function SalvaDettaglioGiocatore(Squadra As String, idAnno As String, idGiocatore As String, Genitore1 As String,
 											Genitore2 As String, FirmaGenitore1 As String, FirmaGenitore2 As String, CertificatoMedico As String,
 											TotalePagamento As String, TelefonoGenitore1 As String, TelefonoGenitore2 As String,
-											ScadenzaCertificatoMedico As String) As String
+											ScadenzaCertificatoMedico As String, MailGenitore1 As String, MailGenitore2 As String) As String
 		Dim Ritorno As String = ""
 		Dim Connessione As String = LeggeImpostazioniDiBase(Server.MapPath("."), Squadra)
 
@@ -481,7 +481,9 @@ Public Class wsGiocatori
 							"TotalePagamento=" & TotalePagamento & ", " &
 							"TelefonoGenitore1='" & Replace(TelefonoGenitore1, "'", "''") & "', " &
 							"TelefonoGenitore2='" & Replace(TelefonoGenitore2, "'", "''") & "', " &
-							"ScadenzaCertificatoMedico='" & ScadenzaCertificatoMedico & "' " &
+							"ScadenzaCertificatoMedico='" & ScadenzaCertificatoMedico & "', " &
+							"MailGenitore1='" & MailGenitore1 & "', " &
+							"MailGenitore2='" & MailGenitore2 & "' " &
 							"Where idAnno=" & idAnno & " And idGiocatore=" & idGiocatore
 						Ritorno = EsegueSql(Conn, Sql, Connessione)
 						If Ritorno.Contains(StringaErrore) Then
@@ -541,7 +543,9 @@ Public Class wsGiocatori
 							"0, " &
 							"'', " &
 							"'', " &
-							"null " &
+							"null, " &
+							"'', " &
+							"'' " &
 							")"
 						Ritorno = EsegueSql(Conn, Sql, Connessione)
 						If Not Ritorno.Contains(StringaErrore) Then
@@ -557,8 +561,50 @@ Public Class wsGiocatori
 						Ritorno &= Rec("TelefonoGenitore1").Value & ";"
 						Ritorno &= Rec("TelefonoGenitore2").Value & ";"
 						Ritorno &= Rec("ScadenzaCertificatoMedico").Value & ";"
+						Ritorno &= Rec("MailGenitore1").Value & ";"
+						Ritorno &= Rec("MailGenitore2").Value & ";"
 					End If
 				End If
+			End If
+		End If
+
+		Return Ritorno
+	End Function
+
+	<WebMethod()>
+	Public Function RitornaNuovoIDGiocatore(Squadra As String) As String
+		Dim Ritorno As String = ""
+		Dim Connessione As String = LeggeImpostazioniDiBase(Server.MapPath("."), Squadra)
+		Dim idGioc As String = -1
+
+		If Connessione = "" Then
+			Ritorno = ErroreConnessioneNonValida
+		Else
+			Dim Conn As Object = ApreDB(Connessione)
+
+			If TypeOf (Conn) Is String Then
+				Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
+			Else
+				Dim Rec As Object = Server.CreateObject("ADODB.Recordset")
+				Dim Sql As String = ""
+				Try
+					Sql = "SELECT Max(idGiocatore)+1 FROM Giocatori"
+					Rec = LeggeQuery(Conn, Sql, Connessione)
+					If TypeOf (Rec) Is String Then
+						Ritorno = Rec
+					Else
+						If Rec(0).Value Is DBNull.Value Then
+							idGioc = 1
+						Else
+							idGioc = Rec(0).Value
+						End If
+						Rec.Close()
+
+						Ritorno = idGioc
+					End If
+				Catch ex As Exception
+					Ritorno = StringaErrore & " " & ex.Message
+				End Try
 			End If
 		End If
 
