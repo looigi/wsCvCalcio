@@ -136,6 +136,63 @@ Public Class wsUtenti
 	End Function
 
 	<WebMethod()>
+	Public Function RitornaUtenteLocaleDaID(idUtente As String) As String
+		Dim Ritorno As String = ""
+		Dim Connessione As String = LeggeImpostazioniDiBase(Server.MapPath("."), "")
+
+		If Connessione = "" Then
+			Ritorno = ErroreConnessioneNonValida
+		Else
+			Dim Conn As Object = ApreDB(Connessione)
+
+			If TypeOf (Conn) Is String Then
+				Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
+			Else
+				Dim Rec As Object = Server.CreateObject("ADODB.Recordset")
+				Dim Sql As String = ""
+
+				Try
+					' Sql = "SELECT * FROM UtentiMobile Where idAnno=" & idAnno & " And idUtente=" & idUtente
+					Sql = "SELECT Utenti.* " &
+						"From Utenti " &
+						"Where idUtente = " & idUtente
+					Rec = LeggeQuery(Conn, Sql, Connessione)
+					If TypeOf (Rec) Is String Then
+						Ritorno = Rec
+					Else
+						If Rec.Eof Then
+							Ritorno = StringaErrore & " Nessun utente rilevato"
+						Else
+							Ritorno = ""
+							Do Until Rec.Eof
+								Ritorno &= Rec("idAnno").Value & ";" &
+									Rec("idUtente").Value & ";" &
+									Rec("Utente").Value & ";" &
+									Rec("Cognome").Value & ";" &
+									Rec("Nome").Value & ";" &
+									Rec("Password").Value & ";" &
+									Rec("EMail").Value & ";" &
+									"-1;" &
+									Rec("idTipologia").Value & ";" &
+									";" &
+									"§"
+								Rec.MoveNext()
+							Loop
+						End If
+						Rec.Close()
+					End If
+				Catch ex As Exception
+					Ritorno = StringaErrore & " " & ex.Message
+				End Try
+
+				Conn.Close()
+			End If
+		End If
+
+		Return Ritorno
+	End Function
+
+	<WebMethod()>
 	Public Function RitornaListaUtenti(Squadra As String, idAnno As String) As String
 		Dim Ritorno As String = ""
 		Dim Connessione As String = LeggeImpostazioniDiBase(Server.MapPath("."), Squadra)
@@ -342,7 +399,7 @@ Public Class wsUtenti
 									Ok = False
 								End If
 							Else
-								Ritorno = StringaErrore & " Utente già esistente per l'anno in corso"
+								Ritorno = StringaErrore & " Utente già esistente"
 								Ok = False
 							End If
 						End If

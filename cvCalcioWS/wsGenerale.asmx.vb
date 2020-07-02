@@ -10,6 +10,15 @@ Public Class wsGenerale
     Inherits System.Web.Services.WebService
 
 	<WebMethod()>
+	Public Function InviaMail(Oggetto As String, Body As String, ChiScrive As String, ChiRiceve As String) As String
+		Return Oggetto
+
+		Dim m As New mail
+		Dim Ritorno As String = m.SendEmail(Oggetto, Body, ChiScrive, ChiRiceve)
+		Return Ritorno
+	End Function
+
+	<WebMethod()>
 	Public Function SistemaImmagini(Squadra As String, idAnno As String) As String
 		Dim Ritorno As String = ""
 		Dim Connessione As String = LeggeImpostazioniDiBase(Server.MapPath("."), Squadra)

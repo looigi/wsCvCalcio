@@ -9,6 +9,126 @@ Public Class wsUtentiLocali
 	Inherits System.Web.Services.WebService
 
 	<WebMethod()>
+	Public Function ImpostaPasswordDimenticata(ByVal Utente As String, PWD As String) As String
+		Dim Ritorno As String = ""
+		Dim Connessione As String = LeggeImpostazioniDiBase(Server.MapPath("."), "")
+
+		If Connessione = "" Then
+			Ritorno = ErroreConnessioneNonValida
+		Else
+			Dim Conn As Object = ApreDB(Connessione)
+
+			If TypeOf (Conn) Is String Then
+				Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
+			Else
+				Dim Rec As Object = Server.CreateObject("ADODB.Recordset")
+				Dim Sql As String = ""
+
+				Sql = "SELECT Utenti.idAnno, idUtente, Utente, Cognome, Nome, " &
+						"Password, EMail, idCategoria, idTipologia, Utenti.idSquadra, Descrizione As Squadra " &
+						"FROM Utenti Left Join Squadre On Utenti.idSquadra = Squadre.idSquadra " &
+						"Where Upper(Utente)='" & Utente.ToUpper.Replace("'", "''") & "'" ' And idAnno=" & idAnno
+				Rec = LeggeQuery(Conn, Sql, Connessione)
+				If TypeOf (Rec) Is String Then
+					Ritorno = Rec
+				Else
+					If Rec.Eof Then
+						Ritorno = StringaErrore & " Nessun utente rilevato"
+					Else
+						Dim wrapper As New CryptEncrypt("WPippoBaudo227!")
+						Dim nuovaPassCrypt As String = wrapper.EncryptData(PWD)
+						Dim idUtente As Integer = Rec("idUtente").Value
+
+						Try
+							Sql = "Update Utenti Set Password='" & nuovaPassCrypt & "', PasswordScaduta=0 " &
+									"Where idUtente=" & idUtente
+							Ritorno = EsegueSql(Conn, Sql, Connessione)
+						Catch ex As Exception
+							Ritorno = StringaErrore & " " & ex.Message
+						End Try
+
+					End If
+				End If
+			End If
+		End If
+
+		Return Ritorno
+	End Function
+
+	<WebMethod()>
+	Public Function RitornaMailDimenticata(ByVal Utente As String) As String
+		Dim Ritorno As String = ""
+		Dim Connessione As String = LeggeImpostazioniDiBase(Server.MapPath("."), "")
+
+		If Connessione = "" Then
+			Ritorno = ErroreConnessioneNonValida
+		Else
+			Dim Conn As Object = ApreDB(Connessione)
+
+			If TypeOf (Conn) Is String Then
+				Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
+			Else
+				Dim Rec As Object = Server.CreateObject("ADODB.Recordset")
+				Dim Sql As String = ""
+
+				Sql = "SELECT Utenti.idAnno, idUtente, Utente, Cognome, Nome, " &
+						"Password, EMail, idCategoria, idTipologia, Utenti.idSquadra, Descrizione As Squadra " &
+						"FROM Utenti Left Join Squadre On Utenti.idSquadra = Squadre.idSquadra " &
+						"Where Upper(Utente)='" & Utente.ToUpper.Replace("'", "''") & "'" ' And idAnno=" & idAnno
+				Rec = LeggeQuery(Conn, Sql, Connessione)
+				If TypeOf (Rec) Is String Then
+					Ritorno = Rec
+				Else
+					If Rec.Eof Then
+						Ritorno = StringaErrore & " Nessun utente rilevato"
+					Else
+						If Rec("EMail").Value = "" And Rec("Utente").Value = "" Then
+							Ritorno = StringaErrore & " Nessuna mail rilevata"
+						Else
+							Dim idUtente As Integer = Rec("idUtente").Value
+							Dim EMail As String = Rec("EMail").value
+							If EMail = "" Then
+								EMail = Rec("Utente").Value
+							End If
+							Dim chiave As String = "AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvZz0123456789!$%/()=?^"
+							Dim rnd1 As New Random()
+							Dim nuovaPass As String = ""
+
+							For i As Integer = 1 To 7
+								Dim c As Integer = rnd1.Next(chiave.Length - 1) + 1
+								nuovaPass &= Mid(chiave, c, 1)
+							Next
+
+							Dim wrapper As New CryptEncrypt("WPippoBaudo227!")
+							Dim nuovaPassCrypt As String = wrapper.EncryptData(nuovaPass)
+
+							Try
+								Sql = "Update Utenti Set Password='" & nuovaPassCrypt & "', PasswordScaduta=1 " &
+									"Where idUtente=" & idUtente
+								Ritorno = EsegueSql(Conn, Sql, Connessione)
+								If Not Ritorno.Contains(StringaErrore) Then
+									Dim m As New mail
+									Dim Oggetto As String = "Reset password inCalcio"
+									Dim Body As String = ""
+									Body &= "La Sua password relativa al sito inCalcio è stata modificata dietro sua richiesta. " & vbCrLf & vbCrLf
+									Body &= "La nuova password valida per il solo primo accesso è: " & nuovaPass & vbCrLf & vbCrLf
+									Dim ChiScrive As String = "notifiche@incalcio.cloud"
+
+									Ritorno = m.SendEmail(Oggetto, Body, ChiScrive, EMail)
+								End If
+							Catch ex As Exception
+								Ritorno = StringaErrore & " " & ex.Message
+							End Try
+						End If
+					End If
+				End If
+			End If
+		End If
+
+		Return Ritorno
+	End Function
+
+	<WebMethod()>
 	Public Function CreaStringaCriptata(Stringa As String) As String
 		Dim wrapper As New CryptEncrypt("WPippoBaudo227!")
 		Dim Ritorno As String = wrapper.EncryptData(Stringa)
@@ -36,7 +156,7 @@ Public Class wsUtentiLocali
 
 				Try
 					Sql = "SELECT Utenti.idAnno, idUtente, Utente, Cognome, Nome, " &
-						"Password, EMail, idCategoria, idTipologia, Utenti.idSquadra, Descrizione As Squadra " &
+						"Password, EMail, idCategoria, idTipologia, Utenti.idSquadra, Descrizione As Squadra, PasswordScaduta, Telefono " &
 						"FROM Utenti Left Join Squadre On Utenti.idSquadra = Squadre.idSquadra " &
 						"Where Upper(Utente)='" & Utente.ToUpper.Replace("'", "''") & "'"
 					Rec = LeggeQuery(Conn, Sql, Connessione)
@@ -51,7 +171,7 @@ Public Class wsUtentiLocali
 							'Else
 							Ritorno = ""
 								Do Until Rec.Eof
-									Ritorno &= Rec("idAnno").Value & ";" &
+								Ritorno &= Rec("idAnno").Value & ";" &
 										Rec("idUtente").Value & ";" &
 										Rec("Utente").Value & ";" &
 										Rec("Cognome").Value & ";" &
@@ -62,9 +182,11 @@ Public Class wsUtentiLocali
 										Rec("idTipologia").Value & ";" &
 										Rec("idSquadra").Value & ";" &
 										Rec("Squadra").Value & ";" &
+										Rec("PasswordScaduta").Value & ";" &
+										Rec("Telefono").Value & ";" &
 										"§"
 
-									Squadra = Rec("Squadra").Value
+								Squadra = Rec("Squadra").Value
 									UtenteDaSalvare = Ritorno
 
 									Rec.MoveNext()
@@ -150,7 +272,7 @@ Public Class wsUtentiLocali
 				Try
 					' Sql = "SELECT * FROM Utenti Where idAnno=" & idAnno & " And Utente='" & Utente.Replace("'", "''") & "'"
 					Sql = "SELECT Utenti.idAnno, idUtente, Utente, Cognome, Nome, " &
-						"Password, EMail, Categorie.idCategoria As idCat1, idTipologia, Categorie.Descrizione As Descr1 " &
+						"Password, EMail, Categorie.idCategoria As idCat1, idTipologia, Categorie.Descrizione As Descr1, Telefono " &
 						"FROM (Utenti " &
 						"Left Join Categorie On Utenti.idCategoria=Categorie.idCategoria And Utenti.idAnno=Categorie.idAnno) " &
 						"Where Utente='" & Utente.Replace("'", "''") & "' And Utenti.idAnno=" & idAnno
@@ -176,6 +298,7 @@ Public Class wsUtentiLocali
 										Rec("idCat1").Value & ";" &
 										Rec("idTipologia").Value & ";" &
 										Rec("Descr1").Value & ";" &
+										Rec("Telefono").Value & ";" &
 										"§"
 									Rec.MoveNext()
 								Loop
@@ -234,6 +357,7 @@ Public Class wsUtentiLocali
 									Rec("idCategoria").Value & ";" &
 									Rec("idTipologia").Value & ";" &
 									Rec("Descrizione").Value & ";" &
+									Rec("Telefono").Value & ";" &
 									"§"
 								Rec.MoveNext()
 							Loop
@@ -273,9 +397,9 @@ Public Class wsUtentiLocali
 
 				Try
 					Sql = "SELECT Utenti.idAnno, Utenti.idUtente, Utenti.Utente, Utenti.Cognome, Utenti.Nome, Utenti.EMail, Categorie.Descrizione As Categoria, " &
-						"Utenti.idTipologia, Utenti.Password, Categorie.idCategoria, idSquadra " &
+						"Utenti.idTipologia, Utenti.Password, Categorie.idCategoria, idSquadra, Utenti.Telefono " &
 						"FROM (Utenti LEFT JOIN [" & Squadra & "].[dbo].Categorie ON Utenti.idCategoria = Categorie.idCategoria And Utenti.idAnno = Categorie.idAnno) " &
-						"Where Utenti.idAnno=" & Anno & " And idSquadra=" & idSquadra & " Order By 2,1;"
+						"Where Utenti.idAnno=" & Anno & " And Utenti.idTipologia > 0 And idSquadra=" & idSquadra & " Order By 2,1;"
 					' "Where Utenti.idAnno=" & idAnno & " Order By 2,1;"
 					Rec = LeggeQuery(Conn, Sql, Connessione)
 					If TypeOf (Rec) Is String Then
@@ -307,6 +431,7 @@ Public Class wsUtentiLocali
 									DecriptaStringa(Rec("Password").Value) & ";" &
 									Rec("idCategoria").Value & ";" &
 									Rec("Categoria").Value & ";" &
+									Rec("Telefono").Value & ";" &
 									"§"
 
 								Rec.MoveNext()
@@ -385,7 +510,7 @@ Public Class wsUtentiLocali
 
 	<WebMethod()>
 	Public Function SalvaUtente(Squadra As String, ByVal idAnno As String, idUtente As String, Utente As String, Cognome As String, Nome As String, EMail As String,
-								Password As String, idCategoria As String, idTipologia As String) As String
+								Password As String, idCategoria As String, idTipologia As String, Telefono As String) As String
 		Dim Ritorno As String = ""
 		Dim Connessione As String = LeggeImpostazioniDiBase(Server.MapPath("."), "")
 
@@ -401,7 +526,7 @@ Public Class wsUtentiLocali
 				Dim Sql As String = ""
 				'Dim idUtente As String = ""
 
-				Sql = "SELECT * FROM Utenti Where Upper(Utente)='" & Utente.Trim.ToUpper & "' And idAnno=" & idAnno
+				Sql = "SELECT * FROM Utenti Where Upper(Utente)='" & Utente.Trim.ToUpper & "'"
 				Rec = LeggeQuery(Conn, Sql, Connessione)
 				If TypeOf (Rec) Is String Then
 					Ritorno = Rec
@@ -433,7 +558,9 @@ Public Class wsUtentiLocali
 													"'" & EMail.Replace("'", "''") & "', " &
 													" " & idCategoria & ", " &
 													" " & idTipologia & ", " &
-													" " & idSquadra & " " &
+													" " & idSquadra & ", " &
+													"0, " &
+													"'" & Telefono & "' " &
 													")"
 								Ritorno = EsegueSql(Conn, Sql, Connessione)
 								'End If
@@ -480,7 +607,7 @@ Public Class wsUtentiLocali
 							Ritorno = StringaErrore & " " & ex.Message
 						End Try
 					Else
-						Ritorno = StringaErrore & " Utente già esistente per l'anno in corso"
+						Ritorno = StringaErrore & " Utente già esistente"
 					End If
 				End If
 
@@ -536,7 +663,7 @@ Public Class wsUtentiLocali
 
 	<WebMethod()>
 	Public Function ModificaUtente(Squadra As String, ByVal idAnno As String, Utente As String, Cognome As String, Nome As String, EMail As String,
-								Password As String, idCategoria As String, idTipologia As String, idUtente As String) As String
+								Password As String, idCategoria As String, idTipologia As String, idUtente As String, Telefono As String) As String
 		Dim Ritorno As String = ""
 		Dim Connessione As String = LeggeImpostazioniDiBase(Server.MapPath("."), "")
 
@@ -577,7 +704,9 @@ Public Class wsUtentiLocali
 							"'" & EMail.Replace("'", "''") & "', " &
 							" " & idCategoria & ", " &
 							"" & idTipologia & ", " &
-							"" & Val(sq(1)).ToString & ")"
+							"" & Val(sq(1)).ToString & ", " &
+							"0, " &
+							"'" & Telefono & "')"
 						Ritorno = EsegueSql(Conn, Sql, Connessione)
 						If Ritorno.Contains(StringaErrore) Then
 							Ok = False

@@ -9,44 +9,44 @@ Imports System.IO
 Public Class wsMultimedia
     Inherits System.Web.Services.WebService
 
-    <WebMethod()>
-    Public Function EliminaImmagine(Tipologia As String, NomeFile As String) As String
-        Dim Ritorno As String = ""
-        Dim Ok As Boolean = True
-        Dim Percorso As String = PercorsoSitoCV & Tipologia
-        Dim Estensioni() As String = {".jpg", ".png", ".bmp", ".jpeg"}
-        Dim Estensione As String
-        Dim Nome As String
+	<WebMethod()>
+	Public Function EliminaImmagine(Squadra As String, Tipologia As String, NomeFile As String) As String
+		Dim Ritorno As String = ""
+		Dim Ok As Boolean = True
+		Dim Percorso As String = PercorsoSitoCV & Squadra & "\" & Tipologia
+		Dim Estensioni() As String = {".jpg", ".png", ".bmp", ".jpeg"}
+		Dim Estensione As String
+		Dim Nome As String
 
-        If NomeFile.Contains(".") Then
-            Estensione = Mid(NomeFile, NomeFile.IndexOf(".") + 1, NomeFile.Length)
-            Nome = NomeFile.Replace(Estensione, "")
-        Else
-            Estensione = ""
-            Nome = NomeFile
-        End If
+		If NomeFile.Contains(".") Then
+			Estensione = Mid(NomeFile, NomeFile.IndexOf(".") + 1, NomeFile.Length)
+			Nome = NomeFile.Replace(Estensione, "")
+		Else
+			Estensione = ""
+			Nome = NomeFile
+		End If
 
-        For Each est As String In Estensioni
-            Dim Nometto As String = Percorso & "\" & Nome & est
-            If File.Exists(Nometto) Then
-                Try
-                    File.Delete(Nometto)
-                    Ritorno = "*"
-                    Ok = True
-                Catch ex As Exception
-                    Ok = False
-                    Ritorno = StringaErrore & " " & ex.Message
-                End Try
-                Exit For
-            End If
-        Next
+		For Each est As String In Estensioni
+			Dim Nometto As String = Percorso & "\" & Nome & est
+			If File.Exists(Nometto) Then
+				Try
+					File.Delete(Nometto)
+					Ritorno = "*"
+					Ok = True
+				Catch ex As Exception
+					Ok = False
+					Ritorno = StringaErrore & " " & ex.Message
+				End Try
+				Exit For
+			End If
+		Next
 
-        If Ritorno = "" Then
-            Ritorno = "*"
-        End If
+		If Ritorno = "" Then
+			Ritorno = "*"
+		End If
 
-        Return Ritorno
-    End Function
+		Return Ritorno
+	End Function
 
 	<WebMethod()>
 	Public Function RitornaMultimedia(Squadra As String, idAnno As String, id As String, Tipologia As String) As String

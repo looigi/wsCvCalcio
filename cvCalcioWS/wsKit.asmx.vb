@@ -31,7 +31,7 @@ Public Class wsKit
 						Ritorno = Rec
 					Else
 						If Rec(0).Value Is DBNull.Value Then
-							Ritorno = "ERROR: Nessun elemento rilevato"
+							' Ritorno = "ERROR: Nessun elemento rilevato"
 						Else
 							Do Until Rec.Eof
 								Ritorno &= Rec("idElemento").Value & ";" & Rec("Descrizione").Value & "§"
@@ -252,7 +252,7 @@ Public Class wsKit
 							Ritorno = "ERROR: Nessun elemento rilevato"
 						Else
 							Do Until Rec.Eof
-								Ritorno &= Rec("idTipoKit").Value & ";" & Rec("Descrizione").Value & "§"
+								Ritorno &= Rec("idTipoKit").Value & ";" & Rec("Descrizione").Value & ";" & Rec("Descrizione2").Value & "§"
 
 								Rec.MoveNext
 							Loop
@@ -322,7 +322,7 @@ Public Class wsKit
 	End Function
 
 	<WebMethod()>
-	Public Function InserisceTipologiaKit(Squadra As String, Descrizione As String) As String
+	Public Function InserisceTipologiaKit(Squadra As String, Nome As String, Descrizione As String) As String
 		Dim Ritorno As String = ""
 		Dim Connessione As String = LeggeImpostazioniDiBase(Server.MapPath("."), Squadra)
 		Dim Giocata As String = ""
@@ -365,7 +365,7 @@ Public Class wsKit
 
 					If Ok Then
 						Try
-							Sql = "Insert Into KitTipologie Values (" & idElemento & ", '" & Descrizione.Replace("'", "''") & "', 'N')"
+							Sql = "Insert Into KitTipologie Values (" & idElemento & ",  '" & Nome.Replace("'", "''") & "', '" & Descrizione.Replace("'", "''") & "', 'N')"
 							Ritorno = EsegueSql(Conn, Sql, Connessione)
 							If Ritorno.Contains(StringaErrore) Then
 								Ok = False
@@ -394,7 +394,7 @@ Public Class wsKit
 	End Function
 
 	<WebMethod()>
-	Public Function ModificaTipologiaKit(Squadra As String, ByVal idElemento As String, Descrizione As String) As String
+	Public Function ModificaTipologiaKit(Squadra As String, ByVal idElemento As String, Nome As String, Descrizione As String) As String
 		Dim Ritorno As String = ""
 		Dim Connessione As String = LeggeImpostazioniDiBase(Server.MapPath("."), Squadra)
 		Dim Giocata As String = ""
@@ -416,7 +416,7 @@ Public Class wsKit
 
 				If Not Ritorno.Contains(StringaErrore) Then
 					Try
-						Sql = "Update KitTipologie Set Descrizione='" & Descrizione.Replace("'", "''") & "' " &
+						Sql = "Update KitTipologie Set Descrizione = '" & Nome.Replace("'", "''") & "', Descrizione2='" & Descrizione.Replace("'", "''") & "' " &
 							"Where idTipoKit=" & idElemento
 						Ritorno = EsegueSql(Conn, Sql, Connessione)
 						If Ritorno.Contains(StringaErrore) Then

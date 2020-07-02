@@ -12,31 +12,6 @@
         Return Ritorno
     End Function
 
-    Public Sub InviaMailCdoSys(ByVal MailFrom As String, ByVal MailTo As String, ByVal MailCc As String, ByVal MailSubject As String, ByVal MailTesto As String, ByVal Allegato As String)
-        Dim pMail As Object
-        pMail = CreateObject("CDO.Message")
-        pMail.from = MailFrom
-        pMail.to = MailTo
-        If Len(MailCc) > 0 Then pMail.Bcc = MailCc
-        pMail.subject = "[trasfSMS] " & MailSubject
-        pMail.AddAttachment(Allegato)
-        pMail.HTMLBody = "<html><body><form id=""form1""><div>" & MailTesto & "</div></form></body></html>"
-        ' pMail.IsBodyHtml = True
-
-        With pMail.Configuration
-            .Fields("http://schemas.microsoft.com/cdo/configuration/sendusing") = 2
-            .Fields("http://schemas.microsoft.com/cdo/configuration/smtpserver") = "localhost"
-            .Fields("http://schemas.microsoft.com/cdo/configuration/smtpserverport") = 25
-            .Fields.Update()
-        End With
-        Try
-            pMail.send()
-        Catch ex As Exception
-
-        End Try
-        pMail = Nothing
-    End Sub
-
     Public Function MetteMaiuscoleDopoOgniSpazio(ByVal Cosa As String) As String
         Dim Appoggio As String
         Dim Ritorno As String

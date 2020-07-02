@@ -13,7 +13,7 @@
     <OutputType>Library</OutputType>
     <RootNamespace>cvCalcioWS</RootNamespace>
     <AssemblyName>cvCalcioWS</AssemblyName>
-    <TargetFrameworkVersion>v2.0</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
     <MyType>Custom</MyType>
     <UseIISExpress>true</UseIISExpress>
     <IISExpressSSLPort />
@@ -22,6 +22,7 @@
     <IISExpressUseClassicPipelineMode />
     <UseGlobalApplicationHostFile />
     <Use64BitIISExpress />
+    <TargetFrameworkProfile />
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -44,13 +45,17 @@
   <ItemGroup>
     <Reference Include="System" />
     <Reference Include="System.Data" />
+    <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="System.Drawing" />
+    <Reference Include="System.Management" />
     <Reference Include="System.Web" />
+    <Reference Include="System.Web.Extensions" />
     <Reference Include="System.Xml" />
     <Reference Include="System.Configuration" />
     <Reference Include="System.Web.Services" />
     <Reference Include="System.EnterpriseServices" />
     <Reference Include="System.Xml" />
+    <Reference Include="System.Xml.Linq" />
   </ItemGroup>
   <ItemGroup>
     <Import Include="Microsoft.VisualBasic" />
@@ -81,6 +86,7 @@
     <Content Include="NomeSquadraBase.txt" />
     <Content Include="PathAllegati.txt" />
     <Content Include="PathCvCalcio.txt" />
+    <Content Include="PercorsoSito.txt" />
     <Content Include="wsAllegati.asmx" />
     <Content Include="wsFunzioniRC.asmx" />
     <Content Include="wsKit.asmx" />
@@ -97,9 +103,6 @@
     <Content Include="wsEventi.asmx" />
     <Content Include="wsDirigenti.asmx" />
     <Content Include="wsGenerale.asmx" />
-    <Content Include="Web.config">
-      <SubType>Designer</SubType>
-    </Content>
     <Content Include="wsGiocatori.asmx" />
     <Content Include="wsMultimedia.asmx" />
     <Content Include="wsPartite.asmx" />
@@ -112,6 +115,7 @@
     <Compile Include="CryptEncrypt.vb" />
     <Compile Include="GestioneFilesDirectory.vb" />
     <Compile Include="Globale.vb" />
+    <Compile Include="mail.vb" />
     <Compile Include="mdlTrasfSMS.vb" />
     <Compile Include="wsAllegati.asmx.vb">
       <DependentUpon>wsAllegati.asmx</DependentUpon>
@@ -181,6 +185,7 @@
     <Compile Include="My Project\Application.Designer.vb">
       <AutoGen>True</AutoGen>
       <DependentUpon>Application.myapp</DependentUpon>
+      <DesignTime>True</DesignTime>
     </Compile>
     <Compile Include="My Project\MyExtensions\MyWebExtension.vb">
       <VBMyExtensionTemplateID>Microsoft.VisualBasic.Web.MyExtension</VBMyExtensionTemplateID>
@@ -244,6 +249,7 @@
       <CustomToolNamespace>My</CustomToolNamespace>
       <LastGenOutput>Settings.Designer.vb</LastGenOutput>
     </None>
+    <Content Include="Web.config" />
     <None Include="Web.Debug.config">
       <DependentUpon>Web.config</DependentUpon>
     </None>
