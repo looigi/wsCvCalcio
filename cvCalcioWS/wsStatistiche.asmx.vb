@@ -3146,7 +3146,7 @@ Public Class wsStatistiche
 					Ritorno = StringaErrore & " " & ex.Message
 				End Try
 
-				Dim Filone As String = gf.LeggeFileIntero(HttpContext.Current.Server.MapPath(".") & "\base_statistiche.txt")
+				Dim Filone As String = gf.LeggeFileIntero(HttpContext.Current.Server.MapPath(".") & "\Scheletri\base_statistiche.txt")
 				gf.CreaDirectoryDaPercorso(HttpContext.Current.Server.MapPath(".") & "\Statistiche\" & Squadra & "\")
 				Dim NomeFileFinale As String = HttpContext.Current.Server.MapPath(".") & "\Statistiche\" & Squadra & "\" & idAnno & "_" & idCategoria & ".html"
 

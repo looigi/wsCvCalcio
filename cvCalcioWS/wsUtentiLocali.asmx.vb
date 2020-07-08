@@ -158,7 +158,7 @@ Public Class wsUtentiLocali
 					Sql = "SELECT Utenti.idAnno, idUtente, Utente, Cognome, Nome, " &
 						"Password, EMail, idCategoria, idTipologia, Utenti.idSquadra, Descrizione As Squadra, PasswordScaduta, Telefono " &
 						"FROM Utenti Left Join Squadre On Utenti.idSquadra = Squadre.idSquadra " &
-						"Where Upper(Utente)='" & Utente.ToUpper.Replace("'", "''") & "'"
+						"Where Upper(Utente)='" & Utente.ToUpper.Replace("'", "''") & "' And Utenti.Eliminato = 'N'"
 					Rec = LeggeQuery(Conn, Sql, Connessione)
 					If TypeOf (Rec) Is String Then
 						Ritorno = Rec
@@ -275,7 +275,7 @@ Public Class wsUtentiLocali
 						"Password, EMail, Categorie.idCategoria As idCat1, idTipologia, Categorie.Descrizione As Descr1, Telefono " &
 						"FROM (Utenti " &
 						"Left Join Categorie On Utenti.idCategoria=Categorie.idCategoria And Utenti.idAnno=Categorie.idAnno) " &
-						"Where Utente='" & Utente.Replace("'", "''") & "' And Utenti.idAnno=" & idAnno
+						"Where Utente='" & Utente.Replace("'", "''") & "' And Utenti.idAnno=" & idAnno & " And Utenti.Eliminato='N'"
 					Rec = LeggeQuery(Conn, Sql, Connessione)
 					If TypeOf (Rec) Is String Then
 						Ritorno = Rec
@@ -337,7 +337,7 @@ Public Class wsUtentiLocali
 					' Sql = "SELECT * FROM Utenti Where idAnno=" & idAnno & " And idUtente=" & idUtente
 					Sql = "SELECT Utenti.*, Categorie.Descrizione " &
 						"From Utenti LEFT Join Categorie On (Utenti.idCategoria = Categorie.idCategoria) And (Utenti.idAnno = Categorie.idAnno) " &
-						"Where idUtente = " & idUtente
+						"Where idUtente = " & idUtente & " And Utente.Eliminato='N'"
 					Rec = LeggeQuery(Conn, Sql, Connessione)
 					If TypeOf (Rec) Is String Then
 						Ritorno = Rec
@@ -399,7 +399,7 @@ Public Class wsUtentiLocali
 					Sql = "SELECT Utenti.idAnno, Utenti.idUtente, Utenti.Utente, Utenti.Cognome, Utenti.Nome, Utenti.EMail, Categorie.Descrizione As Categoria, " &
 						"Utenti.idTipologia, Utenti.Password, Categorie.idCategoria, idSquadra, Utenti.Telefono " &
 						"FROM (Utenti LEFT JOIN [" & Squadra & "].[dbo].Categorie ON Utenti.idCategoria = Categorie.idCategoria And Utenti.idAnno = Categorie.idAnno) " &
-						"Where Utenti.idAnno=" & Anno & " And Utenti.idTipologia > 0 And idSquadra=" & idSquadra & " Order By 2,1;"
+						"Where Utenti.idAnno=" & Anno & " And Utenti.idTipologia > 0 And idSquadra=" & idSquadra & " And Utenti.Eliminato='N' Order By 2,1;"
 					' "Where Utenti.idAnno=" & idAnno & " Order By 2,1;"
 					Rec = LeggeQuery(Conn, Sql, Connessione)
 					If TypeOf (Rec) Is String Then
@@ -560,7 +560,8 @@ Public Class wsUtentiLocali
 													" " & idTipologia & ", " &
 													" " & idSquadra & ", " &
 													"0, " &
-													"'" & Telefono & "' " &
+													"'" & Telefono & "', " &
+													"'N'" &
 													")"
 								Ritorno = EsegueSql(Conn, Sql, Connessione)
 								'End If
@@ -634,7 +635,8 @@ Public Class wsUtentiLocali
 				Dim Rec As Object = Server.CreateObject("ADODB.Recordset")
 				Dim Sql As String = ""
 
-				Sql = "Delete From Utenti Where idUtente=" & idUtente & " And idAnno=" & idAnno
+				' Sql = "Delete From Utenti Where idUtente=" & idUtente & " And idAnno=" & idAnno
+				Sql = "Update Utenti Set Eliminato = 'S' Where idUtente=" & idUtente & " And idAnno=" & idAnno
 				Ritorno = EsegueSql(Conn, Sql, Connessione)
 
 				'If Ritorno = "*" Then

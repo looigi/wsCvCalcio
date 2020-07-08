@@ -1,0 +1,27 @@
+<html>
+	<style type="text/css">
+		.finestra {
+
+		}
+		
+		.testo {
+			font-family: arial;
+			font-size: 22px;
+		}
+	</style>
+	<body style="background: url('***SFONDO***') repeat;">
+		<br />
+		<div style="width: 98%; height: auto; background-color: #fdfdfd; opacity: .9; border: 1px solid #777; border-radius: 5px; padding: 5px; margin: 5px;">
+			<h1>
+				<img src="***LOGO APPLICAZIONE***" style="width: 75px; height: 75px;">
+				<span style="color: red; font-family: Arial;">inCalcio</span>
+			</h1>
+			<hr />
+			<span class="testo">
+				***BODY***
+			</span>
+			<hr />
+		</div>
+		<br />
+	</body>
+</html>

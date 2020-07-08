@@ -11,9 +11,13 @@ Public Class wsMultimedia
 
 	<WebMethod()>
 	Public Function EliminaImmagine(Squadra As String, Tipologia As String, NomeFile As String) As String
+		Dim gf As New GestioneFilesDirectory
+		Dim Righe As String = gf.LeggeFileIntero(HttpContext.Current.Server.MapPath(".") & "\PathAllegati.txt")
+		Dim Campi() As String = Righe.Split(";")
+
 		Dim Ritorno As String = ""
 		Dim Ok As Boolean = True
-		Dim Percorso As String = PercorsoSitoCV & Squadra & "\" & Tipologia
+		Dim Percorso As String = Campi(0) & Squadra & "\" & Tipologia
 		Dim Estensioni() As String = {".jpg", ".png", ".bmp", ".jpeg"}
 		Dim Estensione As String
 		Dim Nome As String

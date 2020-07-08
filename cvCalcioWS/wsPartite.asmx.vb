@@ -1098,6 +1098,7 @@ Public Class wsPartite
 								End If
 								Rec2.Close
 
+								'21
 								If Rec("Casa").Value.ToString.ToUpper = "S" Then
 									Ritorno &= goalPropri.ToString.Trim & "-" & goalAvversari.ToString.Trim & ";"
 								Else
@@ -1116,6 +1117,7 @@ Public Class wsPartite
 								Ritorno &= Rec("Umidita").Value & ";"
 								Ritorno &= Rec("Pressione").Value & ";"
 
+								'31
 								Ritorno &= Rec("TempiPrimoTempo").Value & ";"
 								Ritorno &= Rec("TempiSecondoTempo").Value & ";"
 								Ritorno &= Rec("TempiTerzoTempo").Value & ";"
@@ -1163,6 +1165,7 @@ Public Class wsPartite
 									End If
 								End If
 
+								'37
 								Ritorno &= RigoriPropri & ";"
 								Ritorno &= RigoriAvv & ";"
 
@@ -1229,6 +1232,7 @@ Public Class wsPartite
 									Rec2.Close
 								End If
 
+								'39
 								Ritorno &= EventiPrimoTempo & ";"
 								Ritorno &= EventiSecondoTempo & ";"
 								Ritorno &= EventiTerzoTempo & ";"
@@ -1426,7 +1430,7 @@ Public Class wsPartite
 							If Anticipo = 0 Then
 								Anticipo = 1
 							End If
-							Dim Filetto As String = gf.LeggeFileIntero(Server.MapPath(".") & "\base_convocazioni.txt")
+							Dim Filetto As String = gf.LeggeFileIntero(Server.MapPath(".") & "\Scheletri\base_convocazioni.txt")
 							Dim Datella As Date = Rec("DataOra").Value
 							Dim DatellaConv As Date = Datella.AddHours(-Anticipo)
 
@@ -1535,140 +1539,7 @@ Public Class wsPartite
 
 	<WebMethod()>
 	Public Function EliminaPartitaGEN(Squadra As String, idAnno As String, idPartita As String) As String
-		Dim Ritorno As String = ""
-		Dim Connessione As String = LeggeImpostazioniDiBase(Server.MapPath("."), Squadra)
-
-		If Connessione = "" Then
-			Ritorno = ErroreConnessioneNonValida
-		Else
-			Dim Conn As Object = ApreDB(Connessione)
-
-			If TypeOf (Conn) Is String Then
-				Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
-			Else
-				Dim sql As String
-				Dim Ok As Boolean = True
-
-				sql = "Begin transaction"
-				Ritorno = EsegueSql(Conn, sql, Connessione)
-
-				If Not Ritorno.Contains(StringaErrore) Then
-					sql = "delete from Partite Where idAnno = " & idAnno & " And idPartita = " & idPartita
-					Ritorno = EsegueSql(Conn, sql, Connessione)
-					If Ritorno.Contains(StringaErrore) Then
-						Ok = False
-					End If
-
-					If Ok Then
-						sql = "delete from ArbitriPartite Where idAnno = " & idAnno & " And idPartita = " & idPartita
-						Ritorno = EsegueSql(Conn, sql, Connessione)
-						If Ritorno.Contains(StringaErrore) Then
-							Ok = False
-						End If
-					End If
-
-					If Ok Then
-						sql = "delete from Convocati Where idPartita = " & idPartita
-						Ritorno = EsegueSql(Conn, sql, Connessione)
-						If Ritorno.Contains(StringaErrore) Then
-							Ok = False
-						End If
-					End If
-
-					If Ok Then
-						sql = "delete from CoordinatePartite Where idPartita = " & idPartita
-						Ritorno = EsegueSql(Conn, sql, Connessione)
-						If Ritorno.Contains(StringaErrore) Then
-							Ok = False
-						End If
-					End If
-
-					If Ok Then
-						sql = "delete from EventiPartita Where idAnno = " & idAnno & " And idPartita = " & idPartita
-						Ritorno = EsegueSql(Conn, sql, Connessione)
-						If Ritorno.Contains(StringaErrore) Then
-							Ok = False
-						End If
-					End If
-
-					If Ok Then
-						sql = "delete from Marcatori Where idPartita = " & idPartita
-						Ritorno = EsegueSql(Conn, sql, Connessione)
-						If Ritorno.Contains(StringaErrore) Then
-							Ok = False
-						End If
-					End If
-
-					If Ok Then
-						sql = "delete from MeteoPartite Where idPartita = " & idPartita
-						Ritorno = EsegueSql(Conn, sql, Connessione)
-						If Ritorno.Contains(StringaErrore) Then
-							Ok = False
-						End If
-					End If
-
-					If Ok Then
-						sql = "delete from RigoriAvversari Where idAnno = " & idAnno & " And idPartita = " & idPartita
-						Ritorno = EsegueSql(Conn, sql, Connessione)
-						If Ritorno.Contains(StringaErrore) Then
-							Ok = False
-						End If
-					End If
-
-					If Ok Then
-						sql = "delete from RigoriPropri Where idAnno = " & idAnno & " And idPartita = " & idPartita
-						Ritorno = EsegueSql(Conn, sql, Connessione)
-						If Ritorno.Contains(StringaErrore) Then
-							Ok = False
-						End If
-					End If
-
-					If Ok Then
-						sql = "delete from Risultati Where idPartita = " & idPartita
-						Ritorno = EsegueSql(Conn, sql, Connessione)
-						If Ritorno.Contains(StringaErrore) Then
-							Ok = False
-						End If
-					End If
-
-					If Ok Then
-						sql = "delete from RisultatiAggiuntivi Where idPartita = " & idPartita
-						Ritorno = EsegueSql(Conn, sql, Connessione)
-						If Ritorno.Contains(StringaErrore) Then
-							Ok = False
-						End If
-					End If
-
-					If Ok Then
-						sql = "delete from RisultatiAggiuntiviMarcatori Where idPartita = " & idPartita
-						Ritorno = EsegueSql(Conn, sql, Connessione)
-						If Ritorno.Contains(StringaErrore) Then
-							Ok = False
-						End If
-					End If
-
-					If Ok Then
-						sql = "delete from TempiGoalAvversari Where idPartita = " & idPartita
-						Ritorno = EsegueSql(Conn, sql, Connessione)
-						If Ritorno.Contains(StringaErrore) Then
-							Ok = False
-						End If
-					End If
-				Else
-					Ok = False
-				End If
-
-				If Ok Then
-					sql = "commit"
-					Dim Ritorno2 As String = EsegueSql(Conn, sql, Connessione)
-				Else
-					sql = "rollback"
-					Dim Ritorno2 As String = EsegueSql(Conn, sql, Connessione)
-				End If
-			End If
-		End If
-
-		Return Ritorno
+		Return EliminaPartita(Squadra, idAnno, idPartita)
 	End Function
 
 End Class

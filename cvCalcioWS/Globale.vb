@@ -2,8 +2,8 @@
 	Public Const ErroreConnessioneNonValida As String = "ERRORE: Stringa di connessione non valida"
 	Public Const ErroreConnessioneDBNonValida As String = "ERRORE: Connessione al db non valida"
 	Public Percorso As String
-	Public PercorsoSitoCV As String = "C:\GestioneCampionato\CalcioImages\" ' "C:\inetpub\wwwroot\CVCalcio\App_Themes\Standard\Images\"
-	Public PercorsoSitoURLImmagini As String = "http://loppa.duckdns.org:90/MultiMedia/" ' "http://looigi.no-ip.biz:90/CvCalcio/App_Themes/Standard/Images/"
+	' Public PercorsoSitoCV As String = "C:\GestioneCampionato\CalcioImages\" ' "C:\inetpub\wwwroot\CVCalcio\App_Themes\Standard\Images\"
+	' Public PercorsoSitoURLImmagini As String = "http://loppa.duckdns.org:90/MultiMedia/" ' "http://looigi.no-ip.biz:90/CvCalcio/App_Themes/Standard/Images/"
 	Public StringaErrore As String = "ERROR: "
 	Public RigaPari As Boolean = False
 
@@ -96,14 +96,17 @@
 
 	Public Function RitornaMultimediaPerTipologia(Squadra As String, idAnno As String, id As String, Tipologia As String) As String
 		' PercorsoSitoCV = "D:\Looigi\VB.Net\Miei\WEB\SSDCastelverdeCalcio\CVCalcio\App_Themes\Standard\Images\"
+		Dim gf As New GestioneFilesDirectory
+		Dim Righe As String = gf.LeggeFileIntero(HttpContext.Current.Server.MapPath(".") & "\PathAllegati.txt")
+		Dim Campi() As String = Righe.Split(";")
+
 		Dim Ritorno As String = ""
 		Dim Ok As Boolean = True
-		Dim Percorso As String = PercorsoSitoCV & "\" & Squadra & "\" & Tipologia & "\"
+		Dim Percorso As String = Campi(0) & "\" & Squadra & "\" & Tipologia & "\"
 		Percorso = Percorso.Replace("\\", "\")
-		Dim IndirizzoURL As String = PercorsoSitoURLImmagini & "/" & Squadra & "/" & Tipologia & "/"
+		Dim IndirizzoURL As String = Campi(2) & "/" & Squadra & "/" & Tipologia & "/"
 		IndirizzoURL = IndirizzoURL.Replace("//", "/")
 		Dim Codice As String
-		Dim gf As New GestioneFilesDirectory
 
 		Select Case Tipologia
 			Case "Partite"
@@ -147,7 +150,7 @@
 		Dim PathBaseImmScon As String = "http://loppa.duckdns.org:90/MultiMedia/Sconosciuto.png" ' "http://looigi.no-ip.biz:90/CVCalcio/App_Themes/Standard/Images/Sconosciuto.png"
 		Dim Ritorno As String = "*"
 
-		Dim Filone As String = gf.LeggeFileIntero(HttpContext.Current.Server.MapPath(".") & "\base_partita.txt")
+		Dim Filone As String = gf.LeggeFileIntero(HttpContext.Current.Server.MapPath(".") & "\Scheletri\base_partita.txt")
 		gf.CreaDirectoryDaPercorso(HttpContext.Current.Server.MapPath(".") & "\Partite\" & Squadra & "\")
 		Dim NomeFileFinale As String = HttpContext.Current.Server.MapPath(".") & "\Partite\" & Squadra & "\" & idAnno & "_" & idPartita & ".html"
 
@@ -819,6 +822,151 @@
 		Catch ex As System.Security.Cryptography.CryptographicException
 			Ritorno = ""
 		End Try
+
+		Return Ritorno
+	End Function
+
+	Public Function EliminaPartita(Squadra As String, idAnno As String, idPartita As String) As String
+		Dim Ritorno As String = ""
+		Dim Connessione As String = LeggeImpostazioniDiBase(HttpContext.Current.Server.MapPath("."), Squadra)
+
+		If Connessione = "" Then
+			Ritorno = ErroreConnessioneNonValida
+		Else
+			Dim Conn As Object = ApreDB(Connessione)
+
+			If TypeOf (Conn) Is String Then
+				Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
+			Else
+				Dim sql As String
+				Dim Ok As Boolean = True
+
+				sql = "Begin transaction"
+				Ritorno = EsegueSql(Conn, sql, Connessione)
+
+				If Not Ritorno.Contains(StringaErrore) Then
+					sql = "delete from Partite Where idAnno = " & idAnno & " And idPartita = " & idPartita
+					Ritorno = EsegueSql(Conn, sql, Connessione)
+					If Ritorno.Contains(StringaErrore) Then
+						Ok = False
+					End If
+
+					If Ok Then
+						sql = "delete from ArbitriPartite Where idAnno = " & idAnno & " And idPartita = " & idPartita
+						Ritorno = EsegueSql(Conn, sql, Connessione)
+						If Ritorno.Contains(StringaErrore) Then
+							Ok = False
+						End If
+					End If
+
+					If Ok Then
+						sql = "delete from Convocati Where idPartita = " & idPartita
+						Ritorno = EsegueSql(Conn, sql, Connessione)
+						If Ritorno.Contains(StringaErrore) Then
+							Ok = False
+						End If
+					End If
+
+					If Ok Then
+						sql = "delete from CoordinatePartite Where idPartita = " & idPartita
+						Ritorno = EsegueSql(Conn, sql, Connessione)
+						If Ritorno.Contains(StringaErrore) Then
+							Ok = False
+						End If
+					End If
+
+					If Ok Then
+						sql = "delete from EventiPartita Where idAnno = " & idAnno & " And idPartita = " & idPartita
+						Ritorno = EsegueSql(Conn, sql, Connessione)
+						If Ritorno.Contains(StringaErrore) Then
+							Ok = False
+						End If
+					End If
+
+					If Ok Then
+						sql = "delete from Marcatori Where idPartita = " & idPartita
+						Ritorno = EsegueSql(Conn, sql, Connessione)
+						If Ritorno.Contains(StringaErrore) Then
+							Ok = False
+						End If
+					End If
+
+					If Ok Then
+						sql = "delete from MeteoPartite Where idPartita = " & idPartita
+						Ritorno = EsegueSql(Conn, sql, Connessione)
+						If Ritorno.Contains(StringaErrore) Then
+							Ok = False
+						End If
+					End If
+
+					If Ok Then
+						sql = "delete from RigoriAvversari Where idAnno = " & idAnno & " And idPartita = " & idPartita
+						Ritorno = EsegueSql(Conn, sql, Connessione)
+						If Ritorno.Contains(StringaErrore) Then
+							Ok = False
+						End If
+					End If
+
+					If Ok Then
+						sql = "delete from RigoriPropri Where idAnno = " & idAnno & " And idPartita = " & idPartita
+						Ritorno = EsegueSql(Conn, sql, Connessione)
+						If Ritorno.Contains(StringaErrore) Then
+							Ok = False
+						End If
+					End If
+
+					If Ok Then
+						sql = "delete from Risultati Where idPartita = " & idPartita
+						Ritorno = EsegueSql(Conn, sql, Connessione)
+						If Ritorno.Contains(StringaErrore) Then
+							Ok = False
+						End If
+					End If
+
+					If Ok Then
+						sql = "delete from RisultatiAggiuntivi Where idPartita = " & idPartita
+						Ritorno = EsegueSql(Conn, sql, Connessione)
+						If Ritorno.Contains(StringaErrore) Then
+							Ok = False
+						End If
+					End If
+
+					If Ok Then
+						sql = "delete from RisultatiAggiuntiviMarcatori Where idPartita = " & idPartita
+						Ritorno = EsegueSql(Conn, sql, Connessione)
+						If Ritorno.Contains(StringaErrore) Then
+							Ok = False
+						End If
+					End If
+
+					If Ok Then
+						sql = "delete from TempiGoalAvversari Where idPartita = " & idPartita
+						Ritorno = EsegueSql(Conn, sql, Connessione)
+						If Ritorno.Contains(StringaErrore) Then
+							Ok = False
+						End If
+					End If
+
+					If Ok Then
+						sql = "delete from EventiCalendario Where idPartita = " & idPartita
+						Ritorno = EsegueSql(Conn, sql, Connessione)
+						If Ritorno.Contains(StringaErrore) Then
+							Ok = False
+						End If
+					End If
+				Else
+					Ok = False
+				End If
+
+				If Ok Then
+					sql = "commit"
+					Dim Ritorno2 As String = EsegueSql(Conn, sql, Connessione)
+				Else
+					sql = "rollback"
+					Dim Ritorno2 As String = EsegueSql(Conn, sql, Connessione)
+				End If
+			End If
+		End If
 
 		Return Ritorno
 	End Function

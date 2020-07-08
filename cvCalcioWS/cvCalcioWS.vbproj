@@ -80,14 +80,15 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="App_Themes\Standard\bg.jpg" />
-    <Content Include="base_convocazioni.txt" />
-    <Content Include="base_partita.txt" />
-    <Content Include="base_statistiche.txt" />
+    <Content Include="Scheletri\base_convocazioni.txt" />
+    <Content Include="Scheletri\base_partita.txt" />
+    <Content Include="Scheletri\base_statistiche.txt" />
     <Content Include="NomeSquadraBase.txt" />
     <Content Include="PathAllegati.txt" />
     <Content Include="PathCvCalcio.txt" />
     <Content Include="PercorsoSito.txt" />
     <Content Include="wsAllegati.asmx" />
+    <Content Include="wsEventiCalendario.asmx" />
     <Content Include="wsFunzioniRC.asmx" />
     <Content Include="wsKit.asmx" />
     <Content Include="wsMaschere.asmx" />
@@ -119,6 +120,10 @@
     <Compile Include="mdlTrasfSMS.vb" />
     <Compile Include="wsAllegati.asmx.vb">
       <DependentUpon>wsAllegati.asmx</DependentUpon>
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="wsEventiCalendario.asmx.vb">
+      <DependentUpon>wsEventiCalendario.asmx</DependentUpon>
       <SubType>Component</SubType>
     </Compile>
     <Compile Include="wsFunzioniRC.asmx.vb">

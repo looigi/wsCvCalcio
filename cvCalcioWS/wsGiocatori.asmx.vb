@@ -11,6 +11,145 @@ Public Class wsGiocatori
 	Inherits System.Web.Services.WebService
 
 	<WebMethod()>
+	Public Function RitornaFirmeDaValidare(Squadra As String) As String
+		Dim Ritorno As String = ""
+		Dim Connessione As String = LeggeImpostazioniDiBase(Server.MapPath("."), Squadra)
+
+		If Connessione = "" Then
+			Ritorno = ErroreConnessioneNonValida
+		Else
+			Dim Conn As Object = ApreDB(Connessione)
+
+			If TypeOf (Conn) Is String Then
+				Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
+			Else
+				Dim Rec As Object = Server.CreateObject("ADODB.Recordset")
+				Dim Sql As String = ""
+
+				Sql = "Select Top 5 A.*, B.Cognome + ' ' + B.Nome As Giocatore, " &
+					"CASE A.idGenitore " &
+					"     WHEN 1 THEN C.Genitore1 " &
+					"     WHEN 2 THEN C.Genitore2 " &
+					"     WHEN 3 THEN B.Cognome + ' ' + B.Nome " &
+					"END As Genitore " &
+					"From GiocatoriFirme A " &
+					"Left Join Giocatori B On A.idGiocatore = B.idGiocatore " &
+					"Left Join GiocatoriDettaglio C On A.idGiocatore = C.idGiocatore " &
+					"Where (DataFirma Is Not Null And DataFirma <> '') And (Validazione Is Null Or Validazione = '')"
+				Rec = LeggeQuery(Conn, Sql, Connessione)
+				If TypeOf (Rec) Is String Then
+					Ritorno = Rec
+				Else
+					If Not Rec.Eof Then
+						Do Until Rec.Eof
+							Ritorno &= Rec("idGiocatore").Value.ToString & ";" &
+									Rec("idGenitore").Value.ToString & ";" &
+									Rec("Datella").Value.ToString.Trim & ";" &
+									Rec("DataFirma").Value.ToString.Trim & ";" &
+									Rec("Giocatore").Value.ToString.Trim & ";" &
+									Rec("Genitore").Value.ToString.Trim & ";" &
+									"§"
+
+							Rec.MoveNext()
+						Loop
+					End If
+					Rec.Close
+				End If
+			End If
+		End If
+
+		Return Ritorno
+	End Function
+
+	<WebMethod()>
+	Public Function ConvalidaFirma(Squadra As String, idGiocatore As String, idGenitore As String) As String
+		Dim Ritorno As String = ""
+		Dim Connessione As String = LeggeImpostazioniDiBase(Server.MapPath("."), Squadra)
+
+		If Connessione = "" Then
+			Ritorno = ErroreConnessioneNonValida
+		Else
+			Dim Conn As Object = ApreDB(Connessione)
+
+			If TypeOf (Conn) Is String Then
+				Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
+			Else
+				Dim Rec As Object = Server.CreateObject("ADODB.Recordset")
+				Dim dataVal As String = Format(Now.Day, "00") & "/" & Format(Now.Month, "00") & "/" & Now.Year & " " & Format(Now.Hour, "00") & ":" & Format(Now.Minute, "00") & ":" & Format(Now.Second, "00")
+				Dim Sql As String = "Update GiocatoriFirme Set Validazione='" & dataVal & "' Where idGiocatore=" & idGiocatore & " And idGenitore=" & idGenitore
+				Ritorno = EsegueSql(Conn, Sql, Connessione)
+			End If
+		End If
+
+		Return Ritorno
+	End Function
+
+	<WebMethod()>
+	Public Function EliminaFirma(Squadra As String, idGiocatore As String, idGenitore As String) As String
+		Dim Ritorno As String = ""
+		Dim Connessione As String = LeggeImpostazioniDiBase(Server.MapPath("."), Squadra)
+
+		If Connessione = "" Then
+			Ritorno = ErroreConnessioneNonValida
+		Else
+			Dim Conn As Object = ApreDB(Connessione)
+
+			If TypeOf (Conn) Is String Then
+				Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
+			Else
+				Dim Rec As Object = Server.CreateObject("ADODB.Recordset")
+				Dim Sql As String = ""
+
+				Dim c() As String = Squadra.Split("_")
+				Dim Anno As String = Str(Val(c(0))).Trim
+				Dim codSquadra As String = c(1)
+				Dim NomeSquadra As String = ""
+
+				Sql = "Select NomeSquadra, Descrizione From Anni Where idAnno = " & Anno
+				Rec = LeggeQuery(Conn, Sql, Connessione)
+				If TypeOf (Rec) Is String Then
+					Ritorno = Rec
+				Else
+					If Rec.Eof Then
+						Ritorno = StringaErrore & " Nessuna squadra rilevata"
+					Else
+						NomeSquadra = Rec("NomeSquadra").Value
+					End If
+				End If
+				Rec.Close
+
+				If Ritorno = "" Then
+					Dim gf As New GestioneFilesDirectory
+					Dim Percorso As String = gf.LeggeFileIntero(Server.MapPath(".") & "\PathCvCalcio.txt")
+					gf = Nothing
+					Percorso = Percorso.Trim()
+					If Strings.Right(Percorso, 1) <> "\" Then
+						Percorso &= "\"
+					End If
+					Dim path1 As String = Percorso & NomeSquadra.Replace(" ", "_") & "\Firme\" & Anno & "_" & idGiocatore & "_" & idGenitore & ".png"
+					If File.Exists(path1) Then
+						Try
+							File.Delete(path1)
+							Ritorno = "*"
+						Catch ex As Exception
+							Ritorno = StringaErrore & ": " & ex.Message
+						End Try
+					Else
+						Ritorno = StringaErrore & "Firma non esistente"
+					End If
+				End If
+
+				If Ritorno = "*" Then
+					Sql = "Delete From GiocatoriFirme Where idGiocatore=" & idGiocatore & " And idGenitore=" & idGenitore
+					Ritorno = EsegueSql(Conn, Sql, Connessione)
+				End If
+			End If
+		End If
+
+		Return Ritorno
+	End Function
+
+	<WebMethod()>
 	Public Function AggiornaFirma(Squadra As String, ByVal idGiocatore As String, ByVal Genitore As String) As String
 		Dim Ritorno As String = ""
 		Dim Connessione As String = LeggeImpostazioniDiBase(Server.MapPath("."), Squadra)
@@ -221,17 +360,20 @@ Public Class wsGiocatori
 												Dim Body As String = ""
 
 												If Genitore = 3 Then
-													Body &= "E' stata richiesta la firma di " & nomeGenitore & " dalla direzione della società " & NomeSquadra & " per l'iscrizione all'anno " & Descrizione & ". " & vbCrLf & vbCrLf
-													Body &= "Per effettuare l'operazione eseguire il seguente link:" & vbCrLf & vbCrLf
-													Body &= Percorso & "?firma=true&codSquadra=" & Squadra & "&id=" & idGiocatore & "&squadra=" & NomeSquadra.Replace(" ", "_") & "&anno=" & Anno & "&genitore=" & Genitore
+													Body &= "E' stata richiesta la firma di " & nomeGenitore & " dalla direzione della società " & NomeSquadra & " per l'iscrizione all'anno " & Descrizione & ". <br /><br />"
+													Body &= "Per effettuare l'operazione eseguire il seguente link:<br /><br />"
 												Else
-													Body &= "E' stata richiesta la firma di " & nomeGenitore & " dalla direzione della società " & NomeSquadra & " per l'iscrizione all'anno " & Descrizione & " del giocatore " & Nominativo & ". " & vbCrLf & vbCrLf
-													Body &= "Per effettuare l'operazione eseguire il seguente link:" & vbCrLf & vbCrLf
-													Body &= Percorso & "?firma=true&codSquadra=" & Squadra & "&id=" & idGiocatore & "&squadra=" & NomeSquadra.Replace(" ", "_") & "&anno=" & Anno & "&genitore=" & Genitore
+													Body &= "E' stata richiesta la firma di " & nomeGenitore & " dalla direzione della società " & NomeSquadra & " per l'iscrizione all'anno " & Descrizione & " del giocatore " & Nominativo & ".<br /><br />"
+													Body &= "Per effettuare l'operazione eseguire il seguente link:<br /><br />"
 												End If
+
+												Body &= "<a href= """ & Percorso & "&firma=true&codSquadra=" & Squadra & "&id=" & idGiocatore & "&squadra=" & NomeSquadra.Replace(" ", "_") & "&anno=" & Anno & "&genitore=" & Genitore & """>"
+												Body &= "Click per firmare"
+												Body &= "</a>"
+
 												Dim ChiScrive As String = "notifiche@incalcio.cloud"
 
-												Ritorno = m.SendEmail(Oggetto, Body, ChiScrive, EMail)
+												Ritorno = m.SendEmail(Oggetto, Body, ChiScrive, EMail, Server.MapPath(".") & "\Scheletri\base_iscrizione.pdf")
 												'Ritorno = "*"
 											End If
 										End If
@@ -272,6 +414,11 @@ Public Class wsGiocatori
 			Else
 				Dim Rec As Object = Server.CreateObject("ADODB.Recordset")
 				Dim Sql As String = ""
+				Dim Altro As String = ""
+
+				If idCategoria <> "-1" Then
+					Altro = "And CharIndex('" & idCategoria & "-', Categorie) > 0"
+				End If
 
 				Try
 					Sql = "SELECT idGiocatore, Ruoli.idRuolo As idR, Cognome, Nome, Ruoli.Descrizione, EMail, Telefono, Soprannome, DataDiNascita, Indirizzo, " &
@@ -282,7 +429,7 @@ Public Class wsGiocatori
 						"Left Join Categorie On Categorie.idCategoria=Giocatori.idCategoria2 And Categorie.idAnno=Giocatori.idAnno) " &
 						"Left Join Categorie As Cat3 On Cat3.idCategoria=Giocatori.idCategoria3 And Cat3.idAnno=Giocatori.idAnno) " &
 						"Left Join Categorie As Cat1 On Cat1.idCategoria=Giocatori.idCategoria And Cat1.idAnno=Giocatori.idAnno " &
-						"Where Giocatori.Eliminato='N' And Giocatori.idAnno=" & idAnno & " And CharIndex('" & idCategoria & "-', Categorie) > 0 " &
+						"Where Giocatori.Eliminato='N' And Giocatori.idAnno=" & idAnno & " " & Altro & " " &
 						"And RapportoCompleto = 'S' " &
 						"Order By Cognome, Nome"
 					' "Where Giocatori.Eliminato='N' And Giocatori.idAnno=" & idAnno & " And (Giocatori.idCategoria=" & idCategoria & " Or Giocatori.idCategoria2=" & idCategoria & " Or Giocatori.idCategoria3=" & idCategoria & ") " &
@@ -1565,67 +1712,6 @@ Public Class wsGiocatori
 						Ritorno = StringaErrore & ": Nessun pagamento impostato"
 					End If
 				End If
-			End If
-		End If
-
-		Return Ritorno
-	End Function
-
-	<WebMethod()>
-	Public Function EliminaFirma(Squadra As String, idGiocatore As String, idGenitore As String) As String
-		Dim Ritorno As String = ""
-		Dim Connessione As String = LeggeImpostazioniDiBase(Server.MapPath("."), Squadra)
-
-		If Connessione = "" Then
-			Ritorno = ErroreConnessioneNonValida
-		Else
-			Dim Conn As Object = ApreDB(Connessione)
-
-			If TypeOf (Conn) Is String Then
-				Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
-			Else
-				Dim Rec As Object = Server.CreateObject("ADODB.Recordset")
-				Dim Sql As String = ""
-
-				Dim c() As String = Squadra.Split("_")
-				Dim Anno As String = Str(Val(c(0))).Trim
-				Dim codSquadra As String = c(1)
-				Dim NomeSquadra As String = ""
-
-				Sql = "Select NomeSquadra, Descrizione From Anni Where idAnno = " & Anno
-				Rec = LeggeQuery(Conn, Sql, Connessione)
-				If TypeOf (Rec) Is String Then
-					Ritorno = Rec
-				Else
-					If Rec.Eof Then
-						Ritorno = StringaErrore & " Nessuna squadra rilevata"
-					Else
-						NomeSquadra = Rec("NomeSquadra").Value
-					End If
-				End If
-				Rec.Close
-
-				If Ritorno = "" Then
-					Dim gf As New GestioneFilesDirectory
-					Dim Percorso As String = gf.LeggeFileIntero(Server.MapPath(".") & "\PathCvCalcio.txt")
-					gf = Nothing
-					Percorso = Percorso.Trim()
-					If Strings.Right(Percorso, 1) <> "\" Then
-						Percorso &= "\"
-					End If
-					Dim path1 As String = Percorso & NomeSquadra.Replace(" ", "_") & "\Firme\" & Anno & "_" & idGiocatore & "_" & idGenitore & ".png"
-					If File.Exists(path1) Then
-						Try
-							File.Delete(path1)
-							Ritorno = "*"
-						Catch ex As Exception
-							Ritorno = StringaErrore & ": " & ex.Message
-						End Try
-					Else
-						Ritorno = StringaErrore & "Firma non esistente"
-					End If
-				End If
-
 			End If
 		End If
 

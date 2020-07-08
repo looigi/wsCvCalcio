@@ -11,8 +11,6 @@ Public Class wsGenerale
 
 	<WebMethod()>
 	Public Function InviaMail(Oggetto As String, Body As String, ChiScrive As String, ChiRiceve As String) As String
-		Return Oggetto
-
 		Dim m As New mail
 		Dim Ritorno As String = m.SendEmail(Oggetto, Body, ChiScrive, ChiRiceve)
 		Return Ritorno
@@ -575,7 +573,8 @@ Public Class wsGenerale
 
 	<WebMethod()>
 	Public Function SalvaImpostazioni(Cod_Squadra As String, idAnno As String, Descrizione As String, NomeSquadra As String, Lat As String, Lon As String,
-									  Indirizzo As String, CampoSquadra As String, NomePolisportiva As String) As String
+									  Indirizzo As String, CampoSquadra As String, NomePolisportiva As String, Mail As String, PEC As String,
+									  Telefono As String, PIva As String, CodiceFiscale As String, CodiceUnivoco As String, SitoWeb As String) As String
 		Dim Ritorno As String = ""
 		Dim Connessione As String = LeggeImpostazioniDiBase(Server.MapPath("."), Cod_Squadra)
 
@@ -596,7 +595,14 @@ Public Class wsGenerale
 					"Lon = '" & Lon & "', " &
 					"Indirizzo = '" & Indirizzo.Replace("'", "''") & "', " &
 					"CampoSquadra = '" & CampoSquadra.Replace("'", "''") & "', " &
-					"NomePolisportiva = '" & NomePolisportiva.Replace("'", "''") & "' " &
+					"NomePolisportiva = '" & NomePolisportiva.Replace("'", "''") & "', " &
+					"Mail = '" & Mail.Replace("'", "''") & "', " &
+					"PEC = '" & PEC.Replace("'", "''") & "', " &
+					"Telefono = '" & Telefono.Replace("'", "''") & "', " &
+					"PIva = '" & PIva.Replace("'", "''") & "', " &
+					"CodiceFiscale = '" & CodiceFiscale.Replace("'", "''") & "', " &
+					"CodiceUnivoco = '" & CodiceUnivoco.Replace("'", "''") & "', " &
+					"SitoWeb = '" & SitoWeb.Replace("'", "''") & "' " &
 					"Where idAnno = " & idAnno
 				Ritorno = EsegueSql(Conn, Sql, Connessione)
 			End If
@@ -626,7 +632,9 @@ Public Class wsGenerale
 				Dim Rec As Object = Server.CreateObject("ADODB.Recordset")
 				Dim Sql As String = ""
 
-				Sql = "Select A.*, B.idAvversario, B.idCampo From Anni A Left Join SquadreAvversarie B On A.NomeSquadra = B.Descrizione Order By idAnno Desc"
+				Sql = "Select A.*, B.idAvversario, B.idCampo " &
+					"From Anni A Left Join SquadreAvversarie B On A.NomeSquadra = B.Descrizione " &
+					"Order By idAnno Desc"
 				Rec = LeggeQuery(Conn, Sql, Connessione)
 				If TypeOf (Rec) Is String Then
 					Ritorno = Rec
@@ -643,6 +651,13 @@ Public Class wsGenerale
 								Rec("NomePolisportiva").Value & ";" &
 								Rec("idAvversario").Value & ";" &
 								Rec("idCampo").Value & ";" &
+								Rec("Mail").Value & ";" &
+								Rec("PEC").Value & ";" &
+								Rec("Telefono").Value & ";" &
+								Rec("PIva").Value & ";" &
+								Rec("CodiceFiscale").Value & ";" &
+								Rec("CodiceUnivoco").Value & ";" &
+								Rec("SitoWeb").Value & ";" &
 								"§"
 						Rec.MoveNext()
 					Loop

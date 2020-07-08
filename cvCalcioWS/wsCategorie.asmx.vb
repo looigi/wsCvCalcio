@@ -9,6 +9,42 @@ Public Class wsCategorie
     Inherits System.Web.Services.WebService
 
 	<WebMethod()>
+	Public Function RitornaNuovoID(Squadra As String, ByVal idAnno As String) As String
+		Dim Ritorno As String = ""
+		Dim Connessione As String = LeggeImpostazioniDiBase(Server.MapPath("."), Squadra)
+		Dim idCategoria As String = "-1"
+
+		If Connessione = "" Then
+			Ritorno = ErroreConnessioneNonValida
+		Else
+			Dim Conn As Object = ApreDB(Connessione)
+
+			If TypeOf (Conn) Is String Then
+				Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
+			Else
+				Dim Rec As Object = Server.CreateObject("ADODB.Recordset")
+				Dim Sql As String = ""
+				'Dim idUtente As String = ""
+
+				Sql = "SELECT Max(idCategoria)+1 FROM Categorie Where idAnno=" & idAnno
+				Rec = LeggeQuery(Conn, Sql, Connessione)
+				If TypeOf (Rec) Is String Then
+					Ritorno = Rec
+				Else
+					If Rec(0).Value Is DBNull.Value Then
+						idCategoria = "1"
+					Else
+						idCategoria = Rec(0).Value.ToString
+					End If
+				End If
+				Rec.Close()
+			End If
+		End If
+
+		Return idCategoria
+	End Function
+
+	<WebMethod()>
 	Public Function SalvaCategorieUtente(Squadra As String, IDutente As Integer, Categorie As String) As String
 		Dim Ritorno As String = ""
 		Dim Connessione As String = LeggeImpostazioniDiBase(Server.MapPath("."), Squadra)
@@ -176,6 +212,7 @@ Public Class wsCategorie
 									Ritorno = StringaErrore & " Nessuna categoria rilevata"
 								Else
 									Ritorno = ""
+									Ritorno &= "-1;Tutte le categorie;0§"
 									Do Until Rec.Eof
 										Ritorno &= Rec("idCategoria").Value.ToString & ";" & Rec("Descrizione").Value.ToString & ";" & Rec("AnticipoConvocazione").Value & "§"
 

@@ -9,6 +9,42 @@ Public Class wsDirigenti
     Inherits System.Web.Services.WebService
 
 	<WebMethod()>
+	Public Function RitornaNuovoID(Squadra As String, ByVal idAnno As String) As String
+		Dim Ritorno As String = ""
+		Dim Connessione As String = LeggeImpostazioniDiBase(Server.MapPath("."), Squadra)
+		Dim idDirigente As String = "-1"
+
+		If Connessione = "" Then
+			Ritorno = ErroreConnessioneNonValida
+		Else
+			Dim Conn As Object = ApreDB(Connessione)
+
+			If TypeOf (Conn) Is String Then
+				Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
+			Else
+				Dim Rec As Object = Server.CreateObject("ADODB.Recordset")
+				Dim Sql As String = ""
+				'Dim idUtente As String = ""
+
+				Sql = "SELECT Max(idDirigente)+1 FROM Dirigenti Where idAnno=" & idAnno
+				Rec = LeggeQuery(Conn, Sql, Connessione)
+				If TypeOf (Rec) Is String Then
+					Ritorno = Rec
+				Else
+					If Rec(0).Value Is DBNull.Value Then
+						idDirigente = "1"
+					Else
+						idDirigente = Rec(0).Value.ToString
+					End If
+				End If
+				Rec.Close()
+			End If
+		End If
+
+		Return idDirigente
+	End Function
+
+	<WebMethod()>
 	Public Function SalvaDirigente(Squadra As String, idAnno As String, idCategoria As String, idDirigente As String,
 								   Cognome As String, Nome As String, EMail As String, Telefono As String) As String
 		Dim Ritorno As String = ""
@@ -109,9 +145,16 @@ Public Class wsDirigenti
 				Dim Rec As Object = Server.CreateObject("ADODB.Recordset")
 				Dim Sql As String = ""
 
+				Dim Altro As String = ""
+
+				If idCategoria <> "-1" Then
+					Altro = "And A.idCategoria=" & idCategoria
+				End If
 				Try
-					Sql = "SELECT * FROM Dirigenti Where idAnno=" & idAnno & " And idCategoria=" & idCategoria & " And Eliminato='N' Order By Cognome, Nome"
-					' Sql = "SELECT * FROM Dirigenti Where idAnno=" & idAnno & " And Eliminato='N' Order By Cognome, Nome"
+					' Sql = "SELECT * FROM Dirigenti Where idAnno=" & idAnno & " " & Altro & " And Eliminato='N' Order By Cognome, Nome"
+					Sql = "SELECT A.*, B.Descrizione FROM Dirigenti A " &
+						"Left Join Categorie B On A.idAnno = B.idAnno And A.idCategoria = B.idCategoria " &
+						"Where A.idAnno=" & idAnno & " " & Altro & " And A.Eliminato='N' Order By Cognome, Nome"
 					Rec = LeggeQuery(Conn, Sql, Connessione)
 					If TypeOf (Rec) Is String Then
 						Ritorno = Rec
@@ -126,6 +169,8 @@ Public Class wsDirigenti
 									Rec("Nome").Value.ToString.Trim & ";" &
 									Rec("EMail").Value.ToString.Trim & ";" &
 									Rec("Telefono").Value.ToString.Trim & ";" &
+									Rec("idCategoria").Value.ToString.Trim & ";" &
+									Rec("Descrizione").Value.ToString.Trim & ";" &
 									"§"
 								Rec.MoveNext()
 							Loop
