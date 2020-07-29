@@ -46,7 +46,7 @@ Public Class wsAllenatori
 
 	<WebMethod()>
 	Public Function SalvaAllenatore(Squadra As String, idAnno As String, idCategoria As String, idAllenatore As String,
-									Cognome As String, Nome As String, EMail As String, Telefono As String) As String
+									Cognome As String, Nome As String, EMail As String, Telefono As String, idTipologia As String) As String
 		Dim Ritorno As String = ""
 		Dim Connessione As String = LeggeImpostazioniDiBase(Server.MapPath("."), Squadra)
 
@@ -103,7 +103,8 @@ Public Class wsAllenatori
 							"'" & Nome.Replace("'", "''") & "', " &
 							"'" & EMail.Replace("'", "''") & "', " &
 							"'" & Telefono.Replace("'", "''") & "', " &
-							"'N' " &
+							"'N', " &
+							" " & idTipologia & " " &
 							")"
 						Ritorno = EsegueSql(Conn, Sql, Connessione)
 					End If
@@ -168,6 +169,7 @@ Public Class wsAllenatori
 									Rec("Telefono").Value.ToString.Trim & ";" &
 									Rec("idCategoria").Value.ToString.Trim & ";" &
 									Rec("Descrizione").Value.ToString.Trim & ";" &
+									Rec("idTipologia").Value.ToString.Trim & ";" &
 									"§"
 								Rec.MoveNext()
 							Loop

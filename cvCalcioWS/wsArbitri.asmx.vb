@@ -9,6 +9,42 @@ Public Class wsArbitri
     Inherits System.Web.Services.WebService
 
 	<WebMethod()>
+	Public Function RitornaNuovoID(Squadra As String, ByVal idAnno As String) As String
+		Dim Ritorno As String = ""
+		Dim Connessione As String = LeggeImpostazioniDiBase(Server.MapPath("."), Squadra)
+		Dim idArbitro As String = "-1"
+
+		If Connessione = "" Then
+			Ritorno = ErroreConnessioneNonValida
+		Else
+			Dim Conn As Object = ApreDB(Connessione)
+
+			If TypeOf (Conn) Is String Then
+				Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
+			Else
+				Dim Rec As Object = Server.CreateObject("ADODB.Recordset")
+				Dim Sql As String = ""
+				'Dim idUtente As String = ""
+
+				Sql = "SELECT Max(idArbitro)+1 FROM Arbitri Where idAnno=" & idAnno
+				Rec = LeggeQuery(Conn, Sql, Connessione)
+				If TypeOf (Rec) Is String Then
+					Ritorno = Rec
+				Else
+					If Rec(0).Value Is DBNull.Value Then
+						idArbitro = "1"
+					Else
+						idArbitro = Rec(0).Value.ToString
+					End If
+				End If
+				Rec.Close()
+			End If
+		End If
+
+		Return idArbitro
+	End Function
+
+	<WebMethod()>
 	Public Function SalvaArbitro(Squadra As String, idAnno As String, idCategoria As String, idArbitro As String,
 								 Cognome As String, Nome As String, EMail As String, Telefono As String) As String
 		Dim Ritorno As String = ""
@@ -60,15 +96,15 @@ Public Class wsArbitri
 
 					If Ok Then
 						Sql = "Insert Into Arbitri Values (" &
-						" " & idAnno & ", " &
-						" " & idCategoria & ", " &
-						" " & idDir & ", " &
-						"'" & Cognome.Replace("'", "''") & "', " &
-						"'" & Nome.Replace("'", "''") & "', " &
-						"'" & EMail.Replace("'", "''") & "', " &
-						"'" & Telefono.Replace("'", "''") & "', " &
-						"'N' " &
-						")"
+							" " & idAnno & ", " &
+							" " & idCategoria & ", " &
+							" " & idDir & ", " &
+							"'" & Cognome.Replace("'", "''") & "', " &
+							"'" & Nome.Replace("'", "''") & "', " &
+							"'" & EMail.Replace("'", "''") & "', " &
+							"'" & Telefono.Replace("'", "''") & "', " &
+							"'N' " &
+							")"
 						Ritorno = EsegueSql(Conn, Sql, Connessione)
 					End If
 

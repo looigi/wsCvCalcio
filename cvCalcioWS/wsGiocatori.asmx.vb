@@ -286,7 +286,7 @@ Public Class wsGiocatori
 				'	End If
 
 				' If Ritorno = "*" Then
-				Sql = "Insert Into GiocatoriFirme Values (" & idGiocatore & ", " & Genitore & ", '" & Format(Now.Day, "00") & "/" & Format(Now.Month, "00") & "/" & Now.Year & " " & Format(Now.Hour, "00") & ":" & Format(Now.Minute, "00") & ":" & Format(Now.Second, "00") & "', '')"
+				Sql = "Insert Into GiocatoriFirme Values (" & idGiocatore & ", " & Genitore & ", '" & Format(Now.Day, "00") & "/" & Format(Now.Month, "00") & "/" & Now.Year & " " & Format(Now.Hour, "00") & ":" & Format(Now.Minute, "00") & ":" & Format(Now.Second, "00") & "', '', '')"
 				Ritorno = EsegueSql(Conn, Sql, Connessione)
 
 				If Ritorno = "*" Then
@@ -367,13 +367,18 @@ Public Class wsGiocatori
 													Body &= "Per effettuare l'operazione eseguire il seguente link:<br /><br />"
 												End If
 
-												Body &= "<a href= """ & Percorso & "&firma=true&codSquadra=" & Squadra & "&id=" & idGiocatore & "&squadra=" & NomeSquadra.Replace(" ", "_") & "&anno=" & Anno & "&genitore=" & Genitore & """>"
+												Body &= "<a href= """ & Percorso & "?firma=true&codSquadra=" & Squadra & "&id=" & idGiocatore & "&squadra=" & NomeSquadra.Replace(" ", "_") & "&anno=" & Anno & "&genitore=" & Genitore & """>"
 												Body &= "Click per firmare"
 												Body &= "</a>"
 
 												Dim ChiScrive As String = "notifiche@incalcio.cloud"
+												Dim fileDaCopiare As String = Server.MapPath(".") & "\Firme\iscrizione_" & Anno & "_" & idGiocatore & ".html"
 
-												Ritorno = m.SendEmail(Oggetto, Body, ChiScrive, EMail, Server.MapPath(".") & "\Scheletri\base_iscrizione.pdf")
+												File.Copy(Server.MapPath(".") & "\Scheletri\base_iscrizione_.html", fileDaCopiare)
+												Dim fileFirme As String = gf.LeggeFileIntero(fileDaCopiare)
+												fileFirme = RiempieFileFirme(fileFirme, Anno, idGiocatore, Rec, Conn, Connessione)
+
+												Ritorno = m.SendEmail(Oggetto, Body, ChiScrive, EMail, Server.MapPath(".") & "\Scheletri\base_iscrizione_" & idGiocatore & ".html")
 												'Ritorno = "*"
 											End If
 										End If
@@ -397,6 +402,167 @@ Public Class wsGiocatori
 		End If
 
 		Return Ritorno
+	End Function
+
+	Private Function RiempieFileFirme(Contenuto As String, Anno As String, idGiocatore As String, Rec As Object, Conn As Object, Connessione As String) As String
+		Dim Sql As String = "Select * From Anni Where idAnno=" & Anno
+
+		Rec = LeggeQuery(Conn, Sql, Connessione)
+		If TypeOf (Rec) Is String Then
+			Contenuto = Rec
+		Else
+			If Not Rec.Eof Then
+				Dim NomePolisportiva As String = "" & Rec("NomePolisportiva").value
+				Dim NomeCampo As String = "" & Rec("CampoSquadra").value
+				Dim Mail As String = "" & Rec("Mail").value
+				Dim Telefono As String = "" & Rec("Telefono").value
+				Dim SitoWeb As String = "" & Rec("SitoWeb").value
+
+				Contenuto = Contenuto.Replace("***Anno menu settaggi***", Anno)
+				Contenuto = Contenuto.Replace("***nome societ&agrave; menu settaggi***", NomePolisportiva)
+				Contenuto = Contenuto.Replace("***nome Campo menu settaggi***", NomeCampo)
+				Contenuto = Contenuto.Replace("***mail, telefono, sito web menu settaggi***", Mail & ", " & Telefono & ", " & SitoWeb)
+			Else
+				Contenuto = Contenuto.Replace("***Anno menu settaggi***", Anno)
+				Contenuto = Contenuto.Replace("***nome societ&agrave; menu settaggi***", "")
+				Contenuto = Contenuto.Replace("***nome Campo menu settaggi***", "")
+				Contenuto = Contenuto.Replace("***mail, telefono, sito web menu settaggi***", "")
+			End If
+
+			Sql = "Select * From Giocatori Where idGiocatore=" & idGiocatore
+			Rec = LeggeQuery(Conn, Sql, Connessione)
+			If TypeOf (Rec) Is String Then
+				Contenuto = Rec
+			Else
+				If Not Rec.Eof Then
+					Dim Cognome As String = "" & Rec("Cognome").value
+					Dim Nome As String = "" & Rec("Nome").value
+					Dim DataDiNascita As String = "" & Rec("DataDiNascita").value
+					Dim CodFisc As String = "" & Rec("CodFiscale").value
+					Dim Maschio As String = "" & Rec("Maschio").value
+					Dim Indirizzo As String = "" & Rec("Indirizzo").value
+					Dim Citta As String = "" & Rec("Citta").value
+					Dim EMail As String = "" & Rec("EMail").value
+					Dim TelefonoGioc As String = "" & Rec("Telefono").value
+
+					If Maschio = "M" Then
+						Maschio = "Maschile"
+					Else
+						Maschio = "Femminile"
+					End If
+
+					Contenuto = Contenuto.Replace("****cognome menu&nbsp; anagrafica***", Cognome)
+					Contenuto = Contenuto.Replace("***Nome menu anagrafica***", Nome)
+					Contenuto = Contenuto.Replace("***Data di nascita menu anagrafica***", DataDiNascita)
+					Contenuto = Contenuto.Replace("***non c'&egrave;***", "")
+					Contenuto = Contenuto.Replace("***codice fiscale menu anagrafica***", CodFisc)
+					Contenuto = Contenuto.Replace("***sesso menu anagrafica***", Maschio)
+					Contenuto = Contenuto.Replace("****indirizzo menu anagrafica***", Indirizzo)
+					Contenuto = Contenuto.Replace("***citt&agrave;***", Citta)
+					Contenuto = Contenuto.Replace("***?***", "")
+					Contenuto = Contenuto.Replace("*** mail menu anagrafica***", EMail)
+					Contenuto = Contenuto.Replace("***telefono menu anagrafica***", TelefonoGioc)
+				Else
+					Contenuto = Contenuto.Replace("****cognome menu&nbsp; anagrafica***", "")
+					Contenuto = Contenuto.Replace("***Nome menu anagrafica***", "")
+					Contenuto = Contenuto.Replace("***Data di nascita menu anagrafica***", "")
+					Contenuto = Contenuto.Replace("***non c'&egrave;***", "")
+					Contenuto = Contenuto.Replace("***codice fiscale menu anagrafica***", "")
+					Contenuto = Contenuto.Replace("***sesso menu anagrafica***", "")
+					Contenuto = Contenuto.Replace("****indirizzo menu anagrafica****", "")
+					Contenuto = Contenuto.Replace("***citt&agrave;***", "")
+					Contenuto = Contenuto.Replace("***?***", "")
+					Contenuto = Contenuto.Replace("*** mail menu anagrafica***", "")
+					Contenuto = Contenuto.Replace("***telefono menu anagrafica***", "")
+				End If
+			End If
+
+			Sql = "Select * From GiocatoriDettaglio Where idGiocatore=" & idGiocatore
+			Rec = LeggeQuery(Conn, Sql, Connessione)
+			If TypeOf (Rec) Is String Then
+				Contenuto = Rec
+			Else
+				If Not Rec.Eof Then
+					Dim Genitore1 As String = "" & Rec("Genitore1").value
+					Dim Mail1 As String = "" & Rec("MailGenitore1").value
+					Dim Telefono1 As String = "" & Rec("TelefonoGenitore1").value
+					Dim Gen1() As String = Genitore1.Split(" ")
+
+					Dim Genitore2 As String = "" & Rec("Genitore2").value
+					Dim Mail2 As String = "" & Rec("MailGenitore2").value
+					Dim Telefono2 As String = "" & Rec("TelefonoGenitore2").value
+					Dim Gen2() As String = Genitore2.Split(" ")
+
+					Contenuto = Contenuto.Replace("****cognome1 menu&nbsp; anagrafica***", Gen1(1))
+					Contenuto = Contenuto.Replace("***Nome1 menu anagrafica***", Gen1(0))
+					Contenuto = Contenuto.Replace("***Data di nascita1 menu anagrafica***", "")
+					Contenuto = Contenuto.Replace("***non c'&egrave;***", "")
+					Contenuto = Contenuto.Replace("***codice fiscale1 menu anagrafica***", "")
+					Contenuto = Contenuto.Replace("****indirizzo1 menu anagrafica***", "")
+					Contenuto = Contenuto.Replace("***citt&agrave;1***", "")
+					Contenuto = Contenuto.Replace("***?***", "")
+					Contenuto = Contenuto.Replace("*** mail1 menu anagrafica***", Mail1)
+					Contenuto = Contenuto.Replace("***telefono1 menu anagrafica***", Telefono1)
+
+					Contenuto = Contenuto.Replace("****cognome2 menu&nbsp; anagrafica***", Gen2(1))
+					Contenuto = Contenuto.Replace("***Nome2 menu anagrafica***", Gen2(0))
+					Contenuto = Contenuto.Replace("***Data di nascita2 menu anagrafica***", "")
+					Contenuto = Contenuto.Replace("***non c'&egrave;***", "")
+					Contenuto = Contenuto.Replace("***codice fiscale2 menu anagrafica***", "")
+					Contenuto = Contenuto.Replace("****indirizzo2 menu anagrafica***", "")
+					Contenuto = Contenuto.Replace("***citt&agrave;2***", "")
+					Contenuto = Contenuto.Replace("***?***", "")
+					Contenuto = Contenuto.Replace("*** mail2 menu anagrafica***", Mail2)
+					Contenuto = Contenuto.Replace("***telefono2 menu anagrafica***", Telefono2)
+				Else
+					Contenuto = Contenuto.Replace("****cognome1 menu&nbsp; anagrafica***", "")
+					Contenuto = Contenuto.Replace("***Nome1 menu anagrafica***", "")
+					Contenuto = Contenuto.Replace("***Data di nascita1 menu anagrafica***", "")
+					Contenuto = Contenuto.Replace("***non c'&egrave;***", "")
+					Contenuto = Contenuto.Replace("***codice fiscale1 menu anagrafica***", "")
+					Contenuto = Contenuto.Replace("****indirizzo1 menu anagrafica***", "")
+					Contenuto = Contenuto.Replace("***citt&agrave;1***", "")
+					Contenuto = Contenuto.Replace("***?***", "")
+					Contenuto = Contenuto.Replace("*** mail1 menu anagrafica***", "")
+					Contenuto = Contenuto.Replace("***telefono1 menu anagrafica***", "")
+
+					Contenuto = Contenuto.Replace("****cognome2 menu&nbsp; anagrafica***", "")
+					Contenuto = Contenuto.Replace("***Nome2 menu anagrafica***", "")
+					Contenuto = Contenuto.Replace("***Data di nascita2 menu anagrafica***", "")
+					Contenuto = Contenuto.Replace("***non c'&egrave;***", "")
+					Contenuto = Contenuto.Replace("***codice fiscale2 menu anagrafica***", "")
+					Contenuto = Contenuto.Replace("****indirizzo2 menu anagrafica***", "")
+					Contenuto = Contenuto.Replace("***citt&agrave;2***", "")
+					Contenuto = Contenuto.Replace("***?***", "")
+					Contenuto = Contenuto.Replace("*** mail2 menu anagrafica***", "")
+					Contenuto = Contenuto.Replace("***telefono2 menu anagrafica***", "")
+				End If
+			End If
+
+			Sql = "Select * From GiocatoriFirme Where idGiocatore=" & idGiocatore
+			Rec = LeggeQuery(Conn, Sql, Connessione)
+			If TypeOf (Rec) Is String Then
+				Contenuto = Rec
+			Else
+				Do Until Rec.Eof
+					Select Case Rec("idGenitore").value
+						Case 1
+							Contenuto = Contenuto.Replace("***data firma1***", Rec("DataFirma").value)
+						Case 2
+							Contenuto = Contenuto.Replace("***data firma2***", Rec("DataFirma").value)
+						Case 3
+							Contenuto = Contenuto.Replace("***data firma3***", Rec("DataFirma").value)
+					End Select
+
+					Rec.movenext
+				Loop
+				Contenuto = Contenuto.Replace("***data firma1***", "")
+				Contenuto = Contenuto.Replace("***data firma2***", "")
+				Contenuto = Contenuto.Replace("***data firma2***", "")
+			End If
+		End If
+
+		Return Contenuto
 	End Function
 
 	<WebMethod()>
@@ -708,6 +874,7 @@ Public Class wsGiocatori
 									Dim Semaforo2 As String = "" : Dim Titolo2 As String = ""
 									Dim Semaforo3 As String = "" : Dim Titolo3 As String = ""
 									Dim Semaforo4 As String = "" : Dim Titolo4 As String = ""
+									Dim Semaforo5 As String = "" : Dim Titolo5 As String = ""
 
 									' Semaforo 1: Iscrizione
 									Semaforo1 = IIf(Rec("RapportoCompleto").Value = "S", "verde", "rosso")
@@ -801,6 +968,41 @@ Public Class wsGiocatori
 										End If
 										Rec2.Close
 									End If
+									' Semaforo 5: KIT
+									Sql = "Select C.Descrizione, QuantitaConsegnata, Quantita From KitGiocatori A " &
+										"Left Join KitTipologie B On A.idTipoKit = B.idTipoKit " &
+										"Left Join KitElementi C On A.idElemento = C.idElemento " &
+										"Left Join KitComposizione D On D.idAnno = " & idAnno & " And A.idTipoKit = B.idTipoKit And A.idElemento = C.idElemento And A.idTipoKit = D.idTipoKit  And A.idElemento = D.idElemento " &
+										"Where idGiocatore = " & Rec("idGiocatore").Value & " And B.Eliminato = 'N' And C.Eliminato = 'N' And D.Eliminato = 'N'"
+									Rec2 = LeggeQuery(Conn, Sql, Connessione)
+									If TypeOf (Rec2) Is String Then
+										Ritorno = Rec2
+									Else
+										If Rec2.Eof Then
+											Semaforo5 = "rosso"
+											Titolo5 = "Nessun elemento kit consegnato"
+										Else
+											Dim Tutto As Boolean = True
+
+											Do Until Rec2.Eof
+												If Rec2("QuantitaConsegnata").Value < Rec2("Quantita").Value Then
+													Tutto = False
+													Exit Do
+												End If
+
+												Rec2.MoveNext()
+											Loop
+
+											If Tutto Then
+												Semaforo5 = "verde"
+												Titolo5 = "Tutto il kit è stato consegnato"
+											Else
+												Semaforo5 = "giallo"
+												Titolo5 = "Alcuni elementi del kit sono stati consegnati"
+											End If
+										End If
+										Rec2.Close()
+									End If
 
 									Ritorno &= Rec("idGiocatore").Value.ToString & ";" &
 										Rec("idR").Value.ToString & ";" &
@@ -830,6 +1032,7 @@ Public Class wsGiocatori
 										Semaforo2 & "*" & Titolo2 & ";" &
 										Semaforo3 & "*" & Titolo3 & ";" &
 										Semaforo4 & "*" & Titolo4 & ";" &
+										Semaforo5 & "*" & Titolo5 & ";" &
 										Rec("idTipologiaKit").Value.ToString & ";" &
 										"§"
 
@@ -1232,7 +1435,7 @@ Public Class wsGiocatori
 	Public Function SalvaGiocatore(Squadra As String, idAnno As String, idCategoria As String, idGiocatore As String, idRuolo As String, Cognome As String, Nome As String, EMail As String, Telefono As String,
 								   Soprannome As String, DataDiNascita As String, Indirizzo As String, CodFiscale As String, Maschio As String, Citta As String, Matricola As String,
 								   NumeroMaglia As String, idCategoria2 As String, idCategoria3 As String, Categorie As String, RapportoCompleto As String,
-								   idTaglia As String) As String
+								   idTaglia As String, Modalita As String) As String
 		Dim Ritorno As String = ""
 		Dim Connessione As String = LeggeImpostazioniDiBase(Server.MapPath("."), Squadra)
 
@@ -1253,68 +1456,70 @@ Public Class wsGiocatori
 				Ritorno = EsegueSql(Conn, Sql, Connessione)
 
 				If Not Ritorno.Contains(StringaErrore) Then
-					If idGiocatore = "-1" Then
-						Sql = "SELECT * FROM Giocatori Where idAnno=" & idAnno & " And CodFiscale=" & CodFiscale
+					'If idGiocatore = "-1" Then
+					If Modalita = "INSERIMENTO" Then
+						Sql = "SELECT * FROM Giocatori Where idAnno=" & idAnno & " And Upper(lTrim(rTrim(CodFiscale)))='" & CodFiscale.ToUpper.Trim & "'"
 						Rec = LeggeQuery(Conn, Sql, Connessione)
 						If Not Rec.Eof Then
-							Ritorno = "Codice fiscale già presente in archivio"
-						Else
+							Ritorno = StringaErrore & "Codice fiscale già presente in archivio"
 							Ok = False
 						End If
 						Rec.Close
-
-						If Ok Then
-							Try
-								Sql = "SELECT Max(idGiocatore)+1 FROM Giocatori"
-								Rec = LeggeQuery(Conn, Sql, Connessione)
-								If TypeOf (Rec) Is String Then
-									Ritorno = Rec
-								Else
-									If Rec(0).Value Is DBNull.Value Then
-										idGioc = 1
-									Else
-										idGioc = Rec(0).Value
-									End If
-									Rec.Close()
-								End If
-							Catch ex As Exception
-								Ritorno = StringaErrore & " " & ex.Message
-								Ok = False
-							End Try
-						End If
-					Else
-						Sql = "SELECT * FROM Giocatori Where idAnno=" & idAnno & " And idGiocatore=" & idGiocatore
-						Rec = LeggeQuery(Conn, Sql, Connessione)
-						If Not Rec.Eof Then
-							Dim conta As Integer = 0
-
-							'Do While Ritorno.Contains(StringaErrore) Or Ritorno = ""
-							Try
-								Sql = "Delete  From Giocatori Where idAnno=" & idAnno & " And idGiocatore=" & idGiocatore
-								Ritorno = EsegueSql(Conn, Sql, Connessione)
-								If Ritorno.Contains(StringaErrore) Then
-									Ok = False
-								End If
-
-							Catch ex As Exception
-								Ritorno = StringaErrore & " " & ex.Message
-								Ok = False
-								'Exit Do
-							End Try
-							'	conta += 1
-							'	If (conta = 10) Then
-							'		Ritorno = StringaErrore & " Impossibile modificare il giocatore"
-							'		Ok = False
-							'	'Exit Do
-							'End If
-							'Loop
-						End If
-						Rec.Close
-						idGioc = idGiocatore
 					End If
 
-					If Ok = True Then
-						Sql = "Insert Into Giocatori Values (" &
+					'If Ok Then
+					'	Try
+					'		Sql = "SELECT Max(idGiocatore)+1 FROM Giocatori"
+					'		Rec = LeggeQuery(Conn, Sql, Connessione)
+					'		If TypeOf (Rec) Is String Then
+					'			Ritorno = Rec
+					'		Else
+					'			If Rec(0).Value Is DBNull.Value Then
+					'				idGioc = 1
+					'			Else
+					'				idGioc = Rec(0).Value
+					'			End If
+					'			Rec.Close()
+					'		End If
+					'	Catch ex As Exception
+					'		Ritorno = StringaErrore & " " & ex.Message
+					'		Ok = False
+					'	End Try
+					'End If
+					'Else
+					If Ok Then
+							Sql = "SELECT * FROM Giocatori Where idAnno=" & idAnno & " And idGiocatore=" & idGiocatore
+							Rec = LeggeQuery(Conn, Sql, Connessione)
+							If Not Rec.Eof Then
+								Dim conta As Integer = 0
+
+								'Do While Ritorno.Contains(StringaErrore) Or Ritorno = ""
+								Try
+									Sql = "Delete  From Giocatori Where idAnno=" & idAnno & " And idGiocatore=" & idGiocatore
+									Ritorno = EsegueSql(Conn, Sql, Connessione)
+									If Ritorno.Contains(StringaErrore) Then
+										Ok = False
+									End If
+
+								Catch ex As Exception
+									Ritorno = StringaErrore & " " & ex.Message
+									Ok = False
+									'Exit Do
+								End Try
+								'	conta += 1
+								'	If (conta = 10) Then
+								'		Ritorno = StringaErrore & " Impossibile modificare il giocatore"
+								'		Ok = False
+								'	'Exit Do
+								'End If
+								'Loop
+							End If
+							Rec.Close
+							idGioc = idGiocatore
+							'End If
+
+							If Ok = True Then
+								Sql = "Insert Into Giocatori Values (" &
 							" " & idAnno & ", " &
 							" " & idGioc & ", " &
 							" " & idCategoria & ", " &
@@ -1340,13 +1545,14 @@ Public Class wsGiocatori
 							"'" & Categorie & "', " &
 							"'" & RapportoCompleto & "' " &
 							")"
-						Ritorno = EsegueSql(Conn, Sql, Connessione)
-						If Ritorno.Contains(StringaErrore) Then
-							Ok = False
+								Ritorno = EsegueSql(Conn, Sql, Connessione)
+								If Ritorno.Contains(StringaErrore) Then
+									Ok = False
+								End If
+							End If
 						End If
-					End If
-				Else
-					Ok = False
+					Else
+						Ok = False
 				End If
 
 				If Ok Then

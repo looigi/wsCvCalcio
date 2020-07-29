@@ -365,7 +365,7 @@ Public Class wsKit
 
 					If Ok Then
 						Try
-							Sql = "Insert Into KitTipologie Values (" & idElemento & ",  '" & Nome.Replace("'", "''") & "', '" & Descrizione.Replace("'", "''") & "', 'N')"
+							Sql = "Insert Into KitTipologie Values (" & idElemento & ",  '" & Nome.Replace("'", "''") & "', 'N', '" & Descrizione.Replace("'", "''") & "')"
 							Ritorno = EsegueSql(Conn, Sql, Connessione)
 							If Ritorno.Contains(StringaErrore) Then
 								Ok = False
@@ -715,7 +715,7 @@ Public Class wsKit
 							If TypeOf (Rec) Is String Then
 								Ritorno = Rec
 							Else
-								If Rec(0).Value Is DBNull.Value Then
+								If Rec.Eof() Then
 									Ritorno = "ERROR: Nessun elemento rilevato"
 								Else
 									Do Until Rec.Eof

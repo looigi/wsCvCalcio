@@ -124,45 +124,77 @@ Public Class wsCategorie
 	End Function
 
 	<WebMethod()>
-	Public Function RitornaTutteCategorieUtente(Squadra As String, idUtente As String) As String
+	Public Function RitornaTutteCategorieUtente(Squadra As String, idAnno As String, idUtente As String) As String
 		Dim Ritorno As String = ""
+		Dim ConnessioneU As String = LeggeImpostazioniDiBase(Server.MapPath("."), "")
 		Dim Connessione As String = LeggeImpostazioniDiBase(Server.MapPath("."), Squadra)
 
 		If Connessione = "" Then
 			Ritorno = ErroreConnessioneNonValida
 		Else
 			Dim Conn As Object = ApreDB(Connessione)
+			Dim ConnU As Object = ApreDB(ConnessioneU)
 
 			If TypeOf (Conn) Is String Then
 				Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
 			Else
-				Dim Rec As Object = Server.CreateObject("ADODB.Recordset")
-				Dim Sql As String = ""
+				If TypeOf (ConnU) Is String Then
+					Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
+				Else
+					Dim Rec As Object = Server.CreateObject("ADODB.Recordset")
+					Dim Sql As String = ""
+					Dim TipoUtente As String = ""
 
-				Try
-					Sql = "SELECT * From UtentiCategorie Where idUtente=" & idUtente
-					Rec = LeggeQuery(Conn, Sql, Connessione)
-					If TypeOf (Rec) Is String Then
-						Ritorno = Rec
-					Else
-						If Rec.Eof Then
-							' Ritorno = StringaErrore & " Nessun permesso ritornato"
+					Try
+						Sql = "Select * From Utenti Where idUtente=" & idUtente
+						Rec = LeggeQuery(ConnU, Sql, Connessione)
+						If TypeOf (Rec) Is String Then
+							Ritorno = Rec
 						Else
-							Ritorno = ""
-							Do Until Rec.Eof
-								Ritorno &= Rec("idCategoria").Value.ToString & "§"
-
-								Rec.MoveNext()
-							Loop
+							If Rec.Eof Then
+								Ritorno = StringaErrore & " Nessun utente rilevato"
+							Else
+								TipoUtente = Rec("idTipologia").Value
+							End If
+							Rec.Close()
 						End If
-						Rec.Close()
-					End If
-				Catch ex As Exception
-					'				Ritorno = StringaErrore & " " & ex.Message
-				End Try
+					Catch ex As Exception
 
-				Conn.Close()
+					End Try
+
+					If Ritorno = "" Then
+						Try
+							If TipoUtente = "2" Then
+								Sql = "SELECT * From UtentiCategorie Where idAnno=" & idAnno & " And idUtente=" & idUtente
+							Else
+								Sql = "SELECT * From Categorie Where idAnno=" & idAnno
+							End If
+							Rec = LeggeQuery(Conn, Sql, Connessione)
+							If TypeOf (Rec) Is String Then
+								Ritorno = Rec
+							Else
+								If Rec.Eof Then
+									' Ritorno = StringaErrore & " Nessun permesso ritornato"
+								Else
+									Ritorno = ""
+									Do Until Rec.Eof
+										Ritorno &= Rec("idCategoria").Value.ToString & "§"
+
+										Rec.MoveNext()
+									Loop
+								End If
+								Rec.Close()
+							End If
+						Catch ex As Exception
+							'				Ritorno = StringaErrore & " " & ex.Message
+						End Try
+					End If
+
+					ConnU.Close()
+					Conn.Close()
+				End If
 			End If
+
 		End If
 
 		Return Ritorno
@@ -197,10 +229,10 @@ Public Class wsCategorie
 							Dim idCategoria As String = Rec("idCategoria").Value
 
 							If idTipologia = "1" Or idTipologia = "0" Then
-								Sql = "SELECT idCategoria, Descrizione, AnticipoConvocazione FROM Categorie " &
+								Sql = "SELECT idCategoria, Descrizione, AnticipoConvocazione, RisultatoATempi FROM Categorie " &
 									"Where idAnno=" & idAnno & " And Eliminato='N' Order By Descrizione"
 							Else
-								Sql = "Select A.idCategoria, B.Descrizione, AnticipoConvocazione From UtentiCategorie A " &
+								Sql = "Select A.idCategoria, B.Descrizione, AnticipoConvocazione, B.RisultatoATempi From UtentiCategorie A " &
 									"Left Join Categorie B On A.idCategoria = B.idCategoria " &
 									"Where B.idAnno = " & idAnno & " And A.idUtente = " & idUtente & " And Eliminato='N' Order By Descrizione"
 							End If
@@ -209,12 +241,12 @@ Public Class wsCategorie
 								Ritorno = Rec
 							Else
 								If Rec.Eof Then
-									Ritorno = StringaErrore & " Nessuna categoria rilevata"
+									Ritorno = "" ' StringaErrore & " Nessuna categoria rilevata"
 								Else
 									Ritorno = ""
 									Ritorno &= "-1;Tutte le categorie;0§"
 									Do Until Rec.Eof
-										Ritorno &= Rec("idCategoria").Value.ToString & ";" & Rec("Descrizione").Value.ToString & ";" & Rec("AnticipoConvocazione").Value & "§"
+										Ritorno &= Rec("idCategoria").Value.ToString & ";" & Rec("Descrizione").Value.ToString & ";" & Rec("AnticipoConvocazione").Value & ";" & Rec("RisultatoATempi").Value & "§"
 
 										Rec.MoveNext()
 									Loop
@@ -257,11 +289,11 @@ Public Class wsCategorie
 						Ritorno = Rec
 					Else
 						If Rec.Eof Then
-							Ritorno = StringaErrore & " Nessuna categoria rilevata"
+							Ritorno = "" ' StringaErrore & " Nessuna categoria rilevata"
 						Else
 							Ritorno = ""
 							Do Until Rec.Eof
-								Ritorno &= Rec("idCategoria").Value.ToString & ";" & Rec("Descrizione").Value.ToString & ";" & Rec("AnticipoConvocazione").Value & "§"
+								Ritorno &= Rec("idCategoria").Value.ToString & ";" & Rec("Descrizione").Value.ToString & ";" & Rec("AnticipoConvocazione").Value & ";" & Rec("RisultatoATempi").Value & "§"
 
 								Rec.MoveNext()
 							Loop
@@ -280,7 +312,7 @@ Public Class wsCategorie
 	End Function
 
 	<WebMethod()>
-	Public Function SalvaCategoria(Squadra As String, ByVal idAnno As String, idCategoria As String, Categoria As String, AnticipoConvocazione As String) As String
+	Public Function SalvaCategoria(Squadra As String, ByVal idAnno As String, idCategoria As String, Categoria As String, AnticipoConvocazione As String, RisultatoATempi As String) As String
 		Dim Ritorno As String = ""
 		Dim Connessione As String = LeggeImpostazioniDiBase(Server.MapPath("."), Squadra)
 
@@ -339,7 +371,8 @@ Public Class wsCategorie
 								"'" & Categoria.Replace("'", "''") & "', " &
 								"'N', " &
 								"1," &
-								" " & AnticipoConvocazione & " " &
+								" " & AnticipoConvocazione & ", " &
+								"'" & RisultatoATempi & "' " &
 								")"
 							Ritorno = EsegueSql(Conn, Sql, Connessione)
 							If Ritorno.Contains(StringaErrore) Then

@@ -406,7 +406,7 @@ Public Class wsUtentiLocali
 						Ritorno = Rec
 					Else
 						If Rec.Eof Then
-							Ritorno = StringaErrore & " Nessun utente rilevato"
+							Ritorno = "" ' StringaErrore & " Nessun utente rilevato"
 						Else
 							Ritorno = ""
 							Do Until Rec.Eof
@@ -526,7 +526,7 @@ Public Class wsUtentiLocali
 				Dim Sql As String = ""
 				'Dim idUtente As String = ""
 
-				Sql = "SELECT * FROM Utenti Where Upper(Utente)='" & Utente.Trim.ToUpper & "'"
+				Sql = "SELECT * FROM Utenti Where Upper(Utente)='" & Utente.Trim.ToUpper & "' And Eliminato='N'"
 				Rec = LeggeQuery(Conn, Sql, Connessione)
 				If TypeOf (Rec) Is String Then
 					Ritorno = Rec
@@ -708,7 +708,9 @@ Public Class wsUtentiLocali
 							"" & idTipologia & ", " &
 							"" & Val(sq(1)).ToString & ", " &
 							"0, " &
-							"'" & Telefono & "')"
+							"'" & Telefono & "', " &
+							"'N' " &
+							")"
 						Ritorno = EsegueSql(Conn, Sql, Connessione)
 						If Ritorno.Contains(StringaErrore) Then
 							Ok = False
