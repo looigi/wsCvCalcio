@@ -832,7 +832,7 @@ Public Class wsGiocatori
 					If Rec.Eof Then
 						Ritorno = StringaErrore & " Nessuna squadra rilevata"
 					Else
-						nomesquadra = Rec("NomeSquadra").Value
+						NomeSquadra = Rec("NomeSquadra").Value
 					End If
 				End If
 				Rec.Close
@@ -1461,8 +1461,10 @@ Public Class wsGiocatori
 						Sql = "SELECT * FROM Giocatori Where idAnno=" & idAnno & " And Upper(lTrim(rTrim(CodFiscale)))='" & CodFiscale.ToUpper.Trim & "'"
 						Rec = LeggeQuery(Conn, Sql, Connessione)
 						If Not Rec.Eof Then
-							Ritorno = StringaErrore & "Codice fiscale già presente in archivio"
+							Ritorno = StringaErrore & "Codice fiscale già presente in archivio" ' : " & CodFiscale & "--->" & Sql
 							Ok = False
+						Else
+							Ritorno = ""
 						End If
 						Rec.Close
 					End If
@@ -1519,33 +1521,33 @@ Public Class wsGiocatori
 							'End If
 
 							If Ok = True Then
-								Sql = "Insert Into Giocatori Values (" &
-							" " & idAnno & ", " &
-							" " & idGioc & ", " &
-							" " & idCategoria & ", " &
-							" " & idRuolo & ", " &
-							"'" & Cognome.Replace("'", "''") & "', " &
-							"'" & Nome.Replace("'", "''") & "', " &
-							"'" & EMail.Replace("'", "''") & "', " &
-							"'" & Telefono.Replace("'", "''") & "', " &
-							"'" & Soprannome.Replace("'", "''") & "', " &
-							"'" & DataDiNascita.Replace("'", "''") & "', " &
-							"'" & Indirizzo.Replace("'", "''") & "', " &
-							"'" & CodFiscale.Replace("'", "''") & "', " &
-							"'N', " &
-							"null, " &
-							"'" & Maschio & "', " &
-							"'', " &
-							"'" & Citta.Replace("'", "''") & "', " &
-							" " & idTaglia & ", " &
-							" " & idCategoria2 & ", " &
-							"'" & Matricola.Replace("'", "''") & "', " &
-							"'" & NumeroMaglia.Replace("'", "''") & "', " &
-							" " & idCategoria3 & ", " &
-							"'" & Categorie & "', " &
-							"'" & RapportoCompleto & "' " &
-							")"
-								Ritorno = EsegueSql(Conn, Sql, Connessione)
+							Sql = "Insert Into Giocatori Values (" &
+									" " & idAnno & ", " &
+									" " & idGioc & ", " &
+									" " & idCategoria & ", " &
+									" " & idRuolo & ", " &
+									"'" & Cognome.Replace("'", "''") & "', " &
+									"'" & Nome.Replace("'", "''") & "', " &
+									"'" & EMail.Replace("'", "''") & "', " &
+									"'" & Telefono.Replace("'", "''") & "', " &
+									"'" & Soprannome.Replace("'", "''") & "', " &
+									"'" & DataDiNascita.Replace("'", "''") & "', " &
+									"'" & Indirizzo.Replace("'", "''") & "', " &
+									"'" & CodFiscale.Replace("'", "''") & "', " &
+									"'N', " &
+									"null, " &
+									"'" & Maschio & "', " &
+									"'', " &
+									"'" & Citta.Replace("'", "''") & "', " &
+									" " & idTaglia & ", " &
+									" " & idCategoria2 & ", " &
+									"'" & Matricola.Replace("'", "''") & "', " &
+									"'" & NumeroMaglia.Replace("'", "''") & "', " &
+									" " & idCategoria3 & ", " &
+									"'" & Categorie & "', " &
+									"'" & RapportoCompleto & "' " &
+									")"
+							Ritorno = EsegueSql(Conn, Sql, Connessione)
 								If Ritorno.Contains(StringaErrore) Then
 									Ok = False
 								End If

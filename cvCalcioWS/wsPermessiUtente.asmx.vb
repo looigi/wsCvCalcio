@@ -4,14 +4,14 @@ Imports System.ComponentModel
 
 ' Per consentire la chiamata di questo servizio Web dallo script utilizzando ASP.NET AJAX, rimuovere il commento dalla riga seguente.
 ' <System.Web.Script.Services.ScriptService()> _
-<System.Web.Services.WebService(Namespace:="http://wsPermessiRCVisual.PAndE.it/")>
+<System.Web.Services.WebService(Namespace:="http://wsPermessiUtente.PAndE.it/")>
 <System.Web.Services.WebServiceBinding(ConformsTo:=WsiProfiles.BasicProfile1_1)>
 <ToolboxItem(False)>
-Public Class wsPermessiRCVisual
+Public Class wsPermessiUtente
 	Inherits System.Web.Services.WebService
 
 	<WebMethod()>
-	Public Function SalvaPermessiVisual(Squadra As String, IDutente As Integer, Permessi As String) As String
+	Public Function SalvaPermessiUtente(Squadra As String, IDutente As Integer, Permessi As String) As String
 		Dim Ritorno As String = ""
 		Dim Connessione As String = LeggeImpostazioniDiBase(Server.MapPath("."), Squadra)
 		Dim Ok As Boolean = True
@@ -32,7 +32,7 @@ Public Class wsPermessiRCVisual
 
 				If Not Ritorno.Contains(StringaErrore) Then
 					Try
-						Sql = "Delete From PermessoVisual Where Idutente = " & IDutente
+						Sql = "Delete From PermessiUtente Where Idutente = " & IDutente
 						Ritorno = EsegueSql(Conn, Sql, Connessione)
 						If Ritorno.Contains(StringaErrore) Then
 							Ok = False
@@ -52,7 +52,7 @@ Public Class wsPermessiRCVisual
 									Progressivo += 1
 
 									Try
-										Sql = "Insert Into PermessoVisual Values (" &
+										Sql = "Insert Into PermessiUtente Values (" &
 											" " & IDutente & ", " &
 											" " & Progressivo & ", " &
 											" " & p & " " &
@@ -91,7 +91,7 @@ Public Class wsPermessiRCVisual
 	End Function
 
 	<WebMethod()>
-	Public Function RitornaPermessiVisual(Squadra As String, IDutente As Integer) As String
+	Public Function RitornaPermessiUtente(Squadra As String, IDutente As Integer, idTipologia As String) As String
 		Dim Ritorno As String = ""
 		Dim Connessione As String = LeggeImpostazioniDiBase(Server.MapPath("."), Squadra)
 
@@ -107,10 +107,11 @@ Public Class wsPermessiRCVisual
 				Dim Sql As String = ""
 
 				Try
-					Sql = "SELECT A.*, B.descrizione, B.NomePerCodice From PermessoVisual A , Visualizza B
-							where IDutente=" & IDutente & " 
-							and   permesso = IDfunzione
-							Order By progressivo"
+					Sql = "SELECT A.*, C.Descrizione, C.NomePerCodice From PermessiUtente A " &
+						"Left Join [Generale].[dbo].[Permessi_Composizione] B On A.idPermesso = B.idPermesso " &
+						"Left Join [Generale].[dbo].[Permessi_Lista] C On B.idPermesso = C.idPermesso " &
+						"Where A.IDutente=" & IDutente & " And B.idTipologia=" & idTipologia & " " &
+						"Order By progressivo"
 					Rec = LeggeQuery(Conn, Sql, Connessione)
 					If TypeOf (Rec) Is String Then
 						Ritorno = Rec
@@ -120,8 +121,8 @@ Public Class wsPermessiRCVisual
 						Else
 							Ritorno = ""
 							Do Until Rec.Eof
-								Ritorno &= Rec("IDutente").Value.ToString & ";" & Rec("progressivo").Value.ToString & ";" & Rec("permesso").Value.ToString & ";" &
-										   Rec("descrizione").Value.ToString & ";" & Rec("NomePerCodice").Value.ToString & "§"
+								Ritorno &= Rec("IDutente").Value.ToString & ";" & Rec("Progressivo").Value.ToString & ";" & Rec("idPermesso").Value.ToString & ";" &
+										   Rec("Descrizione").Value.ToString & ";" & Rec("NomePerCodice").Value.ToString & "§"
 
 								Rec.MoveNext()
 							Loop
@@ -140,7 +141,7 @@ Public Class wsPermessiRCVisual
 	End Function
 
 	<WebMethod()>
-	Public Function RitornaTuttiPermessiVisual(Squadra As String) As String
+	Public Function RitornaTuttiPermessiUtente(Squadra As String, idTipologia As String) As String
 		Dim Ritorno As String = ""
 		Dim Connessione As String = LeggeImpostazioniDiBase(Server.MapPath("."), Squadra)
 
@@ -156,8 +157,12 @@ Public Class wsPermessiRCVisual
 				Dim Sql As String = ""
 
 				Try
-					Sql = "SELECT * From Visualizza Where Eliminato = 'N' 
-							Order By Descrizione"
+					Sql = "SELECT A.idPermesso, B.Descrizione From [Generale].[dbo].[Permessi_Composizione] A " &
+						"Left Join [Generale].[dbo].[Permessi_Lista] B " &
+						"On A.idPermesso = B.idPermesso " &
+						"Where Eliminato = 'N' " &
+						"And A.idTipologia = " & idTipologia & " " &
+						"Order By Descrizione"
 					Rec = LeggeQuery(Conn, Sql, Connessione)
 					If TypeOf (Rec) Is String Then
 						Ritorno = Rec
@@ -167,7 +172,7 @@ Public Class wsPermessiRCVisual
 						Else
 							Ritorno = ""
 							Do Until Rec.Eof
-								Ritorno &= Rec("IDfunzione").Value.ToString & ";" & Rec("descrizione").Value.ToString & "§"
+								Ritorno &= Rec("idPermesso").Value.ToString & ";" & Rec("Descrizione").Value.ToString & "§"
 
 								Rec.MoveNext()
 							Loop
@@ -186,7 +191,7 @@ Public Class wsPermessiRCVisual
 	End Function
 
 	<WebMethod()>
-	Public Function EliminaPermessoVisual(Squadra As String, IDutente As Integer, progressivo As Integer) As String
+	Public Function EliminaPermessiUtente(Squadra As String, IDutente As Integer, Progressivo As Integer, idTipologia As String) As String
 		Dim Ritorno As String = ""
 		Dim Connessione As String = LeggeImpostazioniDiBase(Server.MapPath("."), Squadra)
 
@@ -204,9 +209,9 @@ Public Class wsPermessiRCVisual
 				Dim PermessoDaEliminare As String = ""
 
 				Try
-					Sql = "Select B.descrizione From PermessoVisual A Left Join " &
-						"Visualizza B On A.permesso = B.IDfunzione " &
-						"Where IDutente = " & IDutente & " And progressivo = " & progressivo
+					Sql = "Select B.Descrizione From PermessiUtente A " &
+						"Left Join [Generale].[dbo].[Permessi_Composizione] B On A.idPermesso = B.idPermesso " &
+						"Where IDutente = " & IDutente & " And Progressivo = " & Progressivo & " And B.idTipologia = " & idTipologia
 					Rec = LeggeQuery(Conn, Sql, Connessione)
 					If TypeOf (Rec) Is String Then
 						Ritorno = Rec
@@ -230,16 +235,16 @@ Public Class wsPermessiRCVisual
 					Dim CiSonoAltri As Boolean = False
 
 					Try
-						Sql = "Select B.descrizione From PermessoVisual A Left Join " &
-							"Visualizza B On A.permesso = B.IDfunzione " &
-							"Where IDutente = " & IDutente & " And Progressivo <> " & progressivo
+						Sql = "Select B.Descrizione From PermessiUtente A " &
+							"Left Join [Generale].[dbo].[Permessi_Composizione] B On A.idPermesso = B.idPermesso " &
+							"Where IDutente = " & IDutente & " And Progressivo <> " & Progressivo & " And B.idTipologia = " & idTipologia
 						Rec = LeggeQuery(Conn, Sql, Connessione)
 						If TypeOf (Rec) Is String Then
 							Ritorno = Rec
 						Else
 							If Rec.Eof Then
 								Ok = False
-								Ritorno = StringaErrore & " Permessi non rilevato"
+								Ritorno = StringaErrore & " Permesso non rilevato"
 							Else
 								Do Until Rec.Eof
 									If Rec(0).Value.ToString.Contains(Chiave) Then
@@ -261,7 +266,7 @@ Public Class wsPermessiRCVisual
 						Dim IdPermessoPadre As Integer = -1
 
 						Try
-							Sql = "Select * From Visualizza Where descrizione = '" & Chiave.Replace("/", "").Trim & "'"
+							Sql = "Select * From [Generale].[dbo].[Permessi_Composizione] Where Descrizione = '" & Chiave.Replace("/", "").Trim & "'"
 							Rec = LeggeQuery(Conn, Sql, Connessione)
 							If TypeOf (Rec) Is String Then
 								Ritorno = Rec
@@ -270,7 +275,7 @@ Public Class wsPermessiRCVisual
 									Ok = False
 									Ritorno = StringaErrore & " Permesso padre non rilevato"
 								Else
-									IdPermessoPadre = Rec("IDfunzione").Value
+									IdPermessoPadre = Rec("idPermesso").Value
 								End If
 								Rec.Close()
 							End If
@@ -281,7 +286,7 @@ Public Class wsPermessiRCVisual
 
 						If IdPermessoPadre > -1 Then
 							Try
-								Sql = "Delete PermessoVisual Where IDutente=" & IDutente & " AND permesso = " & IdPermessoPadre
+								Sql = "Delete PermessiUtente Where IDutente=" & IDutente & " And idPermesso = " & IdPermessoPadre
 								Ritorno = EsegueSql(Conn, Sql, Connessione)
 								If Ritorno.Contains(StringaErrore) Then
 									Ok = False
@@ -295,7 +300,7 @@ Public Class wsPermessiRCVisual
 				End If
 
 				Try
-					Sql = "Delete PermessoVisual Where IDutente=" & IDutente & " AND progressivo=" & progressivo
+					Sql = "Delete PermessiUtente Where IDutente=" & IDutente & " AND Progressivo=" & Progressivo
 					Ritorno = EsegueSql(Conn, Sql, Connessione)
 					If Ritorno.Contains(StringaErrore) Then
 						Ok = False
@@ -314,7 +319,7 @@ Public Class wsPermessiRCVisual
 	End Function
 
 	<WebMethod()>
-	Public Function InserisciPermessoVisual(Squadra As String, IDutente As Integer, progressivo As Integer, permesso As Integer) As String
+	Public Function InserisciPermessiUtente(Squadra As String, IDutente As Integer, Progressivo As Integer, Permesso As Integer, idTipologia As String) As String
 		Dim Ritorno As String = ""
 		Dim Connessione As String = LeggeImpostazioniDiBase(Server.MapPath("."), Squadra)
 
@@ -336,7 +341,7 @@ Public Class wsPermessiRCVisual
 
 				If Not Ritorno.Contains(StringaErrore) Then
 					Try
-						Sql = "SELECT Max(progressivo)+1 FROM PermessoVisual Where IDutente=" & IDutente
+						Sql = "SELECT Max(Progressivo)+1 FROM PermessiUtente Where IDutente=" & IDutente
 						Rec = LeggeQuery(Conn, Sql, Connessione)
 						If TypeOf (Rec) Is String Then
 							Ritorno = Rec
@@ -356,7 +361,9 @@ Public Class wsPermessiRCVisual
 					Dim DescrizionePermesso As String = ""
 
 					Try
-						Sql = "SELECT * FROM Visualizza Where idFunzione=" & permesso
+						Sql = "SELECT B.Descrizione FROM [Generale].[dbo].[Permessi_Composizione] A " &
+							"Left Join [Generale].[dbo].[Permessi_Lista] B On A.idPermesso = B.idPermesso " &
+							"Where idPermesso=" & Permesso
 						Rec = LeggeQuery(Conn, Sql, Connessione)
 						If TypeOf (Rec) Is String Then
 							Ritorno = Rec
@@ -364,7 +371,7 @@ Public Class wsPermessiRCVisual
 							If Rec.Eof Then
 								Ritorno = StringaErrore & " Permesso non trovato"
 							Else
-								DescrizionePermesso = Rec("descrizione").Value
+								DescrizionePermesso = Rec("Descrizione").Value
 							End If
 							Rec.Close()
 						End If
@@ -376,10 +383,10 @@ Public Class wsPermessiRCVisual
 					If Not Ritorno.Contains(StringaErrore) Then
 						Try
 							If Not Ritorno.Contains(StringaErrore) Then
-								Sql = "Insert Into PermessoVisual Values (" &
+								Sql = "Insert Into PermessiUtente Values (" &
 									" " & SistemaNumero(IDutente) & "," &
 									" " & SistemaNumero(ProgPerm) & "," &
-									" " & SistemaNumero(permesso) & " " &
+									" " & SistemaNumero(Permesso) & " " &
 									")"
 
 								Ritorno = EsegueSql(Conn, Sql, Connessione)
@@ -399,7 +406,9 @@ Public Class wsPermessiRCVisual
 						Dim idFunzionePadre As Integer = -1
 
 						Try
-							Sql = "SELECT * FROM Visualizza Where descrizione = '" & Padre & "'"
+							Sql = "SELECT * FROM [Generale].[dbo].[Permessi_Composizione] A " &
+								"Left Join [Generale].[dbo].[Permessi_Lista] B On A.idPermesso = B.idPermesso " &
+								"Where B.Descrizione = '" & Padre & "' And B.idTipologia=" & idTipologia
 							Rec = LeggeQuery(Conn, Sql, Connessione)
 							If TypeOf (Rec) Is String Then
 								Ritorno = Rec
@@ -407,7 +416,7 @@ Public Class wsPermessiRCVisual
 								If Rec.Eof Then
 									Ritorno = StringaErrore & " Permesso padre non trovato"
 								Else
-									idFunzionePadre = Rec("IDfunzione").Value
+									idFunzionePadre = Rec("idPermesso").Value
 								End If
 								Rec.Close()
 							End If
@@ -420,7 +429,7 @@ Public Class wsPermessiRCVisual
 
 						If Not Ritorno.Contains(StringaErrore) Then
 							Try
-								Sql = "SELECT * FROM PermessoVisual Where IDutente = " & IDutente & " And permesso = " & idFunzionePadre
+								Sql = "SELECT * FROM PermessiUtente Where IDutente = " & IDutente & " And idPermesso = " & idFunzionePadre
 								Rec = LeggeQuery(Conn, Sql, Connessione)
 								If TypeOf (Rec) Is String Then
 									Ritorno = Rec
@@ -440,11 +449,11 @@ Public Class wsPermessiRCVisual
 							Try
 								If Not Ritorno.Contains(StringaErrore) Then
 									ProgPerm += 1
-									Sql = "Insert Into PermessoVisual Values (" &
-									" " & SistemaNumero(IDutente) & "," &
-									" " & SistemaNumero(ProgPerm) & "," &
-									" " & SistemaNumero(idFunzionePadre) & " " &
-									")"
+									Sql = "Insert Into PermessiUtente Values (" &
+										" " & SistemaNumero(IDutente) & "," &
+										" " & SistemaNumero(ProgPerm) & "," &
+										" " & SistemaNumero(idFunzionePadre) & " " &
+										")"
 
 									Ritorno = EsegueSql(Conn, Sql, Connessione)
 									If Ritorno.Contains(StringaErrore) Then
@@ -458,10 +467,10 @@ Public Class wsPermessiRCVisual
 						End If
 					End If
 
-						If Ritorno.Contains(StringaErrore) Then
+					If Ritorno.Contains(StringaErrore) Then
 						Dim Ritorno2 As String
 
-						Sql = "Delete From PermessoVisual Where IDutente=" & IDutente
+						Sql = "Delete From PermessiUtente Where IDutente=" & IDutente
 						Ritorno2 = EsegueSql(Conn, Sql, Connessione)
 					End If
 				Else
@@ -483,62 +492,62 @@ Public Class wsPermessiRCVisual
 		Return Ritorno
 	End Function
 
-	<WebMethod()>
-	Public Function ModificaPermessoVisual(Squadra As String, IDutente As Integer, progressivo As Integer, permesso As Integer) As String
-		Dim Ritorno As String = ""
-		Dim Connessione As String = LeggeImpostazioniDiBase(Server.MapPath("."), Squadra)
+	'<WebMethod()>
+	'Public Function ModificaPermessiUtente(Squadra As String, IDutente As Integer, progressivo As Integer, permesso As Integer) As String
+	'	Dim Ritorno As String = ""
+	'	Dim Connessione As String = LeggeImpostazioniDiBase(Server.MapPath("."), Squadra)
 
-		If Connessione = "" Then
-			Ritorno = ErroreConnessioneNonValida
-		Else
-			Dim Conn As Object = ApreDB(Connessione)
+	'	If Connessione = "" Then
+	'		Ritorno = ErroreConnessioneNonValida
+	'	Else
+	'		Dim Conn As Object = ApreDB(Connessione)
 
-			If TypeOf (Conn) Is String Then
-				Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
-			Else
-				Dim Rec As Object = Server.CreateObject("ADODB.Recordset")
-				Dim Sql As String = ""
-				Dim Ok As Boolean = True
+	'		If TypeOf (Conn) Is String Then
+	'			Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
+	'		Else
+	'			Dim Rec As Object = Server.CreateObject("ADODB.Recordset")
+	'			Dim Sql As String = ""
+	'			Dim Ok As Boolean = True
 
-				Sql = "Begin transaction"
-				Ritorno = EsegueSql(Conn, Sql, Connessione)
+	'			Sql = "Begin transaction"
+	'			Ritorno = EsegueSql(Conn, Sql, Connessione)
 
-				If Not Ritorno.Contains(StringaErrore) Then
-					Sql = "Delete From PermessoVisual Where IDutente=" & IDutente & " AND progressivo=" & progressivo
-					Ritorno = EsegueSql(Conn, Sql, Connessione)
-					If Ritorno.Contains(StringaErrore) Then
-						Ok = False
-					End If
+	'			If Not Ritorno.Contains(StringaErrore) Then
+	'				Sql = "Delete From PermessiUtente Where IDutente=" & IDutente & " AND progressivo=" & progressivo
+	'				Ritorno = EsegueSql(Conn, Sql, Connessione)
+	'				If Ritorno.Contains(StringaErrore) Then
+	'					Ok = False
+	'				End If
 
-					If Ok Then
-						Sql = "Insert Into PermessoVisual Values (" &
-								" " & SistemaNumero(IDutente) & "," &
-								" " & SistemaNumero(progressivo) & "," &
-								" " & SistemaNumero(permesso) & " " &
-								")"
-						Ritorno = EsegueSql(Conn, Sql, Connessione)
-						If Ritorno.Contains(StringaErrore) Then
-							Ok = False
-						End If
-					End If
-				Else
-					Ok = False
-				End If
+	'				If Ok Then
+	'					Sql = "Insert Into PermessiUtente Values (" &
+	'							" " & SistemaNumero(IDutente) & "," &
+	'							" " & SistemaNumero(progressivo) & "," &
+	'							" " & SistemaNumero(permesso) & " " &
+	'							")"
+	'					Ritorno = EsegueSql(Conn, Sql, Connessione)
+	'					If Ritorno.Contains(StringaErrore) Then
+	'						Ok = False
+	'					End If
+	'				End If
+	'			Else
+	'				Ok = False
+	'			End If
 
-				If Ok Then
-					Sql = "commit"
-					Dim Ritorno2 As String = EsegueSql(Conn, Sql, Connessione)
-				Else
-					Sql = "rollback"
-					Dim Ritorno2 As String = EsegueSql(Conn, Sql, Connessione)
-				End If
+	'			If Ok Then
+	'				Sql = "commit"
+	'				Dim Ritorno2 As String = EsegueSql(Conn, Sql, Connessione)
+	'			Else
+	'				Sql = "rollback"
+	'				Dim Ritorno2 As String = EsegueSql(Conn, Sql, Connessione)
+	'			End If
 
-				Conn.Close()
-			End If
-		End If
+	'			Conn.Close()
+	'		End If
+	'	End If
 
-		Return Ritorno
-	End Function
+	'	Return Ritorno
+	'End Function
 
 
 End Class

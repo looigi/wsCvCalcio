@@ -165,7 +165,7 @@ Public Class wsCategorie
 					If Ritorno = "" Then
 						Try
 							If TipoUtente = "2" Then
-								Sql = "SELECT * From UtentiCategorie Where idAnno=" & idAnno & " And idUtente=" & idUtente
+								Sql = "SELECT * From UtentiCategorie Where idUtente=" & idUtente
 							Else
 								Sql = "SELECT * From Categorie Where idAnno=" & idAnno
 							End If

@@ -89,11 +89,9 @@
     <Content Include="PercorsoSito.txt" />
     <Content Include="wsAllegati.asmx" />
     <Content Include="wsEventiCalendario.asmx" />
-    <Content Include="wsFunzioniRC.asmx" />
+    <Content Include="wsFunzioni.asmx" />
     <Content Include="wsKit.asmx" />
-    <Content Include="wsMaschere.asmx" />
-    <Content Include="wsPermessiRC.asmx" />
-    <Content Include="wsPermessiRCVisual.asmx" />
+    <Content Include="wsPermessiUtente.asmx" />
     <Content Include="wsStatAllenamenti.asmx" />
     <Content Include="wsAllenamenti.asmx" />
     <Content Include="wsAllenatori.asmx" />
@@ -108,6 +106,7 @@
     <Content Include="wsMultimedia.asmx" />
     <Content Include="wsPartite.asmx" />
     <Content Include="wsStatistiche.asmx" />
+    <Content Include="wsSuperUser.asmx" />
     <Content Include="wsTaglie.asmx" />
     <Content Include="wsUtentiLocali.asmx" />
     <Content Include="wsUtenti.asmx" />
@@ -126,24 +125,16 @@
       <DependentUpon>wsEventiCalendario.asmx</DependentUpon>
       <SubType>Component</SubType>
     </Compile>
-    <Compile Include="wsFunzioniRC.asmx.vb">
-      <DependentUpon>wsFunzioniRC.asmx</DependentUpon>
+    <Compile Include="wsFunzioni.asmx.vb">
+      <DependentUpon>wsFunzioni.asmx</DependentUpon>
       <SubType>Component</SubType>
     </Compile>
     <Compile Include="wsKit.asmx.vb">
       <DependentUpon>wsKit.asmx</DependentUpon>
       <SubType>Component</SubType>
     </Compile>
-    <Compile Include="wsMaschere.asmx.vb">
-      <DependentUpon>wsMaschere.asmx</DependentUpon>
-      <SubType>Component</SubType>
-    </Compile>
-    <Compile Include="wsPermessiRC.asmx.vb">
-      <DependentUpon>wsPermessiRC.asmx</DependentUpon>
-      <SubType>Component</SubType>
-    </Compile>
-    <Compile Include="wsPermessiRCVisual.asmx.vb">
-      <DependentUpon>wsPermessiRCVisual.asmx</DependentUpon>
+    <Compile Include="wsPermessiUtente.asmx.vb">
+      <DependentUpon>wsPermessiUtente.asmx</DependentUpon>
       <SubType>Component</SubType>
     </Compile>
     <Compile Include="wsStatAllenamenti.asmx.vb">
@@ -220,6 +211,10 @@
     </Compile>
     <Compile Include="wsStatistiche.asmx.vb">
       <DependentUpon>wsStatistiche.asmx</DependentUpon>
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="wsSuperUser.asmx.vb">
+      <DependentUpon>wsSuperUser.asmx</DependentUpon>
       <SubType>Component</SubType>
     </Compile>
     <Compile Include="wsTaglie.asmx.vb">

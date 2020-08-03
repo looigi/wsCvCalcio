@@ -615,54 +615,89 @@ Public Class wsGenerale
 	Public Function RitornaImpostazioni(Squadra As String) As String
 		Dim Ritorno As String = ""
 		Dim gf As New GestioneFilesDirectory
-		'Dim nomeSquadra As String = gf.LeggeFileIntero(Server.MapPath(".") & "\NomeSquadraBase.txt")
-		'nomeSquadra = nomeSquadra.Replace(vbCrLf, "")
-		'nomeSquadra = nomeSquadra.Replace(" ", "_")
 		gf = Nothing
 		Dim Connessione As String = LeggeImpostazioniDiBase(Server.MapPath("."), Squadra)
+		Dim ConnessioneGen As String = LeggeImpostazioniDiBase(Server.MapPath("."), "")
 
 		If Connessione = "" Then
 			Ritorno = ErroreConnessioneNonValida
 		Else
 			Dim Conn As Object = ApreDB(Connessione)
+			Dim ConnGen As Object = ApreDB(ConnessioneGen)
 
-			If TypeOf (Conn) Is String Then
-				Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
+			If TypeOf (Conn) Is String Or TypeOf (ConnGen) Is String Then
+				If TypeOf (Conn) Is String Then
+					Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
+				Else
+					Ritorno = ErroreConnessioneDBNonValida & ":" & ConnGen
+				End If
 			Else
 				Dim Rec As Object = Server.CreateObject("ADODB.Recordset")
 				Dim Sql As String = ""
 
-				Sql = "Select A.*, B.idAvversario, B.idCampo " &
-					"From Anni A Left Join SquadreAvversarie B On A.NomeSquadra = B.Descrizione " &
-					"Order By idAnno Desc"
-				Rec = LeggeQuery(Conn, Sql, Connessione)
+				Dim c() As String = Squadra.Split("_")
+				Dim Anno As String = Str(Val(c(0))).Trim
+				Dim codSquadra As String = Str(Val(c(1))).Trim
+				Dim Anni As New List(Of Integer)
+
+				Sql = "Select * From SquadraAnni Where idSquadra=" & codSquadra & " Order By idAnno"
+				Rec = LeggeQuery(ConnGen, Sql, ConnessioneGen)
 				If TypeOf (Rec) Is String Then
 					Ritorno = Rec
 				Else
-					Ritorno = ""
-					Do Until Rec.Eof
-						Ritorno &= Rec("idAnno").Value & ";" &
-								Rec("Descrizione").Value & ";" &
-								Rec("NomeSquadra").Value & ";" &
-								Rec("Lat").Value & ";" &
-								Rec("Lon").Value & ";" &
-								Rec("Indirizzo").Value & ";" &
-								Rec("CampoSquadra").Value & ";" &
-								Rec("NomePolisportiva").Value & ";" &
-								Rec("idAvversario").Value & ";" &
-								Rec("idCampo").Value & ";" &
-								Rec("Mail").Value & ";" &
-								Rec("PEC").Value & ";" &
-								Rec("Telefono").Value & ";" &
-								Rec("PIva").Value & ";" &
-								Rec("CodiceFiscale").Value & ";" &
-								Rec("CodiceUnivoco").Value & ";" &
-								Rec("SitoWeb").Value & ";" &
-								"§"
+					Do Until Rec.Eof()
+						Anni.Add(Rec("idAnno").Value)
+
 						Rec.MoveNext()
 					Loop
 					Rec.Close()
+
+					If Anni.Count > 0 Then
+						Ritorno = ""
+						For Each a As Integer In Anni
+							Dim sAnno As String = Format(a, "0000")
+							Dim sCodSquadra As String = codSquadra.Trim
+							While sCodSquadra.Length <> 5
+								sCodSquadra = "0" & sCodSquadra
+							End While
+							Dim Codice As String = sAnno & "_" & sCodSquadra
+
+							Sql = "Select A.*, B.idAvversario, B.idCampo " &
+								"From [" & Codice & "].[dbo].[Anni] A Left Join [" & Codice & "].[dbo].[SquadreAvversarie] B On A.NomeSquadra = B.Descrizione " &
+								"Order By idAnno Desc"
+							Rec = LeggeQuery(ConnGen, Sql, ConnessioneGen)
+							If TypeOf (Rec) Is String Then
+								Ritorno = Rec
+							Else
+								' Ritorno = ""
+								Do Until Rec.Eof
+									Ritorno &= Rec("idAnno").Value & ";" &
+										Rec("Descrizione").Value & ";" &
+										Rec("NomeSquadra").Value & ";" &
+										Rec("Lat").Value & ";" &
+										Rec("Lon").Value & ";" &
+										Rec("Indirizzo").Value & ";" &
+										Rec("CampoSquadra").Value & ";" &
+										Rec("NomePolisportiva").Value & ";" &
+										Rec("idAvversario").Value & ";" &
+										Rec("idCampo").Value & ";" &
+										Rec("Mail").Value & ";" &
+										Rec("PEC").Value & ";" &
+										Rec("Telefono").Value & ";" &
+										Rec("PIva").Value & ";" &
+										Rec("CodiceFiscale").Value & ";" &
+										Rec("CodiceUnivoco").Value & ";" &
+										Rec("SitoWeb").Value & ";" &
+										"§"
+
+									Rec.MoveNext()
+								Loop
+								Rec.Close()
+							End If
+						Next
+					End If
 				End If
+
 			End If
 		End If
 

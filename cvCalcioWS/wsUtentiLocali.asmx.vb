@@ -156,9 +156,11 @@ Public Class wsUtentiLocali
 
 				Try
 					Sql = "SELECT Utenti.idAnno, idUtente, Utente, Cognome, Nome, " &
-						"Password, EMail, idCategoria, idTipologia, Utenti.idSquadra, Descrizione As Squadra, PasswordScaduta, Telefono " &
+						"Password, EMail, idCategoria, Utenti.idTipologia As idTipologia, Utenti.idSquadra, Descrizione As Squadra, PasswordScaduta, Telefono, " &
+						"Squadre.Eliminata, Squadre.idTipologia As idTipo2, Squadre.idLicenza " &
 						"FROM Utenti Left Join Squadre On Utenti.idSquadra = Squadre.idSquadra " &
-						"Where Upper(Utente)='" & Utente.ToUpper.Replace("'", "''") & "' And Utenti.Eliminato = 'N'"
+						"Where Upper(Utente)='" & Utente.ToUpper.Replace("'", "''") & "' And Utenti.Eliminato = 'N' " &
+						"Order By Utenti.idTipologia"
 					Rec = LeggeQuery(Conn, Sql, Connessione)
 					If TypeOf (Rec) Is String Then
 						Ritorno = Rec
@@ -170,30 +172,81 @@ Public Class wsUtentiLocali
 							'	Ritorno = StringaErrore & " Password non valida"
 							'Else
 							Ritorno = ""
-								Do Until Rec.Eof
-								Ritorno &= Rec("idAnno").Value & ";" &
-										Rec("idUtente").Value & ";" &
-										Rec("Utente").Value & ";" &
-										Rec("Cognome").Value & ";" &
-										Rec("Nome").Value & ";" &
-										DecriptaStringa(Rec("Password").Value) & ";" &
-										Rec("EMail").Value & ";" &
-										Rec("idCategoria").Value & ";" &
-										Rec("idTipologia").Value & ";" &
-										Rec("idSquadra").Value & ";" &
-										Rec("Squadra").Value & ";" &
-										Rec("PasswordScaduta").Value & ";" &
-										Rec("Telefono").Value & ";" &
-										"§"
+							Do Until Rec.Eof
+								Dim Ok As Boolean = False
 
-								Squadra = Rec("Squadra").Value
+								If Not Rec("Eliminata").Value Is DBNull.Value Then
+									If Rec("Eliminata").Value = "N" Then
+										Ok = True
+									End If
+								Else
+									Ok = True
+								End If
+
+								If Ok = True Then
+									Ritorno &= Rec("idAnno").Value & ";" &
+											Rec("idUtente").Value & ";" &
+											Rec("Utente").Value & ";" &
+											Rec("Cognome").Value & ";" &
+											Rec("Nome").Value & ";" &
+											DecriptaStringa(Rec("Password").Value) & ";" &
+											Rec("EMail").Value & ";" &
+											Rec("idCategoria").Value & ";" &
+											Rec("idTipologia").Value & ";" &
+											Rec("idSquadra").Value & ";" &
+											Rec("Squadra").Value & ";" &
+											Rec("PasswordScaduta").Value & ";" &
+											Rec("Telefono").Value & ";" &
+											Rec("idTipo2").Value & ";" &
+											Rec("idLicenza").Value & ";" &
+											"§"
+
+									Squadra = "" & Rec("Squadra").Value
 									UtenteDaSalvare = Ritorno
+								End If
 
-									Rec.MoveNext()
-								Loop
+								Rec.MoveNext()
+							Loop
 							'End If
+							Rec.Close()
+
+							Sql = "Select * From Squadre Where Eliminata = 'N' Order By Descrizione"
+							Rec = LeggeQuery(Conn, Sql, Connessione)
+							If TypeOf (Rec) Is String Then
+								Ritorno = Rec
+							Else
+								If Rec.Eof Then
+									Ritorno = StringaErrore & " Nessuna squadra rilevata"
+								Else
+									Ritorno &= "|"
+									Do Until Rec.Eof
+										Dim Tipologia As String = ""
+										Dim Licenza As String = ""
+
+										Select Case Rec("idTipologia").Value
+											Case 1
+												Tipologia = "Produzione"
+											Case 2
+												Tipologia = "Prova"
+										End Select
+
+										Select Case Rec("idLicenza").Value
+											Case 1
+												Licenza = "Base"
+											Case 2
+												Licenza = "Standard"
+											Case 3
+												Licenza = "Premium"
+										End Select
+
+										Ritorno &= Rec("idSquadra").Value & ";" & Rec("Descrizione").Value & ";" & Rec("DataScadenza").Value & ";" & Tipologia & ";" & Licenza & ";" & Rec("idTipologia").Value & ";" & Rec("idLicenza").Value & ";§"
+
+										Rec.MoveNext()
+									Loop
+									Rec.Close()
+								End If
+							End If
 						End If
-						Rec.Close()
 					End If
 				Catch ex As Exception
 					Ritorno = StringaErrore & " " & ex.Message
@@ -635,28 +688,8 @@ Public Class wsUtentiLocali
 				Dim Rec As Object = Server.CreateObject("ADODB.Recordset")
 				Dim Sql As String = ""
 
-				' Sql = "Delete From Utenti Where idUtente=" & idUtente & " And idAnno=" & idAnno
 				Sql = "Update Utenti Set Eliminato = 'S' Where idUtente=" & idUtente & " And idAnno=" & idAnno
 				Ritorno = EsegueSql(Conn, Sql, Connessione)
-
-				'If Ritorno = "*" Then
-				'	Conn.Close()
-
-				'	Connessione = LeggeImpostazioniDiBase(Server.MapPath("."), Squadra)
-
-				'	If Connessione = "" Then
-				'		Ritorno = ErroreConnessioneNonValida
-				'	Else
-				'		Conn = ApreDB(Connessione)
-
-				'		If TypeOf (Conn) Is String Then
-				'			Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
-				'		Else
-				'			Sql = "Delete From Utenti Where idUtente=" & idUtente & " And idAnno=" & idAnno
-				'			Ritorno = EsegueSql(Conn, Sql, Connessione)
-				'		End If
-				'	End If
-				'End If
 			End If
 		End If
 

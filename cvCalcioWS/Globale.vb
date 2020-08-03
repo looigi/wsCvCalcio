@@ -82,7 +82,11 @@
 					Connessione = "Provider=" & Provider & ";" & connectionString
 					Connessione = Replace(Connessione, "*^*^*", Percorso & "\")
 					If Squadra <> "" Then
-						Connessione = Connessione.Replace("***NOME_DB***", Squadra)
+						If Squadra = "DBVUOTO" Then
+							Connessione = Connessione.Replace("***NOME_DB***", "DBVuoto")
+						Else
+							Connessione = Connessione.Replace("***NOME_DB***", Squadra)
+						End If
 					Else
 						Connessione = Connessione.Replace("***NOME_DB***", "Generale")
 					End If

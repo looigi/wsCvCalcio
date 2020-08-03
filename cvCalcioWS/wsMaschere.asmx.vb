@@ -49,7 +49,7 @@ Public Class wsMaschere
 						End Try
 					Else
 						idFunc = idFunzione
-						Sql = "Delete from Visualizza Where IDfunzione=" & idFunc
+						Sql = "Delete from [Generale].[dbo].[Permessi_Composizione] Where IDfunzione=" & idFunc
 						Ritorno = EsegueSql(Conn, Sql, Connessione)
 						If Ritorno.Contains(StringaErrore) Then
 							Ok = False
@@ -57,7 +57,7 @@ Public Class wsMaschere
 					End If
 
 					If Ok Then
-						Sql = "Insert Into Visualizza Values (" &
+						Sql = "Insert Into [Generale].[dbo].[Permessi_Composizione] Values (" &
 							" " & idFunc & ", " &
 							"'" & Descrizione.Replace("'", "''") & "', " &
 							"'" & NomePerCodice.Replace("'", "''").ToUpper.Trim & "', " &
@@ -102,7 +102,7 @@ Public Class wsMaschere
 				Dim Sql As String = ""
 
 				Try
-					Sql = "SELECT * FROM Visualizza Where Eliminato = 'N' Order By descrizione"
+					Sql = "SELECT * FROM [Generale].[dbo].[Permessi_Composizione] Where Eliminato = 'N' Order By descrizione"
 					Rec = LeggeQuery(Conn, Sql, Connessione)
 					If TypeOf (Rec) Is String Then
 						Ritorno = Rec
@@ -149,7 +149,7 @@ Public Class wsMaschere
 				Dim Ok As Boolean = True
 
 				Try
-					Sql = "Update Visualizza Set Eliminato='S' Where IDfunzione=" & idFunzione
+					Sql = "Update [Generale].[dbo].[Permessi_Composizione] Set Eliminato='S' Where IDfunzione=" & idFunzione
 					Ritorno = EsegueSql(Conn, Sql, Connessione)
 				Catch ex As Exception
 					Ritorno = StringaErrore & " " & ex.Message
