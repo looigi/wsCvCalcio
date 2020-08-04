@@ -12,7 +12,7 @@ Public Class wsMultimedia
 	<WebMethod()>
 	Public Function EliminaImmagine(Squadra As String, Tipologia As String, NomeFile As String) As String
 		Dim gf As New GestioneFilesDirectory
-		Dim Righe As String = gf.LeggeFileIntero(HttpContext.Current.Server.MapPath(".") & "\PathAllegati.txt")
+		Dim Righe As String = gf.LeggeFileIntero(HttpContext.Current.Server.MapPath(".") & "\Impostazioni\PathAllegati.txt")
 		Dim Campi() As String = Righe.Split(";")
 
 		Dim Ritorno As String = ""
@@ -60,26 +60,26 @@ Public Class wsMultimedia
 	<WebMethod()>
     Public Function EliminaMultimedia(Immagine As String) As String
         Dim gf As New GestioneFilesDirectory
-        Dim PathIniziale As String = gf.LeggeFileIntero(Server.MapPath(".") & "/PathCvCalcio.txt")
-        Dim Ritorno As String = ""
+		Dim PathIniziale As String = gf.LeggeFileIntero(Server.MapPath(".") & "/Impostazioni/Paths.txt")
+		Dim Ritorno As String = ""
 
-        If File.Exists(PathIniziale & Immagine) Then
-            Ritorno = gf.EliminaFileFisico(PathIniziale & Immagine)
-        End If
+		If File.Exists(PathIniziale & Immagine) Then
+			Ritorno = gf.EliminaFileFisico(PathIniziale & Immagine)
+		End If
 
-        gf = Nothing
+		gf = Nothing
 
-        If Ritorno = "" Then Ritorno = "*"
+		If Ritorno = "" Then Ritorno = "*"
 
-        Return Ritorno
-    End Function
+		Return Ritorno
+	End Function
 
 	<WebMethod()>
 	Public Function RitornaAlbumPerCategoria(Squadra As String, idAnno As String, idCategoria As String) As String
 		Dim Ritorno As String = ""
 		Dim Ok As Boolean = True
 		Dim gf As New GestioneFilesDirectory
-		Dim PathIniziale As String = gf.LeggeFileIntero(Server.MapPath(".") & "/PathCvCalcio.txt")
+		Dim PathIniziale As String = gf.LeggeFileIntero(Server.MapPath(".") & "/Impostazioni/Paths.txt")
 		PathIniziale = PathIniziale.Trim
 		If Not PathIniziale.EndsWith("\") Then
 			PathIniziale &= "\"

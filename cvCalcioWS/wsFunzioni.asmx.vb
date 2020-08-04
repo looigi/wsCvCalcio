@@ -12,6 +12,174 @@ Public Class wsFunzioni
 	Inherits System.Web.Services.WebService
 
 	<WebMethod()>
+	Public Function RitornaFunzionalita() As String
+		Dim Ritorno As String = ""
+		Dim Connessione As String = LeggeImpostazioniDiBase(Server.MapPath("."), "")
+
+		If Connessione = "" Then
+			Ritorno = ErroreConnessioneNonValida
+		Else
+			Dim Conn As Object = ApreDB(Connessione)
+
+			If TypeOf (Conn) Is String Then
+				Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
+			Else
+				Dim Rec As Object = Server.CreateObject("ADODB.Recordset")
+				Dim Sql As String = ""
+
+				Try
+					' where IDfunzione = " & IDfunzione & " 
+					Sql = "SELECT * From Permessi_Lista Where Eliminato='N' " &
+						"Order By Descrizione"
+					Rec = LeggeQuery(Conn, Sql, Connessione)
+					If TypeOf (Rec) Is String Then
+						Ritorno = Rec
+					Else
+						If Rec.Eof Then
+							Ritorno = "" ' StringaErrore & " Nessuna funzionalità ritornata"
+						Else
+							Ritorno = ""
+							Do Until Rec.Eof
+								Ritorno &= Rec("idPermesso").Value.ToString & ";" & Rec("Descrizione").Value.ToString & ";" & Rec("NomePerCodice").Value.ToString & ";§"
+
+								Rec.MoveNext()
+							Loop
+						End If
+						Rec.Close()
+					End If
+				Catch ex As Exception
+					Ritorno = StringaErrore & " " & ex.Message
+				End Try
+
+				Conn.Close()
+			End If
+		End If
+
+		Return Ritorno
+	End Function
+
+	<WebMethod()>
+	Public Function InserisciFunzionalita(Descrizione As String, Codice As String) As String
+		Dim Ritorno As String = ""
+		Dim Connessione As String = LeggeImpostazioniDiBase(Server.MapPath("."), "")
+
+		If Connessione = "" Then
+			Ritorno = ErroreConnessioneNonValida
+		Else
+			Dim Conn As Object = ApreDB(Connessione)
+
+			If TypeOf (Conn) Is String Then
+				Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
+			Else
+				Dim Rec As Object = Server.CreateObject("ADODB.Recordset")
+				Dim Sql As String = ""
+				Dim Successivo As Integer = -1
+				Dim Ok As Boolean = True
+
+				Try
+					Sql = "SELECT Max(idPermesso)+1 FROM Permessi_Lista"
+					Rec = LeggeQuery(Conn, Sql, Connessione)
+					If TypeOf (Rec) Is String Then
+						Ritorno = Rec
+					Else
+						If Rec(0).Value Is DBNull.Value Then
+							Successivo = 1
+						Else
+							Successivo = Rec(0).Value
+						End If
+						Rec.Close()
+					End If
+				Catch ex As Exception
+					Ritorno = StringaErrore & " " & ex.Message
+					Ok = False
+				End Try
+
+				If Ok Then
+					Try
+						Sql = "Insert Into Permessi_Lista Values (" &
+							" " & Successivo & ", " &
+							"'" & Descrizione.Replace("'", "''") & "' ," &
+							"'" & Codice.Replace("'", "''") & "' ," &
+							"'N' " &
+							")"
+						Ritorno = EsegueSql(Conn, Sql, Connessione)
+						If Ritorno.Contains(StringaErrore) Then
+							Ok = False
+						End If
+					Catch ex As Exception
+						Ritorno = StringaErrore & " " & ex.Message
+					End Try
+				End If
+
+				Conn.Close()
+			End If
+		End If
+
+		Return Ritorno
+	End Function
+
+	<WebMethod()>
+	Public Function EliminaFunzionalita(idPermesso As String) As String
+		Dim Ritorno As String = ""
+		Dim Connessione As String = LeggeImpostazioniDiBase(Server.MapPath("."), "")
+
+		If Connessione = "" Then
+			Ritorno = ErroreConnessioneNonValida
+		Else
+			Dim Conn As Object = ApreDB(Connessione)
+
+			If TypeOf (Conn) Is String Then
+				Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
+			Else
+				Dim Rec As Object = Server.CreateObject("ADODB.Recordset")
+				Dim Sql As String = ""
+				Dim Successivo As Integer = -1
+
+				Try
+					Sql = "Update Permessi_Lista Set Eliminato='S' Where idPermesso=" & idPermesso
+					Ritorno = EsegueSql(Conn, Sql, Connessione)
+				Catch ex As Exception
+					Ritorno = StringaErrore & " " & ex.Message
+				End Try
+
+				Conn.Close()
+			End If
+		End If
+
+		Return Ritorno
+	End Function
+
+	<WebMethod()>
+	Public Function ModificaFunzionalita(idPermesso As String, Descrizione As String, Codice As String) As String
+		Dim Ritorno As String = ""
+		Dim Connessione As String = LeggeImpostazioniDiBase(Server.MapPath("."), "")
+
+		If Connessione = "" Then
+			Ritorno = ErroreConnessioneNonValida
+		Else
+			Dim Conn As Object = ApreDB(Connessione)
+
+			If TypeOf (Conn) Is String Then
+				Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
+			Else
+				Dim Rec As Object = Server.CreateObject("ADODB.Recordset")
+				Dim Sql As String = ""
+
+				Try
+					Sql = "Update Permessi_Lista Set Descrizione='" & Descrizione.Replace("'", "''") & "', NomePerCodice='" & Codice.Replace("'", "''") & "' Where idPermesso=" & idPermesso
+					Ritorno = EsegueSql(Conn, Sql, Connessione)
+				Catch ex As Exception
+					Ritorno = StringaErrore & " " & ex.Message
+				End Try
+
+				Conn.Close()
+			End If
+		End If
+
+		Return Ritorno
+	End Function
+
+	<WebMethod()>
 	Public Function RitornaTutteLeFunzioni(idTipologia As String) As String
 		Dim Ritorno As String = ""
 		Dim Connessione As String = LeggeImpostazioniDiBase(Server.MapPath("."), "")
@@ -135,7 +303,6 @@ Public Class wsFunzioni
 						If Ritorno.Contains(StringaErrore) Then
 							Ok = False
 						End If
-
 					Catch ex As Exception
 						Ritorno = StringaErrore & " " & ex.Message
 						Ok = False

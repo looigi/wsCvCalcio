@@ -2,6 +2,8 @@
 Imports System.Web.Services.Protocols
 Imports System.ComponentModel
 Imports System.Runtime.CompilerServices
+Imports System.IO
+Imports System.Linq
 
 ' Per consentire la chiamata di questo servizio Web dallo script utilizzando ASP.NET AJAX, rimuovere il commento dalla riga seguente.
 ' <System.Web.Script.Services.ScriptService()> _
@@ -139,6 +141,45 @@ Public Class wsSuperUser
 													Ok = False
 												End Try
 											Next
+
+											If Ok Then
+												Dim ConnessioneNuovo As String = LeggeImpostazioniDiBase(Server.MapPath("."), nomeDb)
+												Dim ConnNuovo As Object = ApreDB(ConnessioneNuovo)
+
+												If TypeOf (ConnNuovo) Is String Then
+													Ritorno = ErroreConnessioneDBNonValida & ":" & ConnNuovo
+													Ok = False
+												Else
+													For i As Integer = 0 To q - 1
+														Sql = "Select Chiave From _CHIAVI_ Where Upper(lTrim(rTrim(Tabella)))='" & Tabelle(i).Trim.ToUpper & "'"
+														Rec = LeggeQuery(ConnNuovo, Sql, ConnessioneNuovo)
+														If TypeOf (Rec) Is String Then
+															Ritorno = Rec
+															Ok = False
+															Exit For
+														Else
+															If Not Rec.Eof() Then
+																Dim Query As String = Rec(0).Value
+
+																Ritorno = EsegueSql(ConnNuovo, Query, ConnessioneNuovo)
+																If Ritorno.Contains(StringaErrore) Then
+																	Ok = False
+																End If
+
+																Rec.Close()
+															End If
+														End If
+													Next
+
+													If Ok Then
+														Sql = "Drop Table _CHIAVI_"
+														Ritorno = EsegueSql(ConnNuovo, Sql, ConnessioneNuovo)
+														If Ritorno.Contains(StringaErrore) Then
+															Ok = False
+														End If
+													End If
+												End If
+											End If
 
 											If Ok = True Then
 												Sql = "Insert Into [" & nomeDb & "].[dbo].[Anni] Values (" &
@@ -527,6 +568,45 @@ Public Class wsSuperUser
 						Next
 
 						If Ok Then
+							Dim ConnessioneNuovo As String = LeggeImpostazioniDiBase(Server.MapPath("."), nomeDb)
+							Dim ConnNuovo As Object = ApreDB(ConnessioneNuovo)
+
+							If TypeOf (ConnNuovo) Is String Then
+								Ritorno = ErroreConnessioneDBNonValida & ":" & ConnNuovo
+								Ok = False
+							Else
+								For i As Integer = 0 To q - 1
+									Sql = "Select Chiave From _CHIAVI_ Where Upper(lTrim(rTrim(Tabella)))='" & Tabelle(i).Trim.ToUpper & "'"
+									Rec = LeggeQuery(ConnNuovo, Sql, ConnessioneNuovo)
+									If TypeOf (Rec) Is String Then
+										Ritorno = Rec
+										Ok = False
+										Exit For
+									Else
+										If Not Rec.Eof() Then
+											Dim Query As String = Rec(0).Value
+
+											Ritorno = EsegueSql(ConnNuovo, Query, ConnessioneNuovo)
+											If Ritorno.Contains(StringaErrore) Then
+												Ok = False
+											End If
+
+											Rec.Close()
+										End If
+									End If
+								Next
+
+								If Ok Then
+									Sql = "Drop Table _CHIAVI_"
+									Ritorno = EsegueSql(ConnNuovo, Sql, ConnessioneNuovo)
+									If Ritorno.Contains(StringaErrore) Then
+										Ok = False
+									End If
+								End If
+							End If
+						End If
+
+						If Ok Then
 							Sql = "Insert Into [" & nomeDb & "].[dbo].[Anni] Values (" &
 								" " & idAnno & ", " &
 								"'" & NuovoAnno & "', " &
@@ -572,6 +652,170 @@ Public Class wsSuperUser
 
 					Sql = "Drop Database [" & nomeDb & "]"
 					Ritorno2 = EsegueSql(ConnGen, Sql, ConnessioneGenerale)
+				End If
+			End If
+		End If
+
+		Return Ritorno
+	End Function
+
+	<WebMethod()>
+	Public Function ImportaAnagrafica(CodiceSquadra As String, Squadra As String, idAnno As String) As String
+		Dim Ritorno As String = ""
+		Dim gf As New GestioneFilesDirectory
+		Dim Path As String = gf.LeggeFileIntero(Server.MapPath(".") & "\Impostazioni\Paths.txt")
+		Dim NomeFile As String = Path.Trim & Squadra.Replace(" ", "_").Trim & "\CSV\importAnagrafica.csv"
+		Dim CampiCSV() As String = {"Cognome", "Nome", "EMail", "Telefono", "Soprannome", "DataDiNascita", "Indirizzo", "CodFiscale"}
+		Dim TipoCampiCSV() As String = {"T", "T", "T", "N", "T", "T", "T", "T"}
+
+		If Not File.Exists(NomeFile) Then
+			Ritorno = StringaErrore & " File non esistente: " & NomeFile
+		Else
+			Dim Tutto As String = gf.LeggeFileIntero(NomeFile)
+			Dim Righe() As String = Tutto.Split(vbCrLf)
+
+			If Righe.Count = 0 Then
+				Ritorno = StringaErrore & " File vuoto"
+			Else
+				Dim Campi() As String = Righe(0).Split(";")
+
+				If Campi.Count = 0 Then
+					Ritorno = StringaErrore & " Intestazione vuota"
+				Else
+					If Campi.Count - 1 <> CampiCSV.Count Then
+						Ritorno = StringaErrore & " Intestazione non valida"
+					Else
+						Dim q As Integer = 0
+
+						For Each c In CampiCSV
+							If c.Trim.ToUpper <> Campi(q).Trim.ToUpper Then
+								Ritorno = StringaErrore & " Intestazione non valida: " & CampiCSV.ToString & " -> " & Campi.ToString
+								Exit For
+							End If
+							q += 1
+						Next
+
+						If Ritorno = "" Then
+							Dim ConnessioneGenerale As String = LeggeImpostazioniDiBase(Server.MapPath("."), CodiceSquadra)
+
+							If ConnessioneGenerale = "" Then
+								Ritorno = ErroreConnessioneNonValida
+							Else
+								Dim ConnGen As Object = ApreDB(ConnessioneGenerale)
+								Dim Ok As Boolean = True
+								Dim Datella As String = Now.Year & Format(Now.Month, "00") & Format(Now.Day, "00") & Format(Now.Hour, "00") & Format(Now.Minute, "00") & Format(Now.Second, "00")
+
+								gf.ApreFileDiTestoPerScrittura(Path.Trim & Squadra.Replace(" ", "_").Trim & "\CSV\LogCaricamento_" & Datella & ".txt")
+								gf.ScriveTestoSuFileAperto("Codice squadra: " & CodiceSquadra)
+
+								If TypeOf (ConnGen) Is String Then
+									Ritorno = ErroreConnessioneDBNonValida & ":" & ConnGen
+								Else
+									gf.ScriveTestoSuFileAperto("Begin trans")
+
+									Dim Sql As String = "Begin transaction"
+									Ritorno = EsegueSql(ConnGen, Sql, ConnessioneGenerale)
+
+									If Ritorno = "*" Then
+										Try
+											Dim IntestCampi As String = ""
+
+											gf.ScriveTestoSuFileAperto("Intestazione 1")
+
+											For i As Integer = 0 To CampiCSV.Count - 1
+												IntestCampi &= CampiCSV(i) & ", "
+											Next
+											IntestCampi = "(idAnno, idGiocatore, idCategoria, " & Mid(IntestCampi, 1, IntestCampi.Length - 2) & ", Eliminato, RapportoCompleto)"
+
+											gf.ScriveTestoSuFileAperto("Intestazione 2")
+
+											Dim idGiocatore As Integer = 1
+											Dim Rec As Object = Server.CreateObject("ADODB.Recordset")
+
+											Sql = "Select Max(idGiocatore)+1 From Giocatori"
+											Rec = LeggeQuery(ConnGen, Sql, ConnessioneGenerale)
+											If TypeOf (Rec) Is String Then
+												Ritorno = Rec
+												Ok = False
+											Else
+												If Rec(0).Value Is DBNull.Value = True Then
+													idGiocatore = 1
+												Else
+													idGiocatore = Rec(0).Value
+													Rec.Close
+												End If
+											End If
+											gf.ScriveTestoSuFileAperto("idGiocatore di partenza: " & idGiocatore)
+
+											gf.ScriveTestoSuFileAperto("Righe: " & Righe.Count - 1)
+
+											For i As Integer = 1 To Righe.Count - 1
+												If Righe(i).Trim <> "" Then
+													Dim Campi2() As String = Righe(i).Split(";")
+													Sql = "Insert Into Giocatori " & IntestCampi & " Values ("
+
+													Sql &= idAnno & ", " & idGiocatore & ", -1, "
+
+													' gf.ScriveTestoSuFileAperto("Riga: " & Righe(i))
+													' gf.ScriveTestoSuFileAperto("Campi: " & Campi2.Count - 1)
+
+													For k As Integer = 0 To Campi2.Count - 2
+														Dim c As String = IIf(Campi2(k) = "", "null", Campi2(k))
+
+														If TipoCampiCSV(k) = "T" Then
+															Sql &= "'" & Campi2(k) & "', "
+														Else
+															Sql &= Campi2(k) & ", "
+														End If
+													Next
+													Sql = Mid(Sql, 1, Sql.Length - 2) & ", 'N', 'N'"
+													Sql &= ")"
+													idGiocatore += 1
+
+													gf.ScriveTestoSuFileAperto(Sql)
+
+													Ritorno = EsegueSql(ConnGen, Sql, ConnessioneGenerale)
+
+													If Ritorno.Contains(StringaErrore) Then
+														gf.ScriveTestoSuFileAperto(Ritorno)
+														Ok = False
+														Exit For
+													Else
+														gf.ScriveTestoSuFileAperto("Riga scritta")
+														gf.ScriveTestoSuFileAperto("")
+													End If
+												End If
+												If Ritorno <> "*" Then
+													Ok = False
+													Exit For
+												End If
+											Next
+										Catch ex As Exception
+											gf.ScriveTestoSuFileAperto(ex.Message)
+											Ritorno = StringaErrore & " " & ex.Message
+										End Try
+
+										If Ritorno = "*" Then
+											Ok = True
+											Ritorno = Righe.Count - 2
+										End If
+
+										If Ok Then
+											gf.EliminaFileFisico(NomeFile)
+
+											Sql = "commit"
+											Dim Ritorno2 As String = EsegueSql(ConnGen, Sql, ConnessioneGenerale)
+										Else
+											Sql = "rollback"
+											Dim Ritorno2 As String = EsegueSql(ConnGen, Sql, ConnessioneGenerale)
+										End If
+									End If
+								End If
+
+								gf.ChiudeFileDiTestoDopoScrittura()
+							End If
+						End If
+					End If
 				End If
 			End If
 		End If

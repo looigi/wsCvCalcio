@@ -17,7 +17,7 @@ Public Class wsAllegati
 		End If
 
 		Dim ga As New GestioneFilesDirectory
-		Dim paths() As String = ga.LeggeFileIntero(Server.MapPath(".") & "\PathAllegati.txt").Split(";")
+		Dim paths() As String = ga.LeggeFileIntero(Server.MapPath(".") & "\Impostazioni\PathAllegati.txt").Split(";")
 		Dim path As String = paths(0).Replace(vbCrLf, "")
 		path = path.Replace(Chr(13), "")
 		path = path.Replace(Chr(10), "")
@@ -53,7 +53,7 @@ Public Class wsAllegati
 	Public Function EliminaAllegati(Squadra As String, ByVal idAnno As String, Categoria As String, ID As String, NomeDocumento As String) As String
 		Dim Ritorno As String = ""
 		Dim ga As New GestioneFilesDirectory
-		Dim paths() As String = ga.LeggeFileIntero(Server.MapPath(".") & "\PathAllegati.txt").Split(";")
+		Dim paths() As String = ga.LeggeFileIntero(Server.MapPath(".") & "\Impostazioni\PathAllegati.txt").Split(";")
 		Dim path As String = paths(0).Replace(vbCrLf, "")
 		path = path.Replace(Chr(13), "")
 		path = path.Replace(Chr(10), "")

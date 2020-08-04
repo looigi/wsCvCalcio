@@ -10,9 +10,9 @@ Public Class wsGenerale
     Inherits System.Web.Services.WebService
 
 	<WebMethod()>
-	Public Function InviaMail(Oggetto As String, Body As String, ChiScrive As String, ChiRiceve As String) As String
+	Public Function InviaMail(Oggetto As String, Body As String, ChiRiceve As String) As String
 		Dim m As New mail
-		Dim Ritorno As String = m.SendEmail(Oggetto, Body, ChiScrive, ChiRiceve)
+		Dim Ritorno As String = m.SendEmail(Oggetto, Body, ChiRiceve)
 		Return Ritorno
 	End Function
 
@@ -30,7 +30,7 @@ Public Class wsGenerale
 				Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
 			Else
 				Dim gf As New GestioneFilesDirectory
-				Dim PathBase As String = gf.LeggeFileIntero(Server.MapPath(".") & "\PathCvCalcio.txt")
+				Dim PathBase As String = gf.LeggeFileIntero(Server.MapPath(".") & "\Impostazioni\Paths.txt")
 				PathBase = PathBase.Replace(vbCrLf, "")
 				PathBase = PathBase.Replace(Chr(13), "")
 				PathBase = PathBase.Replace(Chr(10), "")

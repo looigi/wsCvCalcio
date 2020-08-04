@@ -120,7 +120,7 @@ Public Class wsGiocatori
 
 				If Ritorno = "" Then
 					Dim gf As New GestioneFilesDirectory
-					Dim Percorso As String = gf.LeggeFileIntero(Server.MapPath(".") & "\PathCvCalcio.txt")
+					Dim Percorso As String = gf.LeggeFileIntero(Server.MapPath(".") & "\Impostazioni\Paths.txt")
 					gf = Nothing
 					Percorso = Percorso.Trim()
 					If Strings.Right(Percorso, 1) <> "\" Then
@@ -344,8 +344,7 @@ Public Class wsGiocatori
 											Rec.Close
 
 											Dim gf As New GestioneFilesDirectory
-											Dim Percorso As String = gf.LeggeFileIntero(Server.MapPath(".") & "\PercorsoSito.txt")
-											gf = Nothing
+											Dim Percorso As String = gf.LeggeFileIntero(Server.MapPath(".") & "\Impostazioni\PercorsoSito.txt")
 
 											If Percorso = "" Then
 												Ritorno = StringaErrore & " Nessun percorso sito rilevato"
@@ -371,14 +370,30 @@ Public Class wsGiocatori
 												Body &= "Click per firmare"
 												Body &= "</a>"
 
-												Dim ChiScrive As String = "notifiche@incalcio.cloud"
-												Dim fileDaCopiare As String = Server.MapPath(".") & "\Firme\iscrizione_" & Anno & "_" & idGiocatore & ".html"
+												' Dim ChiScrive As String = "notifiche@incalcio.cloud"
+												Dim PathAllegati As String = gf.LeggeFileIntero(Server.MapPath(".") & "\Impostazioni\PathAllegati.txt")
+												Dim P() As String = PathAllegati.Split(";")
+												If Strings.Right(P(0), 1) = "\" Then
+													P(0) = Mid(P(0), 1, P(0).Length - 1)
+												End If
+												Dim fileDaCopiare As String = P(0) & "\" & Squadra & "\Firme\iscrizione_" & Anno & "_" & idGiocatore & ".html"
+												gf.CreaDirectoryDaPercorso(fileDaCopiare)
+												Dim fileScheletro As String = Server.MapPath(".") & "\Scheletri\base_iscrizione_.txt"
 
-												File.Copy(Server.MapPath(".") & "\Scheletri\base_iscrizione_.html", fileDaCopiare)
-												Dim fileFirme As String = gf.LeggeFileIntero(fileDaCopiare)
-												fileFirme = RiempieFileFirme(fileFirme, Anno, idGiocatore, Rec, Conn, Connessione)
+												If File.Exists(fileScheletro) Then
+													Try
+														Dim fileFirme As String = gf.LeggeFileIntero(fileScheletro)
+														fileFirme = RiempieFileFirme(fileFirme, Anno, idGiocatore, Rec, Conn, Connessione)
+														gf.CreaAggiornaFile(fileDaCopiare, fileFirme)
 
-												Ritorno = m.SendEmail(Oggetto, Body, ChiScrive, EMail, Server.MapPath(".") & "\Scheletri\base_iscrizione_" & idGiocatore & ".html")
+														Ritorno = m.SendEmail(Oggetto, Body, EMail, fileDaCopiare)
+													Catch ex As Exception
+														Ritorno = StringaErrore & " " & ex.Message
+													End Try
+												Else
+													Ritorno = StringaErrore & " Scheletro iscrizione non trovato"
+												End If
+												gf = Nothing
 												'Ritorno = "*"
 											End If
 										End If
@@ -487,11 +502,17 @@ Public Class wsGiocatori
 					Dim Mail1 As String = "" & Rec("MailGenitore1").value
 					Dim Telefono1 As String = "" & Rec("TelefonoGenitore1").value
 					Dim Gen1() As String = Genitore1.Split(" ")
+					If Gen1.Length = 1 Then
+						ReDim Preserve Gen1(2)
+					End If
 
 					Dim Genitore2 As String = "" & Rec("Genitore2").value
 					Dim Mail2 As String = "" & Rec("MailGenitore2").value
 					Dim Telefono2 As String = "" & Rec("TelefonoGenitore2").value
 					Dim Gen2() As String = Genitore2.Split(" ")
+					If Gen2.Length = 1 Then
+						ReDim Preserve Gen2(2)
+					End If
 
 					Contenuto = Contenuto.Replace("****cognome1 menu&nbsp; anagrafica***", Gen1(1))
 					Contenuto = Contenuto.Replace("***Nome1 menu anagrafica***", Gen1(0))
@@ -839,7 +860,7 @@ Public Class wsGiocatori
 
 				If Ritorno = "" Then
 					Dim gf As New GestioneFilesDirectory
-					Dim Percorso As String = gf.LeggeFileIntero(Server.MapPath(".") & "\PathCvCalcio.txt")
+					Dim Percorso As String = gf.LeggeFileIntero(Server.MapPath(".") & "\Impostazioni\Paths.txt")
 					gf = Nothing
 					Percorso = Percorso.Trim()
 					If Strings.Right(Percorso, 1) <> "\" Then
@@ -1307,7 +1328,7 @@ Public Class wsGiocatori
 								End If
 							Else
 								Dim gf As New GestioneFilesDirectory
-								Dim Percorso As String = gf.LeggeFileIntero(Server.MapPath(".") & "\PathCvCalcio.txt")
+								Dim Percorso As String = gf.LeggeFileIntero(Server.MapPath(".") & "\Impostazioni\Paths.txt")
 								gf = Nothing
 								Percorso = Percorso.Trim()
 								If Strings.Right(Percorso, 1) <> "\" Then

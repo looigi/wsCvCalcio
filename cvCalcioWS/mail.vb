@@ -3,7 +3,7 @@ Imports System.Net.Mail
 Imports System.Net.Mime
 
 Public Class mail
-	Public Function SendEmail(ByVal oggetto As String, ByVal newBody As String, ByVal Mittente As String, ByVal Optional ricevente As String = "emaildefault", ByVal Optional Allegato As String = "") As String
+	Public Function SendEmail(ByVal oggetto As String, ByVal newBody As String, ByVal Optional ricevente As String = "emaildefault", ByVal Optional Allegato As String = "") As String
 		'Dim myStream As StreamReader = New StreamReader(Server.MapPath(ConfigurationManager.AppSettings("VirtualDir") & "mailresponsive.html"))
 		'Dim newBody As String = ""
 		'newBody = myStream.ReadToEnd()
@@ -11,41 +11,50 @@ Public Class mail
 		'myStream.Close()
 		'myStream.Dispose()
 
+		Dim gf As New GestioneFilesDirectory
 		Dim Ritorno As String = ""
 		Dim mail As MailMessage = New MailMessage()
-		mail.From = New MailAddress(Mittente)
-		mail.[To].Add(New MailAddress(ricevente))
-		' mail.CC.Add(New MailAddress("email"))
-		mail.Subject = oggetto
-		mail.Body = CreaCorpoMail(mail, newBody)
-		mail.IsBodyHtml = True
+		Dim Credenziali As String = gf.LeggeFileIntero(HttpContext.Current.Server.MapPath(".") & "\Impostazioni\CredenzialiPosta.txt")
 
-		If Allegato <> "" Then
-			Dim Data As Attachment = New Attachment(Allegato, MediaTypeNames.Application.Octet)
-			Dim disposition As ContentDisposition = Data.ContentDisposition
-			disposition.CreationDate = System.IO.File.GetCreationTime(Allegato)
-			disposition.ModificationDate = System.IO.File.GetLastWriteTime(Allegato)
-			disposition.ReadDate = System.IO.File.GetLastAccessTime(Allegato)
-			mail.Attachments.Add(Data)
-		End If
-		'mail.BodyEncoding = System.Text.Encoding.GetEncoding("utf-8")
-		'Dim plainView As System.Net.Mail.AlternateView = System.Net.Mail.AlternateView.CreateAlternateViewFromString(System.Text.RegularExpressions.Regex.Replace(newBody, "< (.|\n) *?>", String.Empty), Nothing, "text/plain")
-		'Dim htmlView As System.Net.Mail.AlternateView = System.Net.Mail.AlternateView.CreateAlternateViewFromString(newBody, Nothing, "text/html")
-		'mail.AlternateViews.Add(plainView)
-		'mail.AlternateViews.Add(htmlView)
-		Dim smtpClient As SmtpClient = New SmtpClient("smtps.aruba.it")
-		smtpClient.EnableSsl = True
-		smtpClient.Port = 587
-		smtpClient.UseDefaultCredentials = False
-		smtpClient.Credentials = New System.Net.NetworkCredential("notifiche@incalcio.cloud", "Ch10d3ll1184!")
 		Try
+			Dim cr() As String = Credenziali.Split(";")
+			Dim Utenza As String = cr(0)
+			Dim Password As String = cr(1).Replace(vbCrLf, "")
+
+			mail.From = New MailAddress(Utenza)
+			mail.[To].Add(New MailAddress(ricevente))
+			' mail.CC.Add(New MailAddress("email"))
+			mail.Subject = oggetto
+			mail.IsBodyHtml = True
+			mail.Body = CreaCorpoMail(mail, newBody)
+
+			If Allegato <> "" Then
+				Dim Data As Attachment = New Attachment(Allegato, MediaTypeNames.Application.Octet)
+				Dim disposition As ContentDisposition = Data.ContentDisposition
+				disposition.CreationDate = System.IO.File.GetCreationTime(Allegato)
+				disposition.ModificationDate = System.IO.File.GetLastWriteTime(Allegato)
+				disposition.ReadDate = System.IO.File.GetLastAccessTime(Allegato)
+				mail.Attachments.Add(Data)
+			End If
+			'mail.BodyEncoding = System.Text.Encoding.GetEncoding("utf-8")
+			'Dim plainView As System.Net.Mail.AlternateView = System.Net.Mail.AlternateView.CreateAlternateViewFromString(System.Text.RegularExpressions.Regex.Replace(newBody, "< (.|\n) *?>", String.Empty), Nothing, "text/plain")
+			'Dim htmlView As System.Net.Mail.AlternateView = System.Net.Mail.AlternateView.CreateAlternateViewFromString(newBody, Nothing, "text/html")
+			'mail.AlternateViews.Add(plainView)
+			'mail.AlternateViews.Add(htmlView)
+			Dim smtpClient As SmtpClient = New SmtpClient("smtps.aruba.it")
+
+			smtpClient.EnableSsl = True
+			smtpClient.Port = 587
+			smtpClient.UseDefaultCredentials = False
+			smtpClient.Credentials = New System.Net.NetworkCredential(Utenza, Password)
 			smtpClient.Send(mail)
+			smtpClient = Nothing
+
 			Ritorno = "*"
 		Catch ex As Exception
 			Ritorno = StringaErrore & ex.Message
 		End Try
 		'smtpClient.Dispose()
-		smtpClient = Nothing
 
 		Return Ritorno
 	End Function
@@ -53,7 +62,7 @@ Public Class mail
 	Private Function CreaCorpoMail(mail As MailMessage, newBody As String) As String
 		Try
 			Dim gf As New GestioneFilesDirectory
-			Dim Righe As String = gf.LeggeFileIntero(HttpContext.Current.Server.MapPath(".") & "\PathCvCalcio.txt")
+			Dim Righe As String = gf.LeggeFileIntero(HttpContext.Current.Server.MapPath(".") & "\Impostazioni\Paths.txt")
 			Righe = Righe.Replace(vbCrLf, "")
 
 			Dim Body As String = ""
@@ -64,7 +73,7 @@ Public Class mail
 			'Corpo = Corpo.Replace("***SFONDO***", sfondoMail)
 			'Corpo = Corpo.Replace("***LOGO APPLICAZIONE***", logoApplicazione)
 
-			Corpo = Corpo.Replace("***BODY***", newBody)
+			Corpo = Corpo.Replace("***BODY***", "<span style=""font-family: Verdana; font-size: 18px;"">" & newBody & "</span>")
 
 			Dim contentID As String = "Image1" ' & Now.Year & Format(Now.Month, "00") & Format(Now.Day, "00") & Format(Now.Hour, "00") & Format(Now.Minute, "00") & Format(Now.Second, "00")
 			Dim inlineLogo = New Attachment(sfondoMail)

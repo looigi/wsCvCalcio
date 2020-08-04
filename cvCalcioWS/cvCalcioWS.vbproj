@@ -83,10 +83,6 @@
     <Content Include="Scheletri\base_convocazioni.txt" />
     <Content Include="Scheletri\base_partita.txt" />
     <Content Include="Scheletri\base_statistiche.txt" />
-    <Content Include="NomeSquadraBase.txt" />
-    <Content Include="PathAllegati.txt" />
-    <Content Include="PathCvCalcio.txt" />
-    <Content Include="PercorsoSito.txt" />
     <Content Include="wsAllegati.asmx" />
     <Content Include="wsEventiCalendario.asmx" />
     <Content Include="wsFunzioni.asmx" />

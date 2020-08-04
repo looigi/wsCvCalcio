@@ -25,7 +25,7 @@ Public Class wsUtentiLocali
 				Dim Sql As String = ""
 
 				Sql = "SELECT Utenti.idAnno, idUtente, Utente, Cognome, Nome, " &
-						"Password, EMail, idCategoria, idTipologia, Utenti.idSquadra, Descrizione As Squadra " &
+						"Password, EMail, idCategoria, Utenti.idTipologia, Utenti.idSquadra, Descrizione As Squadra " &
 						"FROM Utenti Left Join Squadre On Utenti.idSquadra = Squadre.idSquadra " &
 						"Where Upper(Utente)='" & Utente.ToUpper.Replace("'", "''") & "'" ' And idAnno=" & idAnno
 				Rec = LeggeQuery(Conn, Sql, Connessione)
@@ -72,7 +72,7 @@ Public Class wsUtentiLocali
 				Dim Sql As String = ""
 
 				Sql = "SELECT Utenti.idAnno, idUtente, Utente, Cognome, Nome, " &
-						"Password, EMail, idCategoria, idTipologia, Utenti.idSquadra, Descrizione As Squadra " &
+						"Password, EMail, idCategoria, Utenti.idTipologia, Utenti.idSquadra, Descrizione As Squadra " &
 						"FROM Utenti Left Join Squadre On Utenti.idSquadra = Squadre.idSquadra " &
 						"Where Upper(Utente)='" & Utente.ToUpper.Replace("'", "''") & "'" ' And idAnno=" & idAnno
 				Rec = LeggeQuery(Conn, Sql, Connessione)
@@ -110,11 +110,11 @@ Public Class wsUtentiLocali
 									Dim m As New mail
 									Dim Oggetto As String = "Reset password inCalcio"
 									Dim Body As String = ""
-									Body &= "La Sua password relativa al sito inCalcio è stata modificata dietro sua richiesta. " & vbCrLf & vbCrLf
-									Body &= "La nuova password valida per il solo primo accesso è: " & nuovaPass & vbCrLf & vbCrLf
+									Body &= "La Sua password relativa al sito inCalcio è stata modificata dietro sua richiesta. <br /><br />"
+									Body &= "La nuova password valida per il solo primo accesso è: " & nuovaPass & "<br /><br />"
 									Dim ChiScrive As String = "notifiche@incalcio.cloud"
 
-									Ritorno = m.SendEmail(Oggetto, Body, ChiScrive, EMail)
+									Ritorno = m.SendEmail(Oggetto, Body, EMail)
 								End If
 							Catch ex As Exception
 								Ritorno = StringaErrore & " " & ex.Message
