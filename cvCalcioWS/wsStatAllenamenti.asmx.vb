@@ -58,7 +58,7 @@ Public Class wsStatAllenamenti
 						"Where idAnno=" & idAnno & " And idCategoria=" & idCategoria & " And CharIndex('" & sMese & "', Datella)>0  And Progressivo=0) As Totale, A.NumeroMaglia From ( " &
 						"SELECT Giocatori.idGiocatore, Cognome, Nome, Ruoli.Descrizione,  Count(*) As Presenze, Giocatori.NumeroMaglia " &
 						"FROM (Allenamenti LEFT JOIN Giocatori ON (Allenamenti.idAnno = Giocatori.idAnno) AND (Allenamenti.idGiocatore=Giocatori.idGiocatore) AND (Allenamenti.idCategoria = Giocatori.idCategoria)) " &
-						"LEFT Join Ruoli On Giocatori.idRuolo=Ruoli.idRuolo " &
+						"LEFT Join [Generale].[dbo].[Ruoli] On Giocatori.idRuolo=Ruoli.idRuolo " &
 						"WHERE Allenamenti.idCategoria=" & idCategoria & " And Allenamenti.idAnno=" & idAnno & " And Giocatori.idGiocatore Is Not Null And CharIndex('" & sMese & "', Datella)>0 " &
 						"Group By Giocatori.idGiocatore, Cognome, Nome, Ruoli.Descrizione, Giocatori.NumeroMaglia " &
 						") A) B " &

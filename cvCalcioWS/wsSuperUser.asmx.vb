@@ -589,6 +589,7 @@ Public Class wsSuperUser
 											Ritorno = EsegueSql(ConnNuovo, Query, ConnessioneNuovo)
 											If Ritorno.Contains(StringaErrore) Then
 												Ok = False
+												Exit For
 											End If
 
 											Rec.Close()

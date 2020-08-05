@@ -171,7 +171,7 @@ Public Class wsMultimedia
 						End If
 
 						Sql = "Select Giocatori.*, Ruoli.Descrizione From Giocatori "
-						Sql &= "Left Join Ruoli On Giocatori.idRuolo=Ruoli.idRuolo "
+						Sql &= "Left Join [Generale].[dbo].[Ruoli] On Giocatori.idRuolo=Ruoli.idRuolo "
 						Sql &= "Where idAnno=" & idAnno & Altro
 						Rec = LeggeQuery(Conn, Sql, Connessione)
 						If TypeOf (Rec) Is String Then

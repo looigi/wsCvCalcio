@@ -172,7 +172,7 @@
 			"FROM ((((((((((Partite LEFT JOIN Risultati ON Partite.idPartita = Risultati.idPartita) " &
 			"LEFT JOIN Categorie ON (Partite.idCategoria = Categorie.idCategoria) And (Partite.idAnno = Categorie.idAnno)) " &
 			"LEFT JOIN SquadreAvversarie ON Partite.idAvversario = SquadreAvversarie.idAvversario) " &
-			"LEFT JOIN TipologiePartite ON Partite.idTipologia = TipologiePartite.idTipologia) " &
+			"LEFT JOIN [Generale].[dbo].[TipologiePartite] ON Partite.idTipologia = TipologiePartite.idTipologia) " &
 			"LEFT JOIN CampiAvversari ON Partite.idCampo = CampiAvversari.idCampo) " &
 			"LEFT JOIN Allenatori On (Partite.idAnno = Allenatori.idAnno) And (Partite.idAllenatore = Allenatori.idAllenatore)) " &
 			"LEFT JOIN MeteoPartite ON Partite.idPartita = MeteoPartite.idPartita) " &
@@ -201,7 +201,7 @@
 						Filone = Filone.Replace("***CAMPO***", "" & Rec("CampoAvversari").Value)
 						Filone = Filone.Replace("***INDIRIZZO***", "" & Rec("IndirizzoAvversari").Value)
 					Else
-						Filone = Filone.Replace("***CAMPO***", Rec("CampoSquadra").Value)
+						Filone = Filone.Replace("***CAMPO***", "" & Rec("CampoSquadra").Value)
 						Filone = Filone.Replace("***INDIRIZZO***", "" & Rec("IndirizzoBase").Value)
 					End If
 				End If
@@ -321,7 +321,7 @@
 						' Convocati
 						Sql = "SELECT Convocati.idGiocatore, Giocatori.NumeroMaglia, Giocatori.Cognome, Giocatori.Nome, Ruoli.Descrizione As Ruolo " &
 							"FROM (Partite INNER JOIN Convocati ON Partite.idPartita = Convocati.idPartita) " &
-							"INNER JOIN (Giocatori INNER JOIN Ruoli ON Giocatori.idRuolo = Ruoli.idRuolo) ON (Convocati.idGiocatore = Giocatori.idGiocatore) AND (Partite.idAnno = Giocatori.idAnno) " &
+							"INNER JOIN (Giocatori INNER JOIN [Generale].[dbo].[Ruoli] ON Giocatori.idRuolo = Ruoli.idRuolo) ON (Convocati.idGiocatore = Giocatori.idGiocatore) AND (Partite.idAnno = Giocatori.idAnno) " &
 							"Where Partite.idAnno=" & idAnno & " And PArtite.idPartita=" & idPartita & " " &
 							"Order By Ruoli.idRuolo"
 						Rec = LeggeQuery(Conn, Sql, Connessione)
@@ -361,7 +361,7 @@
 							Sql = "Select * From (SELECT RisultatiAggiuntiviMarcatori.Minuto, Giocatori.NumeroMaglia, Giocatori.idGiocatore, Giocatori.Cognome, Giocatori.Nome, Ruoli.Descrizione As Ruolo, RisultatiAggiuntiviMarcatori.idTempo " &
 									"FROM ((Partite INNER JOIN RisultatiAggiuntiviMarcatori ON Partite.idPartita = RisultatiAggiuntiviMarcatori.idPartita) " &
 									"INNER JOIN Giocatori ON (Partite.idAnno = Giocatori.idAnno) AND (RisultatiAggiuntiviMarcatori.idGiocatore = Giocatori.idGiocatore)) " &
-									"INNER JOIN Ruoli ON Giocatori.idRuolo = Ruoli.idRuolo " &
+									"INNER JOIN [Generale].[dbo].[Ruoli] ON Giocatori.idRuolo = Ruoli.idRuolo " &
 									"Where Partite.idAnno=" & idAnno & " And Partite.idPartita=" & idPartita & " " &
 									"Union ALL " &
 									"SELECT RisultatiAggiuntiviMarcatori.Minuto, '', -1, 'Autorete', '', '' As Ruolo, RisultatiAggiuntiviMarcatori.idTempo FROM Partite INNER JOIN RisultatiAggiuntiviMarcatori ON Partite.idPartita = RisultatiAggiuntiviMarcatori.idPartita " &
@@ -492,7 +492,7 @@
 								Sql = "SELECT RigoriPropri.idGiocatore, RigoriPropri.idRigore, Ruoli.Descrizione, Giocatori.Cognome + ' ' + Giocatori.Nome As Giocatore, " &
 									"Giocatori.NumeroMaglia, RigoriPropri.Termine From ((RigoriPropri " &
 									"Left Join Giocatori On RigoriPropri.idGiocatore=Giocatori.idGiocatore And RigoriPropri.idAnno = Giocatori.idAnno) " &
-									"Left Join Ruoli On Giocatori.idRuolo = Ruoli.idRuolo) " &
+									"Left Join [Generale].[dbo].[Ruoli] On Giocatori.idRuolo = Ruoli.idRuolo) " &
 									"Where RigoriPropri.idAnno=" & idAnno & " And idPartita=" & idPartita & " " &
 									"Order By RigoriPropri.idRigore"
 								Rec2 = LeggeQuery(Conn, Sql, Connessione)

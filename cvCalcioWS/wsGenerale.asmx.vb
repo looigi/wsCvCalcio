@@ -837,7 +837,7 @@ Public Class wsGenerale
 				Dim Sql As String = ""
 
 				Try
-					Sql = "SELECT * FROM TipologiePartite Order By Descrizione"
+					Sql = "SELECT * FROM [Generale].[dbo].[TipologiePartite] Order By Descrizione"
 					Rec = LeggeQuery(Conn, Sql, Connessione)
 					If TypeOf (Rec) Is String Then
 						Ritorno = Rec
@@ -868,7 +868,7 @@ Public Class wsGenerale
 	<WebMethod()>
 	Public Function RitornaRuoli(Squadra As String) As String
 		Dim Ritorno As String = ""
-		Dim Connessione As String = LeggeImpostazioniDiBase(Server.MapPath("."), Squadra)
+		Dim Connessione As String = LeggeImpostazioniDiBase(Server.MapPath("."), "")
 
 		If Connessione = "" Then
 			Ritorno = ErroreConnessioneNonValida
@@ -888,7 +888,7 @@ Public Class wsGenerale
 						Ritorno = Rec
 					Else
 						If Rec.Eof Then
-							Ritorno = StringaErrore & " No roles found"
+							Ritorno = StringaErrore & " Nessun ruolo rilevato"
 						Else
 							Ritorno = ""
 							Do Until Rec.Eof

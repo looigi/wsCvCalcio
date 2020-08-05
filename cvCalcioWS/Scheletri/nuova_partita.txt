@@ -1,0 +1,49 @@
+***TIPOLOGIA*** ***COGNOME*** ***NOME*** è convocato per la partita (***TIPOPARTITA***) ***SQUADRA1***-***SQUADRA2*** in data ***DATA***.<br />
+<br />
+
+Luogo: ***LUOGO***
+<br />
+Indirizzo: <a href="***URLMAPPA***">***CAMPO*** ***INDIRIZZO***</a>
+<br />
+Orario di convocazione: ***ORARIO***
+<br />
+Riferimento: ***REFERENTE*** ***TELEFONO***
+<br />
+Allenatore: ***ALLENATORE*** ***TELALLENATORE***
+<br />
+<br />
+
+<a href="***URLPARTECIPO***">
+<span style="    
+	width: 250px;
+    height: 35px;
+	float: left;
+    display: block;
+    font-size: 25px;
+    font-family: Verdana;
+    color: white;
+    text-align: center;
+    background-color: green;
+    border: 1px solid #999;">
+&nbsp;Partecipo&nbsp;
+</span>
+</a>
+&nbsp;
+<a href="***URLNONPARTECIPO***">
+<span style="    
+	width: 250px;
+    height: 35px;
+	float: left;
+	margin-left: 5px;
+    display: block;
+    font-size: 25px;
+    font-family: Verdana;
+    color: white;
+    text-align: center;
+    background-color: red;
+    border: 1px solid #999;">
+&nbsp;Non posso&nbsp;
+</span>
+</a>
+<br />
+<br />

@@ -176,7 +176,7 @@ Public Class wsStatistiche
 
 				If Ok Then
 					Sql = "SELECT RigoriPropri.idGiocatore, Ruoli.Descrizione, Giocatori.Cognome, Giocatori.Nome, Giocatori.NumeroMaglia, Sum(RigoriPropri.Termine) As Rigori " &
-						"From ((RigoriPropri Left Join Giocatori On RigoriPropri.idGiocatore=Giocatori.idGiocatore And RigoriPropri.idAnno = Giocatori.idAnno) Left Join Ruoli On Giocatori.idRuolo = Ruoli.idRuolo) " &
+						"From ((RigoriPropri Left Join Giocatori On RigoriPropri.idGiocatore=Giocatori.idGiocatore And RigoriPropri.idAnno = Giocatori.idAnno) Left Join [Generale].[dbo].[Ruoli] On Giocatori.idRuolo = Ruoli.idRuolo) " &
 						"Where RigoriPropri.idAnno=" & idAnno & " And Termine=1 " &
 						"Group By RigoriPropri.idGiocatore, Ruoli.Descrizione, Giocatori.Cognome, Giocatori.Nome, Giocatori.NumeroMaglia"
 					Rec = LeggeQuery(Conn, Sql, Connessione)
@@ -807,7 +807,7 @@ Public Class wsStatistiche
 				Dim Sql As String
 
 				Sql = "SELECT TipologiePartite.Descrizione, Count(*) As Volte "
-				Sql &= "FROM Partite Left Join TipologiePartite On Partite.idTipologia=TipologiePartite.idTipologia "
+				Sql &= "FROM Partite Left Join [Generale].[dbo].[TipologiePartite] On Partite.idTipologia=TipologiePartite.idTipologia "
 				Sql &= "Where idAnno=" & idAnno & " And idCategoria= " & idCategoria & " "
 				Sql &= "Group By TipologiePartite.Descrizione"
 
@@ -1129,7 +1129,7 @@ Public Class wsStatistiche
 				End Try
 
 				Sql = "SELECT TipologiePartite.Descrizione, Count(*) As Quante " &
-					"FROM Partite Left Join TipologiePartite On Partite.idTipologia = TipologiePartite.idTipologia " &
+					"FROM Partite Left Join [Generale].[dbo].[TipologiePartite] On Partite.idTipologia = TipologiePartite.idTipologia " &
 					"Where Partite.idAnno = " & idAnno & " And Partite.idCategoria = " & idCategoria & "  " &
 					"Group By TipologiePartite.Descrizione"
 				Try
@@ -3002,7 +3002,7 @@ Public Class wsStatistiche
 					"From RisultatiAggiuntivi Where idPartita=" & PartitaConPiuGoal & ") As GoalAvv From " &
 					 "(((Partite Left Join SquadreAvversarie On Partite.idAvversario = SquadreAvversarie.idAvversario) " &
 					"Left Join Anni On Partite.idAnno = Anni.idAnno) Left Join MeteoPartite On Partite.idPartita = MeteoPartite.idPartita) " &
-					"Left Join TipologiePartite On Partite.idTipologia = TipologiePartite.idTipologia " &
+					"Left Join [Generale].[dbo].[TipologiePartite] On Partite.idTipologia = TipologiePartite.idTipologia " &
 					"Where Partite.idAnno = " & idAnno & " And Partite.idCategoria = " & idCategoria & " And Partite.idPartita = " & PartitaConPiuGoal & ""
 				Try
 					Rec = LeggeQuery(Conn, Sql, Connessione)
@@ -3077,7 +3077,7 @@ Public Class wsStatistiche
 					"From RisultatiAggiuntivi Where idPartita=" & PartitaConMenoGoal & ") As GoalAvv From " &
 					"(((Partite Left Join SquadreAvversarie On Partite.idAvversario = SquadreAvversarie.idAvversario) " &
 					"Left Join Anni On Partite.idAnno = Anni.idAnno) Left Join MeteoPartite On Partite.idPartita = MeteoPartite.idPartita) " &
-					"Left Join TipologiePartite On Partite.idTipologia = TipologiePartite.idTipologia " &
+					"Left Join [Generale].[dbo].[TipologiePartite] On Partite.idTipologia = TipologiePartite.idTipologia " &
 					"Where Partite.idAnno = " & idAnno & " And Partite.idCategoria = " & idCategoria & " And Partite.idPartita = " & PartitaConMenoGoal & ""
 				Try
 					Rec = LeggeQuery(Conn, Sql, Connessione)
