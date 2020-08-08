@@ -3,6 +3,10 @@
 
 Luogo: ***LUOGO***
 <br />
+Appuntamento: ***DOAPPUNTAMENTO*** <a href="***URLMAPPAAPP***">***APPUNTAMENTO***</a>
+<br />
+Mezzo di trasporto: ***MEZZO***
+<br />
 Indirizzo: <a href="***URLMAPPA***">***CAMPO*** ***INDIRIZZO***</a>
 <br />
 Orario di convocazione: ***ORARIO***

@@ -114,7 +114,7 @@ Public Class wsUtentiLocali
 									Body &= "La nuova password valida per il solo primo accesso è: " & nuovaPass & "<br /><br />"
 									Dim ChiScrive As String = "notifiche@incalcio.cloud"
 
-									Ritorno = m.SendEmail(Oggetto, Body, EMail)
+									Ritorno = m.SendEmail("", Oggetto, Body, EMail)
 								End If
 							Catch ex As Exception
 								Ritorno = StringaErrore & " " & ex.Message
@@ -152,12 +152,13 @@ Public Class wsUtentiLocali
 				Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
 			Else
 				Dim Rec As Object = Server.CreateObject("ADODB.Recordset")
+				Dim Rec2 As Object = Server.CreateObject("ADODB.Recordset")
 				Dim Sql As String = ""
 
 				Try
 					Sql = "SELECT Utenti.idAnno, idUtente, Utente, Cognome, Nome, " &
 						"Password, EMail, idCategoria, Utenti.idTipologia As idTipologia, Utenti.idSquadra, Descrizione As Squadra, PasswordScaduta, Telefono, " &
-						"Squadre.Eliminata, Squadre.idTipologia As idTipo2, Squadre.idLicenza " &
+						"Squadre.Eliminata, Squadre.idTipologia As idTipo2, Squadre.idLicenza, Utenti.idSquadra " &
 						"FROM Utenti Left Join Squadre On Utenti.idSquadra = Squadre.idSquadra " &
 						"Where Upper(Utente)='" & Utente.ToUpper.Replace("'", "''") & "' And Utenti.Eliminato = 'N' " &
 						"Order By Utenti.idTipologia"
@@ -184,25 +185,52 @@ Public Class wsUtentiLocali
 								End If
 
 								If Ok = True Then
-									Ritorno &= Rec("idAnno").Value & ";" &
-											Rec("idUtente").Value & ";" &
-											Rec("Utente").Value & ";" &
-											Rec("Cognome").Value & ";" &
-											Rec("Nome").Value & ";" &
-											DecriptaStringa(Rec("Password").Value) & ";" &
-											Rec("EMail").Value & ";" &
-											Rec("idCategoria").Value & ";" &
-											Rec("idTipologia").Value & ";" &
-											Rec("idSquadra").Value & ";" &
-											Rec("Squadra").Value & ";" &
-											Rec("PasswordScaduta").Value & ";" &
-											Rec("Telefono").Value & ";" &
-											Rec("idTipo2").Value & ";" &
-											Rec("idLicenza").Value & ";" &
-											"§"
+									Dim ok2 As Boolean = True
 
-									Squadra = "" & Rec("Squadra").Value
-									UtenteDaSalvare = Ritorno
+									If Rec("idSquadra").Value <> -1 Then
+										Sql = "Select * From SquadraAnni Where idSquadra=" & Rec("idSquadra").Value & " And idAnno=" & Rec("idAnno").Value
+										Rec2 = LeggeQuery(Conn, Sql, Connessione)
+										If TypeOf (Rec2) Is String Then
+											Ritorno = Rec2
+											ok2 = False
+										Else
+											If Rec2.Eof Then
+												Ritorno = StringaErrore & " Nessun dettaglio squadra rilevato"
+												ok2 = False
+											Else
+												If Rec2("OnLine").Value = "N" Then
+													Ritorno = StringaErrore & " La squadra dell'utente è temporanemante offline. Riprovare più tardi"
+													ok2 = False
+												Else
+													ok2 = True
+												End If
+
+												Rec2.Close()
+											End If
+										End If
+									End If
+
+									If ok2 Then
+										Ritorno &= Rec("idAnno").Value & ";" &
+														Rec("idUtente").Value & ";" &
+														Rec("Utente").Value & ";" &
+														Rec("Cognome").Value & ";" &
+														Rec("Nome").Value & ";" &
+														DecriptaStringa(Rec("Password").Value) & ";" &
+														Rec("EMail").Value & ";" &
+														Rec("idCategoria").Value & ";" &
+														Rec("idTipologia").Value & ";" &
+														Rec("idSquadra").Value & ";" &
+														Rec("Squadra").Value & ";" &
+														Rec("PasswordScaduta").Value & ";" &
+														Rec("Telefono").Value & ";" &
+														Rec("idTipo2").Value & ";" &
+														Rec("idLicenza").Value & ";" &
+														"§"
+
+										Squadra = "" & Rec("Squadra").Value
+										UtenteDaSalvare = Ritorno
+									End If
 								End If
 
 								Rec.MoveNext()
@@ -210,40 +238,42 @@ Public Class wsUtentiLocali
 							'End If
 							Rec.Close()
 
-							Sql = "Select * From Squadre Where Eliminata = 'N' Order By Descrizione"
-							Rec = LeggeQuery(Conn, Sql, Connessione)
-							If TypeOf (Rec) Is String Then
-								Ritorno = Rec
-							Else
-								If Rec.Eof Then
-									Ritorno = StringaErrore & " Nessuna squadra rilevata"
+							If Not Ritorno.Contains(StringaErrore) Then
+								Sql = "Select * From Squadre Where Eliminata = 'N' Order By Descrizione"
+								Rec = LeggeQuery(Conn, Sql, Connessione)
+								If TypeOf (Rec) Is String Then
+									Ritorno = Rec
 								Else
-									Ritorno &= "|"
-									Do Until Rec.Eof
-										Dim Tipologia As String = ""
-										Dim Licenza As String = ""
+									If Rec.Eof Then
+										Ritorno = StringaErrore & " Nessuna squadra rilevata"
+									Else
+										Ritorno &= "|"
+										Do Until Rec.Eof
+											Dim Tipologia As String = ""
+											Dim Licenza As String = ""
 
-										Select Case Rec("idTipologia").Value
-											Case 1
-												Tipologia = "Produzione"
-											Case 2
-												Tipologia = "Prova"
-										End Select
+											Select Case Rec("idTipologia").Value
+												Case 1
+													Tipologia = "Produzione"
+												Case 2
+													Tipologia = "Prova"
+											End Select
 
-										Select Case Rec("idLicenza").Value
-											Case 1
-												Licenza = "Base"
-											Case 2
-												Licenza = "Standard"
-											Case 3
-												Licenza = "Premium"
-										End Select
+											Select Case Rec("idLicenza").Value
+												Case 1
+													Licenza = "Base"
+												Case 2
+													Licenza = "Standard"
+												Case 3
+													Licenza = "Premium"
+											End Select
 
-										Ritorno &= Rec("idSquadra").Value & ";" & Rec("Descrizione").Value & ";" & Rec("DataScadenza").Value & ";" & Tipologia & ";" & Licenza & ";" & Rec("idTipologia").Value & ";" & Rec("idLicenza").Value & ";§"
+											Ritorno &= Rec("idSquadra").Value & ";" & Rec("Descrizione").Value & ";" & Rec("DataScadenza").Value & ";" & Tipologia & ";" & Licenza & ";" & Rec("idTipologia").Value & ";" & Rec("idLicenza").Value & ";§"
 
-										Rec.MoveNext()
-									Loop
-									Rec.Close()
+											Rec.MoveNext()
+										Loop
+										Rec.Close()
+									End If
 								End If
 							End If
 						End If

@@ -21,7 +21,7 @@
 </tr>
 <tr>
 <td style="width: 325px;">DATA DI NASCITA: ***Data di nascita menu anagrafica***&nbsp;</td>
-<td style="width: 219px;">CITTA' DI NASCITA: ***non c'&egrave;***</td>
+<td style="width: 219px;">CITTA' DI NASCITA: ***Citta nascita menu anagrafica***</td>
 </tr>
 </tbody>
 </table>
@@ -38,7 +38,7 @@
 <tr style="height: 26px;">
 <td style="width: 284.667px; height: 26px;">&nbsp;****indirizzo menu anagrafica***</td>
 <td style="width: 182.333px; height: 26px;">CITTA':&nbsp; ***citt&agrave;***</td>
-<td style="width: 108px; height: 26px;">CAP: ***?***</td>
+<td style="width: 108px; height: 26px;">CAP: ***cap menu anagrafica***</td>
 </tr>
 </tbody>
 </table>
@@ -54,8 +54,8 @@
 <table style="width: 560px;">
 <tbody>
 <tr>
-<td style="width: 335.333px;">DATA: ***data firma***&nbsp;</td>
-<td style="width: 208.667px;">***firma padre***</td>
+<td style="width: 335.333px;">DATA: ***data firma3***&nbsp;</td>
+<td style="width: 208.667px;">***firma giocatore***</td>
 </tr>
 </tbody>
 </table>
@@ -64,19 +64,19 @@
 <table style="width: 557.667px;">
 <tbody>
 <tr>
-<td style="width: 324px;">COGNOME: ****cognome menu&nbsp; anagrafica***</td>
-<td style="width: 218.667px;">NOME: ***Nome menu anagrafica***</td>
+<td style="width: 324px;">COGNOME: ****cognome menu&nbsp; anagrafica1***</td>
+<td style="width: 218.667px;">NOME: ***Nome menu anagrafica1***</td>
 </tr>
 <tr>
-<td style="width: 324px;">DATA DI NASCITA:&nbsp;***Data di nascita menu anagrafica***</td>
-<td style="width: 218.667px;">CITTA' DI NASCITA: ***non c'&egrave;***</td>
+<td style="width: 324px;">DATA DI NASCITA:&nbsp;***Data di nascita menu anagrafica1***</td>
+<td style="width: 218.667px;">CITTA' DI NASCITA: ***Citta Nascita 1***</td>
 </tr>
 </tbody>
 </table>
 <table style="width: 557.333px;">
 <tbody>
 <tr>
-<td style="width: 400px;">CODICE FISCALE: ***codice fiscale menu anagrafica***</td>
+<td style="width: 400px;">CODICE FISCALE: ***codice fiscale menu anagrafica1***</td>
 <td style="width: 152.333px;">&nbsp;</td>
 </tr>
 </tbody>
@@ -84,17 +84,17 @@
 <table style="width: 555.333px;">
 <tbody>
 <tr>
-<td style="width: 248px;">&nbsp;****indirizzo menu anagrafica***</td>
-<td style="width: 145px;">CITTA':&nbsp; ***citt&agrave;***</td>
-<td style="width: 141.333px;">CAP: ***?***</td>
+<td style="width: 248px;">&nbsp;****indirizzo menu anagrafica1***</td>
+<td style="width: 145px;">CITTA':&nbsp; ***citt&agrave;1***</td>
+<td style="width: 141.333px;">CAP: ***cap1***</td>
 </tr>
 </tbody>
 </table>
 <table style="width: 555.333px;">
 <tbody>
 <tr>
-<td style="width: 246px;">email: *** mail menu anagrafica***</td>
-<td style="width: 293.333px;">telefono: ***telefono menu anagrafica***</td>
+<td style="width: 246px;">email: *** mail menu anagrafica1***</td>
+<td style="width: 293.333px;">telefono: ***telefono menu anagrafica1***</td>
 </tr>
 </tbody>
 </table>
@@ -102,7 +102,7 @@
 <table style="width: 552px;">
 <tbody>
 <tr>
-<td style="width: 331.333px;">DATA: ***data firma***&nbsp;</td>
+<td style="width: 331.333px;">DATA: ***data firma1***&nbsp;</td>
 <td style="width: 205.333px;">***firma padre***</td>
 </tr>
 </tbody>
@@ -112,19 +112,19 @@
 <table style="width: 557.667px;">
 <tbody>
 <tr>
-<td style="width: 324px;">COGNOME: ****cognome menu&nbsp; anagrafica***</td>
-<td style="width: 218.667px;">NOME: ***Nome menu anagrafica***</td>
+<td style="width: 324px;">COGNOME: ****cognome menu&nbsp; anagrafica2***</td>
+<td style="width: 218.667px;">NOME: ***Nome menu anagrafica2***</td>
 </tr>
 <tr>
-<td style="width: 324px;">DATA DI NASCITA:&nbsp;***Data di nascita menu anagrafica***</td>
-<td style="width: 218.667px;">CITTA' DI NASCITA: ***non c'&egrave;***</td>
+<td style="width: 324px;">DATA DI NASCITA:&nbsp;***Data di nascita menu anagrafica2***</td>
+<td style="width: 218.667px;">CITTA' DI NASCITA: ***Citta Nascita 2***</td>
 </tr>
 </tbody>
 </table>
 <table style="width: 557.667px;">
 <tbody>
 <tr>
-<td style="width: 400px;">CODICE FISCALE: ***codice fiscale menu anagrafica***</td>
+<td style="width: 400px;">CODICE FISCALE: ***codice fiscale menu anagrafica2***</td>
 <td style="width: 142.667px;">&nbsp;</td>
 </tr>
 </tbody>
@@ -132,8 +132,8 @@
 <table style="width: 558.333px;">
 <tbody>
 <tr>
-<td style="width: 248px;">&nbsp;****indirizzo menu anagrafica***</td>
-<td style="width: 145px;">CITTA':&nbsp; ***citt&agrave;***</td>
+<td style="width: 248px;">&nbsp;****indirizzo menu anagrafica2***</td>
+<td style="width: 145px;">CITTA':&nbsp; ***citt&agrave;2***</td>
 <td style="width: 144.333px;">CAP: ***?***</td>
 </tr>
 </tbody>
@@ -141,8 +141,8 @@
 <table style="width: 558.333px;">
 <tbody>
 <tr>
-<td style="width: 246px;">email: *** mail menu anagrafica***</td>
-<td style="width: 296.333px;">telefono: ***telefono menu anagrafica***</td>
+<td style="width: 246px;">email: *** mail menu anagrafica2***</td>
+<td style="width: 296.333px;">telefono: ***telefono menu anagrafica2***</td>
 </tr>
 </tbody>
 </table>
@@ -150,7 +150,7 @@
 <table style="width: 556px;">
 <tbody>
 <tr>
-<td style="width: 321.667px;">DATA: ***data firma***&nbsp;</td>
+<td style="width: 321.667px;">DATA: ***data firma2***&nbsp;</td>
 <td style="width: 218.333px;">***firma madre***</td>
 </tr>
 </tbody>

@@ -17,7 +17,8 @@ Public Class wsPartite
 								 Tempo2Tempo As String, Tempo3Tempo As String, Coordinate As String, sTempo As String,
 								 idUnioneCalendario As String, TGA1 As String, TGA2 As String, TGA3 As String, Dirigenti As String, idArbitro As String,
 								 RisultatoATempi As String, RigoriPropri As String, RigoriAvv As String, EventiPrimoTempo As String,
-								 EventiSecondoTempo As String, EventiTerzoTempo As String) As String
+								 EventiSecondoTempo As String, EventiTerzoTempo As String, Mittente As String, DataOraAppuntamento As String, LuogoAppuntamento As String,
+								 MezzoTrasporto As String) As String
 
 		Dim Ritorno As String = ""
 		Dim Connessione As String = LeggeImpostazioniDiBase(Server.MapPath("."), Squadra)
@@ -269,7 +270,10 @@ Public Class wsPartite
 							" " & idCampo & ", " &
 							"'" & OraConv & "', " &
 							" " & idUnioneCalendario & ", " &
-							"'" & RisultatoATempi & "' " &
+							"'" & RisultatoATempi & "', " &
+							"'" & DataOraAppuntamento & "', " &
+							"'" & LuogoAppuntamento.Replace("-", "") & "', " &
+							"'" & MezzoTrasporto & "' " &
 							")"
 						Ritorno = EsegueSql(Conn, Sql, Connessione)
 						If Ritorno.Contains(StringaErrore) Then
@@ -659,7 +663,17 @@ Public Class wsPartite
 								Body = Body.Replace("***ALLENATORE***", Allenatore)
 								Body = Body.Replace("***TELALLENATORE***", TelAllenatore)
 								Body = Body.Replace("***URLMAPPA***", "https://www.google.it/maps/place/" & Lat & "," & Lon & "z")
+								Body = Body.Replace("***URLMAPPAAPP***", "https://www.google.it/maps/place/" & LuogoAppuntamento)
 								Body = Body.Replace("***REFERENTE***", Referente)
+								Body = Body.Replace("***DOAPPUNTAMENTO***", FormatDateTime(DataOraAppuntamento, DateFormat.LongDate) & " " & FormatDateTime(DataOraAppuntamento, DateFormat.ShortTime))
+								Body = Body.Replace("***APPUNTAMENTO***", LuogoAppuntamento)
+								Dim Mezzo As String = ""
+								If MezzoTrasporto = "P" Then
+									Mezzo = "Pullman"
+								Else
+									Mezzo = "Auto propria"
+								End If
+								Body = Body.Replace("***MEZZO***", Mezzo)
 
 								Dim Paths As String = gf.LeggeFileIntero(Server.MapPath(".") & "\Impostazioni\PathAllegati.txt")
 								Dim p() As String = Paths.Split(";")
@@ -674,7 +688,7 @@ Public Class wsPartite
 										Body2 = Body2.Replace("***TIPOLOGIA***", "Il giocatore")
 									Else
 										Body2 = Body2.Replace("***TIPOLOGIA***", "L'allenatore")
-                                    End If
+									End If
 
 									If Casa = "S" Then
 										Oggetto &= Categoria & "-" & Avversario
@@ -699,11 +713,12 @@ Public Class wsPartite
 									Dim urlSi As String = pathSito & "wsRisposte.asmx/GeneraRisposta?Squadra=" & Squadra & "&Risposta=SI&idPartita=" & idPartita & "&idGiocatore=" & c(4) & "&Tipo=" & c(3)
 									Dim urlNo As String = pathSito & "wsRisposte.asmx/GeneraRisposta?Squadra=" & Squadra & "&Risposta=NO&idPartita=" & idPartita & "&idGiocatore=" & c(4) & "&Tipo=" & c(3)
 
-									Body2 = Body2.Replace("***URLPARTECIPO***", urlsi)
+									Body2 = Body2.Replace("***URLPARTECIPO***", urlSi)
 									Body2 = Body2.Replace("***URLNONPARTECIPO***", urlNo)
 
-									Ritorno = ma.SendEmail(Oggetto, Body2, c(2))
-									' gf.CreaAggiornaFile(Server.MapPath(".") & "\Scheletri\MailConvocazione" & q & ".html", Body2)
+									Ritorno = ma.SendEmail(Mittente, Oggetto, Body2, c(2))
+									gf.CreaDirectoryDaPercorso(p(0) & "\" & Squadra & "\Convocazioni\Anno" & idAnno & "\")
+									gf.CreaAggiornaFile(p(0) & "\" & Squadra & "\Convocazioni\Anno" & idAnno & "\Convocazione_" & idPartita & "_" & c(4) & ".html", Body2)
 
 									q += 1
 								Next
@@ -1201,7 +1216,7 @@ Public Class wsPartite
 						"RisultatiAggiuntivi.Tempo1Tempo, RisultatiAggiuntivi.Tempo2Tempo, RisultatiAggiuntivi.Tempo3Tempo, " &
 						"CoordinatePartite.Lat, CoordinatePartite.Lon, TempiGoalAvversari.TempiPrimoTempo, TempiGoalAvversari.TempiSecondoTempo, TempiGoalAvversari.TempiTerzoTempo, " &
 						"MeteoPartite.Tempo, MeteoPartite.Gradi, MeteoPartite.Umidita, MeteoPartite.Pressione, ArbitriPartite.idArbitro, Arbitri.Cognome + ' ' + Arbitri.Nome As Arbitro, " &
-						"Partite.RisultatoATempi " &
+						"Partite.RisultatoATempi, Partite.DataOraAppuntamento, Partite.LuogoAppuntamento, Partite.MezzoTrasporto " &
 						"FROM ((((((((((((Partite LEFT JOIN Risultati ON Partite.idPartita = Risultati.idPartita) " &
 						"LEFT JOIN RisultatiAggiuntivi ON Partite.idPartita = RisultatiAggiuntivi.idPartita) " &
 						"LEFT JOIN SquadreAvversarie ON Partite.idAvversario = SquadreAvversarie.idAvversario) " &
@@ -1446,6 +1461,11 @@ Public Class wsPartite
 								Ritorno &= EventiTerzoTempo & ";"
 
 								Ritorno &= Rec("Risultato").Value & ";"
+
+								Ritorno &= Rec("DataOraAppuntamento").Value & ";"
+								Ritorno &= Rec("LuogoAppuntamento").Value & ";"
+								Ritorno &= Rec("MezzoTrasporto").Value & ";"
+
 								Ritorno &= "§"
 
 								Rec.MoveNext()
@@ -1620,7 +1640,7 @@ Public Class wsPartite
 
 				Sql = "SELECT Partite.Casa, Partite.idPartita, Partite.DataOra, Categorie.Descrizione As Categoria, SquadreAvversarie.Descrizione As Avversario, '' + CampiAvversari.Descrizione As Campo, " &
 					"CampiAvversari.Indirizzo, '' + CampiEsterni.Descrizione As CampoEsterno, Allenatori.Cognome + ' ' + Allenatori.Nome As Mister, Allenatori.Telefono, Partite.OraConv, " &
-					"Anni.CampoSquadra, Anni.Indirizzo As IndirizzoCasa, Categorie.AnticipoConvocazione " &
+					"Anni.CampoSquadra, Anni.Indirizzo As IndirizzoCasa, Categorie.AnticipoConvocazione, Partite.DataOraAppuntamento, Partite.LuogoAppuntamento, Partite.MezzoTrasporto " &
 					"FROM (((((Partite LEFT JOIN SquadreAvversarie ON Partite.idAvversario = SquadreAvversarie.idAvversario) " &
 					"LEFT JOIN CampiAvversari ON SquadreAvversarie.idCampo = CampiAvversari.idCampo) " &
 					"LEFT JOIN Categorie ON (Partite.idAnno = Categorie.idAnno) And (Partite.idCategoria = Categorie.idCategoria)) " &
@@ -1663,6 +1683,17 @@ Public Class wsPartite
 
 							Filetto = Filetto.Replace("***MISTER***", Rec("Mister").Value)
 							Filetto = Filetto.Replace("***CELL***", Rec("Telefono").Value)
+
+							Filetto = Filetto.Replace("***DOAPPUNTAMENTO***", Rec("DataOraAppuntamento").Value)
+							Filetto = Filetto.Replace("***APPUNTAMENTO***", Rec("LuogoAppuntamento").Value)
+
+							Dim Mezzo As String = ""
+							If "" & Rec("MezzoTrasporto").Value = "P" Then
+								Mezzo = "Pullman"
+							Else
+								Mezzo = "Auto propria"
+							End If
+							Filetto = Filetto.Replace("***MEZZO***", mezzo)
 
 							Rec.Close()
 

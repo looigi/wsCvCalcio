@@ -3,7 +3,7 @@ Imports System.Net.Mail
 Imports System.Net.Mime
 
 Public Class mail
-	Public Function SendEmail(ByVal oggetto As String, ByVal newBody As String, ByVal Optional ricevente As String = "emaildefault", ByVal Optional Allegato As String = "") As String
+	Public Function SendEmail(Mittente As String, ByVal oggetto As String, ByVal newBody As String, ByVal Optional ricevente As String = "emaildefault", ByVal Optional Allegato As String = "") As String
 		'Dim myStream As StreamReader = New StreamReader(Server.MapPath(ConfigurationManager.AppSettings("VirtualDir") & "mailresponsive.html"))
 		'Dim newBody As String = ""
 		'newBody = myStream.ReadToEnd()
@@ -21,15 +21,21 @@ Public Class mail
 			Dim Utenza As String = cr(0)
 			Dim Password As String = cr(1).Replace(vbCrLf, "")
 
-			mail.From = New MailAddress(Utenza)
+			If Mittente = "" Then
+				Mittente = Utenza
+			End If
+			'Mittente = Utenza
+
+			mail.From = New MailAddress(Mittente)
 			mail.[To].Add(New MailAddress(ricevente))
 			' mail.CC.Add(New MailAddress("email"))
 			mail.Subject = oggetto
 			mail.IsBodyHtml = True
 			mail.Body = CreaCorpoMail(mail, newBody)
 
+			Dim Data As Attachment = Nothing
 			If Allegato <> "" Then
-				Dim Data As Attachment = New Attachment(Allegato, MediaTypeNames.Application.Octet)
+				Data = New Attachment(Allegato, MediaTypeNames.Application.Octet)
 				Dim disposition As ContentDisposition = Data.ContentDisposition
 				disposition.CreationDate = System.IO.File.GetCreationTime(Allegato)
 				disposition.ModificationDate = System.IO.File.GetLastWriteTime(Allegato)
@@ -49,6 +55,10 @@ Public Class mail
 			smtpClient.Credentials = New System.Net.NetworkCredential(Utenza, Password)
 			smtpClient.Send(mail)
 			smtpClient = Nothing
+
+			If Allegato <> "" Then
+				Data.Dispose()
+			End If
 
 			Ritorno = "*"
 		Catch ex As Exception

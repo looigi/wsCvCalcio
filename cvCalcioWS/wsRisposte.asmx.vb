@@ -36,16 +36,18 @@ Public Class wsRisposte
 					Ritorno = Rec
 					Ok = False
 				Else
-					If Not Rec.Eof Then
+					If Rec.Eof Then
 						Rec.Close()
 
 						Sql = "Insert Into ConvocatiPartiteRisposte Values (" & idPartita & ", " & idGiocatore & ", '" & Mid(Risposta, 1, 1) & "')"
 						Ritorno = EsegueSql(Conn, Sql, Connessione)
 						If Ritorno = "*" Then
-							Sql = "Select Casa, C.Descrizione As Squadra1, D.Descrizione As Squadra2, B.EMail, E.Descrizione As Campo, E.Indirizzo, F.Lat, F.Lon From Partite A " &
+							Sql = "Select A.DataOra, Casa, C.Descrizione As Squadra1, D.Descrizione As Squadra2, B.EMail, E.Descrizione As Campo, E.Indirizzo, F.Lat, F.Lon, " &
+								"A.DataOraAppuntamento, A.LuogoAppuntamento, A.Mezzotrasporto " &
+								"From Partite A " &
 								"Left Join Allenatori B On A.idAllenatore = B.idAllenatore " &
 								"Left Join Categorie C On A.idCategoria = C.idCategoria " &
-								"Left Join SquadreAvversarie D On A.idAvversario = D.idAvversario" &
+								"Left Join SquadreAvversarie D On A.idAvversario = D.idAvversario " &
 								"Left Join CampiAvversari E On D.idCampo = E.idCampo " &
 								"Left Join AvversariCoord F On F.idAvversario = D.idAvversario " &
 								"Where idPartita =" & idPartita
@@ -63,6 +65,18 @@ Public Class wsRisposte
 									Dim Sq1 As String = "" & Rec("Squadra1").Value
 									Dim Sq2 As String = "" & Rec("Squadra2").Value
 									Dim LatLon As String = "" & Rec("Lat").Value & "," & Rec("Lon").Value
+									Dim DataOraApp As String = "" & Rec("DataOraAppuntamento").Value
+									If DataOraApp <> "" And
+										DataOraApp = FormatDateTime(DataOra, DateFormat.LongDate) & " " & FormatDateTime(DataOra, DateFormat.ShortTime) Then
+									End If
+									Dim LuogoApp As String = "" & Rec("LuogoAppuntamento").Value
+									Dim MezzoTrasporto As String = "" & Rec("MezzoTrasporto").Value
+									Dim Mezzo As String = ""
+									If MezzoTrasporto = "P" Then
+										Mezzo = "pullman"
+									Else
+										Mezzo = "auto propria"
+									End If
 									Dim descPartita As String = ""
 									If Casa = "S" Then
 										descPartita = Sq1 & "-" & Sq2
@@ -89,37 +103,35 @@ Public Class wsRisposte
 											Else
 												Altro = "negativa"
 											End If
-											Dim Oggetto As String = "Risposta " & altro & " Giocatore " & Cognome & " " & Nome & " per partita " & descPartita
+											Dim Oggetto As String = "Risposta " & Altro & " Giocatore " & Cognome & " " & Nome & " per partita " & descPartita
 											Dim Body As String = "Il giocatore " & Cognome & " " & Nome & " ha risposto in maniera " & Altro & " alla convocazione per la partita " & descPartita & " "
 											Body &= "che si giocherà " & FormatDateTime(DataOra, DateFormat.LongDate) & " " & FormatDateTime(DataOra, DateFormat.ShortTime)
 											If Casa = "S" Then
 												Body &= " in casa."
 											Else
 												Dim url As String = "https://www.google.it/maps/place/" & LatLon
-												Body &= " al campo <a href=""" & url & """>" & Campo & "</a>, indirizzo <a href=""" & url & """>" & Indirizzo & "</a>."
+												Body &= " al campo " & Campo & ", indirizzo <a href=""" & url & """>" & Indirizzo & "</a>."
 											End If
-
-											Ritorno = ma.SendEmail(Oggetto, Body, EMAilAllenatore)
+											Dim url2 As String = "https://www.google.it/maps/place/" & LuogoApp
+											Body &= "<br /><br />Appuntamento: " & DataOraApp & " <a href=""" & url2 & """>" & LuogoApp & "</a> tramite " & Mezzo
+											Ritorno = ma.SendEmail("", Oggetto, Body, EMAilAllenatore)
 										End If
 									End If
 								Else
-									Ritorno = StringaErrore & " Allenatore non rilevato"
+									Ritorno = StringaErrore & " Risposta già inviata"
 									Ok = False
 								End If
 							End If
-						Else
-							Ritorno = StringaErrore & " Risposta già inviata"
-							Ok = False
 						End If
 					End If
-				End If
 
-				If Ok Then
-					Sql = "commit"
-					Dim Ritorno2 As String = EsegueSql(Conn, Sql, Connessione)
-				Else
-					Sql = "rollback"
-					Dim Ritorno2 As String = EsegueSql(Conn, Sql, Connessione)
+					If Ok Then
+						Sql = "commit"
+						Dim Ritorno2 As String = EsegueSql(Conn, Sql, Connessione)
+					Else
+						Sql = "rollback"
+						Dim Ritorno2 As String = EsegueSql(Conn, Sql, Connessione)
+					End If
 				End If
 			End If
 		End If

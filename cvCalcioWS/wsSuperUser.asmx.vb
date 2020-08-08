@@ -14,7 +14,7 @@ Public Class wsSuperUser
 	Inherits System.Web.Services.WebService
 
 	<WebMethod()>
-	Public Function CreaDB(Squadra As String, DataScadenza As String, MailAdmin As String, NomeAdmin As String, CognomeAdmin As String, Anno As String, idTipologia As String, idLicenza As String) As String
+	Public Function CreaDB(Squadra As String, DataScadenza As String, MailAdmin As String, NomeAdmin As String, CognomeAdmin As String, Anno As String, idTipologia As String, idLicenza As String, Mittente As String) As String
 		Dim Ritorno As String = ""
 		Dim ConnessioneGenerale As String = LeggeImpostazioniDiBase(Server.MapPath("."), "")
 		Dim ConnessioneDBVuoto As String = LeggeImpostazioniDiBase(Server.MapPath("."), "DBVUOTO")
@@ -245,7 +245,7 @@ Public Class wsSuperUser
 
 															Dim ChiScrive As String = "notifiche@incalcio.cloud"
 
-															Ritorno = m.SendEmail(Oggetto, Body, ChiScrive, MailAdmin)
+															Ritorno = m.SendEmail(Mittente, Oggetto, Body, ChiScrive, MailAdmin)
 															If Not Ritorno.Contains(StringaErrore) Then
 																Ritorno = Societa
 															End If
@@ -327,6 +327,7 @@ Public Class wsSuperUser
 
 							Dim Scadenza As String = "" & Rec("DataScadenza").Value
 							Dim Semaforo1 As String = "" : Dim Titolo1 As String = ""
+							Dim Semaforo2 As String = "" : Dim Titolo2 As String = ""
 
 							If Scadenza <> "" Then
 								Dim sc() As String = Scadenza.Split("-")
@@ -350,6 +351,7 @@ Public Class wsSuperUser
 
 							Dim Anni As Integer = 0
 							Dim maxAnno As String = ""
+							Dim Stato As String = ""
 
 							Sql = "Select Count(*) From SquadraAnni Where idSquadra = " & Rec("idSquadra").Value
 							Rec2 = LeggeQuery(ConnGen, Sql, ConnessioneGenerale)
@@ -368,9 +370,16 @@ Public Class wsSuperUser
 								Ritorno = Rec2
 							Else
 								If Not Rec2.Eof() Then
-									maxAnno = Rec2(2).Value
+									maxAnno = Rec2("idAnno").Value
+									Stato = Rec2("OnLine").Value
 								End If
 								Rec2.Close
+							End If
+
+							If Stato = "S" Then
+								Semaforo2 = "verde" : Titolo2 = "Database in linea"
+							Else
+								Semaforo2 = "rosso" : Titolo2 = "Database fuori linea"
 							End If
 
 							Ritorno &= Rec("idSquadra").Value & ";" &
@@ -383,6 +392,7 @@ Public Class wsSuperUser
 									Rec("idLicenza").Value & ";" &
 									Anni & ";" &
 									maxAnno & ";" &
+									Semaforo2 & "*" & Titolo2 & ";" &
 									"§"
 
 							Rec.MoveNext()
@@ -823,4 +833,63 @@ Public Class wsSuperUser
 
 		Return Ritorno
 	End Function
+
+	<WebMethod()>
+	Public Function OnLineOffLineSquadra(idAnno As String, idSquadra As String) As String
+		Dim Ritorno As String = ""
+		Dim ConnessioneGenerale As String = LeggeImpostazioniDiBase(Server.MapPath("."), "")
+
+		If ConnessioneGenerale = "" Then
+			Ritorno = ErroreConnessioneNonValida
+		Else
+			Dim ConnGen As Object = ApreDB(ConnessioneGenerale)
+			Dim Ok As Boolean = True
+
+			If TypeOf (ConnGen) Is String Then
+				Ritorno = ErroreConnessioneDBNonValida & ":" & ConnGen
+			Else
+				Dim Rec As Object = Server.CreateObject("ADODB.Recordset")
+				Dim Sql As String = ""
+				Dim Stato As String = ""
+
+				' Sql = "Select * From SquadraAnni Where idAnno=" & idAnno & " And idSquadra=" & idSquadra
+				Sql = "Select * From SquadraAnni Where idSquadra=" & idSquadra
+				Rec = LeggeQuery(ConnGen, Sql, ConnessioneGenerale)
+				If TypeOf (Rec) Is String Then
+					Ritorno = Rec
+					Ok = False
+				Else
+					If Rec.Eof Then
+						Ritorno = StringaErrore & " Nessna squadra rilevata"
+						Rec.Close
+					Else
+						Stato = Rec("OnLine").Value
+						Rec.Close
+
+						If Stato = "S" Then
+							Stato = "N"
+						Else
+							Stato = "S"
+						End If
+
+						Try
+							Sql = "Update SquadraAnni Set " &
+								"OnLine='" & Stato & "' " &
+								"Where idSquadra=" & idSquadra
+							' "Where idAnno=" & idAnno & " And idSquadra=" & idSquadra
+							Ritorno = EsegueSql(ConnGen, Sql, ConnessioneGenerale)
+							If Not Ritorno.Contains(StringaErrore) Then
+								Ritorno = "*"
+							End If
+						Catch ex As Exception
+							Ritorno = StringaErrore & " " & ex.Message
+						End Try
+					End If
+				End If
+			End If
+		End If
+
+		Return Ritorno
+	End Function
+
 End Class

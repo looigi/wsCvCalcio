@@ -12,7 +12,7 @@ Public Class wsGenerale
 	<WebMethod()>
 	Public Function InviaMail(Oggetto As String, Body As String, ChiRiceve As String) As String
 		Dim m As New mail
-		Dim Ritorno As String = m.SendEmail(Oggetto, Body, ChiRiceve)
+		Dim Ritorno As String = m.SendEmail("luigi.pecce@aubay.it", Oggetto, Body, ChiRiceve)
 		Return Ritorno
 	End Function
 
@@ -574,7 +574,7 @@ Public Class wsGenerale
 	<WebMethod()>
 	Public Function SalvaImpostazioni(Cod_Squadra As String, idAnno As String, Descrizione As String, NomeSquadra As String, Lat As String, Lon As String,
 									  Indirizzo As String, CampoSquadra As String, NomePolisportiva As String, Mail As String, PEC As String,
-									  Telefono As String, PIva As String, CodiceFiscale As String, CodiceUnivoco As String, SitoWeb As String) As String
+									  Telefono As String, PIva As String, CodiceFiscale As String, CodiceUnivoco As String, SitoWeb As String, MittenteMail As String) As String
 		Dim Ritorno As String = ""
 		Dim Connessione As String = LeggeImpostazioniDiBase(Server.MapPath("."), Cod_Squadra)
 
@@ -602,7 +602,8 @@ Public Class wsGenerale
 					"PIva = '" & PIva.Replace("'", "''") & "', " &
 					"CodiceFiscale = '" & CodiceFiscale.Replace("'", "''") & "', " &
 					"CodiceUnivoco = '" & CodiceUnivoco.Replace("'", "''") & "', " &
-					"SitoWeb = '" & SitoWeb.Replace("'", "''") & "' " &
+					"SitoWeb = '" & SitoWeb.Replace("'", "''") & "', " &
+					"MittenteMail = '" & MittenteMail.Replace("'", "''") & "' " &
 					"Where idAnno = " & idAnno
 				Ritorno = EsegueSql(Conn, Sql, Connessione)
 			End If
@@ -688,6 +689,7 @@ Public Class wsGenerale
 										Rec("CodiceFiscale").Value & ";" &
 										Rec("CodiceUnivoco").Value & ";" &
 										Rec("SitoWeb").Value & ";" &
+										Rec("MittenteMail").Value & ";" &
 										"§"
 
 									Rec.MoveNext()

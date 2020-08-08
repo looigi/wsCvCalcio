@@ -228,7 +228,9 @@ Public Class GestioneFilesDirectory
         Return Ritorno
     End Function
 
-    Public Sub CreaAggiornaFile(NomeFile As String, Cosa As String)
+    Public Function CreaAggiornaFile(NomeFile As String, Cosa As String) As String
+        Dim Ritorno As String = ""
+
         Try
             Dim path As String
 
@@ -241,12 +243,22 @@ Public Class GestioneFilesDirectory
             path = path.Replace(barra & barra, barra)
 
             ' Create or overwrite the file.
-            Dim fs As FileStream = File.Create(path)
+            'Dim fs As FileStream = File.Create(path)
 
-            ' Add text to the file.
-            Dim info As Byte() = New UTF8Encoding(True).GetBytes(Cosa)
-            fs.Write(info, 0, info.Length)
-            fs.Close()
+            '' Add text to the file.
+            'Dim info As Byte() = New UTF8Encoding(True).GetBytes(Cosa)
+            'fs.Write(info, 0, info.Length)
+            'fs.Close()
+
+            ' Using fs As FileStream = File.Create(path)
+            Using fs As New FileStream(path, IO.FileMode.Create, IO.FileAccess.ReadWrite, FileShare.ReadWrite)
+                Dim info As Byte() = New UTF8Encoding(True).GetBytes(Cosa)
+                fs.Write(info, 0, info.Length)
+                fs.Flush()
+                fs.Close()
+            End Using
+
+            Ritorno = "*"
         Catch ex As Exception
             'Dim StringaPassaggio As String
             'Dim H As HttpApplication = HttpContext.Current.ApplicationInstance
@@ -255,8 +267,11 @@ Public Class GestioneFilesDirectory
             'StringaPassaggio = StringaPassaggio & "&Utente=" & H.Session("Nick")
             'StringaPassaggio = StringaPassaggio & "&Chiamante=" & H.Request.CurrentExecutionFilePath.ToUpper.Trim
             'H.Response.Redirect("Errore.aspx" & StringaPassaggio)
+            Ritorno = StringaErrore & " " & ex.Message
         End Try
-    End Sub
+
+        Return ritorno
+    End Function
 
     Private objReader As StreamReader
 
