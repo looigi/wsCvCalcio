@@ -3,6 +3,11 @@ Imports System.Web.Services.Protocols
 Imports System.ComponentModel
 Imports System.IO
 Imports System.Runtime.InteropServices
+Imports Microsoft.VisualBasic.FileIO
+Imports System.Management
+Imports System.Web.Hosting
+Imports System.Net.Security
+Imports System.Net
 
 <System.Web.Services.WebService(Namespace:="http://cvcalcio_gioc.org/")>
 <System.Web.Services.WebServiceBinding(ConformsTo:=WsiProfiles.BasicProfile1_1)>
@@ -11,7 +16,7 @@ Public Class wsGiocatori
 	Inherits System.Web.Services.WebService
 
 	<WebMethod()>
-	Public Function RitornaFirmeDaValidare(Squadra As String) As String
+	Public Function RitornaFirmeDaValidare(Squadra As String, Tutte As String) As String
 		Dim Ritorno As String = ""
 		Dim Connessione As String = LeggeImpostazioniDiBase(Server.MapPath("."), Squadra)
 
@@ -25,8 +30,13 @@ Public Class wsGiocatori
 			Else
 				Dim Rec As Object = Server.CreateObject("ADODB.Recordset")
 				Dim Sql As String = ""
+				Dim Altro As String = ""
 
-				Sql = "Select Top 5 A.*, B.Cognome + ' ' + B.Nome As Giocatore, " &
+				If Tutte = "" Or Altro = "N" Or Altro = "NO" Then
+					Altro = "Top 3"
+				End If
+
+				Sql = "Select " & Altro & " A.*, B.Cognome + ' ' + B.Nome As Giocatore, " &
 					"CASE A.idGenitore " &
 					"     WHEN 1 THEN C.Genitore1 " &
 					"     WHEN 2 THEN C.Genitore2 " &
@@ -62,7 +72,7 @@ Public Class wsGiocatori
 	End Function
 
 	<WebMethod()>
-	Public Function ConvalidaFirma(Squadra As String, idGiocatore As String, idGenitore As String) As String
+	Public Function ConvalidaFirma(idAnno As String, Squadra As String, idGiocatore As String, idGenitore As String) As String
 		Dim Ritorno As String = ""
 		Dim Connessione As String = LeggeImpostazioniDiBase(Server.MapPath("."), Squadra)
 
@@ -75,9 +85,113 @@ Public Class wsGiocatori
 				Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
 			Else
 				Dim Rec As Object = Server.CreateObject("ADODB.Recordset")
-				Dim dataVal As String = Format(Now.Day, "00") & "/" & Format(Now.Month, "00") & "/" & Now.Year & " " & Format(Now.Hour, "00") & ":" & Format(Now.Minute, "00") & ":" & Format(Now.Second, "00")
-				Dim Sql As String = "Update GiocatoriFirme Set Validazione='" & dataVal & "' Where idGiocatore=" & idGiocatore & " And idGenitore=" & idGenitore
+				Dim Sql As String = ""
+				Dim Ok As Boolean = True
+
+				Sql = "Begin transaction"
 				Ritorno = EsegueSql(Conn, Sql, Connessione)
+				If Ritorno <> "*" Then
+					Ok = False
+				End If
+
+				If Ok Then
+					Dim dataVal As String = Format(Now.Day, "00") & "/" & Format(Now.Month, "00") & "/" & Now.Year & " " & Format(Now.Hour, "00") & ":" & Format(Now.Minute, "00") & ":" & Format(Now.Second, "00")
+					Sql = "Update GiocatoriFirme Set Validazione='" & dataVal & "' Where idGiocatore=" & idGiocatore & " And idGenitore=" & idGenitore
+					Ritorno = EsegueSql(Conn, Sql, Connessione)
+					If Ritorno.Contains(StringaErrore) Then
+						Ok = False
+					End If
+
+					If Ok Then
+						Sql = "Select * From GiocatoriDettaglio Where idGiocatore=" & idGiocatore
+						Rec = LeggeQuery(Conn, Sql, Connessione)
+						If TypeOf (Rec) Is String Then
+							Ritorno = Rec
+						Else
+							If Rec.Eof Then
+								Ritorno = StringaErrore & " Nessun genitore rilevato"
+								Ok = False
+							Else
+								If idGenitore < 3 Then
+									Dim Genitore As String = Rec("Genitore" & idGenitore).Value
+									Dim Mail As String = Rec("MailGenitore" & idGenitore).Value
+									Dim Telefono As String = Rec("TelefonoGenitore" & idGenitore).Value
+
+									Rec.Close
+
+									Dim maxGenitore As Integer = -1
+
+									Sql = "Select Max(idUtente) + 1 From [Generale].[dbo].[Utenti] Where idAnno=" & idAnno
+									Rec = LeggeQuery(Conn, Sql, Connessione)
+									If TypeOf (Rec) Is String Then
+										Ritorno = Rec
+									Else
+										If Rec(0).Value Is DBNull.Value Then
+											maxGenitore = 1
+										Else
+											maxGenitore = Rec(0).Value
+										End If
+									End If
+
+									Dim g() As String = Genitore.Split(" ")
+									Dim s() As String = Squadra.Split("_")
+									Dim idSquadra As Integer = Val(s(1))
+									Dim chiave As String = "AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvZz0123456789!$%/()=?^"
+									Dim rnd1 As New Random()
+									Dim nuovaPass As String = ""
+
+									For i As Integer = 1 To 7
+										Dim c As Integer = rnd1.Next(chiave.Length - 1) + 1
+										nuovaPass &= Mid(chiave, c, 1)
+									Next
+
+									Dim wrapper As New CryptEncrypt("WPippoBaudo227!")
+									Dim nuovaPassCrypt As String = wrapper.EncryptData(nuovaPass)
+
+									Sql = "Insert Into [Generale].[dbo].[Utenti] Values (" &
+										" " & idAnno & ", " &
+										" " & maxGenitore & ", " &
+										"'" & Mail.Replace("'", "''") & "', " &
+										"'" & g(0).Replace("'", "''") & "', " &
+										"'" & g(1).Replace("'", "''") & "', " &
+										"'" & nuovaPassCrypt.Replace("'", "''") & "', " &
+										"'" & Mail.Replace("'", "''") & "', " &
+										"-1, " &
+										"3, " &
+										" " & idSquadra & ", " &
+										"1, " &
+										"'" & Telefono & "', " &
+										"'N', " &
+										" " & idGiocatore & " " &
+										")"
+									Ritorno = EsegueSql(Conn, Sql, Connessione)
+									If Ritorno.Contains(StringaErrore) Then
+										Ok = False
+									Else
+										Dim m As New mail
+										Dim Oggetto As String = "Nuovo utente inCalcio"
+										Dim Body As String = ""
+										Body &= "E' stato creato l'utente '" & Genitore.ToUpper & "'. <br />"
+										Body &= "Per accedere al sito sarà possibile digitare la mail rilasciata alla segreteria in fase di iscrizione: " & Mail & "<br />"
+										Body &= "La password valida per il solo primo accesso è: " & nuovaPass & "<br /><br />"
+										Dim ChiScrive As String = "notifiche@incalcio.cloud"
+
+										Ritorno = m.SendEmail("", Oggetto, Body, Mail)
+									End If
+								End If
+							End If
+						End If
+					End If
+				End If
+
+				If Ok Then
+					Ritorno = "*"
+					Sql = "Commit"
+					Dim Ritorno2 As String = EsegueSql(Conn, Sql, Connessione)
+				Else
+					Sql = "Rollback"
+					Dim Ritorno2 As String = EsegueSql(Conn, Sql, Connessione)
+				End If
 			End If
 		End If
 
@@ -1323,6 +1437,58 @@ Public Class wsGiocatori
 						Ritorno = StringaErrore & " " & ex.Message
 						Ok = False
 					End Try
+
+					If Ok Then
+						Sql = "Select * From GiocatoriMails Where idGiocatore=" & idGiocatore
+						Rec = LeggeQuery(Conn, Sql, Connessione)
+						If TypeOf (Rec) Is String Then
+							Ritorno = Rec
+						Else
+							If Rec.Eof Then
+								If MailGenitore1 <> "" Then
+									Sql = "Insert Into GiocatoriMails Values (" &
+										" " & idGiocatore & ", " &
+										"1, " &
+										"'" & MailGenitore1.Replace("'", "''") & "', " &
+										"'S' " &
+										")"
+									Ritorno = EsegueSql(Conn, Sql, Connessione)
+									If Ritorno.Contains(StringaErrore) Then
+										Ok = False
+									End If
+								End If
+								If Ok Then
+									If MailGenitore2 <> "" Then
+										Sql = "Insert Into GiocatoriMails Values (" &
+										" " & idGiocatore & ", " &
+										"2, " &
+										"'" & MailGenitore2.Replace("'", "''") & "', " &
+										"'S' " &
+										")"
+										Ritorno = EsegueSql(Conn, Sql, Connessione)
+										If Ritorno.Contains(StringaErrore) Then
+											Ok = False
+										End If
+									End If
+								End If
+								If Ok Then
+									If MailGenitore3 <> "" Then
+										Sql = "Insert Into GiocatoriMails Values (" &
+										" " & idGiocatore & ", " &
+										"3, " &
+										"'" & MailGenitore3.Replace("'", "''") & "', " &
+										"'S' " &
+										")"
+										Ritorno = EsegueSql(Conn, Sql, Connessione)
+										If Ritorno.Contains(StringaErrore) Then
+											Ok = False
+										End If
+									End If
+								End If
+							End If
+							Rec.Close()
+						End If
+					End If
 				End If
 
 				If Ok Then

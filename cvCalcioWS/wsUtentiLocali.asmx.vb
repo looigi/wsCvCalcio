@@ -644,7 +644,8 @@ Public Class wsUtentiLocali
 													" " & idSquadra & ", " &
 													"0, " &
 													"'" & Telefono & "', " &
-													"'N'" &
+													"'N', " &
+													"-1 " &
 													")"
 								Ritorno = EsegueSql(Conn, Sql, Connessione)
 								'End If
@@ -772,7 +773,8 @@ Public Class wsUtentiLocali
 							"" & Val(sq(1)).ToString & ", " &
 							"0, " &
 							"'" & Telefono & "', " &
-							"'N' " &
+							"'N', " &
+							"-1 " &
 							")"
 						Ritorno = EsegueSql(Conn, Sql, Connessione)
 						If Ritorno.Contains(StringaErrore) Then

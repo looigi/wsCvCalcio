@@ -86,6 +86,7 @@
     <Content Include="wsAllegati.asmx" />
     <Content Include="wsEventiCalendario.asmx" />
     <Content Include="wsFunzioni.asmx" />
+    <Content Include="wsGenitori.asmx" />
     <Content Include="wsKit.asmx" />
     <Content Include="wsPermessiUtente.asmx" />
     <Content Include="wsRisposte.asmx" />
@@ -124,6 +125,10 @@
     </Compile>
     <Compile Include="wsFunzioni.asmx.vb">
       <DependentUpon>wsFunzioni.asmx</DependentUpon>
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="wsGenitori.asmx.vb">
+      <DependentUpon>wsGenitori.asmx</DependentUpon>
       <SubType>Component</SubType>
     </Compile>
     <Compile Include="wsKit.asmx.vb">

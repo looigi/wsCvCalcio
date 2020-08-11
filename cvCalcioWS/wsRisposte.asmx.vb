@@ -113,7 +113,7 @@ Public Class wsRisposte
 												Body &= " al campo " & Campo & ", indirizzo <a href=""" & url & """>" & Indirizzo & "</a>."
 											End If
 											Dim url2 As String = "https://www.google.it/maps/place/" & LuogoApp
-											Body &= "<br /><br />Appuntamento: " & DataOraApp & " <a href=""" & url2 & """>" & LuogoApp & "</a> tramite " & Mezzo
+											Body &= "<br /><br />Appuntamento: " & FormatDateTime(DataOraApp, DateFormat.LongDate) & " " & FormatDateTime(DataOraApp, DateFormat.ShortTime) & " <a href=""" & url2 & """>" & LuogoApp & "</a> tramite " & Mezzo
 											Ritorno = ma.SendEmail("", Oggetto, Body, EMAilAllenatore)
 										End If
 									End If
