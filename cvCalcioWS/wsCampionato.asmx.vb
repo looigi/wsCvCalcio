@@ -53,11 +53,11 @@ Public Class wsCampionato
 					' Squadre avversarie
 					Sql = "SELECT AvversariCalendario.idAvversario As idAvv, SquadreAvversarie.Descrizione As Squadra, CampiAvversari.idCampo As idCampo, CampiAvversari.Descrizione As Campo, " &
 						"CampiAvversari.Indirizzo As Indirizzo, AvversariCoord.Lat, AvversariCoord.Lon " &
-						"FROM ((AvversariCalendario LEFT JOIN SquadreAvversarie ON AvversariCalendario.idAvversario = SquadreAvversarie.idAvversario) " &
-						"Left Join CampiAvversari On SquadreAvversarie.idCampo = CampiAvversari.idCampo) " &
+						"FROM AvversariCalendario LEFT JOIN SquadreAvversarie ON AvversariCalendario.idAvversario = SquadreAvversarie.idAvversario " &
+						"Left Join CampiAvversari On SquadreAvversarie.idCampo = CampiAvversari.idCampo " &
 						"Left Join AvversariCoord On SquadreAvversarie.idAvversario = AvversariCoord.idAvversario " &
 						"WHERE AvversariCalendario.idAnno=" & idAnno & " And AvversariCalendario.idCategoria=" & idCategoria & " " &
-						"ORDER BY AvversariCalendario.idProgressivo;"
+						"ORDER BY AvversariCalendario.idProgressivo"
 					Rec = LeggeQuery(Conn, Sql, Connessione)
 					If TypeOf (Rec) Is String Then
 						Ritorno = StringaErrore & "" & Rec
@@ -95,15 +95,15 @@ Public Class wsCampionato
 						"RisultatiAggiuntivi.GoalAvvPrimoTempo As GoalAvv1, RisultatiAggiuntivi.GoalAvvSecondoTempo As GoalAvv2, RisultatiAggiuntivi.GoalAvvTerzoTempo As GoalAvv3, " &
 						"CalendarioPartite.Risultato As Risultato1, Risultati.Risultato As Risultato2, Risultati.Note As Notelle, Partite.Casa As InCasa, Partite.OraConv As OraConv, " &
 						"CalendarioDate.Datella, CalendarioPartite.Giocata, Partite.idPartita As PartitaUfficiale " &
-						"FROM ((((((CalendarioPartite LEFT JOIN CalendarioDate ON CalendarioPartite.idAnno = CalendarioDate.idAnno And CalendarioPartite.idCategoria = CalendarioDate.idCategoria " &
-						"And CalendarioPartite.idGiornata = CalendarioDate.idGiornata And CalendarioPartite.idPartita = CalendarioDate.idPartita) " &
-						"LEFT JOIN SquadreAvversarie ON CalendarioPartite.idSqCasa = SquadreAvversarie.idAvversario) " &
-						"LEFT JOIN SquadreAvversarie AS SquadreAvversarie_1 ON CalendarioPartite.idSqFuori = SquadreAvversarie_1.idAvversario) " &
-						"LEFT JOIN Partite ON CalendarioPartite.idPartitaGen = Partite.idUnioneCalendario And CalendarioPartite.idCategoria = Partite.idCategoria) " &
-						"LEFT JOIN Risultati ON Partite.idPartita = Risultati.idPartita) " &
-						"LEFT JOIN RisultatiAggiuntivi ON Partite.idPartita = RisultatiAggiuntivi.idPartita) " &
+						"FROM CalendarioPartite LEFT JOIN CalendarioDate ON CalendarioPartite.idAnno = CalendarioDate.idAnno And CalendarioPartite.idCategoria = CalendarioDate.idCategoria " &
+						"And CalendarioPartite.idGiornata = CalendarioDate.idGiornata And CalendarioPartite.idPartita = CalendarioDate.idPartita " &
+						"LEFT JOIN SquadreAvversarie ON CalendarioPartite.idSqCasa = SquadreAvversarie.idAvversario " &
+						"LEFT JOIN SquadreAvversarie AS SquadreAvversarie_1 ON CalendarioPartite.idSqFuori = SquadreAvversarie_1.idAvversario " &
+						"LEFT JOIN Partite ON CalendarioPartite.idPartitaGen = Partite.idUnioneCalendario And CalendarioPartite.idCategoria = Partite.idCategoria " &
+						"LEFT JOIN Risultati ON Partite.idPartita = Risultati.idPartita " &
+						"LEFT JOIN RisultatiAggiuntivi ON Partite.idPartita = RisultatiAggiuntivi.idPartita " &
 						"WHERE CalendarioPartite.idCategoria=" & idCategoria & " And CalendarioPartite.idAnno=" & idAnno & " " &
-						"ORDER BY CalendarioPartite.idGiornata, CalendarioPartite.idPartita;"
+						"ORDER BY CalendarioPartite.idGiornata, CalendarioPartite.idPartita"
 					Rec = LeggeQuery(Conn, Sql, Connessione)
 					If TypeOf (Rec) Is String Then
 						Ritorno = StringaErrore & "" & Rec

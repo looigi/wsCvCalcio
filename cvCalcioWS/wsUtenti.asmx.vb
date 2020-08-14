@@ -457,15 +457,15 @@ Public Class wsUtenti
 					If Ok Then
 						Try
 							Sql = "Insert Into UtentiMobile Values (" &
-							"" & idAnno & ", " &
-							"" & idUtente & ", " &
-							"'" & Utente.Replace("'", "''") & "', " &
-							"'" & Cognome.Replace("'", "''") & "', " &
-							"'" & Nome.Replace("'", "''") & "', " &
-							"'" & Password.Replace("'", "''") & "', " &
-							"'" & EMail.Replace("'", "''") & "', " &
-							" " & idCategoria & ", " &
-							"" & idTipologia & ")"
+								"" & idAnno & ", " &
+								"" & idUtente & ", " &
+								"'" & Utente.Replace("'", "''") & "', " &
+								"'" & Cognome.Replace("'", "''") & "', " &
+								"'" & Nome.Replace("'", "''") & "', " &
+								"'" & Password.Replace("'", "''") & "', " &
+								"'" & EMail.Replace("'", "''") & "', " &
+								" " & idCategoria & ", " &
+								"" & idTipologia & ")"
 							Ritorno = EsegueSql(Conn, Sql, Connessione)
 							If Ritorno.Contains(StringaErrore) Then
 								Ok = False

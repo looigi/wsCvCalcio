@@ -14,7 +14,8 @@ Public Class wsSuperUser
 	Inherits System.Web.Services.WebService
 
 	<WebMethod()>
-	Public Function CreaDB(Squadra As String, DataScadenza As String, MailAdmin As String, NomeAdmin As String, CognomeAdmin As String, Anno As String, idTipologia As String, idLicenza As String, Mittente As String) As String
+	Public Function CreaDB(Squadra As String, DataScadenza As String, MailAdmin As String, NomeAdmin As String, CognomeAdmin As String, Anno As String, idTipologia As String,
+						   idLicenza As String, Mittente As String) As String
 		Dim Ritorno As String = ""
 		Dim ConnessioneGenerale As String = LeggeImpostazioniDiBase(Server.MapPath("."), "")
 		Dim ConnessioneDBVuoto As String = LeggeImpostazioniDiBase(Server.MapPath("."), "DBVUOTO")
@@ -36,6 +37,20 @@ Public Class wsSuperUser
 			Else
 				Dim Rec As Object = Server.CreateObject("ADODB.Recordset")
 				Dim Sql As String = ""
+				Dim gf As New GestioneFilesDirectory
+
+				gf.CreaDirectoryDaPercorso(Server.MapPath(".") & "\Log\")
+				gf.ApreFileDiTestoPerScrittura(Server.MapPath(".") & "\Log\CreazioneSocieta_" & Squadra & "_" & Now.Year & Format(Now.Month, "00") & Format(Now.Day, "00") & Format(Now.Hour, "00") & Format(Now.Minute, "00") & Format(Now.Second, "00") & ".txt")
+				gf.ScriveTestoSuFileAperto("Squadra: " & Squadra)
+				gf.ScriveTestoSuFileAperto("DataScadenza: " & DataScadenza)
+				gf.ScriveTestoSuFileAperto("MailAdmin: " & MailAdmin)
+				gf.ScriveTestoSuFileAperto("NomeAdmin: " & NomeAdmin)
+				gf.ScriveTestoSuFileAperto("CognomeAdmin: " & CognomeAdmin)
+				gf.ScriveTestoSuFileAperto("Anno: " & Anno)
+				gf.ScriveTestoSuFileAperto("idTipologia: " & idTipologia)
+				gf.ScriveTestoSuFileAperto("idLicenza: " & idLicenza)
+				gf.ScriveTestoSuFileAperto("Mittente: " & Mittente)
+				gf.ScriveTestoSuFileAperto("-------------------------------------------")
 
 				Sql = "Select Max(idSquadra)+1 From Squadre"
 				Rec = LeggeQuery(ConnGen, Sql, ConnessioneGenerale)
@@ -51,6 +66,7 @@ Public Class wsSuperUser
 						idSocieta = Rec(0).Value
 						Rec.Close
 					End If
+					gf.ScriveTestoSuFileAperto("idSocieta: " & idSocieta.ToString)
 
 					Sql = "Select Max(idUtente)+1 From Utenti"
 					Rec = LeggeQuery(ConnGen, Sql, ConnessioneGenerale)
@@ -66,6 +82,7 @@ Public Class wsSuperUser
 							idUtente = Rec(0).Value
 							Rec.Close
 						End If
+						gf.ScriveTestoSuFileAperto("idUtente: " & idUtente.ToString)
 
 						If Ok Then
 							Dim Tabelle(0) As String
@@ -85,11 +102,15 @@ Public Class wsSuperUser
 									Rec.MoveNext()
 								Loop
 								Rec.Close()
+								gf.ScriveTestoSuFileAperto("Tabelle: " & q)
 							End If
 
 							If Ok Then
 								Dim Societa As String = Format(idSocieta, "00000")
 								nomeDb = "0001_" & Societa
+
+								gf.ScriveTestoSuFileAperto("idSocieta 2: " & Societa)
+								gf.ScriveTestoSuFileAperto("Nome DB: " & nomeDb)
 
 								Sql = "Create Database [" & nomeDb & "]"
 								Ritorno = EsegueSql(ConnGen, Sql, ConnessioneGenerale)
@@ -108,20 +129,34 @@ Public Class wsSuperUser
 									End If
 
 									If Ok Then
+										Dim chiave As String = "AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvZz0123456789!$%/()=?^"
+										Dim rnd1 As New Random()
+										Dim nuovaPass As String = ""
+
+										For i As Integer = 1 To 7
+											Dim c As Integer = rnd1.Next(chiave.Length - 1) + 1
+											nuovaPass &= Mid(chiave, c, 1)
+										Next
+
+										Dim wrapper As New CryptEncrypt("WPippoBaudo227!")
+										Dim nuovaPassCrypt As String = wrapper.EncryptData(nuovaPass)
+
 										Sql = "Insert Into Utenti Values (" &
 											"1, " &
 											" " & idUtente & ", " &
 											"'" & MailAdmin.Replace("'", "''") & "', " &
 											"'" & CognomeAdmin.Replace("'", "''") & "', " &
 											"'" & NomeAdmin.Replace("'", "''") & "', " &
-											"'" & CriptaStringa("Password123!") & "', " &
+											"'" & nuovaPassCrypt & "', " &
 											"'" & MailAdmin.Replace("'", "''") & "', " &
 											"-1, " &
 											"1, " &
 											" " & idSocieta & ", " &
 											"1, " &
 											"'', " &
-											"'N' " &
+											"'N', " &
+											"-1, " &
+											"'S' " &
 											")"
 										Ritorno = EsegueSql(ConnGen, Sql, ConnessioneGenerale)
 										If Ritorno.Contains(StringaErrore) Then
@@ -129,12 +164,17 @@ Public Class wsSuperUser
 										End If
 
 										If Ok Then
+											gf.ScriveTestoSuFileAperto("Utente Inserito")
 											For i As Integer = 0 To q - 1
 												Try
 													Sql = "Select * Into [" & nomeDb & "].[dbo].[" & Tabelle(i) & "] From " & Tabelle(i)
 													Ritorno = EsegueSql(ConnDbVuoto, Sql, ConnessioneDBVuoto)
 													If Ritorno.Contains(StringaErrore) Then
 														Ok = False
+														gf.ScriveTestoSuFileAperto("Errore su copia Tabella: " & Tabelle(i) & " -> " & Ritorno)
+														Exit For
+													Else
+														gf.ScriveTestoSuFileAperto("Copiata Tabella: " & Tabelle(i))
 													End If
 												Catch ex As Exception
 													Ritorno = StringaErrore & " " & ex.Message
@@ -163,7 +203,11 @@ Public Class wsSuperUser
 
 																Ritorno = EsegueSql(ConnNuovo, Query, ConnessioneNuovo)
 																If Ritorno.Contains(StringaErrore) Then
+																	gf.ScriveTestoSuFileAperto("Errore su creazione Chiave: " & Tabelle(i) & " -> " & Ritorno)
 																	Ok = False
+																	Exit For
+																Else
+																	gf.ScriveTestoSuFileAperto("Creata Chiave: " & Tabelle(i))
 																End If
 
 																Rec.Close()
@@ -176,6 +220,9 @@ Public Class wsSuperUser
 														Ritorno = EsegueSql(ConnNuovo, Sql, ConnessioneNuovo)
 														If Ritorno.Contains(StringaErrore) Then
 															Ok = False
+															gf.ScriveTestoSuFileAperto("Eliminazione tabella _CHIAVI_: " & Ritorno)
+														Else
+															gf.ScriveTestoSuFileAperto("Eliminata tabella _CHIAVI_")
 														End If
 													End If
 												End If
@@ -197,21 +244,26 @@ Public Class wsSuperUser
 													"null, " &
 													"null, " &
 													"null, " &
+													"null, " &
 													"null " &
 													")"
 												Ritorno = EsegueSql(ConnDbVuoto, Sql, ConnessioneDBVuoto)
 												If Ritorno.Contains(StringaErrore) Then
 													Ok = False
+													gf.ScriveTestoSuFileAperto("Creazione voce su Tabella Anni: " & Ritorno)
 												Else
+													gf.ScriveTestoSuFileAperto("Dati inseriti in tabella Anni: " & "[" & nomeDb & "].[dbo].[Anni]")
 													Sql = "Insert Into SquadraAnni Values (" &
 														" " & idSocieta & ", " &
 														"1, " &
-														"'" & Anno & "' " &
+														"'" & Anno & "', " &
+														"'S' " &
 														")"
 													Ritorno = EsegueSql(ConnGen, Sql, ConnessioneGenerale)
 													If Ritorno.Contains(StringaErrore) Then
 														Ok = False
 													Else
+														gf.ScriveTestoSuFileAperto("Dati inseriti in tabella SquadraAnni")
 														Try
 															Dim Tipologia As String = ""
 															Dim Licenza As String = ""
@@ -236,21 +288,27 @@ Public Class wsSuperUser
 															Dim Oggetto As String = "Creazione nuova società"
 															Dim Body As String = ""
 
-															Body &= "E' stata creata la nuova società '" & Squadra & "'. " & vbCrLf & vbCrLf
-															Body &= "Amministratore: " & CognomeAdmin & " " & NomeAdmin & vbCrLf
-															Body &= "Scadenza licenza: " & DataScadenza & vbCrLf
-															Body &= "Anno: " & Anno & vbCrLf
-															Body &= "Tipologia: " & Tipologia & vbCrLf
-															Body &= "Licenza: " & idLicenza & vbCrLf
+															Body &= "E' stata creata la nuova società '" & Squadra & "'. <br /><br />"
+															Body &= "Amministratore: " & CognomeAdmin & " " & NomeAdmin & "<br />"
+															Body &= "Scadenza licenza: " & DataScadenza & "<br />"
+															Body &= "Anno: " & Anno & "<br />"
+															Body &= "Tipologia: " & Tipologia & "<br />"
+															Body &= "Licenza: " & Licenza & "<br /><br />"
+															Body &= "Per accedere, l'amministratore potrà utilizzare la password " & nuovaPass & " che dovrà essere modificata al primo ingresso."
 
-															Dim ChiScrive As String = "notifiche@incalcio.cloud"
+															Dim ChiScrive As String = "servizioclienti@incalcio.cloud"
 
-															Ritorno = m.SendEmail(Mittente, Oggetto, Body, ChiScrive, MailAdmin)
-															If Not Ritorno.Contains(StringaErrore) Then
+															gf.ScriveTestoSuFileAperto("Invio Mail")
+
+															Ritorno = m.SendEmail(Mittente, Oggetto, Body, MailAdmin)
+															If Ritorno.Contains(StringaErrore) Then
+																gf.ScriveTestoSuFileAperto("Ritorno invio mail: " & Ritorno)
+															Else
 																Ritorno = Societa
 															End If
 														Catch ex As Exception
 															Ritorno = StringaErrore & " " & ex.Message
+															gf.ScriveTestoSuFileAperto("Errore invio mail: " & Ritorno)
 														End Try
 													End If
 												End If
@@ -266,13 +324,21 @@ Public Class wsSuperUser
 				If Ok Then
 					Sql = "commit"
 					Dim Ritorno2 As String = EsegueSql(ConnGen, Sql, ConnessioneGenerale)
+					gf.ScriveTestoSuFileAperto("Commit: " & Ritorno2)
 				Else
 					Sql = "rollback"
 					Dim Ritorno2 As String = EsegueSql(ConnGen, Sql, ConnessioneGenerale)
+					gf.ScriveTestoSuFileAperto("Rollback: " & Ritorno2)
+
+					ConnGen.Close
+					ConnDbVuoto.close
 
 					Sql = "Drop Database [" & nomeDb & "]"
 					Ritorno2 = EsegueSql(ConnDbVuoto, Sql, ConnessioneDBVuoto)
+					gf.ScriveTestoSuFileAperto("Drop Database: " & Ritorno2)
 				End If
+
+				gf.ChiudeFileDiTestoDopoScrittura()
 			End If
 		End If
 

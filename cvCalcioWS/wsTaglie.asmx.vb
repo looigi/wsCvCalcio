@@ -82,7 +82,6 @@ Public Class wsTaglie
 						If Ritorno.Contains(StringaErrore) Then
 							Ok = False
 						End If
-
 					Catch ex As Exception
 						Ritorno = StringaErrore & " " & ex.Message
 						Ok = False

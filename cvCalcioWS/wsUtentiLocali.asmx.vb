@@ -480,7 +480,7 @@ Public Class wsUtentiLocali
 
 				Try
 					Sql = "SELECT Utenti.idAnno, Utenti.idUtente, Utenti.Utente, Utenti.Cognome, Utenti.Nome, Utenti.EMail, Categorie.Descrizione As Categoria, " &
-						"Utenti.idTipologia, Utenti.Password, Categorie.idCategoria, idSquadra, Utenti.Telefono " &
+						"Utenti.idTipologia, Utenti.Password, Categorie.idCategoria, idSquadra, Utenti.Telefono, Utenti.AmmOriginale " &
 						"FROM (Utenti LEFT JOIN [" & Squadra & "].[dbo].Categorie ON Utenti.idCategoria = Categorie.idCategoria And Utenti.idAnno = Categorie.idAnno) " &
 						"Where Utenti.idAnno=" & Anno & " And Utenti.idTipologia > 0 And idSquadra=" & idSquadra & " And Utenti.Eliminato='N' Order By 2,1;"
 					' "Where Utenti.idAnno=" & idAnno & " Order By 2,1;"
@@ -515,6 +515,7 @@ Public Class wsUtentiLocali
 									Rec("idCategoria").Value & ";" &
 									Rec("Categoria").Value & ";" &
 									Rec("Telefono").Value & ";" &
+									Rec("AmmOriginale").Value & ";" &
 									"§"
 
 								Rec.MoveNext()
@@ -593,7 +594,7 @@ Public Class wsUtentiLocali
 
 	<WebMethod()>
 	Public Function SalvaUtente(Squadra As String, ByVal idAnno As String, idUtente As String, Utente As String, Cognome As String, Nome As String, EMail As String,
-								Password As String, idCategoria As String, idTipologia As String, Telefono As String) As String
+								Password As String, idCategoria As String, idTipologia As String, Telefono As String, AmmOriginale As String) As String
 		Dim Ritorno As String = ""
 		Dim Connessione As String = LeggeImpostazioniDiBase(Server.MapPath("."), "")
 
@@ -632,21 +633,22 @@ Public Class wsUtentiLocali
 								'		Rec.Close()
 
 								Sql = "Insert Into Utenti Values (" &
-													" " & idAnno & ", " &
-													" " & idUtente & ", " &
-													"'" & Utente.Replace("'", "''") & "', " &
-													"'" & Cognome.Replace("'", "''") & "', " &
-													"'" & Nome.Replace("'", "''") & "', " &
-													"'" & CriptaStringa(Password).Replace("'", "''") & "', " &
-													"'" & EMail.Replace("'", "''") & "', " &
-													" " & idCategoria & ", " &
-													" " & idTipologia & ", " &
-													" " & idSquadra & ", " &
-													"0, " &
-													"'" & Telefono & "', " &
-													"'N', " &
-													"-1 " &
-													")"
+										" " & idAnno & ", " &
+										" " & idUtente & ", " &
+										"'" & Utente.Replace("'", "''") & "', " &
+										"'" & Cognome.Replace("'", "''") & "', " &
+										"'" & Nome.Replace("'", "''") & "', " &
+										"'" & CriptaStringa(Password).Replace("'", "''") & "', " &
+										"'" & EMail.Replace("'", "''") & "', " &
+										" " & idCategoria & ", " &
+										" " & idTipologia & ", " &
+										" " & idSquadra & ", " &
+										"0, " &
+										"'" & Telefono & "', " &
+										"'N', " &
+										"-1, " &
+										"'" & AmmOriginale & "' " &
+										")"
 								Ritorno = EsegueSql(Conn, Sql, Connessione)
 								'End If
 								'End If
@@ -729,7 +731,7 @@ Public Class wsUtentiLocali
 
 	<WebMethod()>
 	Public Function ModificaUtente(Squadra As String, ByVal idAnno As String, Utente As String, Cognome As String, Nome As String, EMail As String,
-								Password As String, idCategoria As String, idTipologia As String, idUtente As String, Telefono As String) As String
+								Password As String, idCategoria As String, idTipologia As String, idUtente As String, Telefono As String, AmmOriginale As String) As String
 		Dim Ritorno As String = ""
 		Dim Connessione As String = LeggeImpostazioniDiBase(Server.MapPath("."), "")
 
@@ -748,40 +750,39 @@ Public Class wsUtentiLocali
 				Sql = "Begin transaction"
 				Ritorno = EsegueSql(Conn, Sql, Connessione)
 
-				' Sql = "Delete From Utenti Where idAnno=" & idAnno & " And idUtente=" & idUtente
-				Sql = "Delete From Utenti Where idUtente=" & idUtente & " And idAnno=" & idAnno
-				Ritorno = EsegueSql(Conn, Sql, Connessione)
-				If Ritorno.Contains(StringaErrore) Then
-					Ok = False
-				End If
+				'Sql = "Delete From Utenti Where idUtente=" & idUtente & " And idAnno=" & idAnno
+				'Ritorno = EsegueSql(Conn, Sql, Connessione)
+				'If Ritorno.Contains(StringaErrore) Then
+				'	Ok = False
+				'End If
 
 				If Ok Then
 					'Dim idSquadra As Integer
-					Dim sq() As String = Squadra.Split("_")
+					'Dim sq() As String = Squadra.Split("_")
 
 					Try
-						Sql = "Insert Into Utenti Values (" &
-							"" & idAnno & ", " &
-							"" & idUtente & ", " &
-							"'" & Utente.Replace("'", "''") & "', " &
-							"'" & Cognome.Replace("'", "''") & "', " &
-							"'" & Nome.Replace("'", "''") & "', " &
-							"'" & CriptaStringa(Password).Replace("'", "''") & "', " &
-							"'" & EMail.Replace("'", "''") & "', " &
-							" " & idCategoria & ", " &
-							"" & idTipologia & ", " &
-							"" & Val(sq(1)).ToString & ", " &
-							"0, " &
-							"'" & Telefono & "', " &
-							"'N', " &
-							"-1 " &
-							")"
+						' "idSquadra=" & Val(sq(1)).ToString & ", " &
+						Sql = "Update Utenti Set " &
+							"idAnno=" & idAnno & ", " &
+							"Utente='" & Utente.Replace("'", "''") & "', " &
+							"Cognome='" & Cognome.Replace("'", "''") & "', " &
+							"Nome='" & Nome.Replace("'", "''") & "', " &
+							"Password='" & CriptaStringa(Password).Replace("'", "''") & "', " &
+							"EMail='" & EMail.Replace("'", "''") & "', " &
+							"idCategoria=" & idCategoria & ", " &
+							"idTipologia=" & idTipologia & ", " &
+							"PasswordScaduta=0, " &
+							"Telefono='" & Telefono & "', " &
+							"Eliminato='N', " &
+							"idGiocatore=-1, " &
+							"AmmOriginale='" & AmmOriginale & "' " &
+							"Where idUtente=" & idUtente
 						Ritorno = EsegueSql(Conn, Sql, Connessione)
 						If Ritorno.Contains(StringaErrore) Then
 							Ok = False
+						Else
+							Ritorno = idUtente
 						End If
-
-						If Ritorno = "*" Then Ritorno = idUtente
 					Catch ex As Exception
 						Ritorno = StringaErrore & " " & ex.Message
 					End Try

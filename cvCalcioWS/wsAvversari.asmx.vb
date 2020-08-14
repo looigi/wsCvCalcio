@@ -9,6 +9,42 @@ Public Class wsAvversari
     Inherits System.Web.Services.WebService
 
 	<WebMethod()>
+	Public Function RitornaNuovoID(Squadra As String, ByVal idAnno As String) As String
+		Dim Ritorno As String = ""
+		Dim Connessione As String = LeggeImpostazioniDiBase(Server.MapPath("."), Squadra)
+		Dim idAvversario As String = "-1"
+
+		If Connessione = "" Then
+			Ritorno = ErroreConnessioneNonValida
+		Else
+			Dim Conn As Object = ApreDB(Connessione)
+
+			If TypeOf (Conn) Is String Then
+				Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
+			Else
+				Dim Rec As Object = Server.CreateObject("ADODB.Recordset")
+				Dim Sql As String = ""
+				'Dim idUtente As String = ""
+
+				Sql = "SELECT Max(idAvversario)+1 FROM Avversari"
+				Rec = LeggeQuery(Conn, Sql, Connessione)
+				If TypeOf (Rec) Is String Then
+					Ritorno = Rec
+				Else
+					If Rec(0).Value Is DBNull.Value Then
+						idAvversario = "1"
+					Else
+						idAvversario = Rec(0).Value.ToString
+					End If
+					Rec.Close()
+				End If
+			End If
+		End If
+
+		Return idAvversario
+	End Function
+
+	<WebMethod()>
 	Public Function RitornaAvversari(Squadra As String, ByVal idAnno As String, Ricerca As String) As String
 		Dim Ritorno As String = ""
 		Dim Connessione As String = LeggeImpostazioniDiBase(Server.MapPath("."), Squadra)

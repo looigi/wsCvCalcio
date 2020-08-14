@@ -371,7 +371,15 @@ Public Class wsPartite
 
 				If Ok Then
 					If sTempo <> "" Then
-						Dim TT() As String = sTempo.Split(";")
+						Dim CC() As String = Coordinate.Split(";")
+						Dim TempoMeteo As String = RitornaMeteo(CC(0), CC(1))
+						Dim TT() As String = TempoMeteo.Split(";")
+
+						'Temperatura
+						'Umidita
+						'Pressione
+						'Tempo
+						'Icona
 
 						Try
 							Sql = "Insert Into MeteoPartite Values (" &
@@ -379,7 +387,8 @@ Public Class wsPartite
 								"'" & TT(0) & "', " &
 								"'" & TT(1) & "', " &
 								"'" & TT(2) & "', " &
-								"'" & TT(3) & "' " &
+								"'" & TT(3) & "', " &
+								"'" & TT(4) & "' " &
 								")"
 							Ritorno = EsegueSql(Conn, Sql, Connessione)
 							If Ritorno.Contains(StringaErrore) Then
@@ -425,6 +434,7 @@ Public Class wsPartite
 									If Campi.Length > 4 Then
 										Minuto = Campi(5)
 									End If
+									Dim Rigore As String = Campi(6)
 
 									If Minuto = "" Then Minuto = "null"
 
@@ -450,7 +460,8 @@ Public Class wsPartite
 											" " & Tempo & ", " &
 											" " & Progressivo & ", " &
 											" " & idMarcatore & ", " &
-											" " & Minuto & " " &
+											" " & Minuto & ", " &
+											"'" & Rigore & "' " &
 											")"
 										Ritorno = EsegueSql(Conn, Sql, Connessione)
 										If Ritorno.Contains(StringaErrore) Then
@@ -516,9 +527,9 @@ Public Class wsPartite
 
 							Do Until Rec.Eof()
 								If "" & Rec("Mail").Value <> "" Then
-									Sql = "Select * From GiocatoriDettaglio Where idGiocatore=" & Rec("idGiocatore") & " And Progressivo=" & Rec("Progressivo").Value
+									Sql = "Select * From GiocatoriDettaglio Where idGiocatore=" & Rec("idGiocatore").Value ' & " And Progressivo=" & Rec("Progressivo").Value
 									Rec2 = LeggeQuery(Conn, Sql, Connessione)
-									If Not Rec.Eof Then
+									If Not Rec2.Eof Then
 										Dim genitore As String = ""
 										Select Case Val(Rec("Progressivo").Value)
 											Case 1
@@ -532,8 +543,8 @@ Public Class wsPartite
 										Dim nome As String = ""
 										If genitore.Contains(" ") Then
 											Dim g() As String = genitore.Split(" ")
-											cognome = g(1)
-											nome = g(2)
+											cognome = g(0)
+											nome = g(1)
 										End If
 
 										MailsConvocati.Add(cognome & ";" & nome & ";" & Rec("Mail").Value & ";C;" & Rec("idGiocatore").Value)
@@ -1249,7 +1260,7 @@ Public Class wsPartite
 						"CampiAvversari.Indirizzo as CampoIndirizzo, Partite.Casa, Allenatori.idAllenatore, CampiEsterni.Descrizione As CampoEsterno, " &
 						"RisultatiAggiuntivi.Tempo1Tempo, RisultatiAggiuntivi.Tempo2Tempo, RisultatiAggiuntivi.Tempo3Tempo, " &
 						"CoordinatePartite.Lat, CoordinatePartite.Lon, TempiGoalAvversari.TempiPrimoTempo, TempiGoalAvversari.TempiSecondoTempo, TempiGoalAvversari.TempiTerzoTempo, " &
-						"MeteoPartite.Tempo, MeteoPartite.Gradi, MeteoPartite.Umidita, MeteoPartite.Pressione, ArbitriPartite.idArbitro, Arbitri.Cognome + ' ' + Arbitri.Nome As Arbitro, " &
+						"MeteoPartite.Tempo, MeteoPartite.Gradi, MeteoPartite.Umidita, MeteoPartite.Pressione, MeteoPartite.Icona, ArbitriPartite.idArbitro, Arbitri.Cognome + ' ' + Arbitri.Nome As Arbitro, " &
 						"Partite.RisultatoATempi, Partite.DataOraAppuntamento, Partite.LuogoAppuntamento, Partite.MezzoTrasporto " &
 						"FROM ((((((((((((Partite LEFT JOIN Risultati ON Partite.idPartita = Risultati.idPartita) " &
 						"LEFT JOIN RisultatiAggiuntivi ON Partite.idPartita = RisultatiAggiuntivi.idPartita) " &
@@ -1373,8 +1384,9 @@ Public Class wsPartite
 								Ritorno &= Rec("Gradi").Value & ";"
 								Ritorno &= Rec("Umidita").Value & ";"
 								Ritorno &= Rec("Pressione").Value & ";"
+								Ritorno &= Rec("Icona").Value & ";"
 
-								'31
+								'32
 								Ritorno &= Rec("TempiPrimoTempo").Value & ";"
 								Ritorno &= Rec("TempiSecondoTempo").Value & ";"
 								Ritorno &= Rec("TempiTerzoTempo").Value & ";"
@@ -1508,13 +1520,13 @@ Public Class wsPartite
 						Rec.Close()
 						Ritorno &= "|"
 
-						Sql = "Select * From (Select idTempo, Progressivo, RisultatiAggiuntiviMarcatori.idGiocatore, Minuto, Cognome, Nome, Ruoli.Descrizione As Ruolo, NumeroMaglia " &
+						Sql = "Select * From (Select idTempo, Progressivo, RisultatiAggiuntiviMarcatori.idGiocatore, Minuto, Cognome, Nome, Ruoli.Descrizione As Ruolo, NumeroMaglia, Rigore " &
 							"FROM ((RisultatiAggiuntiviMarcatori " &
 							"Left Join Giocatori On RisultatiAggiuntiviMarcatori.idGiocatore = Giocatori.idGiocatore) " &
 							"Left Join [Generale].[dbo].[Ruoli] On Giocatori.idRuolo = Ruoli.idRuolo) " &
 							"Where RisultatiAggiuntiviMarcatori.idPartita=" & idPartita & " And Giocatori.idAnno=" & idAnno & " " &
 							"Union All " &
-							"Select idTempo, Progressivo, -1, Minuto, 'Autorete' As Cognome, '' As Nome, '' As Ruolo, 999 As NumeroMaglia FROM RisultatiAggiuntiviMarcatori " &
+							"Select idTempo, Progressivo, -1, Minuto, 'Autorete' As Cognome, '' As Nome, '' As Ruolo, 999 As NumeroMaglia, 'N' As Rigore FROM RisultatiAggiuntiviMarcatori " &
 							"Where RisultatiAggiuntiviMarcatori.idPartita = " & idPartita & " And RisultatiAggiuntiviMarcatori.idGiocatore = -1 " &
 							") As A  Order By idTempo, Progressivo"
 						Rec = LeggeQuery(Conn, Sql, Connessione)
@@ -1533,6 +1545,7 @@ Public Class wsPartite
 										Rec("Nome").Value.ToString & ";" &
 										Rec("Ruolo").Value.ToString & ";" &
 										Rec("NumeroMaglia").Value.ToString & ";" &
+										Rec("Rigore").Value.ToString & ";" &
 										"§"
 
 									Rec.MoveNext()

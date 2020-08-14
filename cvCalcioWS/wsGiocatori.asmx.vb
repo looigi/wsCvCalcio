@@ -8,6 +8,7 @@ Imports System.Management
 Imports System.Web.Hosting
 Imports System.Net.Security
 Imports System.Net
+Imports System.Diagnostics.Eventing.Reader
 
 <System.Web.Services.WebService(Namespace:="http://cvcalcio_gioc.org/")>
 <System.Web.Services.WebServiceBinding(ConformsTo:=WsiProfiles.BasicProfile1_1)>
@@ -162,7 +163,8 @@ Public Class wsGiocatori
 										"1, " &
 										"'" & Telefono & "', " &
 										"'N', " &
-										" " & idGiocatore & " " &
+										" " & idGiocatore & ", " &
+										"'N' " &
 										")"
 									Ritorno = EsegueSql(Conn, Sql, Connessione)
 									If Ritorno.Contains(StringaErrore) Then
@@ -772,7 +774,7 @@ Public Class wsGiocatori
 				Try
 					Sql = "SELECT idGiocatore, Ruoli.idRuolo As idR, Cognome, Nome, Ruoli.Descrizione, EMail, Telefono, Soprannome, DataDiNascita, Indirizzo, " &
 						"CodFiscale, Maschio, Citta, Matricola, NumeroMaglia, Giocatori.idCategoria, idCategoria2, Categorie.Descrizione As Categoria2, idCategoria3, Cat3.Descrizione As Categoria3, Cat1.Descrizione As Categoria1, " &
-						"Giocatori.Categorie, Giocatori.RapportoCompleto, Giocatori.Cap, Giocatori.CittaNascita " &
+						"Giocatori.Categorie, Giocatori.RapportoCompleto, Giocatori.Cap, Giocatori.CittaNascita, Giocatori.Maggiorenne " &
 						"FROM (((Giocatori " &
 						"Left Join [Generale].[dbo].[Ruoli] On Giocatori.idRuolo=Ruoli.idRuolo) " &
 						"Left Join Categorie On Categorie.idCategoria=Giocatori.idCategoria2 And Categorie.idAnno=Giocatori.idAnno) " &
@@ -816,6 +818,7 @@ Public Class wsGiocatori
 									Rec("RapportoCompleto").Value.ToString & ";" &
 									Rec("Cap").Value.ToString & ";" &
 									Rec("CittaNascita").Value.ToString & ";" &
+									Rec("Maggiorenne").Value & ";" &
 									"§"
 
 								Rec.MoveNext()
@@ -853,7 +856,7 @@ Public Class wsGiocatori
 				Try
 					Sql = "SELECT idGiocatore, Ruoli.idRuolo As idR, Cognome, Nome, Ruoli.Descrizione, EMail, Telefono, Soprannome, DataDiNascita, Indirizzo, " &
 						"CodFiscale, Maschio, Citta, Matricola, NumeroMaglia, Giocatori.idCategoria, -1 As idCategoria2, '' As Categoria2, -1 As idCategoria3, '' As Categoria3, Categorie.Descrizione As Categoria1, " &
-						"Giocatori.Categorie, Giocatori.RapportoCompleto, Giocatori.Cap, Giocatori.CittaNascita " &
+						"Giocatori.Categorie, Giocatori.RapportoCompleto, Giocatori.Cap, Giocatori.CittaNascita, Giocatori.Maggiorenne " &
 						"FROM Giocatori " &
 						"Left Join [Generale].[dbo].[Ruoli] On Giocatori.idRuolo=Ruoli.idRuolo " &
 						"Left Join Categorie On Categorie.idCategoria=Giocatori.idCategoria And Categorie.idAnno=Giocatori.idAnno " &
@@ -894,6 +897,7 @@ Public Class wsGiocatori
 									Rec("RapportoCompleto").Value.ToString & ";" &
 									Rec("Cap").Value.ToString & ";" &
 									Rec("CittaNascita").Value.ToString & ";" &
+									Rec("Maggiorenne").Value.ToString & ";" &
 									"§"
 
 								Rec.MoveNext()
@@ -931,7 +935,7 @@ Public Class wsGiocatori
 				Try
 					Sql = "SELECT idGiocatore, Ruoli.idRuolo As idR, Cognome, Nome, Ruoli.Descrizione, EMail, Telefono, Soprannome, DataDiNascita, Indirizzo, " &
 						"CodFiscale, Maschio, Citta, Matricola, NumeroMaglia, Giocatori.idCategoria, -1 As idCategoria2, '' As Categoria2, -1 As idCategoria3, '' As Categoria3, Categorie.Descrizione As Categoria1, " &
-						"Giocatori.Categorie, Giocatori.RapportoCompleto, Giocatori.Cap, Giocatori.CittaNascita " &
+						"Giocatori.Categorie, Giocatori.RapportoCompleto, Giocatori.Cap, Giocatori.CittaNascita, Giocatori.Maggiorenne " &
 						"FROM Giocatori " &
 						"Left Join [Generale].[dbo].[Ruoli] On Giocatori.idRuolo=Ruoli.idRuolo " &
 						"Left Join Categorie On Categorie.idCategoria=Giocatori.idCategoria And Categorie.idAnno=Giocatori.idAnno " &
@@ -973,6 +977,7 @@ Public Class wsGiocatori
 									Rec("RapportoCompleto").Value.ToString & ";" &
 									Rec("Cap").Value.ToString & ";" &
 									Rec("CittaNascita").Value.ToString & ";" &
+									Rec("Maggiorenne").Value.ToString & ";" &
 									"§"
 
 								Rec.MoveNext()
@@ -1039,7 +1044,7 @@ Public Class wsGiocatori
 						Sql = "SELECT Giocatori.idGiocatore, Ruoli.idRuolo As idR, Cognome, Nome, Ruoli.Descrizione, EMail, Telefono, Soprannome, DataDiNascita, Indirizzo, " &
 							"CodFiscale, Maschio, Citta, Matricola, NumeroMaglia, Giocatori.idCategoria, Giocatori.idCategoria2 As idCategoria2, Categorie2.Descrizione As Categoria2, " &
 							"Giocatori.idCategoria3 As idCategoria3, Categorie3.Descrizione As Categoria3, Categorie.Descrizione As Categoria1, Giocatori.Categorie, " &
-							"Giocatori.RapportoCompleto, Giocatori.idTaglia, Min(KitGiocatori.idTipoKit) As idTipologiaKit, Giocatori.Cap, Giocatori.CittaNascita " &
+							"Giocatori.RapportoCompleto, Giocatori.idTaglia, Min(KitGiocatori.idTipoKit) As idTipologiaKit, Giocatori.Cap, Giocatori.CittaNascita, Giocatori.Maggiorenne " &
 							"FROM Giocatori " &
 							"Left Join KitGiocatori On Giocatori.idGiocatore=KitGiocatori.idGiocatore " &
 							"Left Join [Generale].[dbo].[Ruoli] On Giocatori.idRuolo=Ruoli.idRuolo " &
@@ -1049,7 +1054,7 @@ Public Class wsGiocatori
 							"Where Giocatori.Eliminato='N' And Giocatori.idAnno=" & idAnno & " " &
 							"Group By Giocatori.idGiocatore, Ruoli.idRuolo, Cognome, Nome, Ruoli.Descrizione, EMail, Telefono, Soprannome, DataDiNascita, Indirizzo, CodFiscale, Maschio, " &
 							"Citta, Matricola, NumeroMaglia, Giocatori.idCategoria, Giocatori.idCategoria2, Categorie2.Descrizione, Giocatori.idCategoria3, Categorie3.Descrizione, Categorie.Descrizione, " &
-							"Giocatori.Categorie, Giocatori.RapportoCompleto, Giocatori.idTaglia, Giocatori.Cap, Giocatori.CittaNascita " &
+							"Giocatori.Categorie, Giocatori.RapportoCompleto, Giocatori.idTaglia, Giocatori.Cap, Giocatori.CittaNascita, Giocatori.Maggiorenne " &
 							"Order By Cognome, Nome"
 						Rec = LeggeQuery(Conn, Sql, Connessione)
 						If TypeOf (Rec) Is String Then
@@ -1069,6 +1074,7 @@ Public Class wsGiocatori
 									' Semaforo 1: Iscrizione
 									Semaforo1 = IIf(Rec("RapportoCompleto").Value = "S", "verde", "rosso")
 									Titolo1 = IIf(Rec("RapportoCompleto").Value = "S", "Giocatore iscritto", "Giocatore non iscritto")
+
 									' Semaforo 2: Pagamenti
 									Sql = "Select Sum(Pagamento) As Pagato, TotalePagamento As Somma " &
 										"From GiocatoriPagamenti A Left Join GiocatoriDettaglio B On A.idAnno = B.idAnno And A.idGiocatore = B.idGiocatore " &
@@ -1076,7 +1082,7 @@ Public Class wsGiocatori
 										"Group By TotalePagamento"
 									Rec2 = LeggeQuery(Conn, Sql, Connessione)
 									If TypeOf (Rec2) Is String Then
-										Ritorno = Rec
+										Ritorno = Rec2
 									Else
 										If Not Rec2.Eof Then
 											Semaforo2 = IIf(Rec2("Pagato").Value >= Rec2("Somma").Value, "verde", "giallo")
@@ -1089,22 +1095,97 @@ Public Class wsGiocatori
 									End If
 
 									' Semaforo 3: Firme
+									Dim GenitoriSeparati As Boolean = False
+									Dim AffidamentoCongiunto As Boolean = False
+
+									Sql = "Select * From GiocatoriDettaglio Where idGiocatore=" & Rec("idGiocatore").Value
+									Rec2 = LeggeQuery(Conn, Sql, Connessione)
+									If TypeOf (Rec2) Is String Then
+										Ritorno = Rec2
+									Else
+										If Not Rec2.Eof Then
+											If "" & Rec2("GenitoriSeparati").Value = "S" Then
+												GenitoriSeparati = True
+												AffidamentoCongiunto = IIf("" & Rec2("AffidamentoCongiunto").Value = "S", True, False)
+											Else
+												GenitoriSeparati = False
+												AffidamentoCongiunto = False
+											End If
+										End If
+										Rec2.Close
+									End If
+
 									Dim path1 As String = Percorso & NomeSquadra.Replace(" ", "_") & "\Firme\" & Anno & "_" & Rec("idGiocatore").Value & "_1.png"
 									Dim path2 As String = Percorso & NomeSquadra.Replace(" ", "_") & "\Firme\" & Anno & "_" & Rec("idGiocatore").Value & "_2.png"
 									Dim path3 As String = Percorso & NomeSquadra.Replace(" ", "_") & "\Firme\" & Anno & "_" & Rec("idGiocatore").Value & "_3.png"
 									Dim q As Integer = 0
+									Dim FirmaValidata1 As Boolean = False
+									Dim FirmaValidata2 As Boolean = False
+									Dim FirmaValidata3 As Boolean = False
+
 									If File.Exists(path1) Then
 										q += 1
+
+										Sql = "Select * From GiocatoriFirme Where idGiocatore=" & Rec("idGiocatore").Value & " And idGenitore=1"
+										Rec2 = LeggeQuery(Conn, Sql, Connessione)
+										If TypeOf (Rec2) Is String Then
+											Ritorno = Rec2
+										Else
+											If Not Rec2.Eof Then
+												If "" & Rec2("Validazione").Value <> "" Then
+													FirmaValidata1 = True
+												End If
+											End If
+											Rec2.Close
+										End If
 									End If
 									If File.Exists(path2) Then
 										q += 1
+
+										Sql = "Select * From GiocatoriFirme Where idGiocatore=" & Rec("idGiocatore").Value & " And idGenitore=2"
+										Rec2 = LeggeQuery(Conn, Sql, Connessione)
+										If TypeOf (Rec2) Is String Then
+											Ritorno = Rec2
+										Else
+											If Not Rec2.Eof Then
+												If "" & Rec2("Validazione").Value <> "" Then
+													FirmaValidata2 = True
+												End If
+											End If
+											Rec2.Close
+										End If
 									End If
 									If File.Exists(path3) Then
 										q += 1
+
+										Sql = "Select * From GiocatoriFirme Where idGiocatore=" & Rec("idGiocatore").Value & " And idGenitore=3"
+										Rec2 = LeggeQuery(Conn, Sql, Connessione)
+										If TypeOf (Rec2) Is String Then
+											Ritorno = Rec2
+										Else
+											If Not Rec2.Eof Then
+												If "" & Rec2("Validazione").Value <> "" Then
+													FirmaValidata3 = True
+												End If
+											End If
+											Rec2.Close
+										End If
 									End If
-									If q = 3 Then
-										Semaforo3 = "verde"
-										Titolo3 = "Firme complete"
+
+									Dim totaleFirme As Integer = 3
+
+									If AffidamentoCongiunto = True Then
+										totaleFirme = 2
+									End If
+
+									If q = totaleFirme Then
+										If FirmaValidata1 = True And FirmaValidata2 = True And FirmaValidata3 = True Then
+											Semaforo3 = "verde"
+											Titolo3 = "Firme complete"
+										Else
+											Semaforo3 = "giallo"
+											Titolo3 = "Firme complete ma non ancora completamente validate"
+										End If
 									Else
 										If q > 0 Then
 											Semaforo3 = "giallo"
@@ -1114,6 +1195,7 @@ Public Class wsGiocatori
 											Titolo3 = "Nessuna firma presente"
 										End If
 									End If
+
 									'Semaforo 4: Certificato
 									Sql = "Select CertificatoMedico, ScadenzaCertificatoMedico From GiocatoriDettaglio " &
 										"Where idAnno = " & idAnno & " And idGiocatore = " & Rec("idGiocatore").Value
@@ -1122,16 +1204,11 @@ Public Class wsGiocatori
 										Ritorno = Rec2
 									Else
 										If Not Rec2.Eof Then
-											If Rec2("ScadenzaCertificatoMedico").Value Is DBNull.Value Then
-												If Rec2("CertificatoMedico").Value = "S" Then
-													Semaforo4 = "giallo"
-													Titolo4 = "Certificato presente, Scadenza no"
-												Else
-													Semaforo4 = "rosso"
-													Titolo4 = "Nessun certificato e data presenti"
-												End If
+											If Rec2("CertificatoMedico").value = "" Or Rec2("CertificatoMedico").value = "N" Then
+												Semaforo4 = "rosso"
+												Titolo4 = "Flag certificato non impostato"
 											Else
-												If Rec2("ScadenzaCertificatoMedico").Value = "" Then
+												If Rec2("ScadenzaCertificatoMedico").Value Is DBNull.Value Then
 													If Rec2("CertificatoMedico").Value = "S" Then
 														Semaforo4 = "giallo"
 														Titolo4 = "Certificato presente, Scadenza no"
@@ -1140,15 +1217,33 @@ Public Class wsGiocatori
 														Titolo4 = "Nessun certificato e data presenti"
 													End If
 												Else
-													Dim D() As String = Rec2("ScadenzaCertificatoMedico").Value.split("-")
-													Dim dat As Date = Convert.ToDateTime(D(2) & "/" & D(1) & "/" & D(0))
-
-													If Rec2("CertificatoMedico").Value = "S" And dat > Now Then
-														Semaforo4 = "verde"
-														Titolo4 = "Certificato e data scadenza presenti"
+													If Rec2("ScadenzaCertificatoMedico").Value = "" Then
+														If Rec2("CertificatoMedico").Value = "S" Then
+															Semaforo4 = "giallo"
+															Titolo4 = "Certificato presente, Scadenza no"
+														Else
+															Semaforo4 = "rosso"
+															Titolo4 = "Nessun certificato e data presenti"
+														End If
 													Else
-														Semaforo4 = "giallo"
-														Titolo4 = "Certificato presente e data scaduta"
+														Dim D() As String = Rec2("ScadenzaCertificatoMedico").Value.split("-")
+														Dim dat As Date = Convert.ToDateTime(D(2) & "/" & D(1) & "/" & D(0))
+
+														Dim Scadenza As DateTime = Convert.ToDateTime(Rec2("ScadenzaCertificatoMedico").Value)
+														Dim GiorniAllaScadenza As Integer = DateAndTime.DateDiff(DateInterval.Day, Now, Scadenza, )
+
+														If Rec2("CertificatoMedico").Value = "S" And dat > Now Then
+															If GiorniAllaScadenza <= 30 Then
+																Semaforo4 = "giallo"
+																Titolo4 = "Certificato presente ma data scadenza inferiore a 30 giorni"
+															Else
+																Semaforo4 = "verde"
+																Titolo4 = "Certificato e data scadenza presenti"
+															End If
+														Else
+															Semaforo4 = "rosso"
+															Titolo4 = "Certificato presente ma con data scaduta"
+														End If
 													End If
 												End If
 											End If
@@ -1158,6 +1253,7 @@ Public Class wsGiocatori
 										End If
 										Rec2.Close
 									End If
+
 									' Semaforo 5: KIT
 									Sql = "Select C.Descrizione, QuantitaConsegnata, Quantita From KitGiocatori A " &
 										"Left Join KitTipologie B On A.idTipoKit = B.idTipoKit " &
@@ -1173,11 +1269,16 @@ Public Class wsGiocatori
 											Titolo5 = "Nessun elemento kit consegnato"
 										Else
 											Dim Tutto As Boolean = True
+											Dim Qualcosa As Boolean = False
 
 											Do Until Rec2.Eof
 												If Rec2("QuantitaConsegnata").Value < Rec2("Quantita").Value Then
 													Tutto = False
 													Exit Do
+												Else
+													If Rec2("QuantitaConsegnata").Value > 0 Then
+														Qualcosa = True
+													End If
 												End If
 
 												Rec2.MoveNext()
@@ -1187,8 +1288,13 @@ Public Class wsGiocatori
 												Semaforo5 = "verde"
 												Titolo5 = "Tutto il kit è stato consegnato"
 											Else
-												Semaforo5 = "giallo"
-												Titolo5 = "Alcuni elementi del kit sono stati consegnati"
+												If Qualcosa Then
+													Semaforo5 = "giallo"
+													Titolo5 = "Alcuni elementi del kit sono stati consegnati"
+												Else
+													Semaforo5 = "rosso"
+													Titolo5 = "Nessun elemento kit consegnato"
+												End If
 											End If
 										End If
 										Rec2.Close()
@@ -1226,6 +1332,7 @@ Public Class wsGiocatori
 										Rec("idTipologiaKit").Value.ToString & ";" &
 										Rec("Cap").Value.ToString & ";" &
 										Rec("CittaNascita").Value.ToString & ";" &
+										Rec("Maggiorenne").Value.ToString & ";" &
 										"§"
 
 									Rec.MoveNext()
@@ -1265,7 +1372,7 @@ Public Class wsGiocatori
 					Sql = "SELECT idGiocatore, Ruoli.idRuolo As idR, Cognome, Nome, Ruoli.Descrizione, EMail, Telefono, Soprannome, DataDiNascita, Indirizzo, " &
 						"CodFiscale, Maschio, Citta, Matricola, NumeroMaglia, Giocatori.idCategoria, Giocatori.idCategoria2 As idCategoria2, Categorie2.Descrizione As Categoria2, " &
 						"Giocatori.idCategoria3 As idCategoria3, Categorie3.Descrizione As Categoria3, Categorie.Descrizione As Categoria1, Giocatori.Categorie, " &
-						"Giocatori.RapportoCompleto, Giocatori.Cap, Giocatori.CittaNascita " &
+						"Giocatori.RapportoCompleto, Giocatori.Cap, Giocatori.CittaNascita, Giocatori.Maggiorenne " &
 						"FROM Giocatori " &
 						"Left Join [Generale].[dbo].[Ruoli] On Giocatori.idRuolo=Ruoli.idRuolo " &
 						"Left Join Categorie On Categorie.idCategoria=Giocatori.idCategoria And Categorie.idAnno=Giocatori.idAnno " &
@@ -1307,6 +1414,7 @@ Public Class wsGiocatori
 									Rec("RapportoCompleto").Value.ToString & ";" &
 									Rec("Cap").Value.ToString & ";" &
 									Rec("CittaNascita").Value.ToString & ";" &
+									Rec("Maggiorenne").Value.ToString & ";" &
 									"§"
 
 								Rec.MoveNext()
@@ -1381,7 +1489,8 @@ Public Class wsGiocatori
 											TotalePagamento As String, TelefonoGenitore1 As String, TelefonoGenitore2 As String,
 											ScadenzaCertificatoMedico As String, MailGenitore1 As String, MailGenitore2 As String, FirmaGenitore3 As String, MailGenitore3 As String,
 											DataDiNascita1 As String, CittaNascita1 As String, CodFiscale1 As String, Citta1 As String, Cap1 As String, Indirizzo1 As String,
-											DataDiNascita2 As String, CittaNascita2 As String, CodFiscale2 As String, Citta2 As String, Cap2 As String, Indirizzo2 As String) As String
+											DataDiNascita2 As String, CittaNascita2 As String, CodFiscale2 As String, Citta2 As String, Cap2 As String, Indirizzo2 As String,
+											GenitoriSeparati As String, AffidamentoCongiunto As String) As String
 		Dim Ritorno As String = ""
 		Dim Connessione As String = LeggeImpostazioniDiBase(Server.MapPath("."), Squadra)
 
@@ -1427,7 +1536,9 @@ Public Class wsGiocatori
 							"CodFiscale2='" & CodFiscale2 & "', " &
 							"Citta2='" & Citta2 & "', " &
 							"Cap2='" & Cap2 & "', " &
-							"Indirizzo2='" & Indirizzo2 & "' " &
+							"Indirizzo2='" & Indirizzo2 & "', " &
+							"GenitoriSeparati='" & GenitoriSeparati & "', " &
+							"AffidamentoCongiunto='" & AffidamentoCongiunto & "' " &
 							"Where idAnno=" & idAnno & " And idGiocatore=" & idGiocatore
 						Ritorno = EsegueSql(Conn, Sql, Connessione)
 						If Ritorno.Contains(StringaErrore) Then
@@ -1559,7 +1670,6 @@ Public Class wsGiocatori
 									"'', " &
 									"'', " &
 									"'N', " &
-									"'' " &
 									"'', " &
 									"'', " &
 									"'', " &
@@ -1571,7 +1681,10 @@ Public Class wsGiocatori
 									"'', " &
 									"'', " &
 									"'', " &
-									"'' " &
+									"'', " &
+									"'', " &
+									"'N', " &
+									"'N' " &
 									")"
 								Ritorno = EsegueSql(Conn, Sql, Connessione)
 								If Not Ritorno.Contains(StringaErrore) Then
@@ -1666,6 +1779,8 @@ Public Class wsGiocatori
 								Ritorno &= Rec("Citta2").Value & ";"
 								Ritorno &= Rec("Cap2").Value & ";"
 								Ritorno &= Rec("Indirizzo2").Value & ";"
+								Ritorno &= Rec("GenitoriSeparati").Value & ";"
+								Ritorno &= Rec("AffidamentoCongiunto").Value & ";"
 							End If
 						End If
 					End If
@@ -1742,6 +1857,8 @@ Public Class wsGiocatori
 				Ritorno = EsegueSql(Conn, Sql, Connessione)
 
 				If Not Ritorno.Contains(StringaErrore) Then
+					Dim Maggiorenne As String = "N"
+
 					'If idGiocatore = "-1" Then
 					If Modalita = "INSERIMENTO" Then
 						Sql = "SELECT * FROM Giocatori Where idAnno=" & idAnno & " And Upper(lTrim(rTrim(CodFiscale)))='" & CodFiscale.ToUpper.Trim & "'"
@@ -1751,6 +1868,22 @@ Public Class wsGiocatori
 							Ok = False
 						Else
 							Ritorno = ""
+						End If
+						Rec.Close
+
+						Dim Scadenza As DateTime = Convert.ToDateTime(DataDiNascita)
+						Dim Anni As Integer = DateAndTime.DateDiff(DateInterval.Year, Scadenza, Now, )
+						If Anni >= 18 Then
+							Maggiorenne = "S"
+						Else
+							Maggiorenne = "N"
+						End If
+					Else
+						Sql = "SELECT * FROM Giocatori Where idAnno=" & idAnno & " And Upper(lTrim(rTrim(CodFiscale)))='" & CodFiscale.ToUpper.Trim & "'"
+						Rec = LeggeQuery(Conn, Sql, Connessione)
+						If Not Rec.Eof Then
+							Maggiorenne = Rec("Maggiorenne").Value
+							Ok = False
 						End If
 						Rec.Close
 					End If
@@ -1833,7 +1966,8 @@ Public Class wsGiocatori
 									"'" & Categorie & "', " &
 									"'" & RapportoCompleto & "', " &
 									"'" & Cap & "', " &
-									"'" & CittaNascita.Replace("'", "''") & "' " &
+									"'" & CittaNascita.Replace("'", "''") & "', " &
+									"'" & Maggiorenne & "' " &
 									")"
 							Ritorno = EsegueSql(Conn, Sql, Connessione)
 							If Ritorno.Contains(StringaErrore) Then

@@ -1,4 +1,7 @@
-﻿Module Globale
+﻿Imports System.IO
+Imports System.Net
+
+Module Globale
 	Public Const ErroreConnessioneNonValida As String = "ERRORE: Stringa di connessione non valida"
 	Public Const ErroreConnessioneDBNonValida As String = "ERRORE: Connessione al db non valida"
 	Public Percorso As String
@@ -971,6 +974,39 @@
 				End If
 			End If
 		End If
+
+		Return Ritorno
+	End Function
+
+	Public Function RitornaMeteo(Lat As String, Lon As String) As String
+		Dim url As String = "http://api.openweathermap.org/data/2.5/weather?lat=" & Lat & "&lon=" & Lon & "&mode=xml&units=metric&lang=it&appid=1856b7a9244abb668591169ef0a34308"
+		Dim request As WebRequest = WebRequest.Create(url)
+		Dim Ritorno As String = ""
+		Dim response As WebResponse = DirectCast(request.GetResponse(), HttpWebResponse)
+		Dim reader As New StreamReader(response.GetResponseStream(), Encoding.UTF8)
+		Dim dsResult As New DataSet()
+
+		dsResult.ReadXml(reader)
+
+		'Temperatura: dsResult.Tables(3).Rows(0)
+		'Umidita: dsResult.Tables(5).Rows(0)
+		'Pressione: dsResult.Tables(6).Rows(0)
+		'Tempo:  dsResult.Tables(13).Rows(0)(1)
+
+		Ritorno &= dsResult.Tables(13).Rows(0)(1).ToString() & ";"
+
+		'txtMinima.Text = dsResult.Tables(4).Rows(0)(1).ToString()
+		'txtMassima.Text = dsResult.Tables(4).Rows(0)(2).ToString()
+		Ritorno &= dsResult.Tables(3).Rows(0)(0).ToString() & ";"
+		'txtSorge.Text = DateTime.Parse(dsResult.Tables(3).Rows(0)(0).ToString()).ToString("dd/MM/yyyy hh:mm:ss")
+		'txtTramonta.Text = DateTime.Parse(dsResult.Tables(3).Rows(0)(1).ToString()).ToString("dd/MM/yyyy HH:mm:ss")
+		Ritorno &= dsResult.Tables(5).Rows(0)(0).ToString() & ";"
+		Ritorno &= dsResult.Tables(6).Rows(0)(0).ToString() & ";"
+		'txtventoVelocita.Text = dsResult.Tables(8).Rows(0)(0).ToString() + " " + dsResult.Tables(8).Rows(0)(1).ToString()
+		'txtDirezioneVento.Text = dsResult.Tables(9).Rows(0)(1).ToString() + "     " + dsResult.Tables(9).Rows(0)(2).ToString()
+		'txtPrecipitazione.Text = dsResult.Tables(11).Rows(0)(0).ToString()
+
+		Ritorno &= "http://openweathermap.org/img/w/" + dsResult.Tables(13).Rows(0)(2).ToString() + ".png" & ";"
 
 		Return Ritorno
 	End Function

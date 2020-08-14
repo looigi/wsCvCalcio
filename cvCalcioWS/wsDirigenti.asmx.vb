@@ -1,6 +1,8 @@
 ﻿Imports System.Web.Services
 Imports System.Web.Services.Protocols
 Imports System.ComponentModel
+Imports System.Data.Odbc
+Imports System.Web.UI.WebControls.Adapters
 
 <System.Web.Services.WebService(Namespace:="http://cvcalcio_dir.org/")>
 <System.Web.Services.WebServiceBinding(ConformsTo:=WsiProfiles.BasicProfile1_1)> _
@@ -46,7 +48,8 @@ Public Class wsDirigenti
 
 	<WebMethod()>
 	Public Function SalvaDirigente(Squadra As String, idAnno As String, idCategoria As String, idDirigente As String,
-								   Cognome As String, Nome As String, EMail As String, Telefono As String) As String
+									Cognome As String, Nome As String, EMail As String, Telefono As String,
+									TipologiaOperazione As String) As String
 		Dim Ritorno As String = ""
 		Dim Connessione As String = LeggeImpostazioniDiBase(Server.MapPath("."), Squadra)
 
@@ -87,7 +90,7 @@ Public Class wsDirigenti
 						End Try
 					Else
 						idDir = idDirigente
-						Sql = "Delete from Dirigenti Where idAnno=" & idAnno & " And idDirigente=" & idDir
+						Sql = "Delete From Dirigenti Where idAnno=" & idAnno & " And idDirigente=" & idDir
 						Ritorno = EsegueSql(Conn, Sql, Connessione)
 						If Ritorno.Contains(StringaErrore) Then
 							Ok = False
@@ -96,18 +99,81 @@ Public Class wsDirigenti
 
 					If Ok = True Then
 						Sql = "Insert Into Dirigenti Values (" &
-						" " & idAnno & ", " &
-						" " & idCategoria & ", " &
-						" " & idDir & ", " &
-						"'" & Cognome.Replace("'", "''") & "', " &
-						"'" & Nome.Replace("'", "''") & "', " &
-						"'" & EMail.Replace("'", "''") & "', " &
-						"'" & Telefono.Replace("'", "''") & "', " &
-						"'N' " &
-						")"
+							" " & idAnno & ", " &
+							" " & idCategoria & ", " &
+							" " & idDir & ", " &
+							"'" & Cognome.Replace("'", "''") & "', " &
+							"'" & Nome.Replace("'", "''") & "', " &
+							"'" & EMail.Replace("'", "''") & "', " &
+							"'" & Telefono.Replace("'", "''") & "', " &
+							"'N' " &
+							")"
 						Ritorno = EsegueSql(Conn, Sql, Connessione)
 						If Ritorno.Contains(StringaErrore) Then
 							Ok = False
+						Else
+							If TipologiaOperazione = "INSERIMENTO" Then
+								' Aggiunge Utente
+								Dim maxGenitore As Integer = -1
+
+								Sql = "Select Max(idUtente) + 1 From [Generale].[dbo].[Utenti] Where idAnno=" & idAnno
+								Rec = LeggeQuery(Conn, Sql, Connessione)
+								If TypeOf (Rec) Is String Then
+									Ritorno = Rec
+								Else
+									If Rec(0).Value Is DBNull.Value Then
+										maxGenitore = 1
+									Else
+										maxGenitore = Rec(0).Value
+									End If
+								End If
+
+								Dim s() As String = Squadra.Split("_")
+								Dim idSquadra As Integer = Val(s(1))
+								Dim chiave As String = "AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvZz0123456789!$%/()=?^"
+								Dim rnd1 As New Random()
+								Dim nuovaPass As String = ""
+
+								For i As Integer = 1 To 7
+									Dim c As Integer = rnd1.Next(chiave.Length - 1) + 1
+									nuovaPass &= Mid(chiave, c, 1)
+								Next
+
+								Dim wrapper As New CryptEncrypt("WPippoBaudo227!")
+								Dim nuovaPassCrypt As String = wrapper.EncryptData(nuovaPass)
+
+								Sql = "Insert Into [Generale].[dbo].[Utenti] Values (" &
+									" " & idAnno & ", " &
+									" " & maxGenitore & ", " &
+									"'" & EMail.Replace("'", "''") & "', " &
+									"'" & Cognome.Replace("'", "''") & "', " &
+									"'" & Nome.Replace("'", "''") & "', " &
+									"'" & nuovaPassCrypt.Replace("'", "''") & "', " &
+									"'" & EMail.Replace("'", "''") & "', " &
+									"-1, " &
+									"3, " &
+									" " & idSquadra & ", " &
+									"1, " &
+									"'" & Telefono & "', " &
+									"'N', " &
+									"-1, " &
+									"'N' " &
+									")"
+								Ritorno = EsegueSql(Conn, Sql, Connessione)
+								If Ritorno.Contains(StringaErrore) Then
+									Ok = False
+								Else
+									Dim m As New mail
+									Dim Oggetto As String = "Nuovo utente inCalcio"
+									Dim Body As String = ""
+									Body &= "E' stato creato l'utente '" & Cognome.ToUpper & " " & Nome.ToUpper & "'. <br />"
+									Body &= "Per accedere al sito sarà possibile digitare la mail rilasciata alla segreteria in fase di iscrizione: " & EMail & "<br />"
+									Body &= "La password valida per il solo primo accesso è: " & nuovaPass & "<br /><br />"
+									Dim ChiScrive As String = "notifiche@incalcio.cloud"
+
+									Ritorno = m.SendEmail("", Oggetto, Body, EMail)
+								End If
+							End If
 						End If
 					End If
 				Else
@@ -208,17 +274,40 @@ Public Class wsDirigenti
 				Ritorno = EsegueSql(Conn, Sql, Connessione)
 
 				If Not Ritorno.Contains(StringaErrore) Then
-					Try
-						Sql = "Update Dirigenti Set Eliminato='S' Where idAnno=" & idAnno & " And idDirigente=" & idDirigente
-						Ritorno = EsegueSql(Conn, Sql, Connessione)
-						If Ritorno.Contains(StringaErrore) Then
-							Ok = False
-						End If
+					Dim Rec As Object = Server.CreateObject("ADODB.Recordset")
 
-					Catch ex As Exception
-						Ritorno = StringaErrore & " " & ex.Message
-						Ok = False
-					End Try
+					Sql = "Select * From Dirigenti Where idAnno=" & idAnno & " And idDirigente=" & idDirigente
+					Rec = LeggeQuery(Conn, Sql, Connessione)
+					If TypeOf (Rec) Is String Then
+						Ritorno = Rec
+					Else
+						If Rec.Eof Then
+							Ritorno = StringaErrore & " Nessun Dirigente rilevato"
+						Else
+							Dim EMail As String = Rec("EMail").Value
+							Rec.Close()
+
+							Try
+								Sql = "Update Dirigenti Set Eliminato='S' Where idAnno=" & idAnno & " And idDirigente=" & idDirigente
+								Ritorno = EsegueSql(Conn, Sql, Connessione)
+								If Ritorno.Contains(StringaErrore) Then
+									Ok = False
+								End If
+							Catch ex As Exception
+								Ritorno = StringaErrore & " " & ex.Message
+								Ok = False
+							End Try
+
+							If Ok Then
+								Sql = "Update [Generale].[dbo].[Utenti] Set Eliminato='S' " &
+									"Where Utente='" & EMail.Replace("'", "''") & "'"
+								Ritorno = EsegueSql(Conn, Sql, Connessione)
+								If Ritorno.Contains(StringaErrore) Then
+									Ok = False
+								End If
+							End If
+						End If
+					End If
 				Else
 					Ok = False
 				End If

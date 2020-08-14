@@ -10,6 +10,13 @@ Public Class wsGenerale
     Inherits System.Web.Services.WebService
 
 	<WebMethod()>
+	Public Function RitornaMeteoWS() As String
+		Dim m As New mail
+		Dim Ritorno As String = RitornaMeteo("41.89", "12.48")
+		Return Ritorno
+	End Function
+
+	<WebMethod()>
 	Public Function InviaMail(Oggetto As String, Body As String, ChiRiceve As String) As String
 		Dim m As New mail
 		Dim Ritorno As String = m.SendEmail("luigi.pecce@aubay.it", Oggetto, Body, ChiRiceve)
