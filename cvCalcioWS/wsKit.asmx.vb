@@ -292,18 +292,32 @@ Public Class wsKit
 				Ritorno = EsegueSql(Conn, Sql, Connessione)
 
 				If Not Ritorno.Contains(StringaErrore) Then
-					Try
-						Sql = "Update KitTipologie Set Eliminato='S' " &
-							"Where idTipoKit=" & idElemento
-						Ritorno = EsegueSql(Conn, Sql, Connessione)
-						If Ritorno.Contains(StringaErrore) Then
+					Sql = "Select * From KitGiocatori Where idElemento=" & idElemento
+					Rec = LeggeQuery(Conn, Sql, Connessione)
+					If TypeOf (Rec) Is String Then
+						Ritorno = Rec
+					Else
+						If Not Rec.Eof Then
+							Ritorno = StringaErrore & " L'elemento è utilizzato"
 							Ok = False
 						End If
+						Rec.Close()
+					End If
 
-					Catch ex As Exception
-						Ritorno = StringaErrore & " " & ex.Message
-						Ok = False
-					End Try
+					If Ok Then
+						Try
+							Sql = "Update KitTipologie Set Eliminato='S' " &
+								"Where idTipoKit=" & idElemento
+							Ritorno = EsegueSql(Conn, Sql, Connessione)
+							If Ritorno.Contains(StringaErrore) Then
+								Ok = False
+							End If
+
+						Catch ex As Exception
+							Ritorno = StringaErrore & " " & ex.Message
+							Ok = False
+						End Try
+					End If
 				End If
 
 				If Ok Then

@@ -75,17 +75,31 @@ Public Class wsTaglie
 				Ritorno = EsegueSql(Conn, Sql, Connessione)
 
 				If Not Ritorno.Contains(StringaErrore) Then
-					Try
-						Sql = "Update Taglie Set Elminato='S' " &
-							"Where idTaglia=" & idTaglia
-						Ritorno = EsegueSql(Conn, Sql, Connessione)
-						If Ritorno.Contains(StringaErrore) Then
+					Sql = "Select * From Giocatori Where idTaglia=" & idTaglia
+					Rec = LeggeQuery(Conn, Sql, Connessione)
+					If TypeOf (Rec) Is String Then
+						Ritorno = Rec
+					Else
+						If Not Rec.Eof Then
+							Ritorno = StringaErrore & " La taglia è utilizzata"
 							Ok = False
 						End If
-					Catch ex As Exception
-						Ritorno = StringaErrore & " " & ex.Message
-						Ok = False
-					End Try
+						Rec.Close()
+					End If
+
+					If Ok Then
+						Try
+							Sql = "Update Taglie Set Elminato='S' " &
+							"Where idTaglia=" & idTaglia
+							Ritorno = EsegueSql(Conn, Sql, Connessione)
+							If Ritorno.Contains(StringaErrore) Then
+								Ok = False
+							End If
+						Catch ex As Exception
+							Ritorno = StringaErrore & " " & ex.Message
+							Ok = False
+						End Try
+					End If
 				End If
 
 				If Ok Then

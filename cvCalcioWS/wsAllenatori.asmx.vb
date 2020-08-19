@@ -47,7 +47,7 @@ Public Class wsAllenatori
 	<WebMethod()>
 	Public Function SalvaAllenatore(Squadra As String, idAnno As String, idCategoria As String, idAllenatore As String,
 									Cognome As String, Nome As String, EMail As String, Telefono As String, idTipologia As String,
-									TipologiaOperazione As String) As String
+									TipologiaOperazione As String, Tendina As String) As String
 		Dim Ritorno As String = ""
 		Dim Connessione As String = LeggeImpostazioniDiBase(Server.MapPath("."), Squadra)
 
@@ -111,64 +111,87 @@ Public Class wsAllenatori
 						If Not Ritorno.Contains(StringaErrore) Then
 							If TipologiaOperazione = "INSERIMENTO" Then
 								' Aggiunge Utente
-								Dim maxGenitore As Integer = -1
+								Dim idGenitore As Integer = -1
 
-								Sql = "Select Max(idUtente) + 1 From [Generale].[dbo].[Utenti] Where idAnno=" & idAnno
-								Rec = LeggeQuery(Conn, Sql, Connessione)
-								If TypeOf (Rec) Is String Then
-									Ritorno = Rec
-								Else
-									If Rec(0).Value Is DBNull.Value Then
-										maxGenitore = 1
+								If Tendina = "N" Then
+									Sql = "Select Max(idUtente) + 1 From [Generale].[dbo].[Utenti] Where idAnno=" & idAnno
+									Rec = LeggeQuery(Conn, Sql, Connessione)
+									If TypeOf (Rec) Is String Then
+										Ritorno = Rec
 									Else
-										maxGenitore = Rec(0).Value
+										If Rec(0).Value Is DBNull.Value Then
+											idGenitore = 1
+										Else
+											idGenitore = Rec(0).Value
+										End If
+									End If
+								Else
+									Sql = "Select * From [Generale].[dbo].[Utenti] Where EMail='" & EMail.Replace("'", "''") & "'"
+									Rec = LeggeQuery(Conn, Sql, Connessione)
+									If TypeOf (Rec) Is String Then
+										Ritorno = Rec
+									Else
+										If Rec.Eof Then
+											Ritorno = StringaErrore & " Nessun utente rilevato"
+											Ok = False
+										Else
+											idGenitore = Rec("idUtente").Value
+										End If
 									End If
 								End If
 
-								Dim s() As String = Squadra.Split("_")
-								Dim idSquadra As Integer = Val(s(1))
-								Dim chiave As String = "AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvZz0123456789!$%/()=?^"
-								Dim rnd1 As New Random()
+
 								Dim nuovaPass As String = ""
 
-								For i As Integer = 1 To 7
-									Dim c As Integer = rnd1.Next(chiave.Length - 1) + 1
-									nuovaPass &= Mid(chiave, c, 1)
-								Next
+								If Tendina = "S" Then
+									Sql = "Update [Generale].[dbo].[Utenti] Set idTipologia=5 Where idUtente=" & idGenitore
+								Else
+									Dim s() As String = Squadra.Split("_")
+									Dim idSquadra As Integer = Val(s(1))
+									Dim chiave As String = "AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvZz0123456789!$%/()=?^"
+									Dim rnd1 As New Random()
 
-								Dim wrapper As New CryptEncrypt("WPippoBaudo227!")
-								Dim nuovaPassCrypt As String = wrapper.EncryptData(nuovaPass)
+									For i As Integer = 1 To 7
+										Dim c As Integer = rnd1.Next(chiave.Length - 1) + 1
+										nuovaPass &= Mid(chiave, c, 1)
+									Next
 
-								Sql = "Insert Into [Generale].[dbo].[Utenti] Values (" &
-									" " & idAnno & ", " &
-									" " & maxGenitore & ", " &
-									"'" & EMail.Replace("'", "''") & "', " &
-									"'" & Cognome.Replace("'", "''") & "', " &
-									"'" & Nome.Replace("'", "''") & "', " &
-									"'" & nuovaPassCrypt.Replace("'", "''") & "', " &
-									"'" & EMail.Replace("'", "''") & "', " &
-									"-1, " &
-									"3, " &
-									" " & idSquadra & ", " &
-									"1, " &
-									"'" & Telefono & "', " &
-									"'N', " &
-									"-1, " &
-									"'N' " &
-									")"
+									Dim wrapper As New CryptEncrypt("WPippoBaudo227!")
+									Dim nuovaPassCrypt As String = wrapper.EncryptData(nuovaPass)
+
+									Sql = "Insert Into [Generale].[dbo].[Utenti] Values (" &
+										" " & idAnno & ", " &
+										" " & idGenitore & ", " &
+										"'" & EMail.Replace("'", "''") & "', " &
+										"'" & Cognome.Replace("'", "''") & "', " &
+										"'" & Nome.Replace("'", "''") & "', " &
+										"'" & nuovaPassCrypt.Replace("'", "''") & "', " &
+										"'" & EMail.Replace("'", "''") & "', " &
+										"-1, " &
+										"2, " &
+										" " & idSquadra & ", " &
+										"1, " &
+										"'" & Telefono & "', " &
+										"'N', " &
+										"-1, " &
+										"'N' " &
+										")"
+								End If
 								Ritorno = EsegueSql(Conn, Sql, Connessione)
 								If Ritorno.Contains(StringaErrore) Then
 									Ok = False
 								Else
-									Dim m As New mail
-									Dim Oggetto As String = "Nuovo utente inCalcio"
-									Dim Body As String = ""
-									Body &= "E' stato creato l'utente '" & Cognome.ToUpper & " " & Nome.ToUpper & "'. <br />"
-									Body &= "Per accedere al sito sarà possibile digitare la mail rilasciata alla segreteria in fase di iscrizione: " & EMail & "<br />"
-									Body &= "La password valida per il solo primo accesso è: " & nuovaPass & "<br /><br />"
-									Dim ChiScrive As String = "notifiche@incalcio.cloud"
+									If Tendina = "N" Then
+										Dim m As New mail
+										Dim Oggetto As String = "Nuovo utente inCalcio"
+										Dim Body As String = ""
+										Body &= "E' stato creato l'utente '" & Cognome.ToUpper & " " & Nome.ToUpper & "'. <br />"
+										Body &= "Per accedere al sito sarà possibile digitare la mail rilasciata alla segreteria in fase di iscrizione: " & EMail & "<br />"
+										Body &= "La password valida per il solo primo accesso è: " & nuovaPass & "<br /><br />"
+										Dim ChiScrive As String = "notifiche@incalcio.cloud"
 
-									Ritorno = m.SendEmail("", Oggetto, Body, EMail)
+										Ritorno = m.SendEmail(Squadra, "", Oggetto, Body, EMail, "")
+									End If
 								End If
 							End If
 						End If

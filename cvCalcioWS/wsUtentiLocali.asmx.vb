@@ -9,6 +9,67 @@ Public Class wsUtentiLocali
 	Inherits System.Web.Services.WebService
 
 	<WebMethod()>
+	Public Function RitornaUtentiGenitori(Squadra As String) As String
+		Dim Ritorno As String = ""
+		Dim ConnessioneGenerale As String = LeggeImpostazioniDiBase(Server.MapPath("."), Squadra)
+
+		If ConnessioneGenerale = "" Then
+			Ritorno = ErroreConnessioneNonValida
+		Else
+			Dim Conn As Object = ApreDB(ConnessioneGenerale)
+
+			If TypeOf (Conn) Is String Then
+				Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
+			Else
+				Dim Rec As Object = Server.CreateObject("ADODB.Recordset")
+				Dim Sql As String = ""
+				Dim sq() As String = Squadra.Split("_")
+				Dim idSquadra As Integer = Val(sq(1))
+
+				Try
+					' Sql = "SELECT * FROM UtentiMobile Where idAnno=" & idAnno & " And idUtente=" & idUtente
+					Sql = "SELECT A.*, B.Descrizione " &
+						"From [Generale].[dbo].[Utenti] A " &
+						"LEFT Join Categorie B On A.idCategoria = B.idCategoria And A.idAnno = B.idAnno " &
+						"Where A.idTipologia=3 And A.Eliminato='N' And A.idSquadra=" & idSquadra
+					Rec = LeggeQuery(Conn, Sql, ConnessioneGenerale)
+					If TypeOf (Rec) Is String Then
+						Ritorno = Rec
+					Else
+						If Rec.Eof Then
+							Ritorno = StringaErrore & " Nessun utente rilevato"
+						Else
+							Ritorno = ""
+							Do Until Rec.Eof
+								Ritorno &= Rec("idAnno").Value & ";" &
+									Rec("idUtente").Value & ";" &
+									Rec("Utente").Value & ";" &
+									Rec("Cognome").Value & ";" &
+									Rec("Nome").Value & ";" &
+									Rec("Password").Value & ";" &
+									Rec("EMail").Value & ";" &
+									Rec("idCategoria").Value & ";" &
+									Rec("idTipologia").Value & ";" &
+									Rec("Descrizione").Value & ";" &
+									Rec("Telefono").Value & ";" &
+									"§"
+								Rec.MoveNext()
+							Loop
+						End If
+						Rec.Close()
+					End If
+				Catch ex As Exception
+					Ritorno = StringaErrore & " " & ex.Message
+				End Try
+
+				Conn.Close()
+			End If
+		End If
+
+		Return Ritorno
+	End Function
+
+	<WebMethod()>
 	Public Function ImpostaPasswordDimenticata(ByVal Utente As String, PWD As String) As String
 		Dim Ritorno As String = ""
 		Dim Connessione As String = LeggeImpostazioniDiBase(Server.MapPath("."), "")
@@ -114,7 +175,7 @@ Public Class wsUtentiLocali
 									Body &= "La nuova password valida per il solo primo accesso è: " & nuovaPass & "<br /><br />"
 									Dim ChiScrive As String = "notifiche@incalcio.cloud"
 
-									Ritorno = m.SendEmail("", Oggetto, Body, EMail)
+									Ritorno = m.SendEmail("", "", Oggetto, Body, EMail, "")
 								End If
 							Catch ex As Exception
 								Ritorno = StringaErrore & " " & ex.Message
@@ -459,7 +520,7 @@ Public Class wsUtentiLocali
 	End Function
 
 	<WebMethod()>
-	Public Function RitornaListaUtenti(Squadra As String, idAnno As String) As String
+	Public Function RitornaListaUtenti(Squadra As String, idAnno As String, Selezione As String) As String
 		Dim Ritorno As String = ""
 		Dim Connessione As String = LeggeImpostazioniDiBase(Server.MapPath("."), "")
 
@@ -477,12 +538,22 @@ Public Class wsUtentiLocali
 				Dim cod() As String = Squadra.Split("_")
 				Dim Anno As String = Val(cod(0)).ToString
 				Dim idSquadra As String = Val(cod(1)).ToString
+				Dim Altro As String = ""
+
+				If Selezione <> "" Then
+					If Strings.Right(Selezione, 1) = "," Then
+						Selezione = Mid(Selezione, 1, Len(Selezione) - 1)
+					End If
+					Altro = "And Utenti.idTipologia In (" & Selezione & ")"
+				Else
+					Altro = "And Utenti=-999"
+				End If
 
 				Try
 					Sql = "SELECT Utenti.idAnno, Utenti.idUtente, Utenti.Utente, Utenti.Cognome, Utenti.Nome, Utenti.EMail, Categorie.Descrizione As Categoria, " &
 						"Utenti.idTipologia, Utenti.Password, Categorie.idCategoria, idSquadra, Utenti.Telefono, Utenti.AmmOriginale " &
 						"FROM (Utenti LEFT JOIN [" & Squadra & "].[dbo].Categorie ON Utenti.idCategoria = Categorie.idCategoria And Utenti.idAnno = Categorie.idAnno) " &
-						"Where Utenti.idAnno=" & Anno & " And Utenti.idTipologia > 0 And idSquadra=" & idSquadra & " And Utenti.Eliminato='N' Order By 2,1;"
+						"Where Utenti.idAnno=" & Anno & " And Utenti.idTipologia > 0 " & altro & " And idSquadra=" & idSquadra & " And Utenti.Eliminato='N' Order By 2,1;"
 					' "Where Utenti.idAnno=" & idAnno & " Order By 2,1;"
 					Rec = LeggeQuery(Conn, Sql, Connessione)
 					If TypeOf (Rec) Is String Then

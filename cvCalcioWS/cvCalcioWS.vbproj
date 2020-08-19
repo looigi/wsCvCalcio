@@ -43,6 +43,12 @@
     <NoWarn>42016,41999,42017,42018,42019,42032,42036,42020,42021,42022</NoWarn>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="HtmlRenderer, Version=1.5.0.5, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\HtmlRenderer.Core.1.5.0.5\lib\net35-client\HtmlRenderer.dll</HintPath>
+    </Reference>
+    <Reference Include="Select.HtmlToPdf, Version=20.1.0.0, Culture=neutral, PublicKeyToken=e0ae9f6e27a97018, processorArchitecture=MSIL">
+      <HintPath>..\packages\Select.HtmlToPdf.20.1.0\lib\net20\Select.HtmlToPdf.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Data" />
     <Reference Include="System.Data.DataSetExtensions" />
@@ -50,6 +56,7 @@
     <Reference Include="System.Management" />
     <Reference Include="System.Web" />
     <Reference Include="System.Web.Extensions" />
+    <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Xml" />
     <Reference Include="System.Configuration" />
     <Reference Include="System.Web.Services" />
@@ -80,6 +87,7 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="App_Themes\Standard\bg.jpg" />
+    <Content Include="pdf.asmx" />
     <Content Include="Scheletri\base_convocazioni.txt" />
     <Content Include="Scheletri\base_partita.txt" />
     <Content Include="Scheletri\base_statistiche.txt" />
@@ -87,6 +95,7 @@
     <Content Include="wsEventiCalendario.asmx" />
     <Content Include="wsFunzioni.asmx" />
     <Content Include="wsGenitori.asmx" />
+    <Content Include="wsGiocatoriSezione.asmx" />
     <Content Include="wsKit.asmx" />
     <Content Include="wsPermessiUtente.asmx" />
     <Content Include="wsRisposte.asmx" />
@@ -115,6 +124,11 @@
     <Compile Include="Globale.vb" />
     <Compile Include="mail.vb" />
     <Compile Include="mdlTrasfSMS.vb" />
+    <Compile Include="pdf.asmx.vb">
+      <DependentUpon>pdf.asmx</DependentUpon>
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="pdf.vb" />
     <Compile Include="wsAllegati.asmx.vb">
       <DependentUpon>wsAllegati.asmx</DependentUpon>
       <SubType>Component</SubType>
@@ -129,6 +143,10 @@
     </Compile>
     <Compile Include="wsGenitori.asmx.vb">
       <DependentUpon>wsGenitori.asmx</DependentUpon>
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="wsGiocatoriSezione.asmx.vb">
+      <DependentUpon>wsGiocatoriSezione.asmx</DependentUpon>
       <SubType>Component</SubType>
     </Compile>
     <Compile Include="wsKit.asmx.vb">
@@ -256,6 +274,7 @@
       <LastGenOutput>Settings.Designer.vb</LastGenOutput>
     </None>
     <Content Include="Web.config" />
+    <None Include="packages.config" />
     <None Include="Web.Debug.config">
       <DependentUpon>Web.config</DependentUpon>
     </None>

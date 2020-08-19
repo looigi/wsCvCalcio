@@ -1,0 +1,118 @@
+﻿<table style="width: 100%; border: 1px solid #999;">
+	<tr>
+		<td>
+			<table style="width: 100%;">
+				<tr>
+					<td style="width: 15%; padding: 3px;">
+						<img src="***URL LOGO***" style="width: 98px; height: 98px; border: 0px;"/>
+					</td>
+					<td style="width: 65%; padding: 3px;">
+						<span style="font-family: Arial; font-size: 20px;">***NOME POLISPORTIVA***</span><br />
+						<span style="font-family: Arial; font-size: 15px;">***INDIRIZZO***</span><br />
+						<span style="font-family: Arial; font-size: 15px;">***DATI***</span>
+					</td>
+					<td style="width: 20%; border: 1px solid #999; padding: 3px;">
+						<span style="font-family: Arial; font-size: 20px;">Ricevuta N. ***NUMERO_RICEVUTA***</span><br /><br />
+						<span style="font-family: Arial;">Data: ***DATA_RICEVUTA***</span>
+					</td>
+				<tr>
+			</table>
+			<table style="width: 100%; margin-top: 15px;"">
+				<tr>
+					<td style="width: 100%;">
+						<table style="width: 100%; border: 1px solid #999;">
+							<tr>
+								<td style="width: 15%; text-align: left;">
+									<span style="font-family: Arial;">Ricevuti da</span>
+								</td>
+								<td style="width: 85%;">
+									 <span style="font-family: Arial;">***NOME***</span>
+								</td>
+							</tr>
+							<tr style="margin-top: 15px;">
+								<td style="width: 15%; text-align: left;">
+									<span style="font-family: Arial;">Euro</span>
+								</td>
+								<td style="width: 85%; border: 1px solid #aaa; background-color: #e9f7ff;">
+									 <span style="font-family: Arial;">***IMPORTO LETTERE***</span>
+								</td>
+							</tr>
+							<tr>
+								<td style="width: 15%; text-align: left;">
+									&nbsp;
+								</td>
+								<td style="width: 85%; text-align: center;">
+									 <span style="font-family: Arial;">(IN LETTERE)</span>
+								</td>
+							</tr>
+							<tr style="margin-top: 15px;">
+								<td style="width: 15%; text-align: left;">
+									<span style="font-family: Arial;">Causale</span>
+								</td>
+								<td style="width: 85%;">
+									 <span style="font-family: Arial;">***MOTIVAZIONE***</span>
+								</td>
+							</tr>
+						</table>
+					</td>
+				</tr>
+				<tr>
+					<td>
+						<table style="width: 100%; margin-top: 15px;"">
+							<tr>
+								<td style="width: 40%; border: 1px solid #999;">
+								</td>
+								<td style="width: 60%;">
+									<table style="width: 100%;">
+										<tr>
+											<td style="width: 30%; text-align: center;">
+												<span style="font-family: Arial;">TOTALE:</span>
+											</td>
+											<td style="width: 10%; text-align: center;">
+												<span style="font-family: Arial;">€</span>
+											</td>
+											<td style="width: 49%; border: 1px solid #999;">
+												<span style="font-family: Arial;">***IMPORTO***</span>
+											</td>
+											<td style="width: 1%; text-align: center;">
+												<span style="font-family: Arial;">,</span>
+											</td>
+											<td style="width: 10%; border: 1px solid #999; background-color: #e9f7ff;">
+												<span style="font-family: Arial;">***VIRGOLE***</span>
+											</td>
+										</tr>
+										<tr>
+											<td style="width: 30%; text-align: center;">
+											</td>
+											<td style="width: 10%; text-align: center;">
+											</td>
+											<td style="width: 49%; text-align: center;">
+												<span style="font-family: Arial;">(IN CIFRE)</span>
+											</td>
+											<td style="width: 1%; text-align: center;">
+											</td>
+											<td style="width: 10%;">
+											</td>
+										</tr>
+									</table>
+									<table style="width: 100%; margin-top: 50px;">
+										<tr>
+											<td style="border-bottom: 1px solid #999; text-align: center;">
+						<img src="***URL FIRMA***" style="width: 70%; height: 118px; border: 0px;"/>
+											</td>
+										</tr>
+										<tr>
+											<td style="text-align: center;">
+												<span style="font-family: Arial;">(FIRMA)</span>
+											</td>
+										</tr>
+									</table>
+								</td>
+							</tr>
+						</table>
+					</td>
+				</tr>
+			</table>
+		</td>
+	</tr>	
+</table>

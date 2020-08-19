@@ -10,6 +10,13 @@ Public Class wsGenerale
     Inherits System.Web.Services.WebService
 
 	<WebMethod()>
+	Public Function ProvaConversioneValore(valore As String) As String
+		Dim m As New mail
+		Dim Ritorno As String = convertNumberToReadableString(valore)
+		Return Ritorno
+	End Function
+
+	<WebMethod()>
 	Public Function RitornaMeteoWS() As String
 		Dim m As New mail
 		Dim Ritorno As String = RitornaMeteo("41.89", "12.48")
@@ -19,7 +26,7 @@ Public Class wsGenerale
 	<WebMethod()>
 	Public Function InviaMail(Oggetto As String, Body As String, ChiRiceve As String) As String
 		Dim m As New mail
-		Dim Ritorno As String = m.SendEmail("luigi.pecce@aubay.it", Oggetto, Body, ChiRiceve)
+		Dim Ritorno As String = m.SendEmail("", "luigi.pecce@aubay.it", Oggetto, Body, ChiRiceve, "")
 		Return Ritorno
 	End Function
 
@@ -581,7 +588,8 @@ Public Class wsGenerale
 	<WebMethod()>
 	Public Function SalvaImpostazioni(Cod_Squadra As String, idAnno As String, Descrizione As String, NomeSquadra As String, Lat As String, Lon As String,
 									  Indirizzo As String, CampoSquadra As String, NomePolisportiva As String, Mail As String, PEC As String,
-									  Telefono As String, PIva As String, CodiceFiscale As String, CodiceUnivoco As String, SitoWeb As String, MittenteMail As String) As String
+									  Telefono As String, PIva As String, CodiceFiscale As String, CodiceUnivoco As String, SitoWeb As String, MittenteMail As String,
+									  GestionePagamenti As String) As String
 		Dim Ritorno As String = ""
 		Dim Connessione As String = LeggeImpostazioniDiBase(Server.MapPath("."), Cod_Squadra)
 
@@ -610,7 +618,8 @@ Public Class wsGenerale
 					"CodiceFiscale = '" & CodiceFiscale.Replace("'", "''") & "', " &
 					"CodiceUnivoco = '" & CodiceUnivoco.Replace("'", "''") & "', " &
 					"SitoWeb = '" & SitoWeb.Replace("'", "''") & "', " &
-					"MittenteMail = '" & MittenteMail.Replace("'", "''") & "' " &
+					"MittenteMail = '" & MittenteMail.Replace("'", "''") & "', " &
+					"GestionePagamenti = '" & GestionePagamenti & "' " &
 					"Where idAnno = " & idAnno
 				Ritorno = EsegueSql(Conn, Sql, Connessione)
 			End If
@@ -621,6 +630,10 @@ Public Class wsGenerale
 
 	<WebMethod()>
 	Public Function RitornaImpostazioni(Squadra As String) As String
+		If Squadra = "" Then
+			Return "*" ' StringaErrore & " Nessuna squadra impostata"
+		End If
+
 		Dim Ritorno As String = ""
 		Dim gf As New GestioneFilesDirectory
 		gf = Nothing
@@ -697,6 +710,7 @@ Public Class wsGenerale
 										Rec("CodiceUnivoco").Value & ";" &
 										Rec("SitoWeb").Value & ";" &
 										Rec("MittenteMail").Value & ";" &
+										Rec("GestionePagamenti").Value & ";" &
 										"§"
 
 									Rec.MoveNext()

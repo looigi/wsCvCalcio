@@ -2331,7 +2331,7 @@ Public Class wsStatistiche
 										Dim Giochetti As String = "" & Rec("RisGiochetti").Value
 
 										If Giochetti <> "" Then
-											Dim g() As String
+											Dim g() As String = {}
 
 											If Giochetti.Contains("-") Then
 												g = Giochetti.Split("-")

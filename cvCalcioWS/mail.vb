@@ -3,7 +3,7 @@ Imports System.Net.Mail
 Imports System.Net.Mime
 
 Public Class mail
-	Public Function SendEmail(Mittente As String, ByVal oggetto As String, ByVal newBody As String, ByVal Optional ricevente As String = "emaildefault", ByVal Optional Allegato As String = "") As String
+	Public Function SendEmail(Squadra As String, Mittente As String, ByVal oggetto As String, ByVal newBody As String, ByVal ricevente As String, ByVal Allegato As String) As String
 		'Dim myStream As StreamReader = New StreamReader(Server.MapPath(ConfigurationManager.AppSettings("VirtualDir") & "mailresponsive.html"))
 		'Dim newBody As String = ""
 		'newBody = myStream.ReadToEnd()
@@ -31,7 +31,7 @@ Public Class mail
 			' mail.CC.Add(New MailAddress("email"))
 			mail.Subject = oggetto
 			mail.IsBodyHtml = True
-			mail.Body = CreaCorpoMail(mail, newBody)
+			mail.Body = CreaCorpoMail(Squadra, mail, newBody)
 
 			Dim Data As Attachment = Nothing
 			If Allegato <> "" Then
@@ -69,7 +69,7 @@ Public Class mail
 		Return Ritorno
 	End Function
 
-	Private Function CreaCorpoMail(mail As MailMessage, newBody As String) As String
+	Private Function CreaCorpoMail(Squadra As String, mail As MailMessage, newBody As String) As String
 		Try
 			Dim gf As New GestioneFilesDirectory
 			Dim Righe As String = gf.LeggeFileIntero(HttpContext.Current.Server.MapPath(".") & "\Impostazioni\Paths.txt")
@@ -79,7 +79,16 @@ Public Class mail
 			Dim logoApplicazione As String = Righe & "logoApplicazione.png"
 			Dim sfondoMail As String = Righe & "bg.jpg"
 
-			Dim Corpo As String = gf.LeggeFileIntero(HttpContext.Current.Server.MapPath(".") & "\Scheletri\base_mail.txt")
+			Dim filePaths As String = gf.LeggeFileIntero(HttpContext.Current.Server.MapPath(".") & "\Impostazioni\PathAllegati.txt")
+			Dim p() As String = filePaths.Split(";")
+			If Strings.Right(p(0), 1) <> "\" Then
+				p(0) &= "\"
+			End If
+			Dim pathFilePosta As String = p(0) & Squadra & "\Scheletri\base_mail.txt"
+			If Not File.Exists(pathFilePosta) Then
+				pathFilePosta = HttpContext.Current.Server.MapPath(".") & "\Scheletri\base_mail.txt"
+			End If
+			Dim Corpo As String = gf.LeggeFileIntero(pathFilePosta)
 			'Corpo = Corpo.Replace("***SFONDO***", sfondoMail)
 			'Corpo = Corpo.Replace("***LOGO APPLICAZIONE***", logoApplicazione)
 

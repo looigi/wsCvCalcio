@@ -4,6 +4,7 @@ Imports System.Net.Mail
 Imports System.Data.OleDb
 Imports System.Web.ApplicationServices
 Imports System.Web.Hosting
+Imports System.IO
 
 <System.Web.Services.WebService(Namespace:="http://cvcalcio_part.org/")>
 <System.Web.Services.WebServiceBinding(ConformsTo:=WsiProfiles.BasicProfile1_1)>
@@ -20,7 +21,7 @@ Public Class wsPartite
 								 idUnioneCalendario As String, TGA1 As String, TGA2 As String, TGA3 As String, Dirigenti As String, idArbitro As String,
 								 RisultatoATempi As String, RigoriPropri As String, RigoriAvv As String, EventiPrimoTempo As String,
 								 EventiSecondoTempo As String, EventiTerzoTempo As String, Mittente As String, DataOraAppuntamento As String, LuogoAppuntamento As String,
-								 MezzoTrasporto As String, MandaMail As String) As String
+								 MezzoTrasporto As String, MandaMail As String, InFormazione As String) As String
 
 		Dim Ritorno As String = ""
 		Dim Connessione As String = LeggeImpostazioniDiBase(Server.MapPath("."), Squadra)
@@ -254,6 +255,20 @@ Public Class wsPartite
 				End If
 
 				If Ok Then
+					Try
+						Sql = "Delete From InFormazione Where idPartita=" & idPartita
+						Ritorno = EsegueSql(Conn, Sql, Connessione)
+						If Ritorno.Contains(StringaErrore) Then
+							Ok = False
+						End If
+
+					Catch ex As Exception
+						Ritorno = StringaErrore & " " & ex.Message
+						Ok = False
+					End Try
+				End If
+
+				If Ok Then
 					Dim d As Date = DataOra.Replace("%20", " ")
 					d = d.AddHours(-1)
 					Dim OraConv As String = Format(d.Hour, "00") & ":" & Format(d.Minute, "00") & ":" & Format(d.Second, "00")
@@ -373,31 +388,34 @@ Public Class wsPartite
 					If sTempo <> "" Then
 						Dim CC() As String = Coordinate.Split(";")
 						Dim TempoMeteo As String = RitornaMeteo(CC(0), CC(1))
-						Dim TT() As String = TempoMeteo.Split(";")
 
-						'Temperatura
-						'Umidita
-						'Pressione
-						'Tempo
-						'Icona
+						If TempoMeteo <> "" Then
+							Dim TT() As String = TempoMeteo.Split(";")
 
-						Try
-							Sql = "Insert Into MeteoPartite Values (" &
-								" " & idPartita & ", " &
-								"'" & TT(0) & "', " &
-								"'" & TT(1) & "', " &
-								"'" & TT(2) & "', " &
-								"'" & TT(3) & "', " &
-								"'" & TT(4) & "' " &
-								")"
-							Ritorno = EsegueSql(Conn, Sql, Connessione)
-							If Ritorno.Contains(StringaErrore) Then
+							'Temperatura
+							'Umidita
+							'Pressione
+							'Tempo
+							'Icona
+
+							Try
+								Sql = "Insert Into MeteoPartite Values (" &
+									" " & idPartita & ", " &
+									"'" & TT(0) & "', " &
+									"'" & TT(1) & "', " &
+									"'" & TT(2) & "', " &
+									"'" & TT(3) & "', " &
+									"'" & TT(4) & "' " &
+									")"
+								Ritorno = EsegueSql(Conn, Sql, Connessione)
+								If Ritorno.Contains(StringaErrore) Then
+									Ok = False
+								End If
+							Catch ex As Exception
+								Ritorno = StringaErrore & " " & ex.Message
 								Ok = False
-							End If
-						Catch ex As Exception
-							Ritorno = StringaErrore & " " & ex.Message
-							Ok = False
-						End Try
+							End Try
+						End If
 					End If
 				End If
 
@@ -517,7 +535,7 @@ Public Class wsPartite
 						'	"Where A.idGiocatore in (" & convString & ")"
 						Sql = "Select A.Mail, A.idGiocatore, A.Progressivo, B.Cognome + ' ' + B.Nome As Giocatore From GiocatoriMails A " &
 							"Left Join Giocatori B On A.idGiocatore = B.idGiocatore " &
-							"Where A.idGiocatore in (" & convString & ") And Attiva = 'S'"
+							"Where A.idGiocatore in (" & convString & ") And Attiva = 'S' And A.Mail <> ''"
 						Rec = LeggeQuery(Conn, Sql, Connessione)
 						If TypeOf (Rec) Is String Then
 							Ritorno = Rec
@@ -757,7 +775,7 @@ Public Class wsPartite
 									Body2 = Body2.Replace("***URLNONPARTECIPO***", urlNo)
 
 									If MandaMail = "S" Then
-										Ritorno = ma.SendEmail(Mittente, Oggetto, Body2, c(2))
+										Ritorno = ma.SendEmail(Squadra, Mittente, Oggetto, Body2, c(2), "")
 									End If
 
 									gf.CreaDirectoryDaPercorso(p(0) & "\" & Squadra & "\Convocazioni\Anno" & idAnno & "\Giocatori\")
@@ -772,6 +790,34 @@ Public Class wsPartite
 
 						End If
 					End If
+				End If
+
+				If Ok Then
+					Dim Progressivo As Integer = 1
+
+					For Each C As String In InFormazione.Split(";")
+						If C <> "" Then
+							' Dim Campi() As String = C.Split(";")
+							' Dim idGioc As String = Campi(0)
+
+							If Ok Then
+								Sql = "Insert Into InFormazione Values (" &
+												" " & idPartita & ", " &
+												" " & Progressivo & ", " &
+												" " & C & " " &
+												")"
+								Ritorno = EsegueSql(Conn, Sql, Connessione)
+								If Ritorno.Contains(StringaErrore) Then
+									Ok = False
+									Exit For
+								End If
+
+								Progressivo += 1
+							Else
+								Exit For
+							End If
+						End If
+					Next
 				End If
 
 				If Ok Then
@@ -1261,20 +1307,22 @@ Public Class wsPartite
 						"RisultatiAggiuntivi.Tempo1Tempo, RisultatiAggiuntivi.Tempo2Tempo, RisultatiAggiuntivi.Tempo3Tempo, " &
 						"CoordinatePartite.Lat, CoordinatePartite.Lon, TempiGoalAvversari.TempiPrimoTempo, TempiGoalAvversari.TempiSecondoTempo, TempiGoalAvversari.TempiTerzoTempo, " &
 						"MeteoPartite.Tempo, MeteoPartite.Gradi, MeteoPartite.Umidita, MeteoPartite.Pressione, MeteoPartite.Icona, ArbitriPartite.idArbitro, Arbitri.Cognome + ' ' + Arbitri.Nome As Arbitro, " &
-						"Partite.RisultatoATempi, Partite.DataOraAppuntamento, Partite.LuogoAppuntamento, Partite.MezzoTrasporto " &
-						"FROM ((((((((((((Partite LEFT JOIN Risultati ON Partite.idPartita = Risultati.idPartita) " &
-						"LEFT JOIN RisultatiAggiuntivi ON Partite.idPartita = RisultatiAggiuntivi.idPartita) " &
-						"LEFT JOIN SquadreAvversarie ON Partite.idAvversario = SquadreAvversarie.idAvversario) " &
-						"LEFT JOIN [Generale].[dbo].[TipologiePartite] ON Partite.idTipologia = TipologiePartite.idTipologia) " &
-						"LEFT JOIN Allenatori ON (Partite.idAnno = Allenatori.idAnno) And (Partite.idAllenatore = Allenatori.idAllenatore)) " &
-						"LEFT JOIN CampiAvversari ON SquadreAvversarie.idCampo = CampiAvversari.idCampo) " &
-						"LEFT JOIN CampiEsterni ON Partite.idPartita = CampiEsterni.idPartita) " &
-						"LEFT JOIN Categorie ON Partite.idCategoria = Categorie.idCategoria And Categorie.idAnno = Partite.idAnno) " &
-						"LEFT JOIN CoordinatePartite On Partite.idPartita = CoordinatePartite.idPartita) " &
-						"LEFT JOIN MeteoPartite On Partite.idPartita = MeteoPartite.idPartita) " &
-						"LEFT JOIN TempiGoalAvversari On Partite.idPartita = TempiGoalAvversari.idPartita) " &
-						"LEFT JOIN ArbitriPartite On (Partite.idPartita = ArbitriPartite.idPartita And ArbitriPartite.idAnno = Partite.idAnno)) " &
+						"Partite.RisultatoATempi, Partite.DataOraAppuntamento, Partite.LuogoAppuntamento, Partite.MezzoTrasporto, Categorie.AnticipoConvocazione, Anni.Indirizzo, Anni.Lat, Anni.Lon, " &
+						"Anni.CampoSquadra, Anni.NomePolisportiva " &
+						"FROM Partite LEFT JOIN Risultati ON Partite.idPartita = Risultati.idPartita " &
+						"LEFT JOIN RisultatiAggiuntivi ON Partite.idPartita = RisultatiAggiuntivi.idPartita " &
+						"LEFT JOIN SquadreAvversarie ON Partite.idAvversario = SquadreAvversarie.idAvversario " &
+						"LEFT JOIN [Generale].[dbo].[TipologiePartite] ON Partite.idTipologia = TipologiePartite.idTipologia " &
+						"LEFT JOIN Allenatori ON Partite.idAnno = Allenatori.idAnno And Partite.idAllenatore = Allenatori.idAllenatore " &
+						"LEFT JOIN CampiAvversari ON SquadreAvversarie.idCampo = CampiAvversari.idCampo " &
+						"LEFT JOIN CampiEsterni ON Partite.idPartita = CampiEsterni.idPartita " &
+						"LEFT JOIN Categorie ON Partite.idCategoria = Categorie.idCategoria And Categorie.idAnno = Partite.idAnno " &
+						"LEFT JOIN CoordinatePartite On Partite.idPartita = CoordinatePartite.idPartita " &
+						"LEFT JOIN MeteoPartite On Partite.idPartita = MeteoPartite.idPartita " &
+						"LEFT JOIN TempiGoalAvversari On Partite.idPartita = TempiGoalAvversari.idPartita " &
+						"LEFT JOIN ArbitriPartite On Partite.idPartita = ArbitriPartite.idPartita And ArbitriPartite.idAnno = Partite.idAnno " &
 						"LEFT JOIN Arbitri On ArbitriPartite.idArbitro=Arbitri.idArbitro And ArbitriPartite.idAnno=Arbitri.idAnno " &
+						"LEFT JOIN Anni On Partite.idAnno = Anni.idAnno " &
 						"WHERE Partite.idPartita=" & idPartita & " And Partite.idAnno=" & idAnno
 					Rec = LeggeQuery(Conn, Sql, Connessione)
 					If TypeOf (Rec) Is String Then
@@ -1511,7 +1559,12 @@ Public Class wsPartite
 								Ritorno &= Rec("DataOraAppuntamento").Value & ";"
 								Ritorno &= Rec("LuogoAppuntamento").Value & ";"
 								Ritorno &= Rec("MezzoTrasporto").Value & ";"
-
+								Ritorno &= Rec("AnticipoConvocazione").Value & ";"
+								Ritorno &= Rec("Indirizzo").Value & ";"
+								Ritorno &= Rec("Lat").Value & ";"
+								Ritorno &= Rec("Lon").Value & ";"
+								Ritorno &= Rec("CampoSquadra").Value & ";"
+								Ritorno &= Rec("NomePolisportiva").Value & ";"
 								Ritorno &= "§"
 
 								Rec.MoveNext()
@@ -1521,9 +1574,9 @@ Public Class wsPartite
 						Ritorno &= "|"
 
 						Sql = "Select * From (Select idTempo, Progressivo, RisultatiAggiuntiviMarcatori.idGiocatore, Minuto, Cognome, Nome, Ruoli.Descrizione As Ruolo, NumeroMaglia, Rigore " &
-							"FROM ((RisultatiAggiuntiviMarcatori " &
-							"Left Join Giocatori On RisultatiAggiuntiviMarcatori.idGiocatore = Giocatori.idGiocatore) " &
-							"Left Join [Generale].[dbo].[Ruoli] On Giocatori.idRuolo = Ruoli.idRuolo) " &
+							"FROM RisultatiAggiuntiviMarcatori " &
+							"Left Join Giocatori On RisultatiAggiuntiviMarcatori.idGiocatore = Giocatori.idGiocatore " &
+							"Left Join [Generale].[dbo].[Ruoli] On Giocatori.idRuolo = Ruoli.idRuolo " &
 							"Where RisultatiAggiuntiviMarcatori.idPartita=" & idPartita & " And Giocatori.idAnno=" & idAnno & " " &
 							"Union All " &
 							"Select idTempo, Progressivo, -1, Minuto, 'Autorete' As Cognome, '' As Nome, '' As Ruolo, 999 As NumeroMaglia, 'N' As Rigore FROM RisultatiAggiuntiviMarcatori " &
@@ -1585,11 +1638,44 @@ Public Class wsPartite
 							Rec.Close()
 						End If
 
-						Sql = "SELECT idProgressivo, Convocati.idGiocatore, Cognome, Nome, Ruoli.idRuolo, Ruoli.Descrizione As Ruolo, NumeroMaglia " &
-							"FROM ((Convocati " &
-							"Left Join Giocatori On Convocati.idGiocatore = Giocatori.idGiocatore) " &
-							"Left Join [Generale].[dbo].[Ruoli] On Giocatori.idRuolo = Ruoli.idRuolo) " &
+						' Convocati
+						Sql = "SELECT idProgressivo, Convocati.idGiocatore, Cognome, Nome, Ruoli.idRuolo, Ruoli.Descrizione As Ruolo, NumeroMaglia, ConvocatiPartiteRisposte.Risposta " &
+							"FROM Convocati " &
+							"Left Join Giocatori On Convocati.idGiocatore = Giocatori.idGiocatore " &
+							"Left Join ConvocatiPartiteRisposte On ConvocatiPartiteRisposte.idGiocatore = Convocati.idGiocatore And ConvocatiPartiteRisposte.idPartita = Convocati.idPartita " &
+							"Left Join [Generale].[dbo].[Ruoli] On Giocatori.idRuolo = Ruoli.idRuolo " &
 							"Where Convocati.idPartita=" & idPartita & " And Giocatori.idAnno=" & idAnno & " Order By idProgressivo"
+						Rec = LeggeQuery(Conn, Sql, Connessione)
+						If TypeOf (Rec) Is String Then
+							Ritorno = Sql & "--->" & Rec
+						Else
+							If Rec.Eof Then
+								Ritorno &= "|"
+							Else
+								Do Until Rec.Eof
+									Ritorno &= Rec("idProgressivo").Value.ToString & ";" &
+										Rec("idGiocatore").Value.ToString & ";" &
+										Rec("Cognome").Value.ToString & ";" &
+										Rec("Nome").Value.ToString & ";" &
+										Rec("Ruolo").Value.ToString & ";" &
+										Rec("idRuolo").Value.ToString & ";" &
+										Rec("NumeroMaglia").Value.ToString & ";" &
+										Rec("Risposta").Value.ToString & ";" &
+										"§"
+
+									Rec.MoveNext()
+								Loop
+								Ritorno &= "|"
+							End If
+							Rec.Close()
+						End If
+
+						' In Formazione
+						Sql = "SELECT idProgressivo, InFormazione.idGiocatore, Cognome, Nome, Ruoli.idRuolo, Ruoli.Descrizione As Ruolo, NumeroMaglia " &
+							"FROM InFormazione " &
+							"Left Join Giocatori On InFormazione.idGiocatore = Giocatori.idGiocatore " &
+							"Left Join [Generale].[dbo].[Ruoli] On Giocatori.idRuolo = Ruoli.idRuolo " &
+							"Where InFormazione.idPartita=" & idPartita & " And Giocatori.idAnno=" & idAnno & " Order By idProgressivo"
 						Rec = LeggeQuery(Conn, Sql, Connessione)
 						If TypeOf (Rec) Is String Then
 							Ritorno = Sql & "--->" & Rec
@@ -1745,7 +1831,7 @@ Public Class wsPartite
 							If Appuntamento <> "" Then
 								Appuntamento = Mid(Appuntamento, Appuntamento.IndexOf(" ") + 1, Appuntamento.Length)
 							End If
-							Filetto = Filetto.Replace("***ORARIO1***", appuntamento)
+							Filetto = Filetto.Replace("***ORARIO1***", Appuntamento)
 							Filetto = Filetto.Replace("***ORARIO2***", Rec("OraConv").Value)
 
 							Filetto = Filetto.Replace("***MISTER***", Rec("Mister").Value)
@@ -1846,6 +1932,108 @@ Public Class wsPartite
 	<WebMethod()>
 	Public Function EliminaPartitaGEN(Squadra As String, idAnno As String, idPartita As String) As String
 		Return EliminaPartita(Squadra, idAnno, idPartita)
+	End Function
+
+	<WebMethod()>
+	Public Function CreaFoglioConvocazionePDF(Squadra As String, idAnno As String, idPartita As String) As String
+		Dim Ritorno As String = ""
+		Dim gf As New GestioneFilesDirectory
+		Dim filePaths As String = gf.LeggeFileIntero(Server.MapPath(".") & "\Impostazioni\PathAllegati.txt")
+		Dim p() As String = filePaths.Split(";")
+		If Strings.Right(p(0), 1) <> "\" Then
+			p(0) &= "\"
+		End If
+		Dim pathLog As String = p(0) & Squadra & "\Convocazioni\Anno" & idAnno & "\Partite\Partita_" & idPartita & ".log"
+		Dim path1 As String = p(0) & Squadra & "\Convocazioni\Anno" & idAnno & "\Partite\Partita_" & idPartita & ".html"
+		Dim pathPdf As String = p(0) & Squadra & "\Convocazioni\Anno" & idAnno & "\Partite\Partita_" & idPartita & ".pdf"
+		Dim pp As New pdfGest
+		Ritorno = pp.ConverteHTMLInPDF(path1, pathPdf, pathLog)
+		If Ritorno = "*" Then
+			Ritorno = pathPdf
+		End If
+
+		Return Ritorno
+	End Function
+
+	<WebMethod()>
+	Public Function InviaFoglioConvocazionePDF(Squadra As String, idAnno As String, idPartita As String) As String
+		Dim Ritorno As String = ""
+		Dim gf As New GestioneFilesDirectory
+		Dim filePaths As String = gf.LeggeFileIntero(Server.MapPath(".") & "\Impostazioni\PathAllegati.txt")
+		Dim p() As String = filePaths.Split(";")
+		If Strings.Right(p(0), 1) <> "\" Then
+			p(0) &= "\"
+		End If
+		Dim path1 As String = p(0) & Squadra & "\Convocazioni\Anno" & idAnno & "\Partite\Partita_" & idPartita & ".html"
+		Dim pathLog As String = p(0) & Squadra & "\Convocazioni\Anno" & idAnno & "\Partite\Partita_" & idPartita & ".log"
+		Dim pathPdf As String = p(0) & Squadra & "\Convocazioni\Anno" & idAnno & "\Partite\Partita_" & idPartita & ".pdf"
+		If Not File.Exists(pathPdf) Then
+			Dim pp As New pdfGest
+			Ritorno = pp.ConverteHTMLInPDF(path1, pathPdf, pathLog)
+		Else
+			Ritorno = "*"
+		End If
+
+		If Ritorno = "*" Then
+			Dim Connessione As String = LeggeImpostazioniDiBase(Server.MapPath("."), Squadra)
+
+			If Connessione = "" Then
+				Ritorno = ErroreConnessioneNonValida & ":" & Connessione
+			Else
+				Dim Conn As Object = ApreDB(Connessione)
+
+				If TypeOf (Conn) Is String Then
+					Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
+				Else
+					Dim Ok As Boolean = True
+					Dim Rec As Object = Server.CreateObject("ADODB.Recordset")
+					Dim Sql As String = ""
+
+					Sql = "Select Distinct * From (" &
+						"Select EMail From Partite A " &
+						"Left Join DirigentiPartite B On A.idPartita = B.idPartita " &
+						"Left Join Dirigenti C On B.idDirigente = C.idDirigente " &
+						"Where A.idPartita = " & idPartita & " " &
+						"Union All " &
+						"Select EMail From Convocati A " &
+						"Left Join Giocatori B On A.idGiocatore = B.idGiocatore " &
+						"Where idPartita = " & idPartita & " And Maggiorenne = 'S' " &
+						"Union All " &
+						"Select C.Mail From Convocati A " &
+						"Left Join Giocatori B On A.idGiocatore = B.idGiocatore " &
+						"Left Join GiocatoriMails C On A.idGiocatore = C.idGiocatore " &
+						"Where idPartita = " & idPartita & " And Maggiorenne = 'N' And Attiva = 'S' " &
+						"Union All " &
+						"Select EMail From Partite A " &
+						"Left Join Allenatori B On A.idAllenatore = B.idAllenatore " &
+						"Where idPartita = " & idPartita & " " &
+						") A"
+					Rec = LeggeQuery(Conn, Sql, Connessione)
+					If TypeOf (Rec) Is String Then
+						Ritorno = Rec
+					Else
+						Dim Giocatori As List(Of String) = New List(Of String)
+
+						Do Until Rec.Eof
+							Giocatori.Add(Rec(0).Value)
+
+							Rec.MoveNext
+						Loop
+						Rec.Close
+
+						Dim Oggetto As String = "Convocazione nuova partita: "
+						Dim Body2 As String = ""
+
+						Dim ma As New mail
+						For Each Destinatario As String In Giocatori
+							Ritorno = ma.SendEmail(Squadra, "", Oggetto, Body2, Destinatario, pathPdf)
+						Next
+					End If
+				End If
+			End If
+		End If
+
+		Return Ritorno
 	End Function
 
 End Class

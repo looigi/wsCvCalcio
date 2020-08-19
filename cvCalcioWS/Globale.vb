@@ -979,35 +979,156 @@ Module Globale
 	End Function
 
 	Public Function RitornaMeteo(Lat As String, Lon As String) As String
-		Dim url As String = "http://api.openweathermap.org/data/2.5/weather?lat=" & Lat & "&lon=" & Lon & "&mode=xml&units=metric&lang=it&appid=1856b7a9244abb668591169ef0a34308"
-		Dim request As WebRequest = WebRequest.Create(url)
 		Dim Ritorno As String = ""
-		Dim response As WebResponse = DirectCast(request.GetResponse(), HttpWebResponse)
-		Dim reader As New StreamReader(response.GetResponseStream(), Encoding.UTF8)
-		Dim dsResult As New DataSet()
+		Dim Cosa As String = ""
 
-		dsResult.ReadXml(reader)
+		If Lat = "undefined" Or Lon = "undefined" Or IsNumeric(Lat.Replace(",", ".")) = False Or IsNumeric(Lon.Replace(",", ".")) = False Then
+			Cosa = "q=Rome,IT"
+		Else
+			Cosa = "lat=" & Lat & "&lon=" & Lon
+		End If
 
-		'Temperatura: dsResult.Tables(3).Rows(0)
-		'Umidita: dsResult.Tables(5).Rows(0)
-		'Pressione: dsResult.Tables(6).Rows(0)
-		'Tempo:  dsResult.Tables(13).Rows(0)(1)
+		Try
+			Dim url As String = "http://api.openweathermap.org/data/2.5/weather?" & cosa & "&mode=xml&units=metric&lang=it&appid=1856b7a9244abb668591169ef0a34308"
+			Dim request As WebRequest = WebRequest.Create(url)
+			Dim response As WebResponse = DirectCast(request.GetResponse(), HttpWebResponse)
+			Dim reader As New StreamReader(response.GetResponseStream(), Encoding.UTF8)
+			Dim dsResult As New DataSet()
 
-		Ritorno &= dsResult.Tables(13).Rows(0)(1).ToString() & ";"
+			dsResult.ReadXml(reader)
 
-		'txtMinima.Text = dsResult.Tables(4).Rows(0)(1).ToString()
-		'txtMassima.Text = dsResult.Tables(4).Rows(0)(2).ToString()
-		Ritorno &= dsResult.Tables(3).Rows(0)(0).ToString() & ";"
-		'txtSorge.Text = DateTime.Parse(dsResult.Tables(3).Rows(0)(0).ToString()).ToString("dd/MM/yyyy hh:mm:ss")
-		'txtTramonta.Text = DateTime.Parse(dsResult.Tables(3).Rows(0)(1).ToString()).ToString("dd/MM/yyyy HH:mm:ss")
-		Ritorno &= dsResult.Tables(5).Rows(0)(0).ToString() & ";"
-		Ritorno &= dsResult.Tables(6).Rows(0)(0).ToString() & ";"
-		'txtventoVelocita.Text = dsResult.Tables(8).Rows(0)(0).ToString() + " " + dsResult.Tables(8).Rows(0)(1).ToString()
-		'txtDirezioneVento.Text = dsResult.Tables(9).Rows(0)(1).ToString() + "     " + dsResult.Tables(9).Rows(0)(2).ToString()
-		'txtPrecipitazione.Text = dsResult.Tables(11).Rows(0)(0).ToString()
+			'Temperatura: dsResult.Tables(3).Rows(0)
+			'Umidita: dsResult.Tables(5).Rows(0)
+			'Pressione: dsResult.Tables(6).Rows(0)
+			'Tempo:  dsResult.Tables(13).Rows(0)(1)
 
-		Ritorno &= "http://openweathermap.org/img/w/" + dsResult.Tables(13).Rows(0)(2).ToString() + ".png" & ";"
+			Ritorno &= dsResult.Tables(13).Rows(0)(1).ToString() & ";"
+
+			'txtMinima.Text = dsResult.Tables(4).Rows(0)(1).ToString()
+			'txtMassima.Text = dsResult.Tables(4).Rows(0)(2).ToString()
+			Ritorno &= dsResult.Tables(3).Rows(0)(0).ToString() & ";"
+			'txtSorge.Text = DateTime.Parse(dsResult.Tables(3).Rows(0)(0).ToString()).ToString("dd/MM/yyyy hh:mm:ss")
+			'txtTramonta.Text = DateTime.Parse(dsResult.Tables(3).Rows(0)(1).ToString()).ToString("dd/MM/yyyy HH:mm:ss")
+			Ritorno &= dsResult.Tables(5).Rows(0)(0).ToString() & ";"
+			Ritorno &= dsResult.Tables(6).Rows(0)(0).ToString() & ";"
+			'txtventoVelocita.Text = dsResult.Tables(8).Rows(0)(0).ToString() + " " + dsResult.Tables(8).Rows(0)(1).ToString()
+			'txtDirezioneVento.Text = dsResult.Tables(9).Rows(0)(1).ToString() + "     " + dsResult.Tables(9).Rows(0)(2).ToString()
+			'txtPrecipitazione.Text = dsResult.Tables(11).Rows(0)(0).ToString()
+
+			Ritorno &= "http://openweathermap.org/img/w/" + dsResult.Tables(13).Rows(0)(2).ToString() + ".png" & ";"
+		Catch ex As Exception
+
+		End Try
 
 		Return Ritorno
+	End Function
+
+	Public Function convertNumberToReadableString(ByVal num As Long) As String
+		Dim result As String = ""
+		Dim [mod] As Long = 0
+		Dim i As Single = 0
+		Dim unita As String() = {"zero", "uno", "due", "tre", "quattro", "cinque", "sei", "sette", "otto", "nove", "dieci", "undici", "dodici", "tredici", "quattordici", "quindici", "sedici", "diciassette", "diciotto", "diciannove"}
+		Dim decine As String() = {"", "dieci", "venti", "trenta", "quaranta", "cinquanta", "sessanta", "settanta", "ottanta", "novanta"}
+
+		If num > 0 AndAlso num < 20 Then
+			result = unita(num)
+		Else
+
+			If num < 100 Then
+				[mod] = num Mod 10
+				i = Int(num / 10)
+
+				Select Case [mod]
+					Case 0
+						result = decine(i)
+					Case 1
+						result = decine(i).Substring(0, decine(i).Length - 1) & unita([mod])
+					Case 8
+						result = decine(i).Substring(0, decine(i).Length - 1) & unita([mod])
+					Case Else
+						result = decine(i) & unita([mod])
+				End Select
+			Else
+
+				If num < 1000 Then
+					[mod] = num Mod 100
+					i = Int((num - [mod]) / 100)
+
+					Select Case i
+						Case 1
+							result = "cento"
+						Case Else
+							result = unita(i) & "cento"
+					End Select
+
+					result = result & convertNumberToReadableString([mod])
+				Else
+
+					If num < 10000 Then
+						[mod] = num Mod 1000
+						i = Int((num - [mod]) / 1000)
+
+						Select Case i
+							Case 1
+								result = "mille"
+							Case Else
+								result = unita(i) & "mila"
+						End Select
+
+						result = result & convertNumberToReadableString([mod])
+					Else
+
+						If num < 1000000 Then
+							[mod] = num Mod 1000
+							i = Int((num - [mod]) / 1000)
+
+							Select Case (num - [mod]) / 1000
+								Case Else
+
+									If i < 20 Then
+										result = unita(i) & "mila"
+									Else
+										result = convertNumberToReadableString(i) & "mila"
+									End If
+							End Select
+
+							result = result & convertNumberToReadableString([mod])
+						Else
+
+							If num < 1000000000 Then
+								[mod] = num Mod 1000000
+								i = Int((num - [mod]) / 1000000)
+
+								Select Case i
+									Case 1
+										result = "unmilione"
+									Case Else
+										result = convertNumberToReadableString(i) & "milioni"
+								End Select
+
+								result = result & convertNumberToReadableString([mod])
+							Else
+
+								If num < 1000000000000 Then
+									[mod] = num Mod 1000000000
+									i = Int((num - [mod]) / 1000000000)
+
+									Select Case i
+										Case 1
+											result = "unmiliardo"
+										Case Else
+											result = convertNumberToReadableString(i) & "miliardi"
+									End Select
+
+									result = result & convertNumberToReadableString([mod])
+								End If
+							End If
+						End If
+					End If
+				End If
+			End If
+		End If
+
+		Return result
 	End Function
 End Module
