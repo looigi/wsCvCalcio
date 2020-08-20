@@ -172,17 +172,8 @@ Public Class wsGiocatori
 											Dim g() As String = Genitore.Split(" ")
 											Dim s() As String = Squadra.Split("_")
 											Dim idSquadra As Integer = Val(s(1))
-											Dim chiave As String = "AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvZz0123456789!$%/()=?^"
-											Dim rnd1 As New Random()
-											Dim nuovaPass As String = ""
-
-											For i As Integer = 1 To 7
-												Dim c As Integer = rnd1.Next(chiave.Length - 1) + 1
-												nuovaPass &= Mid(chiave, c, 1)
-											Next
-
-											Dim wrapper As New CryptEncrypt("WPippoBaudo227!")
-											Dim nuovaPassCrypt As String = wrapper.EncryptData(nuovaPass)
+											Dim pass As String = generaPassRandom()
+											Dim nuovaPass() = pass.Split(";")
 
 											If Not GenitoreGiaEsisteComeUtente Then
 												Sql = "Insert Into [Generale].[dbo].[Utenti] Values (" &
@@ -191,7 +182,7 @@ Public Class wsGiocatori
 													"'" & Mail.Replace("'", "''") & "', " &
 													"'" & g(0).Replace("'", "''") & "', " &
 													"'" & g(1).Replace("'", "''") & "', " &
-													"'" & nuovaPassCrypt.Replace("'", "''") & "', " &
+													"'" & nuovaPass(1).Replace("'", "''") & "', " &
 													"'" & Mail.Replace("'", "''") & "', " &
 													"-1, " &
 													"3, " &
@@ -217,7 +208,7 @@ Public Class wsGiocatori
 												Dim Body As String = ""
 												Body &= "E' stato creato l'utente '" & Genitore.ToUpper & "'. <br />"
 												Body &= "Per accedere al sito sarà possibile digitare la mail rilasciata alla segreteria in fase di iscrizione: " & Mail & "<br />"
-												Body &= "La password valida per il solo primo accesso è: " & nuovaPass & "<br /><br />"
+												Body &= "La password valida per il solo primo accesso è: " & nuovaPass(0) & "<br /><br />"
 												Dim ChiScrive As String = "notifiche@incalcio.cloud"
 
 												Ritorno = m.SendEmail(Squadra, "", Oggetto, Body, Mail, "")
@@ -1543,7 +1534,8 @@ Public Class wsGiocatori
 											DataDiNascita1 As String, CittaNascita1 As String, CodFiscale1 As String, Citta1 As String, Cap1 As String, Indirizzo1 As String,
 											DataDiNascita2 As String, CittaNascita2 As String, CodFiscale2 As String, Citta2 As String, Cap2 As String, Indirizzo2 As String,
 											GenitoriSeparati As String, AffidamentoCongiunto As String, AbilitaFirmaGenitore1 As String, AbilitaFirmaGenitore2 As String,
-											AbilitaFirmaGenitore3 As String, FirmaAnalogicaGenitore1 As String, FirmaAnalogicaGenitore2 As String, FirmaAnalogicaGenitore3 As String) As String
+											AbilitaFirmaGenitore3 As String, FirmaAnalogicaGenitore1 As String, FirmaAnalogicaGenitore2 As String, FirmaAnalogicaGenitore3 As String,
+											idTutore As String) As String
 		Dim Ritorno As String = ""
 		Dim Connessione As String = LeggeImpostazioniDiBase(Server.MapPath("."), Squadra)
 
@@ -1597,7 +1589,8 @@ Public Class wsGiocatori
 							"AbilitaFirmaGenitore3='" & AbilitaFirmaGenitore3 & "', " &
 							"FirmaAnalogicaGenitore1='" & FirmaAnalogicaGenitore1 & "', " &
 							"FirmaAnalogicaGenitore2='" & FirmaAnalogicaGenitore2 & "', " &
-							"FirmaAnalogicaGenitore3='" & FirmaAnalogicaGenitore3 & "' " &
+							"FirmaAnalogicaGenitore3='" & FirmaAnalogicaGenitore3 & "', " &
+							"idTutore='" & idTutore & "' " &
 							"Where idAnno=" & idAnno & " And idGiocatore=" & idGiocatore
 						Ritorno = EsegueSql(Conn, Sql, Connessione)
 						If Ritorno.Contains(StringaErrore) Then
@@ -1764,7 +1757,8 @@ Public Class wsGiocatori
 									"'S', " &
 									"'N', " &
 									"'N', " &
-									"'N' " &
+									"'N', " &
+									"'M' " &
 									")"
 								Ritorno = EsegueSql(Conn, Sql, Connessione)
 								If Not Ritorno.Contains(StringaErrore) Then
@@ -1867,6 +1861,7 @@ Public Class wsGiocatori
 								Ritorno &= Rec("FirmaAnalogicaGenitore1").Value & ";"
 								Ritorno &= Rec("FirmaAnalogicaGenitore2").Value & ";"
 								Ritorno &= Rec("FirmaAnalogicaGenitore3").Value & ";"
+								Ritorno &= Rec("idTutore").Value & ";"
 							End If
 						End If
 					End If
@@ -1981,19 +1976,10 @@ Public Class wsGiocatori
 								End If
 							End If
 
-							Dim nuovaPass As String = ""
+							Dim pass As String = generaPassRandom()
+							Dim nuovaPass() = pass.Split(";")
 							Dim s() As String = Squadra.Split("_")
 							Dim idSquadra As Integer = Val(s(1))
-							Dim chiave As String = "AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvZz0123456789!$%/()=?^"
-							Dim rnd1 As New Random()
-
-							For i As Integer = 1 To 7
-								Dim c As Integer = rnd1.Next(chiave.Length - 1) + 1
-								nuovaPass &= Mid(chiave, c, 1)
-							Next
-
-							Dim wrapper As New CryptEncrypt("WPippoBaudo227!")
-							Dim nuovaPassCrypt As String = wrapper.EncryptData(nuovaPass)
 
 							Sql = "Insert Into [Generale].[dbo].[Utenti] Values (" &
 										" " & idAnno & ", " &
@@ -2001,7 +1987,7 @@ Public Class wsGiocatori
 										"'" & EMail.Replace("'", "''") & "', " &
 										"'" & Cognome.Replace("'", "''") & "', " &
 										"'" & Nome.Replace("'", "''") & "', " &
-										"'" & nuovaPassCrypt.Replace("'", "''") & "', " &
+										"'" & nuovaPass(1).Replace("'", "''") & "', " &
 										"'" & EMail.Replace("'", "''") & "', " &
 										"-1, " &
 										"6, " &
@@ -2021,7 +2007,7 @@ Public Class wsGiocatori
 								Dim Body As String = ""
 								Body &= "E' stato creato l'utente '" & Cognome.ToUpper & " " & Nome.ToUpper & "'. <br />"
 								Body &= "Per accedere al sito sarà possibile digitare la mail rilasciata alla segreteria in fase di iscrizione: " & EMail & "<br />"
-								Body &= "La password valida per il solo primo accesso è: " & nuovaPass & "<br /><br />"
+								Body &= "La password valida per il solo primo accesso è: " & nuovaPass(0) & "<br /><br />"
 								Dim ChiScrive As String = "notifiche@incalcio.cloud"
 
 								Ritorno = m.SendEmail(Squadra, "", Oggetto, Body, EMail, "")
@@ -2541,6 +2527,18 @@ Public Class wsGiocatori
 							Virgola = ""
 						End If
 
+						If Virgola = "" Then
+							Virgola = "00"
+						Else
+							If Virgola.Length = 1 Then
+								Virgola = "0" & Virgola
+							Else
+								If Virgola > 2 Then
+									Virgola = Mid(Virgola, 1, 2)
+								End If
+							End If
+						End If
+
 						Dim Dati As String = "C.F.: " & CodiceFiscale & " P.I.:" & PIva & "<br />Telefono: " & Telefono & "<br />E-Mail: " & eMail
 						Dim Altro As String = ""
 						If Commento <> "" Then
@@ -2570,7 +2568,9 @@ Public Class wsGiocatori
 						If Strings.Right(filePaths, 1) <> "\" Then
 							filePaths &= "\"
 						End If
-						Dim pathFirma As String = filePaths & NomeSquadra.Replace(" ", "_") & "\Firme\" & idAnno & "_" & idGiocatore & "_" & idPagatore & ".png"
+						' Dim pathFirma As String = filePaths & NomeSquadra.Replace(" ", "_") & "\Firme\" & idAnno & "_" & idGiocatore & "_" & idPagatore & ".png"
+						Dim pathFirma As String = filePaths & NomeSquadra.Replace(" ", "_") & "\Segreteria\" & idAnno & ".png"
+
 						Body = Body.Replace("***URL FIRMA***", pathFirma)
 
 						gf.EliminaFileFisico(fileAppoggio)

@@ -1131,4 +1131,34 @@ Module Globale
 
 		Return result
 	End Function
+
+	Public Function generaPassRandom() As String
+		Dim chiaveMaiuscole As String = "ABCDEFGHIJKLMNOPQRSTUVZ"
+		Dim chiaveMinuscole As String = "abcdefghijklmnopqrstuvz"
+		Dim chiaveNumeri As String = "0123456789"
+		Dim chiaveSpeciali As String = "!$%/()=?^"
+		Dim rnd1 As New Random()
+		Dim nuovaPass As String = ""
+
+		Dim c As Integer = rnd1.Next(chiaveMaiuscole.Length - 1) + 1
+		nuovaPass &= Mid(chiaveMaiuscole, c, 1)
+
+		For i As Integer = 1 To 5
+			c = rnd1.Next(chiaveMinuscole.Length - 1) + 1
+			nuovaPass &= Mid(chiaveMinuscole, c, 1)
+		Next
+
+		For i As Integer = 1 To 3
+			c = rnd1.Next(chiaveNumeri.Length - 1) + 1
+			nuovaPass &= Mid(chiaveNumeri, c, 1)
+		Next
+
+		c = rnd1.Next(chiaveSpeciali.Length - 1) + 1
+		nuovaPass &= Mid(chiaveSpeciali, c, 1)
+
+		Dim wrapper As New CryptEncrypt("WPippoBaudo227!")
+		Dim nuovaPassCrypt As String = wrapper.EncryptData(nuovaPass)
+
+		Return nuovaPass & ";" & nuovaPassCrypt
+	End Function
 End Module

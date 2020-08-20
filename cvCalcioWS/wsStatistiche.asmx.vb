@@ -77,13 +77,17 @@ Public Class wsStatistiche
 				Dim Sql As String
 
 				Sql = "SELECT Giocatori.idGiocatore, Cognome, Nome, Count(*) As Quanti, NumeroMaglia "
-				Sql &= "FROM ((Giocatori INNER JOIN Partite ON Giocatori.idAnno = Partite.idAnno) "
-				Sql &= "INNER JOIN Convocati ON Partite.idPartita = Convocati.idPartita And Giocatori.idGiocatore=Convocati.idGiocatore) "
-				Sql &= "INNER JOIN Categorie On Giocatori.idCategoria=Categorie.idCategoria And Giocatori.idAnno=Categorie.idAnno "
+				Sql &= "FROM Giocatori INNER JOIN Partite ON Giocatori.idAnno = Partite.idAnno "
+				Sql &= "INNER JOIN Convocati ON Partite.idPartita = Convocati.idPartita And Giocatori.idGiocatore=Convocati.idGiocatore "
+				' Sql &= "INNER JOIN Categorie On Giocatori.idCategoria=Categorie.idCategoria And Giocatori.idAnno=Categorie.idAnno "
 				If SoloAnno = "S" Then
-					Sql &= "WHERE Giocatori.idAnno= " & idAnno & " And Categorie.idCategoria=" & idCategoria & " "
+					If idCategoria <> "-1" Then
+						Sql &= "WHERE Giocatori.idAnno= " & idAnno & " And CharIndex('" & idCategoria & "-', Giocatori.Categorie) > 0 " ' Categorie.idCategoria=" & idCategoria & " "
+					End If
 				Else
-					Sql &= "WHERE Categorie.idCategoria=" & idCategoria & " "
+					If idCategoria <> "-1" Then
+						Sql &= "WHERE CharIndex('" & idCategoria & "-', Giocatori.Categorie) > 0 " ' Categorie.idCategoria=" & idCategoria & " "
+					End If
 				End If
 				Sql &= "Group By Giocatori.idGiocatore, Cognome, Nome, NumeroMaglia "
 				Sql &= "Order By 4 Desc,2,3"

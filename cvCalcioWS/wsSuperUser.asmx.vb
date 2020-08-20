@@ -129,17 +129,8 @@ Public Class wsSuperUser
 									End If
 
 									If Ok Then
-										Dim chiave As String = "AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvZz0123456789!$%/()=?^"
-										Dim rnd1 As New Random()
-										Dim nuovaPass As String = ""
-
-										For i As Integer = 1 To 7
-											Dim c As Integer = rnd1.Next(chiave.Length - 1) + 1
-											nuovaPass &= Mid(chiave, c, 1)
-										Next
-
-										Dim wrapper As New CryptEncrypt("WPippoBaudo227!")
-										Dim nuovaPassCrypt As String = wrapper.EncryptData(nuovaPass)
+										Dim pass As String = generaPassRandom()
+										Dim nuovaPass() = pass.Split(";")
 
 										Sql = "Insert Into Utenti Values (" &
 											"1, " &
@@ -147,7 +138,7 @@ Public Class wsSuperUser
 											"'" & MailAdmin.Replace("'", "''") & "', " &
 											"'" & CognomeAdmin.Replace("'", "''") & "', " &
 											"'" & NomeAdmin.Replace("'", "''") & "', " &
-											"'" & nuovaPassCrypt & "', " &
+											"'" & nuovaPass(1).Replace("'", "''") & "', " &
 											"'" & MailAdmin.Replace("'", "''") & "', " &
 											"-1, " &
 											"1, " &
@@ -294,7 +285,7 @@ Public Class wsSuperUser
 															Body &= "Anno: " & Anno & "<br />"
 															Body &= "Tipologia: " & Tipologia & "<br />"
 															Body &= "Licenza: " & Licenza & "<br /><br />"
-															Body &= "Per accedere, l'amministratore potrà utilizzare la password " & nuovaPass & " che dovrà essere modificata al primo ingresso."
+															Body &= "Per accedere, l'amministratore potrà utilizzare la password " & nuovaPass(0) & " che dovrà essere modificata al primo ingresso."
 
 															Dim ChiScrive As String = "servizioclienti@incalcio.cloud"
 

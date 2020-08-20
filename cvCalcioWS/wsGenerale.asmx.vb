@@ -2,12 +2,14 @@
 Imports System.Web.Services.Protocols
 Imports System.ComponentModel
 Imports System.IO
+Imports System.Windows.Forms
+Imports Microsoft.Win32
 
 <System.Web.Services.WebService(Namespace:="http://cvcalcio.org/")>
 <System.Web.Services.WebServiceBinding(ConformsTo:=WsiProfiles.BasicProfile1_1)>
 <ToolboxItem(False)>
 Public Class wsGenerale
-    Inherits System.Web.Services.WebService
+	Inherits System.Web.Services.WebService
 
 	<WebMethod()>
 	Public Function ProvaConversioneValore(valore As String) As String
@@ -586,6 +588,63 @@ Public Class wsGenerale
 	End Function
 
 	<WebMethod()>
+	Public Function RitornaNumeroFattura(Squadra As String) As String
+		Dim Ritorno As String = ""
+		Dim Connessione As String = LeggeImpostazioniDiBase(Server.MapPath("."), Squadra)
+
+		If Connessione = "" Then
+			Ritorno = ErroreConnessioneNonValida & ":" & Connessione
+		Else
+			Dim Conn As Object = ApreDB(Connessione)
+
+			If TypeOf (Conn) Is String Then
+				Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
+			Else
+				Dim Rec As Object = Server.CreateObject("ADODB.Recordset")
+				Dim Sql As String = "Select * From DatiFattura Where Anno = " & Now.Year
+
+				Rec = LeggeQuery(Conn, Sql, Connessione)
+				If TypeOf (Rec) Is String Then
+					Ritorno = StringaErrore & " " & Rec
+				Else
+					If Rec.Eof Then
+						Sql = "Insert Into DatiFattura Values (" & Now.Year & ", 0)"
+						Ritorno = EsegueSql(Conn, Sql, Connessione)
+
+						Ritorno = 0
+					Else
+						Ritorno = Rec("Progressivo").Value
+					End If
+					Rec.Close
+				End If
+			End If
+		End If
+
+		Return Ritorno
+	End Function
+
+	<WebMethod()>
+	Public Function SalvaNumeroFattura(Squadra As String, NumeroFattura As String) As String
+		Dim Ritorno As String = ""
+		Dim Connessione As String = LeggeImpostazioniDiBase(Server.MapPath("."), Squadra)
+
+		If Connessione = "" Then
+			Ritorno = ErroreConnessioneNonValida & ":" & Connessione
+		Else
+			Dim Conn As Object = ApreDB(Connessione)
+
+			If TypeOf (Conn) Is String Then
+				Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
+			Else
+				Dim Sql As String = "Update DatiFattura Set Progressivo=" & NumeroFattura & " Where Anno=" & Now.Year
+				Ritorno = EsegueSql(Conn, Sql, Connessione)
+			End If
+		End If
+
+		Return Ritorno
+	End Function
+
+	<WebMethod()>
 	Public Function SalvaImpostazioni(Cod_Squadra As String, idAnno As String, Descrizione As String, NomeSquadra As String, Lat As String, Lon As String,
 									  Indirizzo As String, CampoSquadra As String, NomePolisportiva As String, Mail As String, PEC As String,
 									  Telefono As String, PIva As String, CodiceFiscale As String, CodiceUnivoco As String, SitoWeb As String, MittenteMail As String,
@@ -636,7 +695,6 @@ Public Class wsGenerale
 
 		Dim Ritorno As String = ""
 		Dim gf As New GestioneFilesDirectory
-		gf = Nothing
 		Dim Connessione As String = LeggeImpostazioniDiBase(Server.MapPath("."), Squadra)
 		Dim ConnessioneGen As String = LeggeImpostazioniDiBase(Server.MapPath("."), "")
 
@@ -674,53 +732,81 @@ Public Class wsGenerale
 					Rec.Close()
 
 					If Anni.Count > 0 Then
-						Ritorno = ""
-						For Each a As Integer In Anni
-							Dim sAnno As String = Format(a, "0000")
-							Dim sCodSquadra As String = codSquadra.Trim
-							While sCodSquadra.Length <> 5
-								sCodSquadra = "0" & sCodSquadra
-							End While
-							Dim Codice As String = sAnno & "_" & sCodSquadra
+						Sql = "Select * From Anni"
+						Rec = LeggeQuery(Conn, Sql, Connessione)
+						If TypeOf (Rec) Is String Then
+							Ritorno = Rec
+						Else
+							Dim NomeSquadra As String = Rec("NomeSquadra").Value
+							Rec.Close()
 
-							Sql = "Select A.*, B.idAvversario, B.idCampo " &
-								"From [" & Codice & "].[dbo].[Anni] A Left Join [" & Codice & "].[dbo].[SquadreAvversarie] B On A.NomeSquadra = B.Descrizione " &
-								"Order By idAnno Desc"
-							Rec = LeggeQuery(ConnGen, Sql, ConnessioneGen)
-							If TypeOf (Rec) Is String Then
-								Ritorno = Rec
-							Else
-								' Ritorno = ""
-								Do Until Rec.Eof
-									Ritorno &= Rec("idAnno").Value & ";" &
-										Rec("Descrizione").Value & ";" &
-										Rec("NomeSquadra").Value & ";" &
-										Rec("Lat").Value & ";" &
-										Rec("Lon").Value & ";" &
-										Rec("Indirizzo").Value & ";" &
-										Rec("CampoSquadra").Value & ";" &
-										Rec("NomePolisportiva").Value & ";" &
-										Rec("idAvversario").Value & ";" &
-										Rec("idCampo").Value & ";" &
-										Rec("Mail").Value & ";" &
-										Rec("PEC").Value & ";" &
-										Rec("Telefono").Value & ";" &
-										Rec("PIva").Value & ";" &
-										Rec("CodiceFiscale").Value & ";" &
-										Rec("CodiceUnivoco").Value & ";" &
-										Rec("SitoWeb").Value & ";" &
-										Rec("MittenteMail").Value & ";" &
-										Rec("GestionePagamenti").Value & ";" &
-										"§"
+							Ritorno = ""
+							For Each a As Integer In Anni
+								Dim sAnno As String = Format(a, "0000")
+								Dim sCodSquadra As String = codSquadra.Trim
+								While sCodSquadra.Length <> 5
+									sCodSquadra = "0" & sCodSquadra
+								End While
+								Dim Codice As String = sAnno & "_" & sCodSquadra
 
-									Rec.MoveNext()
-								Loop
-								Rec.Close()
-							End If
-						Next
+								Dim PathAllegati As String = gf.LeggeFileIntero(Server.MapPath(".") & "\Impostazioni\PathAllegati.txt")
+								Dim P() As String = PathAllegati.Split(";")
+								If Strings.Right(P(0), 1) = "\" Then
+									P(0) = Mid(P(0), 1, P(0).Length - 1)
+								End If
+								Dim pp As String = gf.LeggeFileIntero(Server.MapPath(".") & "\Impostazioni\Paths.txt")
+								pp = pp.Trim()
+								If Strings.Right(pp, 1) = "\" Then
+									pp = Mid(pp, 1, pp.Length - 1)
+								End If
+								Dim pathFirma1 As String = P(2) & "/" & NomeSquadra.Replace(" ", "_") & "/Segreteria/" & Anno & ".png"
+								Dim urlFirma1 As String = pp & "\" & NomeSquadra.Replace(" ", "_") & "\Segreteria\" & Anno & ".png"
+								Dim esisteFirma As String = "N"
+
+								If File.Exists(urlFirma1) Then
+									esisteFirma = "S"
+								End If
+
+								Sql = "Select A.*, B.idAvversario, B.idCampo " &
+									"From [" & Codice & "].[dbo].[Anni] A Left Join [" & Codice & "].[dbo].[SquadreAvversarie] B On A.NomeSquadra = B.Descrizione " &
+									"Order By idAnno Desc"
+								Rec = LeggeQuery(ConnGen, Sql, ConnessioneGen)
+								If TypeOf (Rec) Is String Then
+									Ritorno = Rec
+								Else
+									' Ritorno = ""
+									Do Until Rec.Eof
+										Ritorno &= Rec("idAnno").Value & ";" &
+											Rec("Descrizione").Value & ";" &
+											Rec("NomeSquadra").Value & ";" &
+											Rec("Lat").Value & ";" &
+											Rec("Lon").Value & ";" &
+											Rec("Indirizzo").Value & ";" &
+											Rec("CampoSquadra").Value & ";" &
+											Rec("NomePolisportiva").Value & ";" &
+											Rec("idAvversario").Value & ";" &
+											Rec("idCampo").Value & ";" &
+											Rec("Mail").Value & ";" &
+											Rec("PEC").Value & ";" &
+											Rec("Telefono").Value & ";" &
+											Rec("PIva").Value & ";" &
+											Rec("CodiceFiscale").Value & ";" &
+											Rec("CodiceUnivoco").Value & ";" &
+											Rec("SitoWeb").Value & ";" &
+											Rec("MittenteMail").Value & ";" &
+											Rec("GestionePagamenti").Value & ";" &
+											esisteFirma & ";" &
+											pathFirma1 & ";" &
+											"§"
+
+										Rec.MoveNext()
+									Loop
+									Rec.Close()
+								End If
+							Next
+						End If
 					End If
 				End If
-
 			End If
 		End If
 
@@ -1330,6 +1416,52 @@ Public Class wsGenerale
 				End Try
 
 				Conn.Close()
+			End If
+		End If
+
+		Return Ritorno
+	End Function
+
+	<WebMethod()>
+	Public Function RichiedeFirma(Squadra As String, CodSquadra As String, Mail As String) As String
+		' RichiedeFirma?Squadra= 0002_00160&idGiocatore=432&Genitore=1 
+		Dim Ritorno As String = ""
+		Dim Connessione As String = LeggeImpostazioniDiBase(Server.MapPath("."), CodSquadra)
+
+		If Connessione = "" Then
+			Ritorno = ErroreConnessioneNonValida
+		Else
+			Dim Conn As Object = ApreDB(Connessione)
+
+			If TypeOf (Conn) Is String Then
+				Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
+			Else
+				Dim c() As String = CodSquadra.Split("_")
+				Dim Anno As String = Str(Val(c(0))).Trim
+				Dim m As New mail
+				Dim Oggetto As String = "Richiesta Firma inCalcio"
+				Dim Body As String = ""
+
+				Dim gf As New GestioneFilesDirectory
+				Dim Percorso As String = gf.LeggeFileIntero(Server.MapPath(".") & "\Impostazioni\PercorsoSito.txt")
+
+				If Percorso = "" Then
+					Ritorno = StringaErrore & " Nessun percorso sito rilevato"
+				Else
+					Percorso = Percorso.Trim()
+					If Strings.Right(Percorso, 1) <> "/" Then
+						Percorso &= "/"
+					End If
+
+					Body &= "E' stata richiesta la firma della segreteria della società " & Squadra.Replace("_", " ") & ".<br /><br />"
+					Body &= "Per effettuare l'operazione eseguire il seguente link:<br /><br />"
+
+					Body &= "<a href= """ & Percorso & "?firma=true&codSquadra=" & CodSquadra & "&id=Segreteria&squadra=" & Squadra.Replace(" ", "_") & "&anno=" & Anno & "&genitore=-1"">"
+					Body &= "Click per firmare"
+					Body &= "</a>"
+
+					Ritorno = m.SendEmail(Squadra, "", Oggetto, Body, Mail, "")
+				End If
 			End If
 		End If
 

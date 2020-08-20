@@ -96,18 +96,17 @@ Public Class wsUtentiLocali
 					If Rec.Eof Then
 						Ritorno = StringaErrore & " Nessun utente rilevato"
 					Else
+						Dim idUtente As Integer = Rec("idUtente").Value
 						Dim wrapper As New CryptEncrypt("WPippoBaudo227!")
 						Dim nuovaPassCrypt As String = wrapper.EncryptData(PWD)
-						Dim idUtente As Integer = Rec("idUtente").Value
 
 						Try
-							Sql = "Update Utenti Set Password='" & nuovaPassCrypt & "', PasswordScaduta=0 " &
+							Sql = "Update Utenti Set Password='" & nuovaPassCrypt.Replace("'", "''") & "', PasswordScaduta=0 " &
 									"Where idUtente=" & idUtente
 							Ritorno = EsegueSql(Conn, Sql, Connessione)
 						Catch ex As Exception
 							Ritorno = StringaErrore & " " & ex.Message
 						End Try
-
 					End If
 				End If
 			End If
@@ -151,20 +150,11 @@ Public Class wsUtentiLocali
 							If EMail = "" Then
 								EMail = Rec("Utente").Value
 							End If
-							Dim chiave As String = "AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvZz0123456789!$%/()=?^"
-							Dim rnd1 As New Random()
-							Dim nuovaPass As String = ""
-
-							For i As Integer = 1 To 7
-								Dim c As Integer = rnd1.Next(chiave.Length - 1) + 1
-								nuovaPass &= Mid(chiave, c, 1)
-							Next
-
-							Dim wrapper As New CryptEncrypt("WPippoBaudo227!")
-							Dim nuovaPassCrypt As String = wrapper.EncryptData(nuovaPass)
+							Dim pass As String = generaPassRandom()
+							Dim nuovaPass() = pass.Split(";")
 
 							Try
-								Sql = "Update Utenti Set Password='" & nuovaPassCrypt & "', PasswordScaduta=1 " &
+								Sql = "Update Utenti Set Password='" & nuovaPass(1).Replace("'", "''") & "', PasswordScaduta=1 " &
 									"Where idUtente=" & idUtente
 								Ritorno = EsegueSql(Conn, Sql, Connessione)
 								If Not Ritorno.Contains(StringaErrore) Then
@@ -172,7 +162,7 @@ Public Class wsUtentiLocali
 									Dim Oggetto As String = "Reset password inCalcio"
 									Dim Body As String = ""
 									Body &= "La Sua password relativa al sito inCalcio è stata modificata dietro sua richiesta. <br /><br />"
-									Body &= "La nuova password valida per il solo primo accesso è: " & nuovaPass & "<br /><br />"
+									Body &= "La nuova password valida per il solo primo accesso è: " & nuovaPass(0) & "<br /><br />"
 									Dim ChiScrive As String = "notifiche@incalcio.cloud"
 
 									Ritorno = m.SendEmail("", "", Oggetto, Body, EMail, "")

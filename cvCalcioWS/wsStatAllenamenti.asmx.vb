@@ -52,14 +52,23 @@ Public Class wsStatAllenamenti
 						sMese = "/12/"
 				End Select
 
+				Dim Altro As String = "And CharIndex(CONVERT(varchar(5),Allenamenti.idCategoria) + '-', Giocatori.Categorie) > 0 "
+				Dim Altro2 As String = "Allenamenti.idCategoria=" & idCategoria & " And "
+				Dim Altro3 As String = "And idCategoria=" & idCategoria & " "
+
+				If idCategoria = "-1" Then
+					Altro = ""
+					Altro2 = ""
+					Altro3 = ""
+				End If
 				Try
 					Sql = "Select B.idGiocatore, B.Cognome, B.Nome, B.Descrizione,  B.Presenze, B.Totale, (Cast(B.Presenze As Numeric) / Cast(B.Totale As Numeric)) * 100 As Perc, B.NumeroMaglia From ( " &
 						"Select A.idGiocatore, A.Cognome, A.Nome, A.Descrizione,  A.Presenze, (SELECT Count(*) From Allenamenti " &
-						"Where idAnno=" & idAnno & " And idCategoria=" & idCategoria & " And CharIndex('" & sMese & "', Datella)>0  And Progressivo=0) As Totale, A.NumeroMaglia From ( " &
+						"Where idAnno=" & idAnno & " " & Altro3 & " And CharIndex('" & sMese & "', Datella)>0  And Progressivo=0) As Totale, A.NumeroMaglia From ( " &
 						"SELECT Giocatori.idGiocatore, Cognome, Nome, Ruoli.Descrizione,  Count(*) As Presenze, Giocatori.NumeroMaglia " &
-						"FROM (Allenamenti LEFT JOIN Giocatori ON (Allenamenti.idAnno = Giocatori.idAnno) AND (Allenamenti.idGiocatore=Giocatori.idGiocatore) AND (Allenamenti.idCategoria = Giocatori.idCategoria)) " &
+						"FROM Allenamenti LEFT JOIN Giocatori ON Allenamenti.idAnno = Giocatori.idAnno AND Allenamenti.idGiocatore=Giocatori.idGiocatore " & Altro & " " &
 						"LEFT Join [Generale].[dbo].[Ruoli] On Giocatori.idRuolo=Ruoli.idRuolo " &
-						"WHERE Allenamenti.idCategoria=" & idCategoria & " And Allenamenti.idAnno=" & idAnno & " And Giocatori.idGiocatore Is Not Null And CharIndex('" & sMese & "', Datella)>0 " &
+						"WHERE " & Altro2 & " Allenamenti.idAnno=" & idAnno & " And Giocatori.idGiocatore Is Not Null And CharIndex('" & sMese & "', Datella)>0 " &
 						"Group By Giocatori.idGiocatore, Cognome, Nome, Ruoli.Descrizione, Giocatori.NumeroMaglia " &
 						") A) B " &
 						"Order By 2"
