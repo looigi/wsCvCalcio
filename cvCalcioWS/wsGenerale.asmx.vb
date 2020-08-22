@@ -719,14 +719,20 @@ Public Class wsGenerale
 				Dim Anno As String = Str(Val(c(0))).Trim
 				Dim codSquadra As String = Str(Val(c(1))).Trim
 				Dim Anni As New List(Of Integer)
+				Dim MeseAttivazione As New List(Of Integer)
+				Dim AnnoAttivazione As New List(Of Integer)
 
-				Sql = "Select * From SquadraAnni Where idSquadra=" & codSquadra & " Order By idAnno"
+				Sql = "Select * From SquadraAnni A " &
+					"Left Join Squadre B On A.idSquadra = B.idSquadra " &
+					"Where A.idSquadra=" & codSquadra & " Order By A.idAnno Desc"
 				Rec = LeggeQuery(ConnGen, Sql, ConnessioneGen)
 				If TypeOf (Rec) Is String Then
 					Ritorno = Rec
 				Else
 					Do Until Rec.Eof()
 						Anni.Add(Rec("idAnno").Value)
+						MeseAttivazione.add(Rec("MeseAttivazione").Value)
+						AnnoAttivazione.add(Rec("AnnoAttivazione").Value)
 
 						Rec.MoveNext()
 					Loop
@@ -742,6 +748,7 @@ Public Class wsGenerale
 							Rec.Close()
 
 							Ritorno = ""
+							Dim quale As Integer = 0
 							For Each a As Integer In Anni
 								Dim sAnno As String = Format(a, "0000")
 								Dim sCodSquadra As String = codSquadra.Trim
@@ -798,12 +805,15 @@ Public Class wsGenerale
 											Rec("GestionePagamenti").Value & ";" &
 											esisteFirma & ";" &
 											pathFirma1 & ";" &
+											MeseAttivazione.Item(quale) & ";" &
+											AnnoAttivazione.Item(quale) & ";" &
 											"§"
 
 										Rec.MoveNext()
 									Loop
 									Rec.Close()
 								End If
+								quale += 1
 							Next
 						End If
 					End If

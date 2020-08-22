@@ -9,6 +9,285 @@ Public Class wsStatistiche
     Inherits System.Web.Services.WebService
 
 	<WebMethod()>
+	Public Function RitornaProssimiEventi(Squadra As String, Limite As String) As String
+		Dim Ritorno As String = ""
+		Dim Connessione As String = LeggeImpostazioniDiBase(Server.MapPath("."), Squadra)
+
+		If Connessione = "" Then
+			Ritorno = ErroreConnessioneNonValida
+		Else
+			Dim Conn As Object = ApreDB(Connessione)
+
+			If TypeOf (Conn) Is String Then
+				Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
+			Else
+				Dim Rec As Object = Server.CreateObject("ADODB.Recordset")
+				Dim Rec2 As Object = Server.CreateObject("ADODB.Recordset")
+				Dim Sql As String
+				Dim Altro As String = ""
+
+				If Limite <> "" Then
+					Altro = "Top " & Limite
+				End If
+
+				Sql = "Select " & Altro & " * From ( " &
+					"Select 'Scadenza Certificato Medico' As Cosa, A.idGiocatore As Id, A.Cognome As PrimoCampo, A.Nome As SecondoCampo, CONVERT(date, B.ScadenzaCertificatoMedico) As Data From Giocatori A " &
+					"Left Join GiocatoriDettaglio B On A.idGiocatore = B.idGiocatore " &
+					"Where CertificatoMedico = 'S' And A.Eliminato = 'N' " &
+					"Union All " &
+					"Select 'Partita' As Cosa, idPartita As Id, B.Descrizione As PrimoCampo, C.Descrizione As SecondoCampo, CONVERT(date, DataOra) As Data From Partite A " &
+					"Left Join Categorie B On A.idCategoria = B.idCategoria " &
+					"Left Join SquadreAvversarie C On A.idAvversario = C.idAvversario " &
+					"Union All " &
+					"Select 'Evento' As Cosa, idEvento As Id, Titolo As PrimoCampo, '' As SecondoCampo, CONVERT(date, Inizio) As Data From EventiCalendario " &
+					"Where idTipologia = 2) A  " &
+					"Where Data > GETDATE() " &
+					"Order By Data Desc"
+				Rec = LeggeQuery(Conn, Sql, Connessione)
+				If TypeOf (Rec) Is String Then
+					Ritorno = Rec
+				Else
+					Ritorno = ""
+					Do Until Rec.Eof
+						Ritorno &= Rec("Cosa").Value & ";" & Rec("Id").Value & ";" & Rec("PrimoCampo").Value & ";" & Rec("SecondoCampo").Value & ";" & Rec("Data").Value & "§"
+
+						Rec.MoveNext
+					Loop
+					Rec.Close
+				End If
+			End If
+		End If
+
+		Return Ritorno
+	End Function
+
+	<WebMethod()>
+	Public Function RitornaQuoteNonSaldate(Squadra As String) As String
+		Dim Ritorno As String = ""
+		Dim Connessione As String = LeggeImpostazioniDiBase(Server.MapPath("."), Squadra)
+
+		If Connessione = "" Then
+			Ritorno = ErroreConnessioneNonValida
+		Else
+			Dim Conn As Object = ApreDB(Connessione)
+
+			If TypeOf (Conn) Is String Then
+				Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
+			Else
+				Dim Rec As Object = Server.CreateObject("ADODB.Recordset")
+				Dim Rec2 As Object = Server.CreateObject("ADODB.Recordset")
+				Dim Sql As String
+				Dim listaCategorie As New List(Of String)
+				Dim idCategorie As New List(Of String)
+				Dim Ok As Boolean = True
+
+				Sql = "Select * From Categorie"
+				Rec = LeggeQuery(Conn, Sql, Connessione)
+				If TypeOf (Rec) Is String Then
+					Ritorno = Rec
+					Ok = False
+				Else
+					Do Until Rec.Eof
+						idCategorie.Add(Rec("idCategoria").Value)
+						listaCategorie.Add(Rec("Descrizione").Value)
+
+						Rec.MoveNext
+					Loop
+					Rec.Close
+				End If
+
+				If Ok Then
+					Dim Differenza(idCategorie.Count) As Single
+
+					For Each id As String In idCategorie
+						Sql = "Select A.idGiocatore, B.TotalePagamento From Giocatori A " &
+							"Left Join GiocatoriDettaglio B On A.idGiocatore = B.idGiocatore " &
+							"Where A.Eliminato = 'N' And CharIndex('" & id & "-', A.Categorie) > 0"
+						Rec = LeggeQuery(Conn, Sql, Connessione)
+						If TypeOf (Rec) Is String Then
+							Ritorno = Rec
+							Ok = False
+						Else
+							Do Until Rec.Eof
+								Dim TotalePagamento As Single = Rec("TotalePagamento").value
+								Dim Pagato As Single = 0
+
+								Sql = "Select Sum(Pagamento) From GiocatoriPagamenti Where idGiocatore=" & Rec("idGiocatore").Value & " And Eliminato='N'"
+								Rec2 = LeggeQuery(Conn, Sql, Connessione)
+								If TypeOf (Rec2) Is String Then
+									Ritorno = Rec2
+									Ok = False
+								Else
+									If Rec2(0).Value Is DBNull.Value Then
+										Pagato = 0
+									Else
+										Pagato = Rec2(0).Value
+									End If
+									Rec2.Close
+								End If
+								Dim qualeCat As Integer = 0
+								For Each idcat As String In idCategorie
+									If Val(idcat) = Val(id) Then
+										Differenza(qualeCat) += (TotalePagamento - Pagato)
+										Exit For
+									End If
+									qualeCat += 1
+								Next
+
+								Rec.MoveNext
+							Loop
+							Rec.Close
+						End If
+					Next
+
+					'Sql = "Select Sum(C.TotalePagamento) - Sum(Pagamento) From GiocatoriPagamenti A " &
+					'	"Left Join Giocatori B On A.idGiocatore = B.idGiocatore " &
+					'	"Left Join GiocatoriDettaglio C On A.idGiocatore = C.idGiocatore " &
+					'	"Where B.Categorie = '' And A.Eliminato='N'"
+					'Rec = LeggeQuery(Conn, Sql, Connessione)
+					'If TypeOf (Rec) Is String Then
+					'	Ritorno = Rec
+					'	Ok = False
+					'Else
+					'	If Rec(0).Value Is DBNull.Value Then
+					'		Ritorno &= "-1;Nessuna Categoria;0§"
+					'	Else
+					'		Ritorno &= "-1;Nessuna Categoria;" & Rec(0).Value & "§"
+					'	End If
+					'	Rec.Close
+					'End If
+
+					Dim quale As Integer = 0
+
+					For Each categ As String In listaCategorie
+						Dim d As String = (Int(Differenza(quale) * 100) / 100).ToString
+						Ritorno &= idCategorie.Item(quale) & ";" & categ & ";" & d & "§"
+
+						quale += 1
+					Next
+				End If
+			End If
+		End If
+
+		Return Ritorno
+	End Function
+
+	<WebMethod()>
+	Public Function RitornaIscritti(Squadra As String, idCategoria As String) As String
+		Dim Ritorno As String = ""
+		Dim Connessione As String = LeggeImpostazioniDiBase(Server.MapPath("."), Squadra)
+
+		If Connessione = "" Then
+			Ritorno = ErroreConnessioneNonValida
+		Else
+			Dim Conn As Object = ApreDB(Connessione)
+
+			If TypeOf (Conn) Is String Then
+				Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
+			Else
+				Dim Rec As Object = Server.CreateObject("ADODB.Recordset")
+				Dim Sql As String
+				Dim listaCategorie As New List(Of String)
+				Dim idCategorie As New List(Of String)
+				Dim Ok As Boolean = True
+
+				Sql = "Select * From Categorie"
+				Rec = LeggeQuery(Conn, Sql, Connessione)
+				If TypeOf (Rec) Is String Then
+					Ritorno = Rec
+					Ok = False
+				Else
+					Do Until Rec.Eof
+						idCategorie.Add(Rec("idCategoria").Value)
+						listaCategorie.Add(Rec("Descrizione").Value)
+
+						Rec.MoveNext
+					Loop
+					Rec.Close
+				End If
+
+				If Ok Then
+					Dim quantiPerCategoria(listaCategorie.Count) As Integer
+					Dim Altro As String = ""
+					If idCategoria <> "" Then
+						Altro = " And CharIndex('" & idCategoria & "-', Giocatori.Categorie) > 0"
+					End If
+
+					Dim Tutti As Integer = 0
+					Sql = "Select Count(*) From Giocatori Where Eliminato='N' And RapportoCompleto='S'"
+					Rec = LeggeQuery(Conn, Sql, Connessione)
+					If TypeOf (Rec) Is String Then
+						Ritorno = Rec
+						Ok = False
+					Else
+						If Rec(0).Value Is DBNull.Value Then
+							Tutti = 0
+						Else
+							Tutti = Rec(0).Value
+						End If
+						Rec.Close
+					End If
+
+					If Ok Then
+						Sql = "Select * From Giocatori Where Eliminato='N' " & Altro
+						Rec = LeggeQuery(Conn, Sql, Connessione)
+						If TypeOf (Rec) Is String Then
+							Ritorno = Rec
+						Else
+							Do Until Rec.Eof
+								Dim Categorie() As String = Rec("Categorie").Value.split("-")
+								Dim listaCategorieRilevate As New List(Of Integer)
+
+								For Each cat As String In Categorie
+									If cat <> "" Then
+										Dim ok2 As Boolean = True
+										For Each id As Integer In listaCategorieRilevate
+											If id = Val(cat) Then
+												ok2 = False
+												Exit For
+											End If
+										Next
+										If ok2 Then
+											listaCategorieRilevate.Add(Val(cat))
+										End If
+									End If
+								Next
+								For Each cat In listaCategorieRilevate
+									Dim q As Integer = 0
+									For Each id As Integer In idCategorie
+										If cat = id Then
+											quantiPerCategoria(q) += 1
+											Exit For
+										End If
+										q += 1
+									Next
+								Next
+
+								Rec.MoveNext
+							Loop
+							Rec.Close()
+
+							Dim quale As Integer = 0
+
+							For Each categ As String In listaCategorie
+								Ritorno &= idCategorie.Item(quale) & ";" & categ & ";" & quantiPerCategoria(quale) & "§"
+
+								quale += 1
+							Next
+							Ritorno &= "-1;Tutti;" & Tutti & "§"
+						End If
+					End If
+				End If
+
+				Conn.Close()
+			End If
+		End If
+
+		If Ritorno = "" Then Ritorno = StringaErrore & " Nessun dato rilevato"
+
+		Return Ritorno
+	End Function
+	<WebMethod()>
 	Public Function RitornaStatisticheAvversari(Squadra As String, idAnno As String, SoloAnno As String, idCategoria As String) As String
 		Dim Ritorno As String = ""
 		Dim Connessione As String = LeggeImpostazioniDiBase(Server.MapPath("."), Squadra)

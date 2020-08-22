@@ -122,7 +122,7 @@ Public Class wsSuperUser
 									Sql = "Begin transaction"
 									Ritorno = EsegueSql(ConnGen, Sql, ConnessioneGenerale)
 
-									Sql = "Insert Into Squadre Values (" & idSocieta & ", '" & Squadra.Replace("'", "''") & "', '" & DataScadenza & "', " & idTipologia & ", " & idLicenza & ", 'N')"
+									Sql = "Insert Into Squadre Values (" & idSocieta & ", '" & Squadra.Replace("'", "''") & "', '" & DataScadenza & "', " & idTipologia & ", " & idLicenza & ", 'N', " & Now.Month & ", " & Now.Year & ")"
 									Ritorno = EsegueSql(ConnGen, Sql, ConnessioneGenerale)
 									If Ritorno.Contains(StringaErrore) Then
 										Ok = False
