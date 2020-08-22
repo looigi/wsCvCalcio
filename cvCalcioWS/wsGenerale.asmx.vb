@@ -1654,4 +1654,23 @@ Public Class wsGenerale
 	'	t.Stop()
 	'	t.Dispose()
 	'End Sub
+
+	<WebMethod()>
+	Public Function ritornaNomeFileScheletroMail(Squadra As String) As String
+		Dim gf As New GestioneFilesDirectory
+		Dim filePaths As String = gf.LeggeFileIntero(HttpContext.Current.Server.MapPath(".") & "\Impostazioni\PathAllegati.txt")
+		Dim p() As String = filePaths.Split(";")
+		If Strings.Right(p(0), 1) <> "\" Then
+			p(0) &= "\"
+		End If
+		Dim pathFilePosta As String = p(0) & Squadra & "\Scheletri\base_mail.txt"
+		Dim Ritorno As String = "MODIFICATO"
+		If Not File.Exists(pathFilePosta) Then
+			pathFilePosta = HttpContext.Current.Server.MapPath(".") & "\Scheletri\base_mail.txt"
+			Ritorno = "ORIGINALE"
+		End If
+
+		Return Ritorno
+	End Function
+
 End Class
