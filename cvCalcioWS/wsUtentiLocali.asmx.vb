@@ -206,6 +206,10 @@ Public Class wsUtentiLocali
 				Dim Rec2 As Object = Server.CreateObject("ADODB.Recordset")
 				Dim Sql As String = ""
 
+				' Pulisce Cartella temporanea
+				PulisceCartellaTemporanea()
+				' Pulisce Cartella temporanea
+
 				Try
 					Sql = "SELECT Utenti.idAnno, idUtente, Utente, Cognome, Nome, " &
 						"Password, EMail, idCategoria, Utenti.idTipologia As idTipologia, Utenti.idSquadra, Descrizione As Squadra, PasswordScaduta, Telefono, " &

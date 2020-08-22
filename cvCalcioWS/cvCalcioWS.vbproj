@@ -119,6 +119,7 @@
     <Content Include="wsUtenti.asmx" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="CriptaFiles.vb" />
     <Compile Include="CryptEncrypt.vb" />
     <Compile Include="GestioneFilesDirectory.vb" />
     <Compile Include="Globale.vb" />

@@ -4,6 +4,7 @@ Imports System.ComponentModel
 Imports System.IO
 Imports System.Windows.Forms
 Imports Microsoft.Win32
+Imports System.Drawing
 
 <System.Web.Services.WebService(Namespace:="http://cvcalcio.org/")>
 <System.Web.Services.WebServiceBinding(ConformsTo:=WsiProfiles.BasicProfile1_1)>
@@ -1468,4 +1469,179 @@ Public Class wsGenerale
 		Return Ritorno
 	End Function
 
+	<WebMethod()>
+	Public Function RinominaImmagini() As String
+		Dim gf As New GestioneFilesDirectory
+		Dim path As String = ""
+		Dim quanteConversioni As Integer = 0
+
+		path = gf.LeggeFileIntero(Server.MapPath(".") & "\Impostazioni\Paths.txt")
+		path = path.Replace(vbCrLf, "")
+		If Strings.Right(path, 1) <> "\" Then
+			path &= "\"
+		End If
+
+		gf.ScansionaDirectorySingola(path)
+		Dim Filetti() As String = gf.RitornaFilesRilevati
+		Dim qFiletti As Integer = gf.RitornaQuantiFilesRilevati
+		Dim cr As New CriptaFiles
+
+		For i As Integer = 1 To qFiletti
+			Dim NomeOrigine As String = Filetti(i)
+			Dim Controllo As String = NomeOrigine.Replace(path, "")
+			If Controllo.Contains("\") Then
+				Dim Estensione As String = gf.TornaEstensioneFileDaPath(Filetti(i))
+				Dim NomeDestinazione As String = NomeOrigine
+				NomeDestinazione = NomeDestinazione.Replace(Estensione, "") & ".kgb"
+
+				If Not NomeOrigine.ToUpper.Contains("\APPOGGIO\") And Not NomeOrigine.ToUpper.Contains("\ICONE\") And (Estensione.ToUpper = ".JPG" Or Estensione.ToUpper = ".PNG") Then
+					If Not File.Exists(NomeDestinazione) Then
+						cr.EncryptFile("WPippoBaudo227!", NomeOrigine, NomeDestinazione)
+						File.Delete(NomeOrigine)
+
+						quanteConversioni += 1
+					End If
+				End If
+			End If
+		Next
+
+		path = gf.LeggeFileIntero(Server.MapPath(".") & "\Impostazioni\PathAllegati.txt")
+		path = path.Replace(vbCrLf, "")
+		Dim p() As String = path.Split(";")
+		path = p(0)
+		If Strings.Right(path, 1) <> "\" Then
+			path &= "\"
+		End If
+
+		gf.ScansionaDirectorySingola(path)
+		Filetti = gf.RitornaFilesRilevati
+		qFiletti = gf.RitornaQuantiFilesRilevati
+
+		For i As Integer = 1 To qFiletti
+			Dim NomeOrigine As String = Filetti(i)
+			Dim Controllo As String = NomeOrigine.Replace(path, "")
+			If Controllo.Contains("\") Then
+				Dim Estensione As String = gf.TornaEstensioneFileDaPath(Filetti(i))
+				Dim NomeDestinazione As String = NomeOrigine
+				NomeDestinazione = NomeDestinazione.Replace(Estensione, "") & ".kgb"
+
+				If Not NomeOrigine.ToUpper.Contains("\APPOGGIO\") And Not NomeOrigine.ToUpper.Contains("\ICONE\") And (Estensione.ToUpper = ".JPG" Or Estensione.ToUpper = ".PNG") Then
+					If Not File.Exists(NomeDestinazione) Then
+						cr.EncryptFile("WPippoBaudo227!", NomeOrigine, NomeDestinazione)
+						File.Delete(NomeOrigine)
+
+						quanteConversioni += 1
+					End If
+				End If
+			End If
+		Next
+
+		Return "Immagini convertite: " & quanteConversioni
+	End Function
+
+	<WebMethod()>
+	Public Function PulisceCartellaTemp() As String
+		Dim Ritorno As String = ""
+
+		Ritorno = PulisceCartellaTemporanea()
+
+		Return Ritorno
+	End Function
+
+	<WebMethod()>
+	Public Function ConverteImmagine(CodiceSquadra As String, NomeSquadra As String, MultimediaOAllegati As String, Immagine As String) As String
+		NomeSquadra = NomeSquadra.Replace(" ", "_")
+
+		Dim Ritorno As String = ""
+		Dim gf As New GestioneFilesDirectory
+		Dim path As String = ""
+		Dim pathImmagine As String = ""
+		Dim pathDestinazione As String = ""
+		Dim fileOrigine As String = ""
+		Dim fileDestinazione As String = ""
+		Dim urlIniziale As String = ""
+		Dim chiave As String = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+		Dim Datella As String = ""
+		For I As Integer = 1 To 10
+			Dim codice As Integer = RitornaValoreRandom(chiave.Length - 1) + 1
+			Datella &= Mid(chiave, codice, 1)
+		Next
+		Dim nn As String = gf.TornaNomeFileDaPath(Immagine)
+		If nn.Contains(".") Then
+			nn = Mid(nn, 1, nn.IndexOf("."))
+		End If
+		Datella &= "_" & nn
+		Dim Ok As Boolean = True
+		Dim cr As New CriptaFiles
+
+		' http://192.168.0.227:92/MultiMedia/Morti_De_Sonno_Fc/Giocatori/1_542.jpg
+		If MultimediaOAllegati = "M" Then
+			path = gf.LeggeFileIntero(Server.MapPath(".") & "\Impostazioni\Paths.txt")
+			path = path.Replace(vbCrLf, "")
+			If Strings.Right(path, 1) <> "\" Then
+				path &= "\"
+			End If
+			Dim a As Integer = Immagine.ToUpper.IndexOf(NomeSquadra.ToUpper)
+			If a = -1 Then
+				Ok = False
+			Else
+				urlIniziale = Mid(Immagine, 1, a)
+				pathImmagine = Mid(Immagine, a + 1, Immagine.Length)
+			End If
+		Else
+			path = gf.LeggeFileIntero(Server.MapPath(".") & "\Impostazioni\PathAllegati.txt")
+			path = path.Replace(vbCrLf, "")
+			Dim p() As String = path.Split(";")
+			path = p(0)
+			If Strings.Right(path, 1) <> "\" Then
+				path &= "\"
+			End If
+			Dim a As Integer = Immagine.ToUpper.IndexOf(CodiceSquadra.ToUpper)
+			If a = -1 Then
+				Ok = False
+			Else
+				urlIniziale = Mid(Immagine, 1, a)
+				pathImmagine = Mid(Immagine, a + 1, Immagine.Length)
+			End If
+		End If
+
+		If Ok Then
+			pathDestinazione = path & "Appoggio\"
+			fileOrigine = path & pathImmagine
+			fileDestinazione = pathDestinazione & Datella & ".jpg"
+
+			fileOrigine = fileOrigine.Replace("%2F", "\")
+			fileDestinazione = fileDestinazione.Replace("%2F", "\")
+
+			If Immagine <> "" Then
+				If File.Exists(fileOrigine) Then
+					gf.CreaDirectoryDaPercorso(fileDestinazione)
+					cr.DecryptFile("WPippoBaudo227!", fileOrigine, fileDestinazione)
+
+					' File.Copy(fileOrigine, fileDestinazione)
+
+					Ritorno = urlIniziale & "Appoggio/" & Datella & ".jpg"
+
+					'Dim t As New Timer With {.Interval = 10000}
+					't.Tag = DateTime.Now
+					'AddHandler t.Tick, Sub(sender, e) MyTickHandler(t, fileDestinazione)
+					't.Start()
+				Else
+					Ritorno = StringaErrore & " Immagine non esistente"
+				End If
+			Else
+				Ritorno = StringaErrore & " Nessuna immagine passata"
+			End If
+		Else
+			Ritorno = StringaErrore & " Errore nel decodificare la stringa"
+		End If
+
+		Return Ritorno
+	End Function
+
+	'Private Sub MyTickHandler(t As Timer, ritorno As String)
+	'	File.Delete(ritorno)
+	'	t.Stop()
+	'	t.Dispose()
+	'End Sub
 End Class

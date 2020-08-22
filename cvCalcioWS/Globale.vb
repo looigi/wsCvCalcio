@@ -1132,33 +1132,63 @@ Module Globale
 		Return result
 	End Function
 
+	Public Function RitornaValoreRandom(Massimo As Integer) As Integer
+		Static rnd1 As New Random()
+
+		Return rnd1.Next(Massimo)
+	End Function
+
 	Public Function generaPassRandom() As String
 		Dim chiaveMaiuscole As String = "ABCDEFGHIJKLMNOPQRSTUVZ"
 		Dim chiaveMinuscole As String = "abcdefghijklmnopqrstuvz"
 		Dim chiaveNumeri As String = "0123456789"
 		Dim chiaveSpeciali As String = "!$%/()=?^"
-		Dim rnd1 As New Random()
 		Dim nuovaPass As String = ""
 
-		Dim c As Integer = rnd1.Next(chiaveMaiuscole.Length - 1) + 1
+		Dim c As Integer = RitornaValoreRandom(chiaveMaiuscole.Length - 1) + 1
 		nuovaPass &= Mid(chiaveMaiuscole, c, 1)
 
 		For i As Integer = 1 To 5
-			c = rnd1.Next(chiaveMinuscole.Length - 1) + 1
+			c = RitornaValoreRandom(chiaveMinuscole.Length - 1) + 1
 			nuovaPass &= Mid(chiaveMinuscole, c, 1)
 		Next
 
 		For i As Integer = 1 To 3
-			c = rnd1.Next(chiaveNumeri.Length - 1) + 1
+			c = RitornaValoreRandom(chiaveNumeri.Length - 1) + 1
 			nuovaPass &= Mid(chiaveNumeri, c, 1)
 		Next
 
-		c = rnd1.Next(chiaveSpeciali.Length - 1) + 1
+		c = RitornaValoreRandom(chiaveSpeciali.Length - 1) + 1
 		nuovaPass &= Mid(chiaveSpeciali, c, 1)
 
 		Dim wrapper As New CryptEncrypt("WPippoBaudo227!")
 		Dim nuovaPassCrypt As String = wrapper.EncryptData(nuovaPass)
 
 		Return nuovaPass & ";" & nuovaPassCrypt
+	End Function
+
+	Public Function PulisceCartellaTemporanea() As Integer
+		Dim Quanti As Integer = 0
+		Dim gf As New GestioneFilesDirectory
+		Dim pp As String = gf.LeggeFileIntero(HttpContext.Current.Server.MapPath(".") & "\Impostazioni\Paths.txt")
+		pp = pp.Trim()
+		pp = pp.Replace(vbCrLf, "")
+		If Strings.Right(pp, 1) = "\" Then
+			pp = Mid(pp, 1, pp.Length - 1)
+		End If
+		gf.ScansionaDirectorySingola(pp & "\Appoggio")
+		Dim Filetti() As String = gf.RitornaFilesRilevati
+		Dim qFiletti As String = gf.RitornaQuantiFilesRilevati
+
+		For i As Integer = 1 To qFiletti
+			Dim DataFile As DateTime = FileDateTime(Filetti(i))
+			Dim Differenza As Integer = DateAndTime.DateDiff(DateInterval.Minute, DataFile, Now)
+			If Differenza > 3 Then
+				File.Delete(Filetti(i))
+				Quanti += 1
+			End If
+		Next
+
+		Return Quanti
 	End Function
 End Module
