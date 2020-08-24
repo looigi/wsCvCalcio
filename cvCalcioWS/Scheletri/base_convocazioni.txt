@@ -135,6 +135,8 @@
 				<tr class="spaziaturaRighe"> </tr>
 			</table>
 			***CONVOCATI***
+			<br /><br />
+			***DIRIGENTI***
 			<table width="100% cellspacing="0px" cellpadding="0px">
 				<tr class="spaziaturaRighe"> </tr>
 				<tr>

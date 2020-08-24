@@ -1,7 +1,20 @@
 ﻿Imports System.IO
 Imports System.Net
+Imports System.Timers
 
 Module Globale
+	Public Structure strutturaMail
+		Dim Squadra As String
+		Dim Mittente As String
+		Dim Oggetto As String
+		Dim newBody As String
+		Dim Ricevente As String
+		Dim Allegato As String
+	End Structure
+	Public listaMails As New List(Of strutturaMail)
+	Public timerMails As Timer = Nothing
+	Public pathMail As String = ""
+
 	Public Const ErroreConnessioneNonValida As String = "ERRORE: Stringa di connessione non valida"
 	Public Const ErroreConnessioneDBNonValida As String = "ERRORE: Connessione al db non valida"
 	Public Percorso As String
@@ -9,6 +22,7 @@ Module Globale
 	' Public PercorsoSitoURLImmagini As String = "http://loppa.duckdns.org:90/MultiMedia/" ' "http://looigi.no-ip.biz:90/CvCalcio/App_Themes/Standard/Images/"
 	Public StringaErrore As String = "ERROR: "
 	Public RigaPari As Boolean = False
+	Public CryptPasswordString As String = "WPippoBaudo227!"
 
 	Public Function SistemaNumero(Numero As String) As String
 		If Numero = "" Then
@@ -190,7 +204,7 @@ Module Globale
 			Ritorno = "Problemi lettura generale"
 		Else
 			If Not Rec.Eof Then
-				Dim Meteo As String = "'" & MetteMaiuscoleDopoOgniSpazio(Rec("Tempo").Value) & "' Gradi: " & Rec("Gradi").Value & " Umidità: " & Rec("Umidita").Value & " Pressione: " & Rec("Pressione").Value
+				Dim Meteo As String = "'" & MetteMaiuscoleDopoOgniSpazio("" & Rec("Tempo").Value) & "' Gradi: " & Rec("Gradi").Value & " Umidità: " & Rec("Umidita").Value & " Pressione: " & Rec("Pressione").Value
 				Dim Casa As String = "" & Rec("Casa").Value
 
 				Filone = Filone.Replace("***PARTITA***", "" & idPartita)
@@ -802,7 +816,7 @@ Module Globale
 		'	End If
 		'Loop
 
-		Dim wrapper As New CryptEncrypt("WPippoBaudo227!")
+		Dim wrapper As New CryptEncrypt(CryptPasswordString)
 		Ritorno = wrapper.EncryptData(Stringa)
 
 		Return Ritorno
@@ -822,7 +836,7 @@ Module Globale
 		'	Contatore += 2
 		'Next
 
-		Dim wrapper As New CryptEncrypt("WPippoBaudo227!")
+		Dim wrapper As New CryptEncrypt(CryptPasswordString)
 
 		Try
 			Ritorno = wrapper.DecryptData(Stringa)
@@ -989,7 +1003,7 @@ Module Globale
 		End If
 
 		Try
-			Dim url As String = "http://api.openweathermap.org/data/2.5/weather?" & cosa & "&mode=xml&units=metric&lang=it&appid=1856b7a9244abb668591169ef0a34308"
+			Dim url As String = "http://api.openweathermap.org/data/2.5/weather?" & Cosa & "&mode=xml&units=metric&lang=it&appid=1856b7a9244abb668591169ef0a34308"
 			Dim request As WebRequest = WebRequest.Create(url)
 			Dim response As WebResponse = DirectCast(request.GetResponse(), HttpWebResponse)
 			Dim reader As New StreamReader(response.GetResponseStream(), Encoding.UTF8)
@@ -1161,7 +1175,7 @@ Module Globale
 		c = RitornaValoreRandom(chiaveSpeciali.Length - 1) + 1
 		nuovaPass &= Mid(chiaveSpeciali, c, 1)
 
-		Dim wrapper As New CryptEncrypt("WPippoBaudo227!")
+		Dim wrapper As New CryptEncrypt(CryptPasswordString)
 		Dim nuovaPassCrypt As String = wrapper.EncryptData(nuovaPass)
 
 		Return nuovaPass & ";" & nuovaPassCrypt

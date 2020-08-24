@@ -1,11 +1,4 @@
-﻿Imports System.Web.Services.Protocols
-Imports PdfSharp.Pdf
-Imports TheArtOfDev.HtmlRenderer.PdfSharp
-Imports PdfSharp
-Imports System.Drawing
-Imports TheArtOfDev
-Imports PdfSharp.Drawing
-Imports SelectPdf
+﻿Imports SelectPdf
 
 Public Class pdfGest
 	Public Function ConverteHTMLInPDF(NomeHtml As String, pathSalvataggio As String, pathLog As String)
@@ -44,7 +37,15 @@ Public Class pdfGest
 	End Function
 
 	Private Sub SurroundingSub(htmlString As String, fileSalvataggio As String)
+		' https://selectpdf.com/html-to-pdf/docs/html/PdfPageProperties.htm
+
 		Dim converter As HtmlToPdf = New HtmlToPdf
+		converter.Options.PdfPageSize = PdfPageSize.A4
+		converter.Options.MarginLeft = 10
+		converter.Options.MarginRight = 10
+		converter.Options.MarginTop = 20
+		converter.Options.MarginBottom = 20
+
 		Dim doc As SelectPdf.PdfDocument = converter.ConvertHtmlString(htmlString)
 		doc.Save(fileSalvataggio)
 		doc.Close()

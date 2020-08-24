@@ -1,16 +1,7 @@
 ﻿Imports System.Web.Services
-Imports System.Web.Services.Protocols
 Imports System.ComponentModel
 Imports System.IO
-Imports System.Runtime.InteropServices
-Imports Microsoft.VisualBasic.FileIO
-Imports System.Management
-Imports System.Web.Hosting
-Imports System.Net.Security
-Imports System.Net
-Imports System.Diagnostics.Eventing.Reader
-Imports SelectPdf
-Imports System.Windows.Forms
+
 
 <System.Web.Services.WebService(Namespace:="http://cvcalcio_gioc.org/")>
 <System.Web.Services.WebServiceBinding(ConformsTo:=WsiProfiles.BasicProfile1_1)>
@@ -798,24 +789,24 @@ Public Class wsGiocatori
 			Dim pathImm As String = pp & "\" & Squadra.Replace(" ", "_") & "\Societa\" & Anno & "_1.kgb"
 			Dim nomeImmConv As String = p(2) & "/Appoggio/Societa_" & idGiocatore & "_" & Esten & ".png"
 			Dim pathImmConv As String = pp & "\Appoggio\Societa_" & idGiocatore & "_" & Esten & ".png"
-			c.DecryptFile("WPippoBaudo227!", pathImm, pathImmConv)
+			c.DecryptFile(CryptPasswordString, pathImm, pathImmConv)
 
 			Contenuto = Contenuto.Replace("***immagine logo menu settaggi***", "<img src=""" & nomeImmConv & """ style=""width: 100px; height: 100px;"" />")
 
 			If File.Exists(urlFirma1) Then
-				c.DecryptFile("WPippoBaudo227!", urlFirma1, urlFirmaConv1)
+				c.DecryptFile(CryptPasswordString, urlFirma1, urlFirmaConv1)
 				Contenuto = Contenuto.Replace("***firma padre***", "FIRMA: <img src=""" & pathFirmaConv1 & """ style=""width: 300px; height: 100px; border-bottom: 1px solid #black;"" />")
 			Else
 				Contenuto = Contenuto.Replace("***firma padre***", "FIRMA: " & "")
 			End If
 			If File.Exists(urlFirma2) Then
-				c.DecryptFile("WPippoBaudo227!", urlFirma2, urlFirmaConv2)
+				c.DecryptFile(CryptPasswordString, urlFirma2, urlFirmaConv2)
 				Contenuto = Contenuto.Replace("***firma madre***", "FIRMA: <img src=""" & pathFirmaConv2 & """ style=""width: 300px; height: 100px; border-bottom: 1px solid #black;"" />")
 			Else
 				Contenuto = Contenuto.Replace("***firma madre***", "FIRMA: " & "")
 			End If
 			If File.Exists(urlFirma3) Then
-				c.DecryptFile("WPippoBaudo227!", urlFirma3, urlFirmaConv3)
+				c.DecryptFile(CryptPasswordString, urlFirma3, urlFirmaConv3)
 				Contenuto = Contenuto.Replace("***firma giocatore***", "FIRMA: <img src=""" & pathFirmaConv3 & """ style=""width: 300px; height: 100px; border-bottom: 1px solid #black;"" />")
 			Else
 				Contenuto = Contenuto.Replace("***firma giocatore***", "FIRMA: " & "")
@@ -1811,6 +1802,21 @@ Public Class wsGiocatori
 							Ritorno = Rec
 						Else
 							If Rec.Eof Then
+								Rec.Close
+
+								Dim totPagamento As String = "0"
+
+								Sql = "Select * From Anni"
+								Rec = LeggeQuery(Conn, Sql, Connessione)
+								If TypeOf (Rec) Is String Then
+									Ritorno = Rec
+								Else
+									If Not Rec.Eof Then
+										totPagamento = Rec("CostoScuolaCalcio").Value '.replace(",", ".")
+									End If
+									Rec.Close
+								End If
+
 								Sql = "Insert Into GiocatoriDettaglio Values (" &
 									" " & idAnno & ", " &
 									" " & idGiocatore & ", " &
@@ -1819,7 +1825,7 @@ Public Class wsGiocatori
 									"'N', " &
 									"'N', " &
 									"'N', " &
-									"0, " &
+									" " & totPagamento.Replace(",", ".") & ", " &
 									"'', " &
 									"'', " &
 									"null, " &
@@ -1852,7 +1858,7 @@ Public Class wsGiocatori
 									")"
 								Ritorno = EsegueSql(Conn, Sql, Connessione)
 								If Not Ritorno.Contains(StringaErrore) Then
-									Ritorno = ";;N;N;N;0;;;"
+									Ritorno = ";;N;N;N;" & totPagamento.Replace(",", ".") & ";;;;;N;;;;;;;;;;;;;;N;N;N;S;S;S;N;N;N;M"
 								End If
 							Else
 								Dim gf As New GestioneFilesDirectory
@@ -2607,7 +2613,7 @@ Public Class wsGiocatori
 						Dim nomeImmConv As String = p(2) & "Appoggio/Societa_" & idAnno & "_1_" & Esten & ".png"
 						Dim pathImmConv As String = pp & "\Appoggio\Societa_" & idAnno & "_1_" & Esten & ".png"
 						Dim c As New CriptaFiles
-						c.DecryptFile("WPippoBaudo227!", pathImm, pathImmConv)
+						c.DecryptFile(CryptPasswordString, pathImm, pathImmConv)
 
 						Dim Body As String = gf.LeggeFileIntero(Server.MapPath(".") & "\Scheletri\ricevuta_pagamento.txt")
 						Dim path As String = p(0) & "\" & Squadra & "\Ricevute\Anno" & idAnno & "\" & idGiocatore & "\"
@@ -2681,7 +2687,7 @@ Public Class wsGiocatori
 						Dim urlFirma As String = pp & "\" & NomeSquadra.Replace(" ", "_") & "\Segreteria\" & idAnno & ".kgb"
 						Dim pathFirmaConv As String = p(2) & "/Appoggio/Segreteria_" & Esten & ".png"
 						Dim urlFirmaConv As String = pp & "\Appoggio\Segreteria_" & Esten & ".png"
-						c.DecryptFile("WPippoBaudo227!", urlFirma, urlFirmaConv)
+						c.DecryptFile(CryptPasswordString, urlFirma, urlFirmaConv)
 
 						Body = Body.Replace("***URL FIRMA***", urlFirmaConv)
 

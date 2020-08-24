@@ -29,7 +29,7 @@ Public Class wsGenerale
 	<WebMethod()>
 	Public Function InviaMail(Oggetto As String, Body As String, ChiRiceve As String) As String
 		Dim m As New mail
-		Dim Ritorno As String = m.SendEmail("", "luigi.pecce@aubay.it", Oggetto, Body, ChiRiceve, "")
+		Dim Ritorno As String = m.SendEmail("", "looigi@gmail.com", Oggetto, Body, ChiRiceve, "")
 		Return Ritorno
 	End Function
 
@@ -649,7 +649,7 @@ Public Class wsGenerale
 	Public Function SalvaImpostazioni(Cod_Squadra As String, idAnno As String, Descrizione As String, NomeSquadra As String, Lat As String, Lon As String,
 									  Indirizzo As String, CampoSquadra As String, NomePolisportiva As String, Mail As String, PEC As String,
 									  Telefono As String, PIva As String, CodiceFiscale As String, CodiceUnivoco As String, SitoWeb As String, MittenteMail As String,
-									  GestionePagamenti As String) As String
+									  GestionePagamenti As String, CostoScuolaCalcio As String) As String
 		Dim Ritorno As String = ""
 		Dim Connessione As String = LeggeImpostazioniDiBase(Server.MapPath("."), Cod_Squadra)
 
@@ -662,6 +662,8 @@ Public Class wsGenerale
 				Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
 			Else
 				Dim Sql As String = ""
+
+				If CostoScuolaCalcio = "" Then CostoScuolaCalcio = "0"
 
 				Sql = "Update Anni Set " &
 					"Descrizione = '" & Descrizione.Replace("'", "''") & "', " &
@@ -679,7 +681,8 @@ Public Class wsGenerale
 					"CodiceUnivoco = '" & CodiceUnivoco.Replace("'", "''") & "', " &
 					"SitoWeb = '" & SitoWeb.Replace("'", "''") & "', " &
 					"MittenteMail = '" & MittenteMail.Replace("'", "''") & "', " &
-					"GestionePagamenti = '" & GestionePagamenti & "' " &
+					"GestionePagamenti = '" & GestionePagamenti & "', " &
+					"CostoScuolaCalcio=" & CostoScuolaCalcio & " " &
 					"Where idAnno = " & idAnno
 				Ritorno = EsegueSql(Conn, Sql, Connessione)
 			End If
@@ -807,6 +810,7 @@ Public Class wsGenerale
 											pathFirma1 & ";" &
 											MeseAttivazione.Item(quale) & ";" &
 											AnnoAttivazione.Item(quale) & ";" &
+											Rec("CostoScuolaCalcio").value & ";" &
 											"§"
 
 										Rec.MoveNext()
@@ -1506,7 +1510,7 @@ Public Class wsGenerale
 
 				If Not NomeOrigine.ToUpper.Contains("\APPOGGIO\") And Not NomeOrigine.ToUpper.Contains("\ICONE\") And (Estensione.ToUpper = ".JPG" Or Estensione.ToUpper = ".PNG") Then
 					If Not File.Exists(NomeDestinazione) Then
-						cr.EncryptFile("WPippoBaudo227!", NomeOrigine, NomeDestinazione)
+						cr.EncryptFile(CryptPasswordString, NomeOrigine, NomeDestinazione)
 						File.Delete(NomeOrigine)
 
 						quanteConversioni += 1
@@ -1537,7 +1541,7 @@ Public Class wsGenerale
 
 				If Not NomeOrigine.ToUpper.Contains("\APPOGGIO\") And Not NomeOrigine.ToUpper.Contains("\ICONE\") And (Estensione.ToUpper = ".JPG" Or Estensione.ToUpper = ".PNG") Then
 					If Not File.Exists(NomeDestinazione) Then
-						cr.EncryptFile("WPippoBaudo227!", NomeOrigine, NomeDestinazione)
+						cr.EncryptFile(CryptPasswordString, NomeOrigine, NomeDestinazione)
 						File.Delete(NomeOrigine)
 
 						quanteConversioni += 1
@@ -1626,7 +1630,7 @@ Public Class wsGenerale
 			If Immagine <> "" Then
 				If File.Exists(fileOrigine) Then
 					gf.CreaDirectoryDaPercorso(fileDestinazione)
-					cr.DecryptFile("WPippoBaudo227!", fileOrigine, fileDestinazione)
+					cr.DecryptFile(CryptPasswordString, fileOrigine, fileDestinazione)
 
 					' File.Copy(fileOrigine, fileDestinazione)
 

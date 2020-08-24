@@ -97,7 +97,7 @@ Public Class wsUtentiLocali
 						Ritorno = StringaErrore & " Nessun utente rilevato"
 					Else
 						Dim idUtente As Integer = Rec("idUtente").Value
-						Dim wrapper As New CryptEncrypt("WPippoBaudo227!")
+						Dim wrapper As New CryptEncrypt(CryptPasswordString)
 						Dim nuovaPassCrypt As String = wrapper.EncryptData(PWD)
 
 						Try
@@ -181,7 +181,7 @@ Public Class wsUtentiLocali
 
 	<WebMethod()>
 	Public Function CreaStringaCriptata(Stringa As String) As String
-		Dim wrapper As New CryptEncrypt("WPippoBaudo227!")
+		Dim wrapper As New CryptEncrypt(CryptPasswordString)
 		Dim Ritorno As String = wrapper.EncryptData(Stringa)
 
 		Return Ritorno

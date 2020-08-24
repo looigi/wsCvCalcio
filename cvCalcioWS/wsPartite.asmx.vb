@@ -5,6 +5,7 @@ Imports System.Data.OleDb
 Imports System.Web.ApplicationServices
 Imports System.Web.Hosting
 Imports System.IO
+Imports System.Security.Principal
 
 <System.Web.Services.WebService(Namespace:="http://cvcalcio_part.org/")>
 <System.Web.Services.WebServiceBinding(ConformsTo:=WsiProfiles.BasicProfile1_1)>
@@ -839,19 +840,19 @@ Public Class wsPartite
 						End If
 
 						Try
-							For Each C As String In Dirigenti.Split("§")
+							For Each C As String In Dirigenti.Split("%")
 								If C <> "" Then
-									Dim Campi() As String = C.Split(";")
+									Dim Campi() As String = C.Split("!")
 									Dim idDirigente As String = Campi(0)
 
 									If Ok Then
 										If idDirigente <> "" Then
 											Sql = "Insert Into DirigentiPartite Values (" &
-											" " & idAnno & ", " &
-											" " & idPartita & ", " &
-											" " & Progressivo & ", " &
-											" " & idDirigente & " " &
-											")"
+												" " & idAnno & ", " &
+												" " & idPartita & ", " &
+												" " & Progressivo & ", " &
+												" " & idDirigente & " " &
+												")"
 											Ritorno = EsegueSql(Conn, Sql, Connessione)
 											If Ritorno.Contains(StringaErrore) Then
 												Ok = False
@@ -872,25 +873,25 @@ Public Class wsPartite
 					End If
 				End If
 
-				If Ok Then
-					Try
-						If idArbitro = 0 Then idArbitro = 1
+				'If Ok Then
+				'	Try
+				'		If idArbitro = 0 Or idArbitro = "" Then idArbitro = 1
 
-						Sql = "Insert Into ArbitriPartite Values (" &
-									" " & idAnno & ", " &
-									" " & idPartita & ", " &
-									"1, " &
-									" " & idArbitro & " " &
-									")"
-						Ritorno = EsegueSql(Conn, Sql, Connessione)
-						If Ritorno.Contains(StringaErrore) Then
-							Ok = False
-						End If
-					Catch ex As Exception
-						Ritorno = StringaErrore & " " & ex.Message
-						Ok = False
-					End Try
-				End If
+				'		Sql = "Insert Into ArbitriPartite Values (" &
+				'					" " & idAnno & ", " &
+				'					" " & idPartita & ", " &
+				'					"1, " &
+				'					" " & idArbitro & " " &
+				'					")"
+				'		Ritorno = EsegueSql(Conn, Sql, Connessione)
+				'		If Ritorno.Contains(StringaErrore) Then
+				'			Ok = False
+				'		End If
+				'	Catch ex As Exception
+				'		Ritorno = StringaErrore & " " & ex.Message
+				'		Ok = False
+				'	End Try
+				'End If
 
 				If Ok Then
 					If RigoriPropri <> "" And RigoriAvv.Contains("§") Then
@@ -1788,14 +1789,23 @@ Public Class wsPartite
 				Else
 					If Not Rec.Eof Then
 						If Not Rec("DataOra").Value Is DBNull.Value Then
-							Dim paths As String = gf.LeggeFileIntero(Server.MapPath(".") & "\Impostazioni\PathAllegati.txt")
+							Dim paths As String = gf.LeggeFileIntero(Server.MapPath(".") & "\Impostazioni\Paths.txt")
+							Dim pp As String = paths
+							pp = pp.Replace(vbCrLf, "")
+							If Strings.Right(pp, 1) <> "\" Then
+								pp = pp & "\"
+							End If
+
+							paths = gf.LeggeFileIntero(Server.MapPath(".") & "\Impostazioni\PathAllegati.txt")
 							Dim p() As String = paths.Split(";")
 							If Strings.Right(p(0), 1) <> "\" Then
 								p(0) = p(0) & "\"
 							End If
+							p(0) = p(0).Replace(vbCrLf, "")
 							If Strings.Right(p(2), 1) <> "/" Then
 								p(2) = p(2) & "/"
 							End If
+							p(2) = p(2).Replace(vbCrLf, "")
 
 							' Dim Anticipo As Single = ("" & Rec("AnticipoConvocazione").Value).replace(",", ".")
 							'If Anticipo = 0 Then
@@ -1805,10 +1815,19 @@ Public Class wsPartite
 							Dim Datella As Date = Rec("DataOra").Value
 							'Dim DatellaConv As Date = Datella.AddHours(-Anticipo)
 
+							Filetto = Filetto.Replace("***PARTITA***", idPartita)
+
 							Filetto = Filetto.Replace("***SQUADRA***", Rec("Categoria").Value)
 
-							Dim url As String = p(2) & Rec("NomeSquadra").Value.ToString.Replace(" ", "_") & "/Societa/" & idAnno & "_1.jpg"
-							Filetto = Filetto.Replace("***URL LOGO***", url)
+							Dim url As String = p(2) & Rec("NomeSquadra").Value.ToString.Replace(" ", "_") & "/Societa/" & idAnno & "_1.kgb"
+							Dim Esten As String = Format(Now.Second, "00") & "_" & Now.Millisecond & RitornaValoreRandom(55)
+							Dim urlConv As String = p(2) & "Appoggio/" & Esten & ".jpg"
+							Dim fileUrlOrig As String = pp & Rec("NomeSquadra").Value.ToString.Replace(" ", "_") & "\Societa\" & idAnno & "_1.kgb"
+							Dim fileUrlConv As String = pp & "Appoggio/" & Esten & ".jpg"
+							Dim c As New CriptaFiles
+							c.DecryptFile(CryptPasswordString, fileUrlOrig, fileUrlConv)
+
+							Filetto = Filetto.Replace("***URL LOGO***", urlConv)
 
 							Filetto = Filetto.Replace("***NOME POLISPORTIVA***", Rec("NomePolisportiva").Value)
 
@@ -1827,12 +1846,16 @@ Public Class wsPartite
 								End If
 							End If
 
-							Dim Appuntamento As String = Rec("DataOraAppuntamento").Value
+							Dim Appuntamento As String = "" & Rec("DataOraAppuntamento").Value
 							If Appuntamento <> "" Then
 								Appuntamento = Mid(Appuntamento, Appuntamento.IndexOf(" ") + 1, Appuntamento.Length)
 							End If
+							Dim OraConv As String = "" & Rec("DataOra").Value
+							If OraConv <> "" Then
+								OraConv = Mid(OraConv, OraConv.IndexOf(" ") + 1, OraConv.Length)
+							End If
 							Filetto = Filetto.Replace("***ORARIO1***", Appuntamento)
-							Filetto = Filetto.Replace("***ORARIO2***", Rec("OraConv").Value)
+							Filetto = Filetto.Replace("***ORARIO2***", OraConv)
 
 							Filetto = Filetto.Replace("***MISTER***", Rec("Mister").Value)
 							Filetto = Filetto.Replace("***CELL***", Rec("Telefono").Value)
@@ -1912,6 +1935,26 @@ Public Class wsPartite
 							End If
 							Filetto = Filetto.Replace("***CONVOCATI***", Convocati)
 
+							Dim Dirigenti As String = "<Table style=""width: 100%;"" cellpadding=""0px"" cellspacing=""0px"">"
+							Sql = "Select Cognome, Nome, Telefono From DirigentiPartite A " &
+								"Left Join Dirigenti B On A.idDirigente = B.idDirigente " &
+								"Where A.idPartita = " & idPartita & " And Eliminato = 'N' " &
+								"Order By Progressivo"
+							Rec = LeggeQuery(Conn, Sql, Connessione)
+							If TypeOf (Rec) Is String Then
+								Ritorno = Rec
+							Else
+								Dirigenti &= "<tr style=""border: 1px solid #999""><th><span style=""font-family: Arial; font-size: 16px;"">Dirigente</span></th><th><span style=""font-family: Arial; font-size: 16px;"">Telefono</span></th></tr>"
+								Do Until Rec.Eof
+									Dirigenti &= "<tr><td><span style=""font-family: Arial; font-size: 14px;"">" & Rec("Cognome").Value & " " & Rec("Nome").Value & "</span></td><td style=""text-align: right;""><span style=""font-family: Arial; font-size: 14px;"">" & Rec("Telefono").Value & "</span></td></tr>"
+
+									Rec.MoveNext
+								Loop
+								Rec.Close
+							End If
+							Dirigenti &= "</table>"
+							Filetto = Filetto.Replace("***DIRIGENTI***", Dirigenti)
+
 							gf.CreaDirectoryDaPercorso(p(0) & "\" & Squadra & "\Convocazioni\Anno" & idAnno & "\Partite\")
 							gf.CreaAggiornaFile(p(0) & "\" & Squadra & "\Convocazioni\Anno" & idAnno & "\Partite\Partita_" & idPartita & ".html", Filetto)
 
@@ -1946,6 +1989,9 @@ Public Class wsPartite
 		Dim pathLog As String = p(0) & Squadra & "\Convocazioni\Anno" & idAnno & "\Partite\Partita_" & idPartita & ".log"
 		Dim path1 As String = p(0) & Squadra & "\Convocazioni\Anno" & idAnno & "\Partite\Partita_" & idPartita & ".html"
 		Dim pathPdf As String = p(0) & Squadra & "\Convocazioni\Anno" & idAnno & "\Partite\Partita_" & idPartita & ".pdf"
+		gf.CreaDirectoryDaPercorso(pathLog)
+		gf.CreaDirectoryDaPercorso(path1)
+		gf.CreaDirectoryDaPercorso(pathPdf)
 		Dim pp As New pdfGest
 		Ritorno = pp.ConverteHTMLInPDF(path1, pathPdf, pathLog)
 		If Ritorno = "*" Then

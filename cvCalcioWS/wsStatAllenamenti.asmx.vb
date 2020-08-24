@@ -137,7 +137,7 @@ Public Class wsStatAllenamenti
 								Dim Esten As String = Format(Now.Second, "00") & "_" & Now.Millisecond & RitornaValoreRandom(55)
 								Dim pathLogoConv As String = filePaths & "Appoggio\" & Esten & ".jpg"
 								Dim c As New CriptaFiles
-								c.DecryptFile("WPippoBaudo227!", pathLogo, pathLogoConv)
+								c.DecryptFile(CryptPasswordString, pathLogo, pathLogoConv)
 
 								Dim urlLogo As String = mmPaths(2) & "Appoggio/" & Esten & ".jpg"
 								filetto = filetto.Replace("***LOGO SOCIETA***", urlLogo)
@@ -247,7 +247,7 @@ Public Class wsStatAllenamenti
 									Ritorno = ""
 								Else
 									Ritorno = "<table style=""width: 100%;"">"
-									Ritorno &= "<tr><th>Data</th></tr>"
+									Ritorno &= "<tr><th>Data</th><th>Ora</th></tr>"
 								End If
 								Do Until Rec.Eof
 									If Stampa = "NO" Then
@@ -256,7 +256,7 @@ Public Class wsStatAllenamenti
 										"§"
 									Else
 										Ritorno &= "<tr>"
-										Ritorno &= "<td>" & Rec("Datella").Value & "</td>"
+										Ritorno &= "<td>" & Rec("Datella").Value & "</td><td>" & Rec("Orella").Value & "</td>"
 										Ritorno &= "</tr>"
 									End If
 
@@ -291,7 +291,7 @@ Public Class wsStatAllenamenti
 								Dim Esten As String = Format(Now.Second, "00") & "_" & Now.Millisecond & RitornaValoreRandom(55)
 								Dim pathLogoConv As String = filePaths & "Appoggio\" & Esten & ".jpg"
 								Dim c As New CriptaFiles
-								c.DecryptFile("WPippoBaudo227!", pathLogo, pathLogoConv)
+								c.DecryptFile(CryptPasswordString, pathLogo, pathLogoConv)
 
 								Dim urlLogo As String = mmPaths(2) & "Appoggio/" & Esten & ".jpg"
 								filetto = filetto.Replace("***LOGO SOCIETA***", urlLogo)
