@@ -164,7 +164,8 @@ Public Class wsAllenatori
 										"'" & Telefono & "', " &
 										"'N', " &
 										"-1, " &
-										"'N' " &
+										"'N', " &
+										"'" & stringaWidgets & "' " &
 										")"
 								End If
 								Ritorno = EsegueSql(Conn, Sql, Connessione)

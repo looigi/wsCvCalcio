@@ -17,8 +17,15 @@ Public Class wsMultimedia
 
 		Dim Ritorno As String = ""
 		Dim Ok As Boolean = True
-		Dim Percorso As String = Campi(0) & Squadra & "\" & Tipologia
-		Dim Estensioni() As String = {".jpg", ".png", ".bmp", ".jpeg"}
+
+		Dim filePaths As String = gf.LeggeFileIntero(HttpContext.Current.Server.MapPath(".") & "\Impostazioni\Paths.txt")
+		filePaths = filePaths.Replace(vbCrLf, "")
+		If Strings.Right(filePaths, 1) <> "\" Then
+			filePaths &= "\"
+		End If
+		Dim Percorso As String = filePaths & Squadra & "\" & Tipologia
+
+		Dim Estensioni() As String = {".kgb", ".png", ".bmp", ".jpeg", ".jpg"}
 		Dim Estensione As String
 		Dim Nome As String
 

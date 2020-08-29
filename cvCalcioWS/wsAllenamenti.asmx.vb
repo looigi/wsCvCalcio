@@ -1,15 +1,16 @@
 ﻿Imports System.Web.Services
 Imports System.Web.Services.Protocols
 Imports System.ComponentModel
+Imports System.IO
 
 <System.Web.Services.WebService(Namespace:="http://cvcalcio_allti.org/")>
 <System.Web.Services.WebServiceBinding(ConformsTo:=WsiProfiles.BasicProfile1_1)>
 <ToolboxItem(False)>
 Public Class wsAllenamenti
-    Inherits System.Web.Services.WebService
+	Inherits System.Web.Services.WebService
 
 	<WebMethod()>
-	Public Function SalvaAllenamenti(Squadra As String, idAnno As String, idCategoria As String, Data As String, Ora As String, Giocatori As String) As String
+	Public Function SalvaAllenamenti(Squadra As String, idAnno As String, idCategoria As String, Data As String, Ora As String, Giocatori As String, OraFine As String) As String
 		Dim Ritorno As String = ""
 		Dim Connessione As String = LeggeImpostazioniDiBase(Server.MapPath("."), Squadra)
 
@@ -47,7 +48,8 @@ Public Class wsAllenamenti
 									"'" & Data & "', " &
 									"'" & Ora & "', " &
 									" " & Progressivo & ", " &
-									" " & s & " " &
+									" " & s & ", " &
+									"'" & OraFine & "' " &
 									")"
 								Ritorno = EsegueSql(Conn, Sql, Connessione)
 								If Ritorno.Contains(StringaErrore) Then
@@ -70,7 +72,7 @@ Public Class wsAllenamenti
 						Dim Ritorno2 As String = EsegueSql(Conn, Sql, Connessione)
 					End If
 				Else
-						Sql = "rollback"
+					Sql = "rollback"
 					Dim Ritorno2 As String = EsegueSql(Conn, Sql, Connessione)
 				End If
 
@@ -142,9 +144,12 @@ Public Class wsAllenamenti
 
 						If Ok Then
 							Dim codiciGiocatore As String = ""
+							Dim oraInizio As String = ""
+							Dim oraFine As String = ""
 
 							Sql = "SELECT Giocatori.idGiocatore, Ruoli.idRuolo As idR, Cognome, Nome, Ruoli.Descrizione, EMail, Telefono, Soprannome, DataDiNascita, Indirizzo, " &
-								"CodFiscale, Maschio, Citta, Matricola, NumeroMaglia, Giocatori.idCategoria, idCategoria2, Categorie.Descrizione As Categoria2, idCategoria3, Cat3.Descrizione As Categoria3, Cat1.Descrizione As Categoria1 " &
+								"CodFiscale, Maschio, Citta, Matricola, NumeroMaglia, Giocatori.idCategoria, idCategoria2, Categorie.Descrizione As Categoria2, idCategoria3, " &
+								"Cat3.Descrizione As Categoria3, Cat1.Descrizione As Categoria1, Allenamenti.Orella, Allenamenti.OrellaFine " &
 								"FROM (((((Allenamenti LEFT JOIN Giocatori ON (Allenamenti.idGiocatore = Giocatori.idGiocatore) And (Allenamenti.idAnno = Giocatori.idAnno))) " &
 								"Left Join [Generale].[dbo].[Ruoli] On Giocatori.idRuolo=Ruoli.idRuolo) " &
 								"Left Join Categorie On Categorie.idCategoria=Giocatori.idCategoria2 And Categorie.idAnno=Giocatori.idAnno) " &
@@ -163,8 +168,11 @@ Public Class wsAllenamenti
 										Ritorno = ""
 									Else
 										Ritorno = "<table style=""width: 100%;"">"
-										Ritorno &= "<tr><th>Giocatore Presente</th></tr>"
+										Ritorno &= "<tr><th>Giocatori Presenti</th></tr>"
 									End If
+
+									Dim q As Integer = 0
+
 									Do Until Rec.Eof
 										If Stampa = "N" Then
 											Ritorno &= Rec("idGiocatore").Value.ToString & ";" &
@@ -191,9 +199,15 @@ Public Class wsAllenamenti
 												"§"
 										Else
 											codiciGiocatore &= Rec("idGiocatore").Value & ","
+											oraInizio = Rec("Orella").Value
+											oraFine = Rec("OrellaFine").Value
+
+											q += 1
+											Dim conta As String = Format(q, "00")
 
 											Ritorno &= "<tr>"
-											Ritorno &= "<td>" & Rec("Cognome").Value & " " & Rec("Nome").Value & "</td>"
+											' Ritorno &= "<td>" & Rec("Cognome").Value & " " & Rec("Nome").Value & "</td>"
+											Ritorno &= "<td style=""padding-left: 50px;"">" & conta & " - " & Rec("Cognome").Value & " " & Rec("Nome").Value & "</td>"
 											Ritorno &= "</tr>"
 										End If
 
@@ -202,7 +216,7 @@ Public Class wsAllenamenti
 								End If
 								Rec.Close()
 
-								If Stampa <> "NO" Then
+								If Stampa <> "N" Then
 									Ritorno &= "</table>"
 									Ritorno &= "<hr />"
 
@@ -217,11 +231,16 @@ Public Class wsAllenamenti
 									If TypeOf (Rec) Is String Then
 										Ritorno = Rec
 									Else
+										Dim q As Integer = 0
+
 										Ritorno &= "<table style=""width: 100%;"">"
-										Ritorno &= "<tr><th>Giocatore Assente</th></tr>"
+										Ritorno &= "<tr><th>Giocatori Assenti</th></tr>"
 										Do Until Rec.Eof
+											q += 1
+											Dim conta As String = Format(q, "00")
+
 											Ritorno &= "<tr>"
-											Ritorno &= "<td>" & Rec("Cognome").Value & " " & Rec("Nome").Value & "</td>"
+											Ritorno &= "<td style=""padding-left: 50px;"">" & conta & " - " & Rec("Cognome").Value & " " & Rec("Nome").Value & "</td>"
 											Ritorno &= "</tr>"
 
 											Rec.MoveNext()
@@ -233,7 +252,7 @@ Public Class wsAllenamenti
 									Dim gf As New GestioneFilesDirectory
 									Dim filetto As String = gf.LeggeFileIntero(HttpContext.Current.Server.MapPath(".") & "\Scheletri\base_allenamenti.txt")
 
-									filetto = filetto.Replace("***TITOLO***", "Allenamenti " & NomeCategoria & "<br />" & Data & " " & Ora)
+									filetto = filetto.Replace("***TITOLO***", "Allenamenti " & NomeCategoria & "<br />" & Data & " " & oraInizio & "-" & oraFine)
 									filetto = filetto.Replace("***DATI***", Ritorno)
 									filetto = filetto.Replace("***NOME SQUADRA***", "<br /><br />" & NomeSquadra)
 
@@ -249,14 +268,18 @@ Public Class wsAllenamenti
 									If Strings.Right(filePaths, 1) <> "\" Then
 										filePaths &= "\"
 									End If
-									Dim pathLogo As String = filePaths & NomeSquadra.Replace(" ", "_") & "\Societa\1_1.kgb"
 									Dim Esten As String = Format(Now.Second, "00") & "_" & Now.Millisecond & RitornaValoreRandom(55)
-									Dim pathLogoConv As String = filePaths & "Appoggio\" & Esten & ".jpg"
-									Dim c As New CriptaFiles
-									c.DecryptFile(CryptPasswordString, pathLogo, pathLogoConv)
+									Dim pathLogo As String = filePaths & NomeSquadra.Replace(" ", "_") & "\Societa\1_1.kgb"
+									If File.Exists(pathLogo) Then
+										Dim pathLogoConv As String = filePaths & "Appoggio\" & Esten & ".jpg"
+										Dim c As New CriptaFiles
+										c.DecryptFile(CryptPasswordString, pathLogo, pathLogoConv)
 
-									Dim urlLogo As String = mmPaths(2) & "Appoggio/" & Esten & ".jpg"
-									filetto = filetto.Replace("***LOGO SOCIETA***", urlLogo)
+										Dim urlLogo As String = mmPaths(2) & "Appoggio/" & Esten & ".jpg"
+										filetto = filetto.Replace("***LOGO SOCIETA***", urlLogo)
+									Else
+										filetto = filetto.Replace("***LOGO SOCIETA***", "")
+									End If
 
 									Dim nomeFileHtml As String = filePaths & "Appoggio\" & Esten & ".html"
 									Dim nomeFilePDF As String = filePaths & "Appoggio\" & Esten & ".pdf"
@@ -271,7 +294,7 @@ Public Class wsAllenamenti
 								End If
 							End If
 						End If
-                    End If
+					End If
 				Catch ex As Exception
 					Ritorno = StringaErrore & " " & ex.Message
 				End Try

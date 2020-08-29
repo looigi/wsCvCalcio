@@ -167,7 +167,8 @@ Public Class wsDirigenti
 										"'" & Telefono & "', " &
 										"'N', " &
 										"-1, " &
-										"'N' " &
+										"'N', " &
+										"'" & stringaWidgets & "' " &
 										")"
 								End If
 								Ritorno = EsegueSql(Conn, Sql, Connessione)

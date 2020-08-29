@@ -367,7 +367,8 @@ Public Class wsUtenti
 										"'" & Password.Replace("'", "''") & "', " &
 										"'" & EMail.Replace("'", "''") & "', " &
 										" " & idCategoria & ", " &
-										" " & idTipologia & " " &
+										" " & idTipologia & ", " &
+										"'" & stringaWidgets & "' " &
 										")"
 									Ritorno = EsegueSql(Conn, Sql, Connessione)
 									If Ritorno.Contains(StringaErrore) Then

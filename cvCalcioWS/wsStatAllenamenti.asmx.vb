@@ -86,6 +86,9 @@ Public Class wsStatAllenamenti
 								Ritorno = "<table style=""width: 100%;"">"
 								Ritorno &= "<tr><th>Nominativo</th><th>Ruolo</th><th>Presenze</th><th>Totale</th><th>Perc</th></tr>"
 							End If
+
+							Dim q As Integer = 0
+
 							Do Until Rec.Eof
 								Dim perc As String = CInt(Rec("Perc").Value.ToString.Trim)
 
@@ -100,8 +103,10 @@ Public Class wsStatAllenamenti
 										Rec("NumeroMaglia").Value.ToString.Trim & ";" &
 										"§"
 								Else
+									q += 1
+									Dim conta As String = Format(q, "00")
 									Ritorno &= "<tr>"
-									Ritorno &= "<td>" & Rec("Cognome").Value & " " & Rec("Nome").Value & "</td>"
+									Ritorno &= "<td style=""padding-left: 50px;"">" & conta & " - " & Rec("Cognome").Value & " " & Rec("Nome").Value & "</td>"
 									Ritorno &= "<td>" & Rec("Descrizione").Value & "</td>"
 									Ritorno &= "<td style=""text-align: right;"">" & Rec("Presenze").Value & "</td>"
 									Ritorno &= "<td style=""text-align: right;"">" & Rec("Totale").Value & "</td>"
@@ -256,7 +261,7 @@ Public Class wsStatAllenamenti
 										"§"
 									Else
 										Ritorno &= "<tr>"
-										Ritorno &= "<td>" & Rec("Datella").Value & "</td><td>" & Rec("Orella").Value & "</td>"
+										Ritorno &= "<td style=""margin-left: 50px;"">" & Rec("Datella").Value & "</td><td>" & Rec("Orella").Value & "</td>"
 										Ritorno &= "</tr>"
 									End If
 

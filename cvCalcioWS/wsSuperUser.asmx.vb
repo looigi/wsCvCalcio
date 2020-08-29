@@ -116,6 +116,9 @@ Public Class wsSuperUser
 								Ritorno = EsegueSql(ConnGen, Sql, ConnessioneGenerale)
 								If Ritorno.Contains(StringaErrore) Then
 									Ok = False
+									gf.ScriveTestoSuFileAperto(Ritorno & " -> " & Sql)
+								Else
+									gf.ScriveTestoSuFileAperto("DB Creato")
 								End If
 
 								If Ok Then
@@ -126,6 +129,9 @@ Public Class wsSuperUser
 									Ritorno = EsegueSql(ConnGen, Sql, ConnessioneGenerale)
 									If Ritorno.Contains(StringaErrore) Then
 										Ok = False
+										gf.ScriveTestoSuFileAperto(Ritorno & " ->" & Sql)
+									Else
+										gf.ScriveTestoSuFileAperto("Inserita riga tabella Squadre")
 									End If
 
 									If Ok Then
@@ -147,11 +153,15 @@ Public Class wsSuperUser
 											"'', " &
 											"'N', " &
 											"-1, " &
-											"'S' " &
+											"'S', " &
+											"'" & stringaWidgets & "' " &
 											")"
 										Ritorno = EsegueSql(ConnGen, Sql, ConnessioneGenerale)
 										If Ritorno.Contains(StringaErrore) Then
 											Ok = False
+											gf.ScriveTestoSuFileAperto(Ritorno & " -> " & Sql)
+										Else
+											gf.ScriveTestoSuFileAperto("Inserita riga tabella Squadre")
 										End If
 
 										If Ok Then
@@ -236,6 +246,8 @@ Public Class wsSuperUser
 													"null, " &
 													"null, " &
 													"null, " &
+													"null, " &
+													"null, " &
 													"null " &
 													")"
 												Ritorno = EsegueSql(ConnDbVuoto, Sql, ConnessioneDBVuoto)
@@ -253,6 +265,7 @@ Public Class wsSuperUser
 													Ritorno = EsegueSql(ConnGen, Sql, ConnessioneGenerale)
 													If Ritorno.Contains(StringaErrore) Then
 														Ok = False
+														gf.ScriveTestoSuFileAperto(Ritorno & " -> " & Sql)
 													Else
 														gf.ScriveTestoSuFileAperto("Dati inseriti in tabella SquadraAnni")
 														Try
@@ -733,8 +746,8 @@ Public Class wsSuperUser
 		Dim gf As New GestioneFilesDirectory
 		Dim Path As String = gf.LeggeFileIntero(Server.MapPath(".") & "\Impostazioni\Paths.txt")
 		Dim NomeFile As String = Path.Trim & Squadra.Replace(" ", "_").Trim & "\CSV\importAnagrafica.csv"
-		Dim CampiCSV() As String = {"Cognome", "Nome", "EMail", "Telefono", "Soprannome", "DataDiNascita", "Indirizzo", "CodFiscale"}
-		Dim TipoCampiCSV() As String = {"T", "T", "T", "N", "T", "T", "T", "T"}
+		Dim CampiCSV() As String = {"Cognome", "Nome", "EMail", "Telefono", "DataDiNascita", "Indirizzo", "CodFiscale", "Maschio", "Citta", "Cap"}
+		Dim TipoCampiCSV() As String = {"T", "T", "T", "N", "T", "T", "T", "T", "T", "T"}
 
 		If Not File.Exists(NomeFile) Then
 			Ritorno = StringaErrore & " File non esistente: " & NomeFile
@@ -750,7 +763,7 @@ Public Class wsSuperUser
 				If Campi.Count = 0 Then
 					Ritorno = StringaErrore & " Intestazione vuota"
 				Else
-					If Campi.Count - 1 <> CampiCSV.Count Then
+					If Campi.Count <> CampiCSV.Count Then
 						Ritorno = StringaErrore & " Intestazione non valida"
 					Else
 						Dim q As Integer = 0
@@ -784,6 +797,9 @@ Public Class wsSuperUser
 									Dim Sql As String = "Begin transaction"
 									Ritorno = EsegueSql(ConnGen, Sql, ConnessioneGenerale)
 
+									Dim Scartati As Integer = 0
+									Dim Scritti As Integer = 0
+
 									If Ritorno = "*" Then
 										Try
 											Dim IntestCampi As String = ""
@@ -793,12 +809,14 @@ Public Class wsSuperUser
 											For i As Integer = 0 To CampiCSV.Count - 1
 												IntestCampi &= CampiCSV(i) & ", "
 											Next
-											IntestCampi = "(idAnno, idGiocatore, idCategoria, " & Mid(IntestCampi, 1, IntestCampi.Length - 2) & ", Eliminato, RapportoCompleto)"
+											IntestCampi = "(idAnno, idGiocatore, idCategoria, " & Mid(IntestCampi, 1, IntestCampi.Length - 2) & ", Eliminato, RapportoCompleto, " &
+												"idRuolo, Maggiorenne, idTaglia, Categorie, idCategoria2, idCategoria3 )"
 
 											gf.ScriveTestoSuFileAperto("Intestazione 2")
 
 											Dim idGiocatore As Integer = 1
 											Dim Rec As Object = Server.CreateObject("ADODB.Recordset")
+											Dim Rec2 As Object = Server.CreateObject("ADODB.Recordset")
 
 											Sql = "Select Max(idGiocatore)+1 From Giocatori"
 											Rec = LeggeQuery(ConnGen, Sql, ConnessioneGenerale)
@@ -819,6 +837,7 @@ Public Class wsSuperUser
 
 											For i As Integer = 1 To Righe.Count - 1
 												If Righe(i).Trim <> "" Then
+													Dim Scrive As Boolean = True
 													Dim Campi2() As String = Righe(i).Split(";")
 													Sql = "Insert Into Giocatori " & IntestCampi & " Values ("
 
@@ -827,35 +846,126 @@ Public Class wsSuperUser
 													' gf.ScriveTestoSuFileAperto("Riga: " & Righe(i))
 													' gf.ScriveTestoSuFileAperto("Campi: " & Campi2.Count - 1)
 
-													For k As Integer = 0 To Campi2.Count - 2
+													Dim eMail As String = ""
+													Dim Maggiorenne As String = ""
+
+													For k As Integer = 0 To Campi2.Count - 1
 														Dim c As String = IIf(Campi2(k) = "", "null", Campi2(k))
 
+														If CampiCSV(k).ToUpper.Contains("CODFISCALE") Then
+															Dim Sql1 As String = "Select * From Giocatori Where Upper(Ltrim(Rtrim(CodFiscale)))='" & Campi2(k).Trim.ToUpper & "'"
+															Rec2 = LeggeQuery(ConnGen, Sql1, ConnessioneGenerale)
+															If TypeOf (Rec2) Is String Then
+																Ritorno = Rec2
+																Ok = False
+															Else
+																If Not Rec2.Eof Then
+																	Scrive = False
+																	Rec2.Close
+																	Exit For
+																End If
+															End If
+														End If
+
+														If CampiCSV(k).ToUpper.Contains("MAIL") Then
+															eMail = Campi2(k)
+														End If
+
+														If CampiCSV(k).ToUpper.Contains("MASCHIO") Then
+															If Campi2(k) = "S" Or Campi2(k) = "M" Then
+																Campi2(k) = "M"
+															Else
+																Campi2(k) = "F"
+															End If
+														End If
+
+														If CampiCSV(k).ToUpper.Contains("NASCITA") Then
+															Dim d() As String = Campi2(k).Split("/")
+															Campi2(k) = d(2) & "-" & d(1) & "-" & d(0)
+															Dim dd As Date = Convert.ToDateTime(Campi2(k))
+															Dim Oggi As Date = Now
+															Dim diff As Integer = DateDiff(DateInterval.Year, dd, Oggi)
+															If diff >= 18 Then
+																Maggiorenne = "S"
+															Else
+																Maggiorenne = "N"
+															End If
+														End If
+
 														If TipoCampiCSV(k) = "T" Then
-															Sql &= "'" & Campi2(k) & "', "
+															Sql &= "'" & Campi2(k).Replace(vbCrLf, "").Replace("'", "''").Trim() & "', "
 														Else
-															Sql &= Campi2(k) & ", "
+															Sql &= Campi2(k).Replace(vbCrLf, "").Trim() & ", "
 														End If
 													Next
-													Sql = Mid(Sql, 1, Sql.Length - 2) & ", 'N', 'N'"
+													Sql = Mid(Sql, 1, Sql.Length - 2) & ", 'N', 'N', 0, '" & Maggiorenne & "', -1, '', -1, -1 "
 													Sql &= ")"
-													idGiocatore += 1
 
-													gf.ScriveTestoSuFileAperto(Sql)
+													If Scrive = True Then
+														idGiocatore += 1
 
-													Ritorno = EsegueSql(ConnGen, Sql, ConnessioneGenerale)
+														gf.ScriveTestoSuFileAperto("Maggiorenne:" & Maggiorenne)
+														gf.ScriveTestoSuFileAperto("EMail:" & eMail)
+														gf.ScriveTestoSuFileAperto(Sql)
 
-													If Ritorno.Contains(StringaErrore) Then
-														gf.ScriveTestoSuFileAperto(Ritorno)
-														Ok = False
-														Exit For
+														Ritorno = EsegueSql(ConnGen, Sql, ConnessioneGenerale)
+
+														If Ritorno.Contains(StringaErrore) Then
+															gf.ScriveTestoSuFileAperto(Ritorno)
+															Ok = False
+															Exit For
+														Else
+															Sql = "Insert into GiocatoriDettaglio (idAnno, idGiocatore) Values (" & idAnno & ", " & idGiocatore & ")"
+															gf.ScriveTestoSuFileAperto(Sql)
+															Ritorno = EsegueSql(ConnGen, Sql, ConnessioneGenerale)
+
+															If Ritorno.Contains(StringaErrore) Then
+																gf.ScriveTestoSuFileAperto(Ritorno)
+																Ok = False
+																Exit For
+															Else
+																Sql = "Insert into GiocatoriMails Values (" & idGiocatore & ", 3, '" & eMail.Replace("'", "''") & "', 'S')"
+																gf.ScriveTestoSuFileAperto(Sql)
+																Ritorno = EsegueSql(ConnGen, Sql, ConnessioneGenerale)
+
+																Sql = "Insert into GiocatoriMails Values (" & idGiocatore & ", 1, '', 'S')"
+																gf.ScriveTestoSuFileAperto(Sql)
+																Ritorno = EsegueSql(ConnGen, Sql, ConnessioneGenerale)
+
+																Sql = "Insert into GiocatoriMails Values (" & idGiocatore & ", 2, '', 'S')"
+																gf.ScriveTestoSuFileAperto(Sql)
+																Ritorno = EsegueSql(ConnGen, Sql, ConnessioneGenerale)
+
+																Sql = "Insert Into GiocatoriSemafori Values (" &
+																	" " & idGiocatore & ", " &
+																	"'rosso', " &
+																	"'Giocatore non iscritto', " &
+																	"'rosso', " &
+																	"'Pagamento non completo', " &
+																	"'rosso', " &
+																	"'Nessuna firma validata', " &
+																	"'rosso', " &
+																	"'Flag certificato non impostato', " &
+																	"'rosso', " &
+																	"'Nessun elemento kit consegnato' " &
+																	")"
+																Ritorno = EsegueSql(ConnGen, Sql, ConnessioneGenerale)
+
+																gf.ScriveTestoSuFileAperto("Riga scritta")
+																gf.ScriveTestoSuFileAperto("")
+
+																Scritti += 1
+															End If
+														End If
 													Else
-														gf.ScriveTestoSuFileAperto("Riga scritta")
+														Scartati += 1
+														gf.ScriveTestoSuFileAperto("Riga scartata.")
 														gf.ScriveTestoSuFileAperto("")
 													End If
-												End If
-												If Ritorno <> "*" Then
-													Ok = False
-													Exit For
+													If Ritorno <> "*" Then
+														Ok = False
+														Exit For
+													End If
 												End If
 											Next
 										Catch ex As Exception
@@ -865,7 +975,7 @@ Public Class wsSuperUser
 
 										If Ritorno = "*" Then
 											Ok = True
-											Ritorno = Righe.Count - 2
+											Ritorno = Scritti & ";" & Scartati ' Righe.Count - 3
 										End If
 
 										If Ok Then

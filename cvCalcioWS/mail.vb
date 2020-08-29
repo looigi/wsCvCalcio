@@ -118,7 +118,7 @@ Public Class mail
 
 			Dim Body As String = ""
 			Dim logoApplicazione As String = Righe & "logoApplicazione.png"
-			Dim sfondoMail As String = Righe & "bg.jpg"
+			'Dim sfondoMail As String = Righe & "bg.jpg"
 
 			Dim filePaths As String = gf.LeggeFileIntero(pathMail & "\Impostazioni\PathAllegati.txt")
 			Dim p() As String = filePaths.Split(";")
@@ -136,12 +136,12 @@ Public Class mail
 			Corpo = Corpo.Replace("***BODY***", "<span style=""font-family: Verdana; font-size: 18px;"">" & newBody & "</span>")
 
 			Dim contentID As String = "Image1" ' & Now.Year & Format(Now.Month, "00") & Format(Now.Day, "00") & Format(Now.Hour, "00") & Format(Now.Minute, "00") & Format(Now.Second, "00")
-			Dim inlineLogo = New Attachment(sfondoMail)
-			inlineLogo.ContentId = contentID
-			inlineLogo.ContentDisposition.Inline = True
-			inlineLogo.ContentDisposition.DispositionType = DispositionTypeNames.Inline
+			'Dim inlineLogo = New Attachment(sfondoMail)
+			'inlineLogo.ContentId = contentID
+			'inlineLogo.ContentDisposition.Inline = True
+			'inlineLogo.ContentDisposition.DispositionType = DispositionTypeNames.Inline
 
-			mail.Attachments.Add(inlineLogo)
+			'mail.Attachments.Add(inlineLogo)
 
 			Dim contentID2 As String = "Image2" ' & Now.Year & Format(Now.Month, "00") & Format(Now.Day, "00") & Format(Now.Hour, "00") & Format(Now.Minute, "00") & Format(Now.Second, "00")
 			Dim inlineLogo2 = New Attachment(logoApplicazione)

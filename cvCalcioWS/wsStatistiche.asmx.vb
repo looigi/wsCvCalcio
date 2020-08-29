@@ -31,7 +31,7 @@ Public Class wsStatistiche
 				End If
 
 				Sql = "Select " & Altro & " * From ( " &
-					"Select 'Scadenza Certificato Medico' As Cosa, A.idGiocatore As Id, A.Cognome As PrimoCampo, A.Nome As SecondoCampo, CONVERT(date, B.ScadenzaCertificatoMedico) As Data From Giocatori A " &
+					"Select 'Cert. Med.' As Cosa, A.idGiocatore As Id, A.Cognome As PrimoCampo, A.Nome As SecondoCampo, CONVERT(date, B.ScadenzaCertificatoMedico) As Data From Giocatori A " &
 					"Left Join GiocatoriDettaglio B On A.idGiocatore = B.idGiocatore " &
 					"Where CertificatoMedico = 'S' And A.Eliminato = 'N' " &
 					"Union All " &
@@ -81,7 +81,7 @@ Public Class wsStatistiche
 				Dim idCategorie As New List(Of String)
 				Dim Ok As Boolean = True
 
-				Sql = "Select * From Categorie"
+				Sql = "Select * From Categorie Where Eliminato='N' "
 				Rec = LeggeQuery(Conn, Sql, Connessione)
 				If TypeOf (Rec) Is String Then
 					Ritorno = Rec
@@ -191,7 +191,7 @@ Public Class wsStatistiche
 				Dim idCategorie As New List(Of String)
 				Dim Ok As Boolean = True
 
-				Sql = "Select * From Categorie"
+				Sql = "Select * From Categorie Where Eliminato='N'"
 				Rec = LeggeQuery(Conn, Sql, Connessione)
 				If TypeOf (Rec) Is String Then
 					Ritorno = Rec
@@ -274,7 +274,7 @@ Public Class wsStatistiche
 
 								quale += 1
 							Next
-							Ritorno &= "-1;Tutti;" & Tutti & "§"
+							' Ritorno &= "-1;Tutti;" & Tutti & "§"
 						End If
 					End If
 				End If

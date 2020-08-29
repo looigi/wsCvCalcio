@@ -229,10 +229,21 @@ Public Class wsCategorie
 							Dim idCategoria As String = Rec("idCategoria").Value
 
 							If idTipologia = "1" Or idTipologia = "0" Then
-								Sql = "SELECT idCategoria, Descrizione, AnticipoConvocazione, RisultatoATempi FROM Categorie " &
-									"Where idAnno=" & idAnno & " And Eliminato='N' Order By Descrizione"
+								Sql = "SELECT idCategoria, Descrizione, AnticipoConvocazione, RisultatoATempi, " &
+									"GiornoAllenamento1, OraInizio1, OraFine1, " &
+									"GiornoAllenamento2, OraInizio2, OraFine2, " &
+									"GiornoAllenamento3, OraInizio3, OraFine3, " &
+									"GiornoAllenamento4, OraInizio4, OraFine4, " &
+									"AnnoCategoria " &
+									"FROM Categorie Where idAnno=" & idAnno & " And Eliminato='N' Order By Descrizione"
 							Else
-								Sql = "Select A.idCategoria, B.Descrizione, AnticipoConvocazione, B.RisultatoATempi From UtentiCategorie A " &
+								Sql = "Select A.idCategoria, B.Descrizione, AnticipoConvocazione, B.RisultatoATempi, " &
+									"B.GiornoAllenamento1, B.OraInizio1, B.OraFine1, " &
+									"B.GiornoAllenamento2, B.OraInizio2, B.OraFine2, " &
+									"B.GiornoAllenamento3, B.OraInizio3, B.OraFine3, " &
+									"B.GiornoAllenamento4, B.OraInizio4, B.OraFine4, " &
+									"AnnoCategoria " &
+									"From UtentiCategorie A " &
 									"Left Join Categorie B On A.idCategoria = B.idCategoria " &
 									"Where B.idAnno = " & idAnno & " And A.idUtente = " & idUtente & " And Eliminato='N' Order By Descrizione"
 							End If
@@ -246,7 +257,14 @@ Public Class wsCategorie
 									Ritorno = ""
 									Ritorno &= "-1;Tutte le categorie;0§"
 									Do Until Rec.Eof
-										Ritorno &= Rec("idCategoria").Value.ToString & ";" & Rec("Descrizione").Value.ToString & ";" & Rec("AnticipoConvocazione").Value & ";" & Rec("RisultatoATempi").Value & "§"
+										Ritorno &= Rec("idCategoria").Value.ToString & ";" & Rec("Descrizione").Value.ToString & ";" &
+											Rec("AnticipoConvocazione").Value & ";" & Rec("RisultatoATempi").Value & ";" &
+											Rec("GiornoAllenamento1").Value & ";" & Rec("OraInizio1").Value & ";" & Rec("OraFine1").Value & ";" &
+											Rec("GiornoAllenamento2").Value & ";" & Rec("OraInizio2").Value & ";" & Rec("OraFine2").Value & ";" &
+											Rec("GiornoAllenamento3").Value & ";" & Rec("OraInizio3").Value & ";" & Rec("OraFine3").Value & ";" &
+											Rec("GiornoAllenamento4").Value & ";" & Rec("OraInizio4").Value & ";" & Rec("OraFine4").Value & ";" &
+											Rec("AnnoCategoria").Value &
+											"§"
 
 										Rec.MoveNext()
 									Loop
@@ -312,7 +330,10 @@ Public Class wsCategorie
 	End Function
 
 	<WebMethod()>
-	Public Function SalvaCategoria(Squadra As String, ByVal idAnno As String, idCategoria As String, Categoria As String, AnticipoConvocazione As String, RisultatoATempi As String) As String
+	Public Function SalvaCategoria(Squadra As String, ByVal idAnno As String, idCategoria As String, Categoria As String, AnticipoConvocazione As String, RisultatoATempi As String,
+								   GiornoAllenamento1 As String, OraInizio1 As String, OraFine1 As String, GiornoAllenamento2 As String, OraInizio2 As String, OraFine2 As String,
+								   GiornoAllenamento3 As String, OraInizio3 As String, OraFine3 As String, GiornoAllenamento4 As String, OraInizio4 As String, OraFine4 As String,
+								   AnnoCategoria As String) As String
 		Dim Ritorno As String = ""
 		Dim Connessione As String = LeggeImpostazioniDiBase(Server.MapPath("."), Squadra)
 
@@ -372,7 +393,20 @@ Public Class wsCategorie
 								"'N', " &
 								"1," &
 								" " & AnticipoConvocazione & ", " &
-								"'" & RisultatoATempi & "' " &
+								"'" & RisultatoATempi & "', " &
+								" " & GiornoAllenamento1 & ", " &
+								"'" & OraInizio1 & "', " &
+								"'" & OraFine1 & "', " &
+								" " & GiornoAllenamento2 & ", " &
+								"'" & OraInizio2 & "', " &
+								"'" & OraFine2 & "', " &
+								" " & GiornoAllenamento3 & ", " &
+								"'" & OraInizio3 & "', " &
+								"'" & OraFine3 & "', " &
+								" " & GiornoAllenamento4 & ", " &
+								"'" & OraInizio4 & "', " &
+								"'" & OraFine4 & "', " &
+								"'" & AnnoCategoria & "' " &
 								")"
 							Ritorno = EsegueSql(Conn, Sql, Connessione)
 							If Ritorno.Contains(StringaErrore) Then

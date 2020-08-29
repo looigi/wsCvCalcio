@@ -13,6 +13,17 @@ Public Class wsGenerale
 	Inherits System.Web.Services.WebService
 
 	<WebMethod()>
+	Public Function TestDataMaggiorenne(Valore As String) As String
+		Dim d() As String = Valore.Split("/")
+		Valore = d(2) & "-" & d(1) & "-" & d(0)
+		Dim dd As Date = Convert.ToDateTime(Valore)
+		Dim Oggi As Date = Now
+		Dim diff As Integer = DateDiff(DateInterval.Year, dd, Oggi)
+
+		Return diff
+	End Function
+
+	<WebMethod()>
 	Public Function ProvaConversioneValore(valore As String) As String
 		Dim m As New mail
 		Dim Ritorno As String = convertNumberToReadableString(valore)
@@ -649,7 +660,7 @@ Public Class wsGenerale
 	Public Function SalvaImpostazioni(Cod_Squadra As String, idAnno As String, Descrizione As String, NomeSquadra As String, Lat As String, Lon As String,
 									  Indirizzo As String, CampoSquadra As String, NomePolisportiva As String, Mail As String, PEC As String,
 									  Telefono As String, PIva As String, CodiceFiscale As String, CodiceUnivoco As String, SitoWeb As String, MittenteMail As String,
-									  GestionePagamenti As String, CostoScuolaCalcio As String) As String
+									  GestionePagamenti As String, CostoScuolaCalcio As String, idUtente As String, Widgets As String) As String
 		Dim Ritorno As String = ""
 		Dim Connessione As String = LeggeImpostazioniDiBase(Server.MapPath("."), Cod_Squadra)
 
@@ -685,6 +696,9 @@ Public Class wsGenerale
 					"CostoScuolaCalcio=" & CostoScuolaCalcio & " " &
 					"Where idAnno = " & idAnno
 				Ritorno = EsegueSql(Conn, Sql, Connessione)
+
+				Sql = "Update [Generale].[dbo].[Utenti] Set Widgets = '" & Widgets & "' Where idUtente=" & idUtente
+				Ritorno = EsegueSql(Conn, Sql, Connessione)
 			End If
 		End If
 
@@ -692,7 +706,7 @@ Public Class wsGenerale
 	End Function
 
 	<WebMethod()>
-	Public Function RitornaImpostazioni(Squadra As String) As String
+	Public Function RitornaImpostazioni(Squadra As String, idUtente As String) As String
 		If Squadra = "" Then
 			Return "*" ' StringaErrore & " Nessuna squadra impostata"
 		End If
@@ -734,8 +748,8 @@ Public Class wsGenerale
 				Else
 					Do Until Rec.Eof()
 						Anni.Add(Rec("idAnno").Value)
-						MeseAttivazione.add(Rec("MeseAttivazione").Value)
-						AnnoAttivazione.add(Rec("AnnoAttivazione").Value)
+						MeseAttivazione.Add(Rec("MeseAttivazione").Value)
+						AnnoAttivazione.Add(Rec("AnnoAttivazione").Value)
 
 						Rec.MoveNext()
 					Loop
@@ -778,6 +792,17 @@ Public Class wsGenerale
 									esisteFirma = "S"
 								End If
 
+								Dim Widgets As String = ""
+
+								Sql = "Select * From [Generale].[dbo].[Utenti] Where idUtente=" & idUtente
+								Rec = LeggeQuery(ConnGen, Sql, ConnessioneGen)
+								If TypeOf (Rec) Is String Then
+									Ritorno = Rec
+								Else
+									Widgets = "" & Rec("Widgets").Value
+								End If
+								Rec.Close()
+
 								Sql = "Select A.*, B.idAvversario, B.idCampo " &
 									"From [" & Codice & "].[dbo].[Anni] A Left Join [" & Codice & "].[dbo].[SquadreAvversarie] B On A.NomeSquadra = B.Descrizione " &
 									"Order By idAnno Desc"
@@ -811,6 +836,7 @@ Public Class wsGenerale
 											MeseAttivazione.Item(quale) & ";" &
 											AnnoAttivazione.Item(quale) & ";" &
 											Rec("CostoScuolaCalcio").value & ";" &
+											Widgets & ";" &
 											"§"
 
 										Rec.MoveNext()

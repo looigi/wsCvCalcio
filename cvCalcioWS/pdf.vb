@@ -41,10 +41,10 @@ Public Class pdfGest
 
 		Dim converter As HtmlToPdf = New HtmlToPdf
 		converter.Options.PdfPageSize = PdfPageSize.A4
-		converter.Options.MarginLeft = 10
-		converter.Options.MarginRight = 10
-		converter.Options.MarginTop = 20
-		converter.Options.MarginBottom = 20
+		converter.Options.MarginLeft = 50
+		converter.Options.MarginRight = 50
+		converter.Options.MarginTop = 50
+		converter.Options.MarginBottom = 50
 
 		Dim doc As SelectPdf.PdfDocument = converter.ConvertHtmlString(htmlString)
 		doc.Save(fileSalvataggio)

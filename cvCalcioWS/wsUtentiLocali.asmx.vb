@@ -299,10 +299,10 @@ Public Class wsUtentiLocali
 								If TypeOf (Rec) Is String Then
 									Ritorno = Rec
 								Else
+									Ritorno &= "|"
 									If Rec.Eof Then
-										Ritorno = StringaErrore & " Nessuna squadra rilevata"
+										' Ritorno = StringaErrore & " Nessuna squadra rilevata"
 									Else
-										Ritorno &= "|"
 										Do Until Rec.Eof
 											Dim Tipologia As String = ""
 											Dim Licenza As String = ""
@@ -712,7 +712,8 @@ Public Class wsUtentiLocali
 										"'" & Telefono & "', " &
 										"'N', " &
 										"-1, " &
-										"'" & AmmOriginale & "' " &
+										"'" & AmmOriginale & "', " &
+										"'" & stringaWidgets & "' " &
 										")"
 								Ritorno = EsegueSql(Conn, Sql, Connessione)
 								'End If

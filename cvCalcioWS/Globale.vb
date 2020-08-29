@@ -1,5 +1,6 @@
 ﻿Imports System.IO
 Imports System.Net
+Imports System.Threading
 Imports System.Timers
 
 Module Globale
@@ -12,7 +13,7 @@ Module Globale
 		Dim Allegato As String
 	End Structure
 	Public listaMails As New List(Of strutturaMail)
-	Public timerMails As Timer = Nothing
+	Public timerMails As Timers.Timer = Nothing
 	Public pathMail As String = ""
 
 	Public Const ErroreConnessioneNonValida As String = "ERRORE: Stringa di connessione non valida"
@@ -23,6 +24,7 @@ Module Globale
 	Public StringaErrore As String = "ERROR: "
 	Public RigaPari As Boolean = False
 	Public CryptPasswordString As String = "WPippoBaudo227!"
+	Public stringaWidgets As String = "1-1-1-1"
 
 	Public Function SistemaNumero(Numero As String) As String
 		If Numero = "" Then
@@ -1181,7 +1183,15 @@ Module Globale
 		Return nuovaPass & ";" & nuovaPassCrypt
 	End Function
 
-	Public Function PulisceCartellaTemporanea() As Integer
+	Public Function PulisceCartellaTemporanea() As String
+		'Dim thread As New Thread(AddressOf PulisceCartellaTempThread)
+		'thread.Start()
+		PulisceCartellaTempThread()
+
+		Return "1"
+	End Function
+
+	Private Sub PulisceCartellaTempThread()
 		Dim Quanti As Integer = 0
 		Dim gf As New GestioneFilesDirectory
 		Dim pp As String = gf.LeggeFileIntero(HttpContext.Current.Server.MapPath(".") & "\Impostazioni\Paths.txt")
@@ -1203,6 +1213,6 @@ Module Globale
 			End If
 		Next
 
-		Return Quanti
-	End Function
+		' Return Quanti
+	End Sub
 End Module
