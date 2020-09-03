@@ -4,7 +4,7 @@ Imports System.Net.Mime
 Imports System.Timers
 
 Public Class mail
-	Public Function SendEmail(Squadra As String, Mittente As String, ByVal oggetto As String, ByVal newBody As String, ByVal ricevente As String, ByVal Allegato As String) As String
+	Public Function SendEmail(Squadra As String, Mittente As String, ByVal oggetto As String, ByVal newBody As String, ByVal ricevente As String, ByVal Allegato As String, Optional AllegatoOMultimedia As String = "") As String
 		Dim Ritorno As String = "*"
 		Dim s As New strutturaMail
 		s.Squadra = Squadra
@@ -13,6 +13,7 @@ Public Class mail
 		s.newBody = newBody
 		s.Ricevente = ricevente
 		s.Allegato = Allegato
+		s.AllegatoOMultimedia = AllegatoOMultimedia
 
 		pathMail = HttpContext.Current.Server.MapPath(".")
 
@@ -34,7 +35,7 @@ Public Class mail
 	Private Sub scodaMessaggi()
 		timerMails.Enabled = False
 		Dim mail As strutturaMail = listaMails.Item(0)
-		Dim Ritorno As String = SendEmailAsincrona(mail.Squadra, mail.Mittente, mail.Oggetto, mail.newBody, mail.Ricevente, mail.Allegato)
+		Dim Ritorno As String = SendEmailAsincrona(mail.Squadra, mail.Mittente, mail.Oggetto, mail.newBody, mail.Ricevente, mail.Allegato, mail.AllegatoOMultimedia)
 		listaMails.RemoveAt(0)
 		If listaMails.Count > 0 Then
 			timerMails.Enabled = True
@@ -44,7 +45,7 @@ Public Class mail
 		End If
 	End Sub
 
-	Private Function SendEmailAsincrona(Squadra As String, Mittente As String, ByVal oggetto As String, ByVal newBody As String, ByVal ricevente As String, ByVal Allegato As String) As String
+	Private Function SendEmailAsincrona(Squadra As String, Mittente As String, ByVal oggetto As String, ByVal newBody As String, ByVal ricevente As String, ByVal Allegato As String, AllegatoOMultimedia As String) As String
 		'Dim myStream As StreamReader = New StreamReader(Server.MapPath(ConfigurationManager.AppSettings("VirtualDir") & "mailresponsive.html"))
 		'Dim newBody As String = ""
 		'newBody = myStream.ReadToEnd()
@@ -72,10 +73,32 @@ Public Class mail
 			' mail.CC.Add(New MailAddress("email"))
 			mail.Subject = oggetto
 			mail.IsBodyHtml = True
-			mail.Body = CreaCorpoMail(Squadra, mail, newBody)
+			If newBody <> "" Then
+				mail.Body = CreaCorpoMail(Squadra, mail, newBody)
+			Else
+				mail.Body = ""
+			End If
 
 			Dim Data As Attachment = Nothing
 			If Allegato <> "" Then
+				Dim paths As String = ""
+				If AllegatoOMultimedia = "A" Then
+					paths = gf.LeggeFileIntero(pathMail & "\Impostazioni\PathAllegati.txt")
+					Dim p() As String = paths.Split(";")
+					If Strings.Right(p(0), 1) <> "\" Then
+						p(0) &= "\"
+					End If
+					Allegato = p(0) & Allegato
+				Else
+					If AllegatoOMultimedia = "M" Then
+						paths = gf.LeggeFileIntero(pathMail & "\Impostazioni\Paths.txt")
+						paths = paths.Replace(vbCrLf, "")
+						If Strings.Right(paths, 1) <> "\" Then
+							paths &= "\"
+						End If
+						Allegato = paths & Allegato
+					End If
+				End If
 				Data = New Attachment(Allegato, MediaTypeNames.Application.Octet)
 				Dim disposition As ContentDisposition = Data.ContentDisposition
 				disposition.CreationDate = System.IO.File.GetCreationTime(Allegato)
@@ -117,7 +140,7 @@ Public Class mail
 			Righe = Righe.Replace(vbCrLf, "")
 
 			Dim Body As String = ""
-			Dim logoApplicazione As String = Righe & "logoApplicazione.png"
+			'Dim logoApplicazione As String = Righe & "logoApplicazione.png"
 			'Dim sfondoMail As String = Righe & "bg.jpg"
 
 			Dim filePaths As String = gf.LeggeFileIntero(pathMail & "\Impostazioni\PathAllegati.txt")
@@ -143,16 +166,17 @@ Public Class mail
 
 			'mail.Attachments.Add(inlineLogo)
 
-			Dim contentID2 As String = "Image2" ' & Now.Year & Format(Now.Month, "00") & Format(Now.Day, "00") & Format(Now.Hour, "00") & Format(Now.Minute, "00") & Format(Now.Second, "00")
-			Dim inlineLogo2 = New Attachment(logoApplicazione)
-			inlineLogo2.ContentId = contentID2
-			inlineLogo2.ContentDisposition.Inline = True
-			inlineLogo2.ContentDisposition.DispositionType = DispositionTypeNames.Inline
+			'Dim contentID2 As String = "Image2" ' & Now.Year & Format(Now.Month, "00") & Format(Now.Day, "00") & Format(Now.Hour, "00") & Format(Now.Minute, "00") & Format(Now.Second, "00")
+			'Dim inlineLogo2 = New Attachment(logoApplicazione)
+			'inlineLogo2.ContentId = contentID2
+			'inlineLogo2.ContentDisposition.Inline = True
+			'inlineLogo2.ContentDisposition.DispositionType = DispositionTypeNames.Inline
 
-			mail.Attachments.Add(inlineLogo2)
+			'mail.Attachments.Add(inlineLogo2)
 
 			Corpo = Corpo.Replace("***SFONDO***", "cid:" & contentID)
-			Corpo = Corpo.Replace("***LOGO APPLICAZIONE***", "cid:" & contentID2)
+			'Corpo = Corpo.Replace("***LOGO APPLICAZIONE***", "cid:" & contentID2)
+			Corpo = Corpo.Replace("***LOGO APPLICAZIONE***", "")
 
 			'gf.ApreFileDiTestoPerScrittura(HttpContext.Current.Server.MapPath(".") & "\MAIL.txt")
 			'gf.ScriveTestoSuFileAperto(Corpo)

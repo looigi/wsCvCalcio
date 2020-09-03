@@ -107,9 +107,9 @@ Public Class wsGiocatori
 								Ok = False
 							Else
 								If idGenitore < 3 Then
-									Dim Genitore As String = Rec("Genitore" & idGenitore).Value
-									Dim Mail As String = Rec("MailGenitore" & idGenitore).Value
-									Dim Telefono As String = Rec("TelefonoGenitore" & idGenitore).Value
+									Dim Genitore As String = "" & Rec("Genitore" & idGenitore).Value
+									Dim Mail As String = "" & Rec("MailGenitore" & idGenitore).Value
+									Dim Telefono As String = "" & Rec("TelefonoGenitore" & idGenitore).Value
 
 									Rec.Close
 
@@ -134,8 +134,8 @@ Public Class wsGiocatori
 												GenitoreGiaEsisteComeUtente = False
 											Else
 												GenitoreGiaEsisteComeUtente = True
-												idGenitoreLetto = Rec("idUtente").Value
-												figliGiaPresenti = Rec("idGiocatore").Value
+												idGenitoreLetto = "" & Rec("idUtente").Value
+												figliGiaPresenti = "" & Rec("idGiocatore").Value
 												If figliGiaPresenti = "-1" Then
 													figliGiaPresenti = ""
 												End If
@@ -161,50 +161,71 @@ Public Class wsGiocatori
 												End If
 											End If
 
+											If Not Genitore.Contains(" ") Then
+												Genitore = " " & Genitore
+											End If
 											Dim g() As String = Genitore.Split(" ")
 											Dim s() As String = Squadra.Split("_")
-											Dim idSquadra As Integer = Val(s(1))
-											Dim pass As String = generaPassRandom()
-											Dim nuovaPass() = pass.Split(";")
+											If s.Length > 0 Then
+												Dim idSquadra As Integer = s(1)
+												Dim pass As String = ""
+												Dim conta As Integer = 0
+												While Not pass.Contains(";")
+													pass = generaPassRandom()
+													conta += 1
+													If conta > 20 Then
+														Ritorno = StringaErrore & " Creazione password fallita"
+														Ok = False
+														Exit While
+													End If
+												End While
 
-											If Not GenitoreGiaEsisteComeUtente Then
-												Sql = "Insert Into [Generale].[dbo].[Utenti] Values (" &
-													" " & idAnno & ", " &
-													" " & idGenitoreLetto & ", " &
-													"'" & Mail.Replace("'", "''") & "', " &
-													"'" & g(0).Replace("'", "''") & "', " &
-													"'" & g(1).Replace("'", "''") & "', " &
-													"'" & nuovaPass(1).Replace("'", "''") & "', " &
-													"'" & Mail.Replace("'", "''") & "', " &
-													"-1, " &
-													"3, " &
-													" " & idSquadra & ", " &
-													"1, " &
-													"'" & Telefono & "', " &
-													"'N', " &
-													"'" & idGiocatore & "', " &
-													"'N', " &
-													"'" & stringaWidgets & "' " &
-													")"
+												If Ok Then
+													Dim nuovaPass() = pass.Split(";")
+
+													If Not GenitoreGiaEsisteComeUtente Then
+														Sql = "Insert Into [Generale].[dbo].[Utenti] Values (" &
+															" " & idAnno & ", " &
+															" " & idGenitoreLetto & ", " &
+															"'" & Mail.Replace("'", "''") & "', " &
+															"'" & g(0).Replace("'", "''") & "', " &
+															"'" & g(1).Replace("'", "''") & "', " &
+															"'" & nuovaPass(1).Replace("'", "''") & "', " &
+															"'" & Mail.Replace("'", "''") & "', " &
+															"-1, " &
+															"3, " &
+															" " & idSquadra & ", " &
+															"1, " &
+															"'" & Telefono & "', " &
+															"'N', " &
+															"'" & idGiocatore & "', " &
+															"'N', " &
+															"'" & stringaWidgets & "' " &
+															")"
+													Else
+														figliGiaPresenti &= idGiocatore & ";"
+														Sql = "Update [Generale].[dbo].[Utenti] Set " &
+															"idGiocatore='" & figliGiaPresenti & "' " &
+															"Where idUtente=" & idGenitoreLetto
+													End If
+													Ritorno = EsegueSql(Conn, Sql, Connessione)
+													If Ritorno.Contains(StringaErrore) Then
+														Ok = False
+													Else
+														Dim m As New mail
+														Dim Oggetto As String = "Nuovo utente inCalcio"
+														Dim Body As String = ""
+														Body &= "E' stato creato l'utente '" & Genitore.ToUpper & "'. <br />"
+														Body &= "Per accedere al sito sarà possibile digitare la mail rilasciata alla segreteria in fase di iscrizione: " & Mail & "<br />"
+														Body &= "La password valida per il solo primo accesso è: " & nuovaPass(0) & "<br /><br />"
+														Dim ChiScrive As String = "notifiche@incalcio.cloud"
+
+														Ritorno = m.SendEmail(Squadra, "", Oggetto, Body, Mail, "")
+													End If
+												End If
 											Else
-												figliGiaPresenti &= idGiocatore & ";"
-												Sql = "Update [Generale].[dbo].[Utenti] Set " &
-													"idGiocatore='" & figliGiaPresenti & "' " &
-													"Where idUtente=" & idGenitoreLetto
-											End If
-											Ritorno = EsegueSql(Conn, Sql, Connessione)
-											If Ritorno.Contains(StringaErrore) Then
 												Ok = False
-											Else
-												Dim m As New mail
-												Dim Oggetto As String = "Nuovo utente inCalcio"
-												Dim Body As String = ""
-												Body &= "E' stato creato l'utente '" & Genitore.ToUpper & "'. <br />"
-												Body &= "Per accedere al sito sarà possibile digitare la mail rilasciata alla segreteria in fase di iscrizione: " & Mail & "<br />"
-												Body &= "La password valida per il solo primo accesso è: " & nuovaPass(0) & "<br /><br />"
-												Dim ChiScrive As String = "notifiche@incalcio.cloud"
-
-												Ritorno = m.SendEmail(Squadra, "", Oggetto, Body, Mail, "")
+												Ritorno = StringaErrore & " Problema nel ricavare i dati della società"
 											End If
 										End If
 									End If
@@ -1133,11 +1154,11 @@ Public Class wsGiocatori
 									Else
 										Semaforo1 = Rec("Semaforo1").Value & "*" & Rec("Titolo1").Value & ";"
 									End If
-									If Rec("Semaforo2").Value Is DBNull.Value Or "" & Rec("Semaforo2").Value = "" Then
-										Semaforo2 = "rosso" & "*" & "Pagamento non completo;"
-									Else
-										Semaforo2 = Rec("Semaforo2").Value & "*" & Rec("Titolo2").Value & ";"
-									End If
+									'If Rec("Semaforo2").Value Is DBNull.Value Or "" & Rec("Semaforo2").Value = "" Then
+									'	Semaforo2 = "rosso" & "*" & "Pagamento non completo;"
+									'Else
+									'Semaforo2 = Rec("Semaforo2").Value & "*" & Rec("Titolo2").Value & ";"
+									'End If
 									If Rec("Smeaforo3").Value Is DBNull.Value Or "" & Rec("Smeaforo3").Value = "" Then
 										Semaforo3 = "rosso" & "*" & "Nessuna firma validata;"
 									Else
@@ -1290,25 +1311,25 @@ Public Class wsGiocatori
 		End If
 		Rec2.Close
 
-		' Semaforo 2: Pagamenti
-		Sql = "Select Sum(Pagamento) As Pagato, TotalePagamento As Somma " &
-				"From GiocatoriPagamenti A Left Join GiocatoriDettaglio B On A.idAnno = B.idAnno And A.idGiocatore = B.idGiocatore " &
-				"Where A.idAnno = " & Anno & " And A.idGiocatore = " & idGiocatore & " " &
-				"Group By TotalePagamento"
-		Rec2 = LeggeQuery(Conn, Sql, Connessione)
-		If TypeOf (Rec2) Is String Then
-			Ritorno = Rec2
-			Return Ritorno
-		Else
-			If Not Rec2.Eof Then
-				Semaforo2 = IIf(Rec2("Pagato").Value >= Rec2("Somma").Value, "verde", "giallo")
-				Titolo2 = IIf(Rec2("Pagato").Value >= Rec2("Somma").Value, "Pagamento completo", "Pagamento parziale")
-			Else
-				Semaforo2 = "rosso"
-				Titolo2 = "Pagamento non completo"
-			End If
-			Rec2.Close
-		End If
+		'' Semaforo 2: Pagamenti
+		'Sql = "Select Sum(Pagamento) As Pagato, TotalePagamento As Somma " &
+		'		"From GiocatoriPagamenti A Left Join GiocatoriDettaglio B On A.idAnno = B.idAnno And A.idGiocatore = B.idGiocatore " &
+		'		"Where A.idAnno = " & Anno & " And A.idGiocatore = " & idGiocatore & " " &
+		'		"Group By TotalePagamento"
+		'Rec2 = LeggeQuery(Conn, Sql, Connessione)
+		'If TypeOf (Rec2) Is String Then
+		'	Ritorno = Rec2
+		'	Return Ritorno
+		'Else
+		'	If Not Rec2.Eof Then
+		'		Semaforo2 = IIf(Rec2("Pagato").Value >= Rec2("Somma").Value, "verde", "giallo")
+		'		Titolo2 = IIf(Rec2("Pagato").Value >= Rec2("Somma").Value, "Pagamento completo", "Pagamento parziale")
+		'	Else
+		'		Semaforo2 = "rosso"
+		'		Titolo2 = "Pagamento non completo"
+		'	End If
+		'	Rec2.Close
+		'End If
 
 		' Semaforo 3: Firme
 		Dim GenitoriSeparati As Boolean = False
@@ -1754,7 +1775,7 @@ Public Class wsGiocatori
 											DataDiNascita2 As String, CittaNascita2 As String, CodFiscale2 As String, Citta2 As String, Cap2 As String, Indirizzo2 As String,
 											GenitoriSeparati As String, AffidamentoCongiunto As String, AbilitaFirmaGenitore1 As String, AbilitaFirmaGenitore2 As String,
 											AbilitaFirmaGenitore3 As String, FirmaAnalogicaGenitore1 As String, FirmaAnalogicaGenitore2 As String, FirmaAnalogicaGenitore3 As String,
-											idTutore As String) As String
+											idTutore As String, idQuota As String) As String
 		Dim Ritorno As String = ""
 		Dim Connessione As String = LeggeImpostazioniDiBase(Server.MapPath("."), Squadra)
 
@@ -1809,7 +1830,8 @@ Public Class wsGiocatori
 							"FirmaAnalogicaGenitore1='" & FirmaAnalogicaGenitore1 & "', " &
 							"FirmaAnalogicaGenitore2='" & FirmaAnalogicaGenitore2 & "', " &
 							"FirmaAnalogicaGenitore3='" & FirmaAnalogicaGenitore3 & "', " &
-							"idTutore='" & idTutore & "' " &
+							"idTutore='" & idTutore & "', " &
+							"idQuota='" & idQuota & "' " &
 							"Where idAnno=" & idAnno & " And idGiocatore=" & idGiocatore
 						Ritorno = EsegueSql(Conn, Sql, Connessione)
 						If Ritorno.Contains(StringaErrore) Then
@@ -1997,7 +2019,8 @@ Public Class wsGiocatori
 									"'N', " &
 									"'N', " &
 									"'N', " &
-									"'M' " &
+									"'M', " &
+									"-1 " &
 									")"
 								Ritorno = EsegueSql(Conn, Sql, Connessione)
 								If Not Ritorno.Contains(StringaErrore) Then
@@ -2101,6 +2124,7 @@ Public Class wsGiocatori
 								Ritorno &= Rec("FirmaAnalogicaGenitore2").Value & ";"
 								Ritorno &= Rec("FirmaAnalogicaGenitore3").Value & ";"
 								Ritorno &= Rec("idTutore").Value & ";"
+								Ritorno &= Rec("idQuota").Value & ";"
 							End If
 						End If
 					End If
@@ -2583,7 +2607,9 @@ Public Class wsGiocatori
 	End Function
 
 	<WebMethod()>
-	Public Function SalvaPagamento(Squadra As String, idAnno As String, idGiocatore As String, Pagamento As String, Commento As String, idPagatore As String, idRegistratore As String) As String
+	Public Function SalvaPagamento(Squadra As String, idAnno As String, idGiocatore As String, Pagamento As String, Commento As String,
+								   idPagatore As String, idRegistratore As String, Note As String, Validato As String, idTipoPagamento As String,
+								   idRata As String, idQuota As String) As String
 		Dim Ritorno As String = ""
 		Dim Connessione As String = LeggeImpostazioniDiBase(Server.MapPath("."), Squadra)
 
@@ -2723,7 +2749,12 @@ Public Class wsGiocatori
 										"'N', " &
 										"'" & Commento.Replace("'", "''") & "', " &
 										" " & idPagatore & ", " &
-										" " & idRegistratore & " " &
+										" " & idRegistratore & ", " &
+										"'" & Note.Replace("'", "''") & "', " &
+										"'" & Validato & "', " &
+										" " & idTipoPagamento & ", " &
+										" " & idRata & ", " &
+										" " & idQuota & " " &
 										")"
 									Ritorno = EsegueSql(Conn, Sql, Connessione)
 									If Ritorno.Contains(StringaErrore) Then
@@ -2773,6 +2804,279 @@ Public Class wsGiocatori
 							gf.CreaDirectoryDaPercorso(path)
 							Dim fileFinale As String = path & "Ricevuta_" & Progressivo & ".pdf"
 							Dim fileAppoggio As String = path & "Ricevuta_" & Progressivo & ".html"
+
+							Dim Intero As String
+							Dim Virgola As String
+
+							If Pagamento.Contains(",") Or Pagamento.Contains(".") Then
+								If Pagamento.Contains(".") Then
+									Dim pp1() As String = Pagamento.Split(".")
+									Intero = pp1(0)
+									Virgola = pp1(1)
+								Else
+									Dim pp22() As String = Pagamento.Split(",")
+									Intero = pp22(0)
+									Virgola = pp22(1)
+								End If
+							Else
+								Intero = Pagamento
+								Virgola = ""
+							End If
+
+							If Virgola = "" Then
+								Virgola = "00"
+							Else
+								If Virgola.Length = 1 Then
+									Virgola = "0" & Virgola
+								Else
+									If Virgola > 2 Then
+										Virgola = Mid(Virgola, 1, 2)
+									End If
+								End If
+							End If
+
+							Dim Dati As String = "C.F.: " & CodiceFiscale & " P.I.:" & PIva & "<br />Telefono: " & Telefono & "<br />E-Mail: " & eMail
+							Dim Altro As String = ""
+							If Commento <> "" Then
+								Altro = "- " & Commento
+							End If
+
+							Body = Body.Replace("***URL LOGO***", nomeImmConv)
+							Body = Body.Replace("***NOME POLISPORTIVA***", NomePolisportiva)
+							Body = Body.Replace("***INDIRIZZO***", Indirizzo)
+							Body = Body.Replace("***DATI***", Dati)
+							Body = Body.Replace("***NUMERO_RICEVUTA***", ProgressivoGenerale & "/" & Now.Year)
+							Body = Body.Replace("***DATA_RICEVUTA***", Format(Now.Day, "00") & "/" & Format(Now.Month, "00") & "/" & Now.Year)
+							Body = Body.Replace("***NOME***", Cognome & " " & Nome)
+							Body = Body.Replace("***MOTIVAZIONE***", CognomeIscritto & " " & NomeIscritto & " " & CodFiscaleIscritto & " " & Altro)
+							Body = Body.Replace("***IMPORTO***", Intero)
+							Body = Body.Replace("***VIRGOLE***", Virgola)
+
+							Dim Cifre1 As String = convertNumberToReadableString(Val(Intero))
+							Dim Cifre2 As String = convertNumberToReadableString(Val(Virgola))
+							Dim Altro2 As String = ""
+							If Cifre2 <> "" Then
+								Altro2 = "/" & Virgola
+							End If
+							Body = Body.Replace("***IMPORTO LETTERE***", Cifre1 & Altro2)
+
+							filePaths = gf.LeggeFileIntero(Server.MapPath(".") & "\Impostazioni\Paths.txt")
+							If Strings.Right(filePaths, 1) <> "\" Then
+								filePaths &= "\"
+							End If
+							' Dim pathFirma As String = filePaths & NomeSquadra.Replace(" ", "_") & "\Firme\" & idAnno & "_" & idGiocatore & "_" & idPagatore & ".png"
+							' Dim pathFirma As String = filePaths & NomeSquadra.Replace(" ", "_") & "\Segreteria\" & idAnno & ".kgb"
+
+							Dim pathFirma As String = filePaths & NomeSquadra.Replace(" ", "_") & "\Segreteria\" & idAnno & ".kgb"
+							If File.Exists(pathFirma) Then
+								Dim urlFirma As String = pp & "\" & NomeSquadra.Replace(" ", "_") & "\Segreteria\" & idAnno & ".kgb"
+								Dim pathFirmaConv As String = p(2) & "/Appoggio/Segreteria_" & Esten & ".png"
+								Dim urlFirmaConv As String = pp & "\Appoggio\Segreteria_" & Esten & ".png"
+								c.DecryptFile(CryptPasswordString, urlFirma, urlFirmaConv)
+
+								Body = Body.Replace("***URL FIRMA***", urlFirmaConv)
+							Else
+								Body = Body.Replace("***URL FIRMA***", "")
+							End If
+
+							gf.EliminaFileFisico(fileAppoggio)
+							gf.ApreFileDiTestoPerScrittura(fileAppoggio)
+							gf.ScriveTestoSuFileAperto(Body)
+
+							gf.ChiudeFileDiTestoDopoScrittura()
+
+							Dim pp2 As New pdfGest
+							Ritorno = pp2.ConverteHTMLInPDF(fileAppoggio, fileFinale, "")
+							If Ritorno <> "*" Then
+								Ok = False
+							End If
+						Catch ex As Exception
+							Ritorno = StringaErrore & " " & ex.Message
+						End Try
+					End If
+				End If
+
+				If Ok Then
+					Sql = "commit"
+					Dim Ritorno2 As String = EsegueSql(Conn, Sql, Connessione)
+				Else
+					Sql = "rollback"
+					Dim Ritorno2 As String = EsegueSql(Conn, Sql, Connessione)
+				End If
+
+				Conn.Close()
+			End If
+		End If
+
+		Return Ritorno
+	End Function
+
+	<WebMethod()>
+	Public Function ModificaPagamento(Squadra As String, idPagamento As String, idAnno As String, idGiocatore As String, Pagamento As String, Commento As String,
+								   idPagatore As String, idRegistratore As String, Note As String, Validato As String, idTipoPagamento As String,
+								   idRata As String, idQuota As String) As String
+		Dim Ritorno As String = ""
+		Dim Connessione As String = LeggeImpostazioniDiBase(Server.MapPath("."), Squadra)
+
+		If Connessione = "" Then
+			Ritorno = ErroreConnessioneNonValida
+		Else
+			Dim Conn As Object = ApreDB(Connessione)
+
+			If TypeOf (Conn) Is String Then
+				Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
+			Else
+				Dim Rec As Object = Server.CreateObject("ADODB.Recordset")
+				Dim Sql As String = ""
+				Dim Ok As Boolean = True
+
+				Sql = "Begin transaction"
+				Ritorno = EsegueSql(Conn, Sql, Connessione)
+
+				If Not Ritorno.Contains(StringaErrore) Then
+					Dim ProgressivoGenerale As Integer
+
+					Dim DataPagamento As String = Now.Year & "-" & Format(Now.Month, "00") & "-" & Format(Now.Day, "00") & " " & Format(Now.Hour, "00") & ":" & Format(Now.Minute, "00") & ":" & Format(Now.Second, "00")
+					Dim Cognome As String = ""
+					Dim Nome As String = ""
+					Dim CognomeIscritto As String = ""
+					Dim NomeIscritto As String = ""
+					Dim CodFiscalePagatore As String = ""
+					Dim CodFiscaleIscritto As String = ""
+					Dim NomeSquadra As String = ""
+					Dim NomePolisportiva As String = ""
+					Dim Indirizzo As String = ""
+					Dim CodiceFiscale As String = ""
+					Dim PIva As String = ""
+					Dim Telefono As String = ""
+					Dim eMail As String = ""
+
+					Try
+						Sql = "SELECT * FROM Anni"
+						Rec = LeggeQuery(Conn, Sql, Connessione)
+						If Rec.Eof() Then
+							Ritorno = StringaErrore & " Nessuna squadra rilevata"
+							Ok = False
+						Else
+							NomeSquadra = Rec("NomeSquadra").Value
+							NomePolisportiva = Rec("NomePolisportiva").Value
+							Indirizzo = Rec("Indirizzo").Value
+							CodiceFiscale = Rec("CodiceFiscale").Value
+							PIva = Rec("PIva").Value
+							Telefono = Rec("Telefono").Value
+							eMail = Rec("Mail").Value
+						End If
+						Rec.Close()
+
+						If Ok Then
+							If idPagatore = 3 Then
+								Sql = "SELECT * FROM Giocatori Where idGiocatore=" & idGiocatore
+								Rec = LeggeQuery(Conn, Sql, Connessione)
+								If Rec.Eof() Then
+									Ritorno = StringaErrore & " Nessun giocatore rilevato"
+									Ok = False
+								Else
+									Cognome = Rec("Cognome").Value
+									Nome = Rec("Nome").Value
+									CodFiscalePagatore = Rec("CodFiscale").Value
+
+									CognomeIscritto = Rec("Cognome").Value
+									NomeIscritto = Rec("Nome").Value
+									CodFiscaleIscritto = Rec("CodFiscale").Value
+								End If
+								Rec.Close()
+							Else
+								Sql = "SELECT * FROM Giocatori Where idGiocatore=" & idGiocatore
+								Rec = LeggeQuery(Conn, Sql, Connessione)
+								If Rec.Eof() Then
+									Ritorno = StringaErrore & " Nessun giocatore rilevato"
+									Ok = False
+								Else
+									CognomeIscritto = Rec("Cognome").Value
+									NomeIscritto = Rec("Nome").Value
+									CodFiscaleIscritto = Rec("CodFiscale").Value
+								End If
+								Rec.Close()
+
+								Sql = "SELECT * FROM GiocatoriDettaglio Where idGiocatore=" & idGiocatore
+								Rec = LeggeQuery(Conn, Sql, Connessione)
+								If Rec.Eof() Then
+									Ritorno = StringaErrore & " Nessun giocatore rilevato"
+									Ok = False
+								Else
+									If idPagatore = 1 Then
+										Cognome = Rec("Genitore1").Value
+										Nome = ""
+										CodFiscalePagatore = Rec("CodFiscale1").Value
+									Else
+										Cognome = Rec("Genitore2").Value
+										Nome = ""
+										CodFiscalePagatore = Rec("CodFiscale2").Value
+									End If
+								End If
+								Rec.Close()
+							End If
+
+							If Ok Then
+								Sql = "Update GiocatoriPagamenti Set " &
+									"Pagamento=" & Pagamento & ", " &
+									"DataPagamento='" & DataPagamento & "', " &
+									"Commento='" & Commento.Replace("'", "''") & "', " &
+									"idUtentePagatore=" & idPagatore & ", " &
+									"idUtenteRegistratore=" & idRegistratore & ", " &
+									"Note='" & Note.Replace("'", "''") & "', " &
+									"Validato='" & Validato & "', " &
+									"idTipoPagamento=" & idTipoPagamento & ", " &
+									"idRata=" & idRata & ", " &
+									"idQuota=" & idQuota & " " &
+									"Where idGiocatore = " & idGiocatore & " And Progressivo = " & idPagamento
+								Ritorno = EsegueSql(Conn, Sql, Connessione)
+								If Ritorno.Contains(StringaErrore) Then
+									Ok = False
+								End If
+							End If
+						End If
+					Catch ex As Exception
+						Ritorno = StringaErrore & " " & ex.Message
+						Ok = False
+					End Try
+
+					If Ok Then
+						Try
+							Dim gf As New GestioneFilesDirectory
+							Dim filePaths As String = gf.LeggeFileIntero(Server.MapPath(".") & "\Impostazioni\PathAllegati.txt")
+							Dim p() As String = filePaths.Split(";")
+							If Strings.Right(p(0), 1) <> "\" Then
+								p(0) &= "\"
+							End If
+							If Strings.Right(p(2), 1) <> "/" Then
+								p(2) = p(2) & "/"
+							End If
+							' Dim url As String = p(2) & NomeSquadra.Replace(" ", "_") & "/Societa/" & idAnno & "_1.jpg"
+
+							Dim pp As String = gf.LeggeFileIntero(Server.MapPath(".") & "\Impostazioni\Paths.txt")
+							pp = pp.Trim()
+							If Strings.Right(pp, 1) = "\" Then
+								pp = Mid(pp, 1, pp.Length - 1)
+							End If
+							Dim Esten As String = Format(Now.Second, "00") & "_" & Now.Millisecond & RitornaValoreRandom(55)
+
+							p(2) = p(2).Replace(vbCrLf, "")
+							Dim nomeImm As String = p(2) & NomeSquadra.Replace(" ", "_") & "/Societa/" & idAnno & "_1.kgb"
+							Dim pathImm As String = pp & "\" & NomeSquadra.Replace(" ", "_") & "\Societa\" & idAnno & "_1.kgb"
+							Dim nomeImmConv As String = ""
+							Dim c As New CriptaFiles
+							If File.Exists(pathImm) Then
+								nomeImmConv = p(2) & "Appoggio/Societa_" & idAnno & "_1_" & Esten & ".png"
+								Dim pathImmConv As String = pp & "\Appoggio\Societa_" & idAnno & "_1_" & Esten & ".png"
+								c.DecryptFile(CryptPasswordString, pathImm, pathImmConv)
+							End If
+
+							Dim Body As String = gf.LeggeFileIntero(Server.MapPath(".") & "\Scheletri\ricevuta_pagamento.txt")
+							Dim path As String = p(0) & "\" & Squadra & "\Ricevute\Anno" & idAnno & "\" & idGiocatore & "\"
+							gf.CreaDirectoryDaPercorso(path)
+							Dim fileFinale As String = path & "Ricevuta_" & idPagamento & ".pdf"
+							Dim fileAppoggio As String = path & "Ricevuta_" & idPagamento & ".html"
 
 							Dim Intero As String
 							Dim Virgola As String
@@ -2975,30 +3279,30 @@ Public Class wsGiocatori
 						Rec.Close
 
 						Sql = "Select * From GiocatoriPagamenti Where idAnno=" & idAnno & " And idGiocatore=" & idGiocatore & " And Eliminato='N' Order By Progressivo"
-							Rec = LeggeQuery(Conn, Sql, Connessione)
-							If TypeOf (Rec) Is String Then
-								Ritorno = Rec
-							Else
-								Dim Totale As Single = 0
-								'Ritorno = "Totale a pagare;" & Format(TotPag, "#0.#0") & ";;§"
-								Dim Ritorno2 As String = ""
-								Do Until Rec.Eof
-									Ritorno2 &= Rec("Progressivo").Value & ";" & Rec("Pagamento").Value & ";" & Rec("DataPagamento").Value & ";" & Rec("Commento").Value & ";§"
-									Totale += (Rec("Pagamento").Value)
-
-									Rec.MoveNext
-								Loop
-								Rec.Close
-
-								Ritorno = Totale & ";" & TotPag & ";|" & Ritorno2
-
-								'Ritorno &= "Totale;" & Format(Totale, "#0.#0") & ";;§"
-								'Dim Differenza As Single = TotPag - Totale
-								'Differenza = CInt(Differenza * 100) / 100
-								'Ritorno &= "Differenza;" & Format(Differenza, "#0.#0") & ";;§"
-							End If
+						Rec = LeggeQuery(Conn, Sql, Connessione)
+						If TypeOf (Rec) Is String Then
+							Ritorno = Rec
 						Else
-							Ritorno = StringaErrore & ": Nessun pagamento impostato"
+							Dim Totale As Single = 0
+							'Ritorno = "Totale a pagare;" & Format(TotPag, "#0.#0") & ";;§"
+							Dim Ritorno2 As String = ""
+							Do Until Rec.Eof
+								Ritorno2 &= Rec("Progressivo").Value & ";" & Rec("Pagamento").Value & ";" & Rec("DataPagamento").Value & ";" & Rec("Commento").Value & ";§"
+								Totale += (Rec("Pagamento").Value)
+
+								Rec.MoveNext
+							Loop
+							Rec.Close
+
+							Ritorno = Totale & ";" & TotPag & ";|" & Ritorno2
+
+							'Ritorno &= "Totale;" & Format(Totale, "#0.#0") & ";;§"
+							'Dim Differenza As Single = TotPag - Totale
+							'Differenza = CInt(Differenza * 100) / 100
+							'Ritorno &= "Differenza;" & Format(Differenza, "#0.#0") & ";;§"
+						End If
+					Else
+						Ritorno = StringaErrore & ": Nessun pagamento impostato"
 					End If
 				End If
 			End If

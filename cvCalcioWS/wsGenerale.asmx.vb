@@ -45,6 +45,25 @@ Public Class wsGenerale
 	End Function
 
 	<WebMethod()>
+	Public Function InviaMailConAllegato(Squadra As String, Oggetto As String, Body As String, Destinatario As String, Allegato As String, AllegatoOMultimedia As String) As String
+		Dim m As New mail
+		Dim Ritorno As String = m.SendEmail(Squadra, "", Oggetto, Body, Destinatario, Allegato.Replace("/", "\"), AllegatoOMultimedia)
+		Return Ritorno
+	End Function
+
+	<WebMethod()>
+	Public Function InviaSollecitoPagamento(Squadra As String, Destinatario As String, Dati As String) As String
+		Dim m As New mail
+
+		Dim Oggetto As String = "Sollecito pagamento"
+		Dim d() As String = Dati.Split(";")
+		Dim Body As String = "In data " & d(0) & " è scaduta la rata '" & d(1) & "' dell'importo di Euro " & d(2) & ".<br />Si prega di passare urgentemente in segreteria.<br />Grazie"
+
+		Dim Ritorno As String = m.SendEmail(Squadra, "", Oggetto, Body, Destinatario, "", "")
+		Return Ritorno
+	End Function
+
+	<WebMethod()>
 	Public Function SistemaImmagini(Squadra As String, idAnno As String) As String
 		Dim Ritorno As String = ""
 		Dim Connessione As String = LeggeImpostazioniDiBase(Server.MapPath("."), Squadra)
@@ -1698,6 +1717,60 @@ Public Class wsGenerale
 		If Not File.Exists(pathFilePosta) Then
 			pathFilePosta = HttpContext.Current.Server.MapPath(".") & "\Scheletri\base_mail.txt"
 			Ritorno = "ORIGINALE"
+		End If
+
+		Return Ritorno
+	End Function
+
+	<WebMethod()>
+	Public Function RitornaDatiContatti(Squadra As String, idCategoria As String) As String
+		' RichiedeFirma?Squadra= 0002_00160&idGiocatore=432&Genitore=1 
+		Dim Ritorno As String = ""
+		Dim Connessione As String = LeggeImpostazioniDiBase(Server.MapPath("."), Squadra)
+
+		If Connessione = "" Then
+			Ritorno = ErroreConnessioneNonValida
+		Else
+			Dim Conn As Object = ApreDB(Connessione)
+
+			If TypeOf (Conn) Is String Then
+				Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
+			Else
+				Dim Rec As Object = Server.CreateObject("ADODB.Recordset")
+				Dim Sql As String = ""
+
+				Sql = "Select * From (Select idGiocatore, DataDiNascita, Cognome, Nome, Maggiorenne, EMail As Dettaglio1, Telefono As Dettaglio2, '' As Dettaglio3, '' As Dettaglio4, '' As Dettaglio5, '' As Dettaglio6 From Giocatori " &
+					"Where Eliminato = 'N' And CharIndex('" & idCategoria & "-', Categorie) > 0 And Maggiorenne = 'S' " &
+					"Union All " &
+					"Select A.idGiocatore, DataDiNascita, Cognome, Nome, A.Maggiorenne, Genitore1 As Dettaglio1, MailGenitore1 As Dettaglio2, TelefonoGenitore1 As Dettaglio3, " &
+					"Genitore2 As Dettaglio4, MailGenitore2 As Dettaglio5, TelefonoGenitore2 As Dettaglio6 From Giocatori A " &
+					"Left Join GiocatoriDettaglio B On A.idGiocatore = B.idGiocatore " &
+					"Where A.Eliminato = 'N' And CharIndex('" & idCategoria & "-', A.Categorie) > 0 And A.Maggiorenne = 'N' " &
+					") A Order By Cognome, Nome"
+				Rec = LeggeQuery(Conn, Sql, Connessione)
+				If TypeOf (Rec) Is String Then
+					Ritorno = Rec
+				Else
+					Ritorno = ""
+					Do Until Rec.Eof
+						Ritorno &= Rec("Cognome").Value & ";"
+						Ritorno &= Rec("Nome").Value & ";"
+						Ritorno &= Rec("Maggiorenne").Value & ";"
+						Ritorno &= Rec("Dettaglio1").Value & ";"
+						Ritorno &= Rec("Dettaglio2").Value & ";"
+						Ritorno &= Rec("Dettaglio3").Value & ";"
+						Ritorno &= Rec("Dettaglio4").Value & ";"
+						Ritorno &= Rec("Dettaglio5").Value & ";"
+						Ritorno &= Rec("Dettaglio6").Value & ";"
+						Ritorno &= Rec("idGiocatore").Value & ";"
+						Ritorno &= Rec("DataDiNascita").Value & ";"
+						Ritorno &= "§"
+
+						Rec.MoveNext
+					Loop
+					Rec.Close
+				End If
+			End If
 		End If
 
 		Return Ritorno

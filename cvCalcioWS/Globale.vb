@@ -11,6 +11,7 @@ Module Globale
 		Dim newBody As String
 		Dim Ricevente As String
 		Dim Allegato As String
+		Dim AllegatoOMultimedia As String
 	End Structure
 	Public listaMails As New List(Of strutturaMail)
 	Public timerMails As Timers.Timer = Nothing
@@ -261,10 +262,10 @@ Module Globale
 
 				'If Casa = "S" Then
 				Filone = Filone.Replace("***IMMAGINE SQ1***", Imm1)
-				Filone = Filone.Replace("***SQUADRA 1***", Rec("Squadra1").Value)
+				Filone = Filone.Replace("***SQUADRA 1***", "" & Rec("Squadra1").Value)
 
 				Filone = Filone.Replace("***IMMAGINE SQ2***", Imm2)
-				Filone = Filone.Replace("***SQUADRA 2***", Rec("Squadra2").Value)
+				Filone = Filone.Replace("***SQUADRA 2***", "" & Rec("Squadra2").Value)
 				'Else
 				'    Filone = Filone.Replace("***IMMAGINE SQ2***", Imm2)
 				'    Filone = Filone.Replace("***SQUADRA 2***", Rec("Squadra2").Value)
@@ -1033,7 +1034,7 @@ Module Globale
 
 			Ritorno &= "http://openweathermap.org/img/w/" + dsResult.Tables(13).Rows(0)(2).ToString() + ".png" & ";"
 		Catch ex As Exception
-
+			Ritorno = StringaErrore & " " & ex.Message
 		End Try
 
 		Return Ritorno

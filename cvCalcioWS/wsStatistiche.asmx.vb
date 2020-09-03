@@ -42,7 +42,7 @@ Public Class wsStatistiche
 					"Select 'Evento' As Cosa, idEvento As Id, Titolo As PrimoCampo, '' As SecondoCampo, CONVERT(date, Inizio) As Data From EventiCalendario " &
 					"Where idTipologia = 2) A  " &
 					"Where Data > GETDATE() " &
-					"Order By Data Desc"
+					"Order By Data"
 				Rec = LeggeQuery(Conn, Sql, Connessione)
 				If TypeOf (Rec) Is String Then
 					Ritorno = Rec

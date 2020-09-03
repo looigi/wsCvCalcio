@@ -98,6 +98,7 @@
     <Content Include="wsGiocatoriSezione.asmx" />
     <Content Include="wsKit.asmx" />
     <Content Include="wsPermessiUtente.asmx" />
+    <Content Include="wsQuote.asmx" />
     <Content Include="wsRisposte.asmx" />
     <Content Include="wsStatAllenamenti.asmx" />
     <Content Include="wsAllenamenti.asmx" />
@@ -156,6 +157,10 @@
     </Compile>
     <Compile Include="wsPermessiUtente.asmx.vb">
       <DependentUpon>wsPermessiUtente.asmx</DependentUpon>
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="wsQuote.asmx.vb">
+      <DependentUpon>wsQuote.asmx</DependentUpon>
       <SubType>Component</SubType>
     </Compile>
     <Compile Include="wsRisposte.asmx.vb">

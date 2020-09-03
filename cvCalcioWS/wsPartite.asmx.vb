@@ -387,20 +387,27 @@ Public Class wsPartite
 
 				If Ok Then
 					If sTempo <> "" Then
-						Dim CC() As String = Coordinate.Split(";")
-						Dim TempoMeteo As String = RitornaMeteo(CC(0), CC(1))
+						If Coordinate <> "" Then
+							Dim CC() As String = Coordinate.Split(";")
+							Dim TempoMeteo As String = RitornaMeteo(CC(0), CC(1))
 
-						If TempoMeteo <> "" Then
-							Dim TT() As String = TempoMeteo.Split(";")
+							If TempoMeteo.Contains(StringaErrore) Then
+								Ritorno = TempoMeteo
+								TempoMeteo = ""
+								Ok = False
+							End If
 
-							'Temperatura
-							'Umidita
-							'Pressione
-							'Tempo
-							'Icona
+							If TempoMeteo <> "" Then
+								Dim TT() As String = TempoMeteo.Split(";")
 
-							Try
-								Sql = "Insert Into MeteoPartite Values (" &
+								'Temperatura
+								'Umidita
+								'Pressione
+								'Tempo
+								'Icona
+
+								Try
+									Sql = "Insert Into MeteoPartite Values (" &
 									" " & idPartita & ", " &
 									"'" & TT(0) & "', " &
 									"'" & TT(1) & "', " &
@@ -408,14 +415,15 @@ Public Class wsPartite
 									"'" & TT(3) & "', " &
 									"'" & TT(4) & "' " &
 									")"
-								Ritorno = EsegueSql(Conn, Sql, Connessione)
-								If Ritorno.Contains(StringaErrore) Then
+									Ritorno = EsegueSql(Conn, Sql, Connessione)
+									If Ritorno.Contains(StringaErrore) Then
+										Ok = False
+									End If
+								Catch ex As Exception
+									Ritorno = StringaErrore & " " & ex.Message
 									Ok = False
-								End If
-							Catch ex As Exception
-								Ritorno = StringaErrore & " " & ex.Message
-								Ok = False
-							End Try
+								End Try
+							End If
 						End If
 					End If
 				End If
@@ -840,10 +848,10 @@ Public Class wsPartite
 						End If
 
 						Try
-							For Each C As String In Dirigenti.Split("%")
+							For Each C As String In Dirigenti.Split(";")
 								If C <> "" Then
-									Dim Campi() As String = C.Split("!")
-									Dim idDirigente As String = Campi(0)
+									' Dim Campi() As String = C.Split("!")
+									Dim idDirigente As String = C.Replace("§", "")
 
 									If Ok Then
 										If idDirigente <> "" Then
@@ -1063,9 +1071,14 @@ Public Class wsPartite
 					Ritorno = "*"
 					Sql = "Commit"
 					Dim Ritorno2 As String = EsegueSql(Conn, Sql, Connessione)
-					If Not Ritorno2.Contains(StringaErrore) Then
-						CreaHtmlPartita(Squadra, Conn, Connessione, idAnno, idPartita)
-					End If
+
+					' POI VA RIMESSO
+
+					'If Not Ritorno2.Contains(StringaErrore) Then
+					'	CreaHtmlPartita(Squadra, Conn, Connessione, idAnno, idPartita)
+					'End If
+
+					' POI VA RIMESSO
 				Else
 					Sql = "Rollback"
 					Dim Ritorno2 As String = EsegueSql(Conn, Sql, Connessione)
@@ -1821,11 +1834,14 @@ Public Class wsPartite
 
 							Dim url As String = p(2) & Rec("NomeSquadra").Value.ToString.Replace(" ", "_") & "/Societa/" & idAnno & "_1.kgb"
 							Dim Esten As String = Format(Now.Second, "00") & "_" & Now.Millisecond & RitornaValoreRandom(55)
-							Dim urlConv As String = p(2) & "Appoggio/" & Esten & ".jpg"
+							Dim urlConv As String = ""
 							Dim fileUrlOrig As String = pp & Rec("NomeSquadra").Value.ToString.Replace(" ", "_") & "\Societa\" & idAnno & "_1.kgb"
-							Dim fileUrlConv As String = pp & "Appoggio/" & Esten & ".jpg"
-							Dim c As New CriptaFiles
-							c.DecryptFile(CryptPasswordString, fileUrlOrig, fileUrlConv)
+							If File.Exists(fileUrlOrig) Then
+								Dim fileUrlConv As String = pp & "Appoggio/" & Esten & ".jpg"
+								Dim c As New CriptaFiles
+								c.DecryptFile(CryptPasswordString, fileUrlOrig, fileUrlConv)
+								urlConv = p(2) & "Appoggio/" & Esten & ".jpg"
+							End If
 
 							Filetto = Filetto.Replace("***URL LOGO***", urlConv)
 
@@ -1857,8 +1873,8 @@ Public Class wsPartite
 							Filetto = Filetto.Replace("***ORARIO1***", Appuntamento)
 							Filetto = Filetto.Replace("***ORARIO2***", OraConv)
 
-							Filetto = Filetto.Replace("***MISTER***", Rec("Mister").Value)
-							Filetto = Filetto.Replace("***CELL***", Rec("Telefono").Value)
+							Filetto = Filetto.Replace("***MISTER***", "" & Rec("Mister").Value)
+							Filetto = Filetto.Replace("***CELL***", "" & Rec("Telefono").Value)
 
 							'Filetto = Filetto.Replace("***DOAPPUNTAMENTO***", Rec("DataOraAppuntamento").Value)
 							'Filetto = Filetto.Replace("***APPUNTAMENTO***", Rec("LuogoAppuntamento").Value)
@@ -1886,7 +1902,7 @@ Public Class wsPartite
 								Dim Giocatori As List(Of String) = New List(Of String)
 
 								Do Until Rec.Eof
-									Giocatori.Add(Rec("Giocatore").Value)
+									Giocatori.Add("" & Rec("Giocatore").Value)
 
 									Rec.MoveNext
 								Loop

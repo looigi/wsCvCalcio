@@ -172,16 +172,21 @@ Public Class wsAllenatori
 								If Ritorno.Contains(StringaErrore) Then
 									Ok = False
 								Else
-									If Tendina = "N" Then
-										Dim m As New mail
-										Dim Oggetto As String = "Nuovo utente inCalcio"
-										Dim Body As String = ""
-										Body &= "E' stato creato l'utente '" & Cognome.ToUpper & " " & Nome.ToUpper & "'. <br />"
-										Body &= "Per accedere al sito sarà possibile digitare la mail rilasciata alla segreteria in fase di iscrizione: " & EMail & "<br />"
-										Body &= "La password valida per il solo primo accesso è: " & nuovaPass(0) & "<br /><br />"
-										Dim ChiScrive As String = "notifiche@incalcio.cloud"
+									Ritorno = CreaPermessiDiBase(Conn, Connessione, idGenitore, idCategoria, Tendina)
+									If Ritorno.Contains(StringaErrore) Then
+										Ok = False
+									Else
+										If Tendina = "N" Then
+											Dim m As New mail
+											Dim Oggetto As String = "Nuovo utente inCalcio"
+											Dim Body As String = ""
+											Body &= "E' stato creato l'utente '" & Cognome.ToUpper & " " & Nome.ToUpper & "'. <br />"
+											Body &= "Per accedere al sito sarà possibile digitare la mail rilasciata alla segreteria in fase di iscrizione: " & EMail & "<br />"
+											Body &= "La password valida per il solo primo accesso è: " & nuovaPass(0) & "<br /><br />"
+											Dim ChiScrive As String = "notifiche@incalcio.cloud"
 
-										Ritorno = m.SendEmail(Squadra, "", Oggetto, Body, EMail, "")
+											Ritorno = m.SendEmail(Squadra, "", Oggetto, Body, EMail, "")
+										End If
 									End If
 								End If
 							End If
@@ -201,6 +206,63 @@ Public Class wsAllenatori
 				End If
 
 				Conn.Close()
+			End If
+		End If
+
+		Return Ritorno
+	End Function
+
+	Private Function CreaPermessiDiBase(Conn As Object, Connessione As String, idGenitore As Integer, idCategoria As Integer, Tendina As String) As String
+		Dim Ritorno As String = ""
+		Dim Sql As String = ""
+		Dim Ok As Boolean = True
+		Dim Rec As Object = Server.CreateObject("ADODB.Recordset")
+
+		If Tendina = "S" Then
+			Sql = "Delete From UtentiCategorie Where idUtente=" & idGenitore
+			Ritorno = EsegueSql(Conn, Sql, Connessione)
+
+			Sql = "Delete From PermessiUtente Where idUtente=" & idGenitore
+			Ritorno = EsegueSql(Conn, Sql, Connessione)
+		End If
+
+		Sql = "Insert Into UtentiCategorie Values (" &
+				" " & idGenitore & ", " &
+				"1, " &
+				" " & idCategoria & " " &
+				")"
+		Ritorno = EsegueSql(Conn, Sql, Connessione)
+		If Ritorno.Contains(StringaErrore) Then
+			Ok = False
+		Else
+			Sql = "Select * From [Generale].[dbo].[Permessi_Lista] Where NomePerCodice In ('HOME', 'CALENDARIO', 'ROSE', 'DIRIGENTI', 'ALLENAMENTI', 'PARTITE', 'CAMPIONATO', 'STATISTICHE', 'CONTATTI')"
+			Rec = LeggeQuery(Conn, Sql, Connessione)
+			If TypeOf (Rec) Is String Then
+				Ritorno = Rec
+			Else
+				Dim idPermesso As New List(Of Integer)
+
+				Do Until Rec.Eof
+					idPermesso.Add(Rec("idPermesso").Value)
+
+					Rec.MoveNext
+				Loop
+				Rec.Close
+
+				Dim Progressivo As Integer = 1
+
+				For Each id As Integer In idPermesso
+					Sql = "Insert Into PermessiUtente Values (" &
+						" " & idGenitore & ", " &
+						" " & Progressivo & ", " &
+						" " & id & " " &
+						")"
+					Ritorno = EsegueSql(Conn, Sql, Connessione)
+					If Ritorno.Contains(StringaErrore) Then
+						Ok = False
+						Exit For
+					End If
+				Next
 			End If
 		End If
 
