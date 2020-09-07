@@ -4,13 +4,22 @@ Imports System.Threading
 Imports System.Timers
 
 Module Globale
+	Public effettuaLog As Boolean = True
+	Public effettuaLogMail As Boolean = True
+
+	Public nomeFileLogGenerale As String = ""
+	Public listaLog As New List(Of String)
+	Public timerLog As Timers.Timer = Nothing
+
+	Public nomeFileLogmail As String = ""
+
 	Public Structure strutturaMail
 		Dim Squadra As String
 		Dim Mittente As String
 		Dim Oggetto As String
 		Dim newBody As String
 		Dim Ricevente As String
-		Dim Allegato As String
+		Dim Allegato() As String
 		Dim AllegatoOMultimedia As String
 	End Structure
 	Public listaMails As New List(Of strutturaMail)
@@ -25,7 +34,7 @@ Module Globale
 	Public StringaErrore As String = "ERROR: "
 	Public RigaPari As Boolean = False
 	Public CryptPasswordString As String = "WPippoBaudo227!"
-	Public stringaWidgets As String = "1-1-1-1"
+	Public stringaWidgets As String = "1-1-1-1-1"
 
 	Public Function SistemaNumero(Numero As String) As String
 		If Numero = "" Then

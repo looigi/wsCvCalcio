@@ -11,6 +11,121 @@ Public Class wsQuote
 	Inherits System.Web.Services.WebService
 
 	<WebMethod()>
+	Public Function StampaListaRicevute(Squadra As String, NomeSquadra As String) As String
+		Dim Ritorno As String = ""
+		Dim Connessione As String = LeggeImpostazioniDiBase(Server.MapPath("."), Squadra)
+
+		If Connessione = "" Then
+			Ritorno = ErroreConnessioneNonValida
+		Else
+			Dim Conn As Object = ApreDB(Connessione)
+
+			If TypeOf (Conn) Is String Then
+				Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
+			Else
+				Dim Rec As Object = Server.CreateObject("ADODB.Recordset")
+				Dim Sql As String = ""
+
+				Sql = "Select A.idGiocatore, Progressivo, Pagamento, DataPagamento, B.Cognome, B.Nome, A.Validato, Case A.idTipoPagamento When 1 Then 'Rata' When 2 Then 'Altro' Else '' End As TipoPagamento, " &
+						"A.idRata, A.Note, A.idUtentePagatore, A.Commento, B.Maggiorenne, A.NumeroRicevuta From " &
+						"GiocatoriPagamenti A " &
+						"Left Join Giocatori B On A.idGiocatore = B.idGiocatore " &
+						"Where A.Eliminato = 'N' " &
+						"Order By DataPagamento Desc"
+				Rec = LeggeQuery(Conn, Sql, Connessione)
+				If TypeOf (Rec) Is String Then
+					Ritorno = Rec
+				Else
+					If Rec.Eof Then
+						Ritorno = StringaErrore & " Nessuna ricevuta rilevata"
+					Else
+						Ritorno = "<table style=""width: 100%;"">"
+						Ritorno &= "<tr><th>Numero Ricevuta</th><th>Data Pagamento</th><th>Importo</th><th>Nominativo</th><th>Stato</th><th>Tipo Pagamento</th><th>Descrizione</th></tr>"
+						Do Until Rec.Eof
+							Dim Stato As String = ""
+							Dim TipoPag As String = ""
+
+							If ("" & Rec("Validato").Value) = "S" Then
+								Stato = "Validata"
+							Else
+								Stato = "Bozza"
+							End If
+							Dim idTP As String = ""
+							'If Rec("idTipoPagamento").Value Is DBNull.Value Then
+							'	idTP = ""
+							'Else
+							'	idTP = Rec("idTipoPagamento").Value
+							'End If
+							'If idTP = 1 Then
+							'	TipoPag = "Rata"
+							'Else
+							'	TipoPag = "Altro"
+							'End If
+
+							Dim pag As String = ("" & Rec("Pagamento").Value).replace(",", ".")
+
+							Ritorno &= "<tr>"
+							Ritorno &= "<td>" & Rec("NumeroRicevuta").Value & "</td>"
+							Ritorno &= "<td>" & Rec("DataPagamento").Value & "</td>"
+							Ritorno &= "<td style=""text-align: right;"">" & pag & "</td>"
+							Ritorno &= "<td>" & Rec("Cognome").Value & " " & Rec("Nome").Value & "</td>"
+							Ritorno &= "<td>" & Stato & "</td>"
+							Ritorno &= "<td>" & Rec("TipoPagamento").Value & "</td>"
+							Ritorno &= "<td>" & Rec("Commento").Value & "</td>"
+							Ritorno &= "</tr>"
+
+							Rec.MoveNext
+						Loop
+						Ritorno &= "</table>"
+						Rec.Close
+
+						Dim gf As New GestioneFilesDirectory
+						Dim filetto As String = gf.LeggeFileIntero(HttpContext.Current.Server.MapPath(".") & "\Scheletri\base_lista_ricevute.txt")
+
+						filetto = filetto.Replace("***TITOLO***", "Lista Ricevute")
+						filetto = filetto.Replace("***DATI***", Ritorno)
+						filetto = filetto.Replace("***NOME SQUADRA***", NomeSquadra)
+
+						Dim multimediaPaths As String = gf.LeggeFileIntero(HttpContext.Current.Server.MapPath(".") & "\Impostazioni\PathAllegati.txt")
+						Dim mmPaths() As String = multimediaPaths.Split(";")
+						mmPaths(2) = mmPaths(2).Replace(vbCrLf, "")
+						If Strings.Right(mmPaths(2), 1) <> "/" Then
+							mmPaths(2) &= "/"
+						End If
+
+						Dim filePaths As String = gf.LeggeFileIntero(HttpContext.Current.Server.MapPath(".") & "\Impostazioni\Paths.txt")
+						filePaths = filePaths.Replace(vbCrLf, "")
+						If Strings.Right(filePaths, 1) <> "\" Then
+							filePaths &= "\"
+						End If
+						Dim pathLogo As String = filePaths & NomeSquadra.Replace(" ", "_") & "\Societa\1_1.kgb"
+						Dim Esten As String = Format(Now.Second, "00") & "_" & Now.Millisecond & RitornaValoreRandom(55)
+						Dim pathLogoConv As String = filePaths & "Appoggio\" & Esten & ".jpg"
+						Dim c As New CriptaFiles
+						c.DecryptFile(CryptPasswordString, pathLogo, pathLogoConv)
+
+						Dim urlLogo As String = mmPaths(2) & "Appoggio/" & Esten & ".jpg"
+						filetto = filetto.Replace("***LOGO SOCIETA***", urlLogo)
+
+						Dim nomeFileHtml As String = filePaths & "Appoggio\" & Esten & ".html"
+						Dim nomeFilePDF As String = filePaths & "Appoggio\" & Esten & ".pdf"
+
+						gf.CreaAggiornaFile(nomeFileHtml, filetto)
+
+						Dim pp2 As New pdfGest
+						Ritorno = pp2.ConverteHTMLInPDF(nomeFileHtml, nomeFilePDF, "")
+						If Ritorno = "*" Then
+							Ritorno = "Appoggio/" & Esten & ".pdf"
+						End If
+					End If
+				End If
+			End If
+		End If
+
+		Return Ritorno
+	End Function
+
+	<WebMethod()>
 	Public Function RitornaInadempienti(Squadra As String) As String
 		Dim Ritorno As String = ""
 		Dim Connessione As String = LeggeImpostazioniDiBase(Server.MapPath("."), Squadra)
@@ -109,11 +224,12 @@ Public Class wsQuote
 				Dim Ok As Boolean = True
 
 				Try
-					Sql = "Select A.idGiocatore, Progressivo, Pagamento, DataPagamento, B.Cognome, B.Nome, A.Validato, A.idTipoPagamento, A.idRata, A.Note, A.idUtentePagatore, A.Commento, B.Maggiorenne From " &
+					Sql = "Select A.idGiocatore, Progressivo, Pagamento, DataPagamento, B.Cognome, B.Nome, A.Validato, A.idTipoPagamento, " &
+						"A.idRata, A.Note, A.idUtentePagatore, A.Commento, B.Maggiorenne, A.NumeroRicevuta From " &
 						"GiocatoriPagamenti A " &
 						"Left Join Giocatori B On A.idGiocatore = B.idGiocatore " &
-						"Where B.Eliminato = 'N' " &
-						"Order By DataPagamento Desc"
+						"Where A.Eliminato = 'N' And B.Eliminato = 'N' " &
+						"Order By DataPagamento Desc, Progressivo Desc"
 					Rec = LeggeQuery(Conn, Sql, Connessione)
 					If TypeOf (Rec) Is String Then
 						Ritorno = Rec
@@ -123,10 +239,12 @@ Public Class wsQuote
 						Else
 							Ritorno = ""
 							Do Until Rec.Eof
+								Dim nn As String = ("" & Rec("Note").Value).replace(";", "*PV*")
 								Ritorno &= Rec("idGiocatore").Value & ";" & Rec("Progressivo").Value & ";" & Rec("Pagamento").Value & ";" &
 									Rec("DataPagamento").Value & ";" & Rec("Cognome").Value & ";" & Rec("Nome").Value & ";" & Rec("Validato").Value & ";" &
-									Rec("idTipoPagamento").Value & ";" & Rec("idRata").Value & ";" & Rec("Note").Value.replace(";", "*PV*") & ";" &
+									Rec("idTipoPagamento").Value & ";" & Rec("idRata").Value & ";" & nn & ";" &
 									Rec("idUtentePagatore").Value & ";" & Rec("Commento").Value & ";" & Rec("Maggiorenne").Value & ";" &
+									Rec("NumeroRicevuta").Value &
 									"§"
 
 								Rec.MoveNext
@@ -402,7 +520,8 @@ Public Class wsQuote
 								   AttivaR2 As String, DescRataR2 As String, DataScadenzaR2 As String, ImportoR2 As String,
 								   AttivaR3 As String, DescRataR3 As String, DataScadenzaR3 As String, ImportoR3 As String,
 								   AttivaR4 As String, DescRataR4 As String, DataScadenzaR4 As String, ImportoR4 As String,
-								   AttivaR5 As String, DescRataR5 As String, DataScadenzaR5 As String, ImportoR5 As String) As String
+								   AttivaR5 As String, DescRataR5 As String, DataScadenzaR5 As String, ImportoR5 As String,
+								   Deducibilita As String) As String
 		Dim Ritorno As String = ""
 		Dim Connessione As String = LeggeImpostazioniDiBase(Server.MapPath("."), Squadra)
 		Dim Giocata As String = ""
@@ -445,7 +564,7 @@ Public Class wsQuote
 
 					If Ok Then
 						Try
-							Sql = "Insert Into Quote Values (" & idQuota & ", '" & Descrizione.Replace("'", "''") & "', " & Importo & ", 'N')"
+							Sql = "Insert Into Quote Values (" & idQuota & ", '" & Descrizione.Replace("'", "''") & "', " & Importo & ", 'N', '" & Deducibilita & "')"
 							Ritorno = EsegueSql(Conn, Sql, Connessione)
 							If Ritorno.Contains(StringaErrore) Then
 								Ok = False

@@ -394,7 +394,7 @@ Public Class wsPartite
 							If TempoMeteo.Contains(StringaErrore) Then
 								Ritorno = TempoMeteo
 								TempoMeteo = ""
-								Ok = False
+								'Ok = False
 							End If
 
 							If TempoMeteo <> "" Then
@@ -408,13 +408,13 @@ Public Class wsPartite
 
 								Try
 									Sql = "Insert Into MeteoPartite Values (" &
-									" " & idPartita & ", " &
-									"'" & TT(0) & "', " &
-									"'" & TT(1) & "', " &
-									"'" & TT(2) & "', " &
-									"'" & TT(3) & "', " &
-									"'" & TT(4) & "' " &
-									")"
+										" " & idPartita & ", " &
+										"'" & TT(0) & "', " &
+										"'" & TT(1) & "', " &
+										"'" & TT(2) & "', " &
+										"'" & TT(3) & "', " &
+										"'" & TT(4) & "' " &
+										")"
 									Ritorno = EsegueSql(Conn, Sql, Connessione)
 									If Ritorno.Contains(StringaErrore) Then
 										Ok = False
@@ -784,7 +784,7 @@ Public Class wsPartite
 									Body2 = Body2.Replace("***URLNONPARTECIPO***", urlNo)
 
 									If MandaMail = "S" Then
-										Ritorno = ma.SendEmail(Squadra, Mittente, Oggetto, Body2, c(2), "")
+										Ritorno = ma.SendEmail(Squadra, Mittente, Oggetto, Body2, c(2), {""})
 									End If
 
 									gf.CreaDirectoryDaPercorso(p(0) & "\" & Squadra & "\Convocazioni\Anno" & idAnno & "\Giocatori\")
@@ -1658,7 +1658,7 @@ Public Class wsPartite
 							"Left Join Giocatori On Convocati.idGiocatore = Giocatori.idGiocatore " &
 							"Left Join ConvocatiPartiteRisposte On ConvocatiPartiteRisposte.idGiocatore = Convocati.idGiocatore And ConvocatiPartiteRisposte.idPartita = Convocati.idPartita " &
 							"Left Join [Generale].[dbo].[Ruoli] On Giocatori.idRuolo = Ruoli.idRuolo " &
-							"Where Convocati.idPartita=" & idPartita & " And Giocatori.idAnno=" & idAnno & " Order By idProgressivo"
+							"Where Convocati.idPartita=" & idPartita & " And Giocatori.idAnno=" & idAnno & " Order By Cognome, Nome"
 						Rec = LeggeQuery(Conn, Sql, Connessione)
 						If TypeOf (Rec) Is String Then
 							Ritorno = Sql & "--->" & Rec
@@ -2088,7 +2088,7 @@ Public Class wsPartite
 
 						Dim ma As New mail
 						For Each Destinatario As String In Giocatori
-							Ritorno = ma.SendEmail(Squadra, "", Oggetto, Body2, Destinatario, pathPdf)
+							Ritorno = ma.SendEmail(Squadra, "", Oggetto, Body2, Destinatario, {pathPdf})
 						Next
 					End If
 				End If

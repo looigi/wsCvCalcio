@@ -165,7 +165,7 @@ Public Class wsUtentiLocali
 									Body &= "La nuova password valida per il solo primo accesso è: " & nuovaPass(0) & "<br /><br />"
 									Dim ChiScrive As String = "notifiche@incalcio.cloud"
 
-									Ritorno = m.SendEmail("", "", Oggetto, Body, EMail, "")
+									Ritorno = m.SendEmail("", "", Oggetto, Body, EMail, {""})
 								End If
 							Catch ex As Exception
 								Ritorno = StringaErrore & " " & ex.Message

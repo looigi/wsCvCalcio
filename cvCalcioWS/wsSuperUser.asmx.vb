@@ -304,7 +304,7 @@ Public Class wsSuperUser
 
 															gf.ScriveTestoSuFileAperto("Invio Mail")
 
-															Ritorno = m.SendEmail(Squadra, Mittente, Oggetto, Body, MailAdmin, "")
+															Ritorno = m.SendEmail(Squadra, Mittente, Oggetto, Body, MailAdmin, {""})
 															If Ritorno.Contains(StringaErrore) Then
 																gf.ScriveTestoSuFileAperto("Ritorno invio mail: " & Ritorno)
 															Else

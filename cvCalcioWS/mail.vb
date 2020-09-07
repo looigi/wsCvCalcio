@@ -4,7 +4,7 @@ Imports System.Net.Mime
 Imports System.Timers
 
 Public Class mail
-	Public Function SendEmail(Squadra As String, Mittente As String, ByVal oggetto As String, ByVal newBody As String, ByVal ricevente As String, ByVal Allegato As String, Optional AllegatoOMultimedia As String = "") As String
+	Public Function SendEmail(Squadra As String, Mittente As String, ByVal oggetto As String, ByVal newBody As String, ByVal ricevente As String, ByVal Allegato() As String, Optional AllegatoOMultimedia As String = "") As String
 		Dim Ritorno As String = "*"
 		Dim s As New strutturaMail
 		s.Squadra = Squadra
@@ -19,6 +19,26 @@ Public Class mail
 
 		listaMails.Add(s)
 
+		If effettuaLogMail Then
+			Dim gf As New GestioneFilesDirectory
+			Dim paths As String = gf.LeggeFileIntero(pathMail & "\Impostazioni\PathAllegati.txt")
+			Dim pp() As String = paths.Split(";")
+			pp(1) = pp(1).Replace(vbCrLf, "")
+			If Strings.Right(pp(1), 1) <> "\" Then
+				pp(1) = pp(1) & "\"
+			End If
+			gf.CreaDirectoryDaPercorso(pp(1))
+			nomeFileLogmail = pp(1) & "logMail_" & Squadra.Replace(" ", "_") & "_" & Now.Day & "_" & Now.Month & "_" & Now.Year & ".txt"
+			Dim Datella As String = Format(Now.Day, "00") & "/" & Format(Now.Month, "00") & "/" & Now.Year & " " & Format(Now.Hour, "00") & ":" & Format(Now.Minute, "00") & ":" & Format(Now.Second, "00")
+			Dim Allegati As String = ""
+			For Each a As String In s.Allegato
+				Allegati &= a & ";"
+			Next
+			gf.ApreFileDiTestoPerScrittura(nomeFileLogMail)
+			gf.ScriveTestoSuFileAperto(Datella & " - Nuova Mail: " & s.Squadra & "/" & s.Mittente & "/" & s.Oggetto & "/" & s.Ricevente & "/" & Allegati & "/" & s.AllegatoOMultimedia)
+			gf.ChiudeFileDiTestoDopoScrittura()
+		End If
+
 		avviaTimer()
 
 		Return Ritorno
@@ -29,13 +49,32 @@ Public Class mail
 			timerMails = New Timer(5000)
 			AddHandler timerMails.Elapsed, New ElapsedEventHandler(AddressOf scodaMessaggi)
 			timerMails.Start()
+
+			If effettuaLogMail And nomeFileLogmail <> "" Then
+				Dim gf As New GestioneFilesDirectory
+				Dim Datella As String = Format(Now.Day, "00") & "/" & Format(Now.Month, "00") & "/" & Now.Year & " " & Format(Now.Hour, "00") & ":" & Format(Now.Minute, "00") & ":" & Format(Now.Second, "00")
+
+				gf.ApreFileDiTestoPerScrittura(nomeFileLogmail)
+				gf.ScriveTestoSuFileAperto(Datella & " - Timer avviato. Mail da scodare: " & listaMails.Count)
+				gf.ChiudeFileDiTestoDopoScrittura()
+			End If
 		End If
 	End Sub
 
 	Private Sub scodaMessaggi()
 		timerMails.Enabled = False
 		Dim mail As strutturaMail = listaMails.Item(0)
-		Dim Ritorno As String = SendEmailAsincrona(mail.Squadra, mail.Mittente, mail.Oggetto, mail.newBody, mail.Ricevente, mail.Allegato, mail.AllegatoOMultimedia)
+
+		Dim gf As New GestioneFilesDirectory
+		If effettuaLogMail Then
+			Dim Datella As String = Format(Now.Day, "00") & "/" & Format(Now.Month, "00") & "/" & Now.Year & " " & Format(Now.Hour, "00") & ":" & Format(Now.Minute, "00") & ":" & Format(Now.Second, "00")
+
+			gf.ApreFileDiTestoPerScrittura(nomeFileLogMail)
+			gf.ScriveTestoSuFileAperto(Datella & " - Scodo Mail: " & mail.Squadra & "/" & mail.Mittente & "/" & mail.Oggetto & "/" & mail.Ricevente)
+			gf.ChiudeFileDiTestoDopoScrittura()
+		End If
+
+		Dim Ritorno As String = SendEmailAsincrona(mail.Squadra, mail.Mittente, mail.Oggetto, mail.newBody, mail.Ricevente, mail.Allegato, mail.AllegatoOMultimedia, gf)
 		listaMails.RemoveAt(0)
 		If listaMails.Count > 0 Then
 			timerMails.Enabled = True
@@ -45,7 +84,8 @@ Public Class mail
 		End If
 	End Sub
 
-	Private Function SendEmailAsincrona(Squadra As String, Mittente As String, ByVal oggetto As String, ByVal newBody As String, ByVal ricevente As String, ByVal Allegato As String, AllegatoOMultimedia As String) As String
+	Private Function SendEmailAsincrona(Squadra As String, Mittente As String, ByVal oggetto As String, ByVal newBody As String,
+										ByVal ricevente As String, ByVal Allegato() As String, AllegatoOMultimedia As String, gf As GestioneFilesDirectory) As String
 		'Dim myStream As StreamReader = New StreamReader(Server.MapPath(ConfigurationManager.AppSettings("VirtualDir") & "mailresponsive.html"))
 		'Dim newBody As String = ""
 		'newBody = myStream.ReadToEnd()
@@ -53,10 +93,16 @@ Public Class mail
 		'myStream.Close()
 		'myStream.Dispose()
 
-		Dim gf As New GestioneFilesDirectory
 		Dim Ritorno As String = ""
 		Dim mail As MailMessage = New MailMessage()
 		Dim Credenziali As String = gf.LeggeFileIntero(pathMail & "\Impostazioni\CredenzialiPosta.txt")
+
+		If effettuaLogMail Then
+			Dim Datella As String = Format(Now.Day, "00") & "/" & Format(Now.Month, "00") & "/" & Now.Year & " " & Format(Now.Hour, "00") & ":" & Format(Now.Minute, "00") & ":" & Format(Now.Second, "00")
+
+			gf.ApreFileDiTestoPerScrittura(nomeFileLogmail)
+			gf.ScriveTestoSuFileAperto(Datella & " - Inizio")
+		End If
 
 		Try
 			Dim cr() As String = Credenziali.Split(";")
@@ -80,31 +126,41 @@ Public Class mail
 			End If
 
 			Dim Data As Attachment = Nothing
-			If Allegato <> "" Then
-				Dim paths As String = ""
-				If AllegatoOMultimedia = "A" Then
-					paths = gf.LeggeFileIntero(pathMail & "\Impostazioni\PathAllegati.txt")
-					Dim p() As String = paths.Split(";")
-					If Strings.Right(p(0), 1) <> "\" Then
-						p(0) &= "\"
-					End If
-					Allegato = p(0) & Allegato
-				Else
-					If AllegatoOMultimedia = "M" Then
-						paths = gf.LeggeFileIntero(pathMail & "\Impostazioni\Paths.txt")
-						paths = paths.Replace(vbCrLf, "")
-						If Strings.Right(paths, 1) <> "\" Then
-							paths &= "\"
+			If Allegato.Length > 0 Then
+				For Each All As String In Allegato
+					If All <> "" Then
+						Dim Allegatone As String = All
+						Dim paths As String = ""
+						If AllegatoOMultimedia = "A" Then
+							paths = gf.LeggeFileIntero(pathMail & "\Impostazioni\PathAllegati.txt")
+							Dim p() As String = paths.Split(";")
+							If Strings.Right(p(0), 1) <> "\" Then
+								p(0) &= "\"
+							End If
+							Allegatone = p(0) & Allegatone
+						Else
+							If AllegatoOMultimedia = "M" Then
+								paths = gf.LeggeFileIntero(pathMail & "\Impostazioni\Paths.txt")
+								paths = paths.Replace(vbCrLf, "")
+								If Strings.Right(paths, 1) <> "\" Then
+									paths &= "\"
+								End If
+								Allegatone = paths & Allegatone
+							End If
 						End If
-						Allegato = paths & Allegato
+						If effettuaLogMail Then
+							Dim Datella As String = Format(Now.Day, "00") & "/" & Format(Now.Month, "00") & "/" & Now.Year & " " & Format(Now.Hour, "00") & ":" & Format(Now.Minute, "00") & ":" & Format(Now.Second, "00")
+
+							gf.ScriveTestoSuFileAperto(Datella & " - Aggiunge Allegato: " & Allegatone)
+						End If
+						Data = New Attachment(Allegatone, MediaTypeNames.Application.Octet)
+						Dim disposition As ContentDisposition = Data.ContentDisposition
+						disposition.CreationDate = System.IO.File.GetCreationTime(Allegatone)
+						disposition.ModificationDate = System.IO.File.GetLastWriteTime(Allegatone)
+						disposition.ReadDate = System.IO.File.GetLastAccessTime(Allegatone)
+						mail.Attachments.Add(Data)
 					End If
-				End If
-				Data = New Attachment(Allegato, MediaTypeNames.Application.Octet)
-				Dim disposition As ContentDisposition = Data.ContentDisposition
-				disposition.CreationDate = System.IO.File.GetCreationTime(Allegato)
-				disposition.ModificationDate = System.IO.File.GetLastWriteTime(Allegato)
-				disposition.ReadDate = System.IO.File.GetLastAccessTime(Allegato)
-				mail.Attachments.Add(Data)
+				Next
 			End If
 			'mail.BodyEncoding = System.Text.Encoding.GetEncoding("utf-8")
 			'Dim plainView As System.Net.Mail.AlternateView = System.Net.Mail.AlternateView.CreateAlternateViewFromString(System.Text.RegularExpressions.Regex.Replace(newBody, "< (.|\n) *?>", String.Empty), Nothing, "text/plain")
@@ -120,15 +176,40 @@ Public Class mail
 			smtpClient.Send(mail)
 			smtpClient = Nothing
 
-			If Allegato <> "" Then
+			If effettuaLogMail Then
+				Dim Datella As String = Format(Now.Day, "00") & "/" & Format(Now.Month, "00") & "/" & Now.Year & " " & Format(Now.Hour, "00") & ":" & Format(Now.Minute, "00") & ":" & Format(Now.Second, "00")
+
+				gf.ScriveTestoSuFileAperto(Datella & " - Invio in corso")
+			End If
+
+			If Allegato.Length > 0 Then
 				Data.Dispose()
 			End If
 
 			Ritorno = "*"
+			If effettuaLogMail Then
+				Dim Datella As String = Format(Now.Day, "00") & "/" & Format(Now.Month, "00") & "/" & Now.Year & " " & Format(Now.Hour, "00") & ":" & Format(Now.Minute, "00") & ":" & Format(Now.Second, "00")
+
+				gf.ScriveTestoSuFileAperto(Datella & " - Invio effettuato")
+			End If
 		Catch ex As Exception
 			Ritorno = StringaErrore & ex.Message
+
+			If effettuaLogMail Then
+				Dim Datella As String = Format(Now.Day, "00") & "/" & Format(Now.Month, "00") & "/" & Now.Year & " " & Format(Now.Hour, "00") & ":" & Format(Now.Minute, "00") & ":" & Format(Now.Second, "00")
+
+				gf.ScriveTestoSuFileAperto(Datella & " - Errore nell'invio: " & ex.Message)
+			End If
 		End Try
 		'smtpClient.Dispose()
+
+		If effettuaLogMail Then
+			Dim Datella As String = Format(Now.Day, "00") & "/" & Format(Now.Month, "00") & "/" & Now.Year & " " & Format(Now.Hour, "00") & ":" & Format(Now.Minute, "00") & ":" & Format(Now.Second, "00")
+
+			gf.ScriveTestoSuFileAperto(Datella & "-----------------------------------------------------------------")
+			gf.ScriveTestoSuFileAperto(Datella & "")
+			gf.ChiudeFileDiTestoDopoScrittura()
+		End If
 
 		Return Ritorno
 	End Function
@@ -158,7 +239,7 @@ Public Class mail
 
 			Corpo = Corpo.Replace("***BODY***", "<span style=""font-family: Verdana; font-size: 18px;"">" & newBody & "</span>")
 
-			Dim contentID As String = "Image1" ' & Now.Year & Format(Now.Month, "00") & Format(Now.Day, "00") & Format(Now.Hour, "00") & Format(Now.Minute, "00") & Format(Now.Second, "00")
+			'Dim contentID As String = "Image1" ' & Now.Year & Format(Now.Month, "00") & Format(Now.Day, "00") & Format(Now.Hour, "00") & Format(Now.Minute, "00") & Format(Now.Second, "00")
 			'Dim inlineLogo = New Attachment(sfondoMail)
 			'inlineLogo.ContentId = contentID
 			'inlineLogo.ContentDisposition.Inline = True
@@ -174,7 +255,7 @@ Public Class mail
 
 			'mail.Attachments.Add(inlineLogo2)
 
-			Corpo = Corpo.Replace("***SFONDO***", "cid:" & contentID)
+			'Corpo = Corpo.Replace("***SFONDO***", "cid:" & contentID)
 			'Corpo = Corpo.Replace("***LOGO APPLICAZIONE***", "cid:" & contentID2)
 			Corpo = Corpo.Replace("***LOGO APPLICAZIONE***", "")
 

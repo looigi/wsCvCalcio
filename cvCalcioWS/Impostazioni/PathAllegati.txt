@@ -1,1 +1,1 @@
-D:\VB.Net\Miei\WEB\SSDCastelverdeCalcio\CVCalcio\App_Themes\Standard\Images\;;http://192.168.0.227:92/Multimedia
+D:\VB.Net\Miei\WEB\SSDCastelverdeCalcio\CVCalcio\App_Themes\Standard\Images\;E:\Sorgenti\VB.Net\Miei\WEB\Webservices\cvCalcio\cvCalcioWS\cvCalcioWS\Impostazioni\Logs;http://192.168.0.227:92/Multimedia

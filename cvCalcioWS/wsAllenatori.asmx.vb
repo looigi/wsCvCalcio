@@ -185,7 +185,7 @@ Public Class wsAllenatori
 											Body &= "La password valida per il solo primo accesso è: " & nuovaPass(0) & "<br /><br />"
 											Dim ChiScrive As String = "notifiche@incalcio.cloud"
 
-											Ritorno = m.SendEmail(Squadra, "", Oggetto, Body, EMail, "")
+											Ritorno = m.SendEmail(Squadra, "", Oggetto, Body, EMail, {""})
 										End If
 									End If
 								End If

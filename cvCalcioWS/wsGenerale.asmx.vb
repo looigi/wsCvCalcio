@@ -40,26 +40,35 @@ Public Class wsGenerale
 	<WebMethod()>
 	Public Function InviaMail(Oggetto As String, Body As String, ChiRiceve As String) As String
 		Dim m As New mail
-		Dim Ritorno As String = m.SendEmail("", "looigi@gmail.com", Oggetto, Body, ChiRiceve, "")
+		Dim Ritorno As String = m.SendEmail("", "looigi@gmail.com", Oggetto, Body, ChiRiceve, {"E:\Sorgenti\VB.Net\Miei\WEB\Webservices\cvCalcio\cvCalcioWS\cvCalcioWS\Impostazioni\Paths.txt", "E:\Sorgenti\VB.Net\Miei\WEB\Webservices\cvCalcio\cvCalcioWS\cvCalcioWS\Impostazioni\PercorsoSito.txt"})
 		Return Ritorno
 	End Function
 
 	<WebMethod()>
-	Public Function InviaMailConAllegato(Squadra As String, Oggetto As String, Body As String, Destinatario As String, Allegato As String, AllegatoOMultimedia As String) As String
+	Public Function InviaMailConAllegato(Squadra As String, Oggetto As String, Body As String, Destinatario As String, Allegato As String, AllegatoOMultimedia As String, Mittente As String) As String
 		Dim m As New mail
-		Dim Ritorno As String = m.SendEmail(Squadra, "", Oggetto, Body, Destinatario, Allegato.Replace("/", "\"), AllegatoOMultimedia)
+		Dim Ritorno As String = m.SendEmail(Squadra, Mittente, Oggetto, Body, Destinatario, {Allegato.Replace("/", "\")}, AllegatoOMultimedia)
 		Return Ritorno
 	End Function
 
 	<WebMethod()>
-	Public Function InviaSollecitoPagamento(Squadra As String, Destinatario As String, Dati As String) As String
+	Public Function InviaSollecitoPagamento(Squadra As String, Destinatario As String, Dati As String, Mittente As String) As String
 		Dim m As New mail
 
 		Dim Oggetto As String = "Sollecito pagamento"
 		Dim d() As String = Dati.Split(";")
-		Dim Body As String = "In data " & d(0) & " è scaduta la rata '" & d(1) & "' dell'importo di Euro " & d(2) & ".<br />Si prega di passare urgentemente in segreteria.<br />Grazie"
+		Dim gf As New GestioneFilesDirectory
+		Dim Body As String = gf.LeggeFileIntero(Server.MapPath(".") & "\Scheletri\mail_sollecito.txt")
+		Body = Body.Replace("***Data scadenza tab rate***", d(0))
+		Body = Body.Replace("***Descrizione tab rate ***", d(1))
+		Body = Body.Replace("***Importo tab rate***", d(2))
+		Body = Body.Replace("****cognome menu&nbsp; anagrafica3***", d(3))
+		Body = Body.Replace("***Nome menu anagrafica3", d(4))
+		Body = Body.Replace("***nome societ&agrave; menu settaggi***", d(5))
 
-		Dim Ritorno As String = m.SendEmail(Squadra, "", Oggetto, Body, Destinatario, "", "")
+		' Dim Body As String = "In data " & d(0) & " è scaduta la rata '" & d(1) & "' dell'importo di Euro " & d(2) & ".<br />Si prega di passare urgentemente in segreteria.<br />Grazie"
+
+		Dim Ritorno As String = m.SendEmail(Squadra, Mittente, Oggetto, Body, Destinatario, {""}, "")
 		Return Ritorno
 	End Function
 
@@ -679,7 +688,8 @@ Public Class wsGenerale
 	Public Function SalvaImpostazioni(Cod_Squadra As String, idAnno As String, Descrizione As String, NomeSquadra As String, Lat As String, Lon As String,
 									  Indirizzo As String, CampoSquadra As String, NomePolisportiva As String, Mail As String, PEC As String,
 									  Telefono As String, PIva As String, CodiceFiscale As String, CodiceUnivoco As String, SitoWeb As String, MittenteMail As String,
-									  GestionePagamenti As String, CostoScuolaCalcio As String, idUtente As String, Widgets As String) As String
+									  GestionePagamenti As String, CostoScuolaCalcio As String, idUtente As String, Widgets As String, Suffisso As String,
+									  IscrFirmaEntrambi As String) As String
 		Dim Ritorno As String = ""
 		Dim Connessione As String = LeggeImpostazioniDiBase(Server.MapPath("."), Cod_Squadra)
 
@@ -712,7 +722,9 @@ Public Class wsGenerale
 					"SitoWeb = '" & SitoWeb.Replace("'", "''") & "', " &
 					"MittenteMail = '" & MittenteMail.Replace("'", "''") & "', " &
 					"GestionePagamenti = '" & GestionePagamenti & "', " &
-					"CostoScuolaCalcio=" & CostoScuolaCalcio & " " &
+					"CostoScuolaCalcio=" & CostoScuolaCalcio & ", " &
+					"Suffisso='" & Suffisso & "', " &
+					"iscrFirmaEntrambi='" & IscrFirmaEntrambi & "' " &
 					"Where idAnno = " & idAnno
 				Ritorno = EsegueSql(Conn, Sql, Connessione)
 
@@ -803,8 +815,8 @@ Public Class wsGenerale
 								If Strings.Right(pp, 1) = "\" Then
 									pp = Mid(pp, 1, pp.Length - 1)
 								End If
-								Dim pathFirma1 As String = P(2) & "/" & NomeSquadra.Replace(" ", "_") & "/Segreteria/" & Anno & ".png"
-								Dim urlFirma1 As String = pp & "\" & NomeSquadra.Replace(" ", "_") & "\Segreteria\" & Anno & ".png"
+								Dim pathFirma1 As String = P(2) & "/" & NomeSquadra.Replace(" ", "_") & "/Utenti/" & Anno & "_" & idUtente & "_Firma.kgb"
+								Dim urlFirma1 As String = pp & "\" & NomeSquadra.Replace(" ", "_") & "\Utenti\" & Anno & "_" & idUtente & "_Firma.kgb"
 								Dim esisteFirma As String = "N"
 
 								If File.Exists(urlFirma1) Then
@@ -856,6 +868,8 @@ Public Class wsGenerale
 											AnnoAttivazione.Item(quale) & ";" &
 											Rec("CostoScuolaCalcio").value & ";" &
 											Widgets & ";" &
+											Rec("Suffisso").Value & ";" &
+											Rec("iscrFirmaEntrambi").Value & ";" &
 											"§"
 
 										Rec.MoveNext()
@@ -1192,7 +1206,22 @@ Public Class wsGenerale
 						"'" & nomeSquadra.Replace(";", "_").Replace("'", "''") & "', " &
 						" " & lat & ", " &
 						" " & lon & ", " &
-						"'" & ind & "' " &
+						"'" & ind & "', " &
+						"'', " &
+						"'', " &
+						"'', " &
+						"'', " &
+						"'', " &
+						"'', " &
+						"'', " &
+						"'', " &
+						"'', " &
+						"'', " &
+						"'', " &
+						"0, " &
+						"'', " &
+						"'', " &
+						"'N' " &
 						")"
 					Ritorno = EsegueSql(Conn, Sql, Connessione)
 
@@ -1483,7 +1512,7 @@ Public Class wsGenerale
 	End Function
 
 	<WebMethod()>
-	Public Function RichiedeFirma(Squadra As String, CodSquadra As String, Mail As String) As String
+	Public Function RichiedeFirma(Squadra As String, CodSquadra As String, idUtente As String, Mail As String, Privacy As String) As String
 		' RichiedeFirma?Squadra= 0002_00160&idGiocatore=432&Genitore=1 
 		Dim Ritorno As String = ""
 		Dim Connessione As String = LeggeImpostazioniDiBase(Server.MapPath("."), CodSquadra)
@@ -1513,14 +1542,14 @@ Public Class wsGenerale
 						Percorso &= "/"
 					End If
 
-					Body &= "E' stata richiesta la firma della segreteria della società " & Squadra.Replace("_", " ") & ".<br /><br />"
+					Body &= "E' stata richiesta la firma dalla società " & Squadra.Replace("_", " ") & ".<br /><br />"
 					Body &= "Per effettuare l'operazione eseguire il seguente link:<br /><br />"
 
-					Body &= "<a href= """ & Percorso & "?firma=true&codSquadra=" & CodSquadra & "&id=Segreteria&squadra=" & Squadra.Replace(" ", "_") & "&anno=" & Anno & "&genitore=-1"">"
+					Body &= "<a href= """ & Percorso & "?firma=true&codSquadra=" & CodSquadra & "&id=" & idUtente & "&squadra=" & Squadra.Replace(" ", "_") & "&anno=" & Anno & "&genitore=-1&privacy=" & Privacy & "&tipoUtente=2"">"
 					Body &= "Click per firmare"
 					Body &= "</a>"
 
-					Ritorno = m.SendEmail(Squadra, "", Oggetto, Body, Mail, "")
+					Ritorno = m.SendEmail(Squadra, "", Oggetto, Body, Mail, {""})
 				End If
 			End If
 		End If
@@ -1703,24 +1732,6 @@ Public Class wsGenerale
 	'	t.Stop()
 	'	t.Dispose()
 	'End Sub
-
-	<WebMethod()>
-	Public Function ritornaNomeFileScheletroMail(Squadra As String) As String
-		Dim gf As New GestioneFilesDirectory
-		Dim filePaths As String = gf.LeggeFileIntero(HttpContext.Current.Server.MapPath(".") & "\Impostazioni\PathAllegati.txt")
-		Dim p() As String = filePaths.Split(";")
-		If Strings.Right(p(0), 1) <> "\" Then
-			p(0) &= "\"
-		End If
-		Dim pathFilePosta As String = p(0) & Squadra & "\Scheletri\base_mail.txt"
-		Dim Ritorno As String = "MODIFICATO"
-		If Not File.Exists(pathFilePosta) Then
-			pathFilePosta = HttpContext.Current.Server.MapPath(".") & "\Scheletri\base_mail.txt"
-			Ritorno = "ORIGINALE"
-		End If
-
-		Return Ritorno
-	End Function
 
 	<WebMethod()>
 	Public Function RitornaDatiContatti(Squadra As String, idCategoria As String) As String

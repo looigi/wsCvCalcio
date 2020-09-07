@@ -1,12 +1,13 @@
 ﻿Imports System.Web.Services
 Imports System.Web.Services.Protocols
 Imports System.ComponentModel
+Imports System.Web.Services.Description
 
 <System.Web.Services.WebService(Namespace:="http://cvcalcio_stat.org/")>
-<System.Web.Services.WebServiceBinding(ConformsTo:=WsiProfiles.BasicProfile1_1)> _
-<ToolboxItem(False)> _
+<System.Web.Services.WebServiceBinding(ConformsTo:=WsiProfiles.BasicProfile1_1)>
+<ToolboxItem(False)>
 Public Class wsStatistiche
-    Inherits System.Web.Services.WebService
+	Inherits System.Web.Services.WebService
 
 	<WebMethod()>
 	Public Function RitornaProssimiEventi(Squadra As String, Limite As String) As String
@@ -76,97 +77,121 @@ Public Class wsStatistiche
 			Else
 				Dim Rec As Object = Server.CreateObject("ADODB.Recordset")
 				Dim Rec2 As Object = Server.CreateObject("ADODB.Recordset")
+				Dim Rec3 As Object = Server.CreateObject("ADODB.Recordset")
 				Dim Sql As String
-				Dim listaCategorie As New List(Of String)
-				Dim idCategorie As New List(Of String)
+				'Dim listaCategorie As New List(Of String)
+				'Dim idCategorie As New List(Of String)
 				Dim Ok As Boolean = True
 
-				Sql = "Select * From Categorie Where Eliminato='N' "
+				'Sql = "Select * From Categorie Where Eliminato='N' "
+				'Rec = LeggeQuery(Conn, Sql, Connessione)
+				'If TypeOf (Rec) Is String Then
+				'	Ritorno = Rec
+				'	Ok = False
+				'Else
+				'	Do Until Rec.Eof
+				'		idCategorie.Add(Rec("idCategoria").Value)
+				'		listaCategorie.Add(Rec("Descrizione").Value)
+
+				'		Rec.MoveNext
+				'	Loop
+				'	Rec.Close
+				'End If
+
+				'If Ok Then
+				'Dim Differenza(idCategorie.Count) As Single
+
+				'For Each id As String In idCategorie
+				Sql = "Select YEAR(CONVERT(date, DataDiNascita)) As Anno From Giocatori " &
+					"Where Eliminato = 'N' " &
+					"Group By YEAR(CONVERT(date, DataDiNascita)) " &
+					"Order By 1"
 				Rec = LeggeQuery(Conn, Sql, Connessione)
 				If TypeOf (Rec) Is String Then
 					Ritorno = Rec
 					Ok = False
 				Else
 					Do Until Rec.Eof
-						idCategorie.Add(Rec("idCategoria").Value)
-						listaCategorie.Add(Rec("Descrizione").Value)
+						Sql = "Select A.idGiocatore, TotalePagamento From Giocatori A " &
+							"Left Join GiocatoriDettaglio B On A.idGiocatore = B.idGiocatore " &
+							"Where A.Eliminato = 'N' And YEAR(CONVERT(date, DataDiNascita)) = " & Rec("Anno").Value
+						Rec2 = LeggeQuery(Conn, Sql, Connessione)
+						If TypeOf (Rec2) Is String Then
+							Ritorno = Rec2
+							Ok = False
+						Else
+							Dim Differenza As Single = 0
+
+							Do Until Rec2.Eof
+								Dim s As String = ("" & Rec2("TotalePagamento").value).replace(",", ".")
+								Dim TotalePagamento As Single = Val(s)
+								Dim Pagato As Single = 0
+
+								Sql = "Select Sum(Pagamento) From GiocatoriPagamenti Where idGiocatore=" & Rec2("idGiocatore").Value & " And Eliminato='N' And idTipoPagamento=1"
+								Rec3 = LeggeQuery(Conn, Sql, Connessione)
+								If TypeOf (Rec3) Is String Then
+									Ritorno = Rec3
+									Ok = False
+								Else
+									If Rec3(0).Value Is DBNull.Value Then
+										Pagato = 0
+									Else
+										Dim p As String = ("" & Rec3(0).Value).replace(",", ".")
+										Pagato = Val(p)
+									End If
+									Rec3.Close
+								End If
+								Differenza += (TotalePagamento - Pagato)
+
+								Rec2.MoveNext
+							Loop
+							Rec2.Close
+
+							Ritorno &= Rec("Anno").Value & ";" & Rec("Anno").Value & ";" & Differenza & "§"
+						End If
+
+						'Dim qualeCat As Integer = 0
+						'For Each idcat As String In idCategorie
+						'	If Val(idcat) = Val(id) Then
+						'		Differenza(qualeCat) += (TotalePagamento - Pagato)
+						'		Exit For
+						'	End If
+						'	qualeCat += 1
+						'Next
 
 						Rec.MoveNext
 					Loop
 					Rec.Close
 				End If
+				'Next
 
-				If Ok Then
-					Dim Differenza(idCategorie.Count) As Single
+				'Sql = "Select Sum(C.TotalePagamento) - Sum(Pagamento) From GiocatoriPagamenti A " &
+				'	"Left Join Giocatori B On A.idGiocatore = B.idGiocatore " &
+				'	"Left Join GiocatoriDettaglio C On A.idGiocatore = C.idGiocatore " &
+				'	"Where B.Categorie = '' And A.Eliminato='N'"
+				'Rec = LeggeQuery(Conn, Sql, Connessione)
+				'If TypeOf (Rec) Is String Then
+				'	Ritorno = Rec
+				'	Ok = False
+				'Else
+				'	If Rec(0).Value Is DBNull.Value Then
+				'		Ritorno &= "-1;Nessuna Categoria;0§"
+				'	Else
+				'		Ritorno &= "-1;Nessuna Categoria;" & Rec(0).Value & "§"
+				'	End If
+				'	Rec.Close
+				'End If
 
-					For Each id As String In idCategorie
-						Sql = "Select A.idGiocatore, B.TotalePagamento From Giocatori A " &
-							"Left Join GiocatoriDettaglio B On A.idGiocatore = B.idGiocatore " &
-							"Where A.Eliminato = 'N' And CharIndex('" & id & "-', A.Categorie) > 0"
-						Rec = LeggeQuery(Conn, Sql, Connessione)
-						If TypeOf (Rec) Is String Then
-							Ritorno = Rec
-							Ok = False
-						Else
-							Do Until Rec.Eof
-								Dim TotalePagamento As Single = Rec("TotalePagamento").value
-								Dim Pagato As Single = 0
+				'Dim quale As Integer = 0
 
-								Sql = "Select Sum(Pagamento) From GiocatoriPagamenti Where idGiocatore=" & Rec("idGiocatore").Value & " And Eliminato='N'"
-								Rec2 = LeggeQuery(Conn, Sql, Connessione)
-								If TypeOf (Rec2) Is String Then
-									Ritorno = Rec2
-									Ok = False
-								Else
-									If Rec2(0).Value Is DBNull.Value Then
-										Pagato = 0
-									Else
-										Pagato = Rec2(0).Value
-									End If
-									Rec2.Close
-								End If
-								Dim qualeCat As Integer = 0
-								For Each idcat As String In idCategorie
-									If Val(idcat) = Val(id) Then
-										Differenza(qualeCat) += (TotalePagamento - Pagato)
-										Exit For
-									End If
-									qualeCat += 1
-								Next
+				'For Each categ As String In listaCategorie
+				'	Dim d As String = (Int(Differenza(quale) * 100) / 100).ToString
+				'	Ritorno &= idCategorie.Item(quale) & ";" & categ & ";" & d & "§"
 
-								Rec.MoveNext
-							Loop
-							Rec.Close
-						End If
-					Next
-
-					'Sql = "Select Sum(C.TotalePagamento) - Sum(Pagamento) From GiocatoriPagamenti A " &
-					'	"Left Join Giocatori B On A.idGiocatore = B.idGiocatore " &
-					'	"Left Join GiocatoriDettaglio C On A.idGiocatore = C.idGiocatore " &
-					'	"Where B.Categorie = '' And A.Eliminato='N'"
-					'Rec = LeggeQuery(Conn, Sql, Connessione)
-					'If TypeOf (Rec) Is String Then
-					'	Ritorno = Rec
-					'	Ok = False
-					'Else
-					'	If Rec(0).Value Is DBNull.Value Then
-					'		Ritorno &= "-1;Nessuna Categoria;0§"
-					'	Else
-					'		Ritorno &= "-1;Nessuna Categoria;" & Rec(0).Value & "§"
-					'	End If
-					'	Rec.Close
-					'End If
-
-					Dim quale As Integer = 0
-
-					For Each categ As String In listaCategorie
-						Dim d As String = (Int(Differenza(quale) * 100) / 100).ToString
-						Ritorno &= idCategorie.Item(quale) & ";" & categ & ";" & d & "§"
-
-						quale += 1
-					Next
-				End If
+				'	quale += 1
+				'Next
 			End If
+			'End If
 		End If
 
 		Return Ritorno
@@ -191,96 +216,100 @@ Public Class wsStatistiche
 				Dim idCategorie As New List(Of String)
 				Dim Ok As Boolean = True
 
-				Sql = "Select * From Categorie Where Eliminato='N'"
+				'Sql = "Select * From Categorie Where Eliminato='N'"
+				'Rec = LeggeQuery(Conn, Sql, Connessione)
+				'If TypeOf (Rec) Is String Then
+				'	Ritorno = Rec
+				'	Ok = False
+				'Else
+				'	Do Until Rec.Eof
+				'		idCategorie.Add(Rec("idCategoria").Value)
+				'		listaCategorie.Add(Rec("Descrizione").Value)
+
+				'		Rec.MoveNext
+				'	Loop
+				'	Rec.Close
+				'End If
+
+				'If Ok Then
+				'	Dim quantiPerCategoria(listaCategorie.Count) As Integer
+				'	Dim Altro As String = ""
+				'	If idCategoria <> "" Then
+				'		Altro = " And CharIndex('" & idCategoria & "-', Giocatori.Categorie) > 0"
+				'	End If
+
+				Dim Tutti As Integer = 0
+				Sql = "Select Count(*) From Giocatori Where Eliminato='N' And RapportoCompleto='S'"
 				Rec = LeggeQuery(Conn, Sql, Connessione)
 				If TypeOf (Rec) Is String Then
 					Ritorno = Rec
 					Ok = False
 				Else
-					Do Until Rec.Eof
-						idCategorie.Add(Rec("idCategoria").Value)
-						listaCategorie.Add(Rec("Descrizione").Value)
-
-						Rec.MoveNext
-					Loop
+					If Rec(0).Value Is DBNull.Value Then
+						Tutti = 0
+					Else
+						Tutti = Rec(0).Value
+					End If
 					Rec.Close
 				End If
 
 				If Ok Then
-					Dim quantiPerCategoria(listaCategorie.Count) As Integer
-					Dim Altro As String = ""
-					If idCategoria <> "" Then
-						Altro = " And CharIndex('" & idCategoria & "-', Giocatori.Categorie) > 0"
-					End If
-
-					Dim Tutti As Integer = 0
-					Sql = "Select Count(*) From Giocatori Where Eliminato='N' And RapportoCompleto='S'"
+					Sql = "Select YEAR(CONVERT(date, DataDiNascita)) As Anno, Count(*) As Quanti From Giocatori " &
+						"Where Eliminato = 'N' And RapportoCompleto='S' " &
+						"Group By YEAR(CONVERT(date, DataDiNascita)) " &
+						"Order By 1"
 					Rec = LeggeQuery(Conn, Sql, Connessione)
 					If TypeOf (Rec) Is String Then
 						Ritorno = Rec
-						Ok = False
 					Else
-						If Rec(0).Value Is DBNull.Value Then
-							Tutti = 0
-						Else
-							Tutti = Rec(0).Value
-						End If
-						Rec.Close
-					End If
+						Do Until Rec.Eof
+							'	'Dim Categorie() As String = Rec("Categorie").Value.split("-")
+							'	'Dim listaCategorieRilevate As New List(Of Integer)
 
-					If Ok Then
-						Sql = "Select * From Giocatori Where Eliminato='N' " & Altro
-						Rec = LeggeQuery(Conn, Sql, Connessione)
-						If TypeOf (Rec) Is String Then
-							Ritorno = Rec
-						Else
-							Do Until Rec.Eof
-								Dim Categorie() As String = Rec("Categorie").Value.split("-")
-								Dim listaCategorieRilevate As New List(Of Integer)
+							'	For Each cat As String In Categorie
+							'		If cat <> "" Then
+							'			Dim ok2 As Boolean = True
+							'			For Each id As Integer In listaCategorieRilevate
+							'				If id = Val(cat) Then
+							'					ok2 = False
+							'					Exit For
+							'				End If
+							'			Next
+							'			If ok2 Then
+							'				listaCategorieRilevate.Add(Val(cat))
+							'			End If
+							'		End If
+							'	Next
+							'	For Each cat In listaCategorieRilevate
+							'		Dim q As Integer = 0
+							'		For Each id As Integer In idCategorie
+							'			If cat = id Then
+							'				quantiPerCategoria(q) += 1
+							'				Exit For
+							'			End If
+							'			q += 1
+							'		Next
+							'	Next
+							Ritorno &= Rec("Anno").Value & ";" & Rec("Anno").Value & ";" & Rec("Quanti").Value & "§"
 
-								For Each cat As String In Categorie
-									If cat <> "" Then
-										Dim ok2 As Boolean = True
-										For Each id As Integer In listaCategorieRilevate
-											If id = Val(cat) Then
-												ok2 = False
-												Exit For
-											End If
-										Next
-										If ok2 Then
-											listaCategorieRilevate.Add(Val(cat))
-										End If
-									End If
-								Next
-								For Each cat In listaCategorieRilevate
-									Dim q As Integer = 0
-									For Each id As Integer In idCategorie
-										If cat = id Then
-											quantiPerCategoria(q) += 1
-											Exit For
-										End If
-										q += 1
-									Next
-								Next
+							Rec.MoveNext
+						Loop
+						Rec.Close()
 
-								Rec.MoveNext
-							Loop
-							Rec.Close()
+						'Dim quale As Integer = 0
 
-							Dim quale As Integer = 0
+						'For Each categ As String In listaCategorie
+						'	Ritorno &= idCategorie.Item(quale) & ";" & categ & ";" & quantiPerCategoria(quale) & "§"
 
-							For Each categ As String In listaCategorie
-								Ritorno &= idCategorie.Item(quale) & ";" & categ & ";" & quantiPerCategoria(quale) & "§"
-
-								quale += 1
-							Next
-							' Ritorno &= "-1;Tutti;" & Tutti & "§"
-						End If
+						'	quale += 1
+						'Next
+						' Ritorno &= "-1;Tutti;" & Tutti & "§"
 					End If
 				End If
-
-				Conn.Close()
 			End If
+
+			Conn.Close()
+			'End If
 		End If
 
 		If Ritorno = "" Then Ritorno = StringaErrore & " Nessun dato rilevato"
