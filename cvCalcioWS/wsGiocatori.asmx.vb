@@ -104,7 +104,7 @@ Public Class wsGiocatori
 	End Function
 
 	<WebMethod()>
-	Public Function ConvalidaFirma(idAnno As String, Squadra As String, idGiocatore As String, idGenitore As String) As String
+	Public Function ConvalidaFirma(idAnno As String, Squadra As String, idGiocatore As String, idGenitore As String, Mittente As String) As String
 		Dim Ritorno As String = ""
 		Dim Connessione As String = LeggeImpostazioniDiBase(Server.MapPath("."), Squadra)
 
@@ -258,7 +258,7 @@ Public Class wsGiocatori
 														Body &= "La password valida per il solo primo accesso è: " & nuovaPass(0) & "<br /><br />"
 														Dim ChiScrive As String = "notifiche@incalcio.cloud"
 
-														Ritorno = m.SendEmail(Squadra, "", Oggetto, Body, Mail, {""})
+														Ritorno = m.SendEmail(Squadra, Mittente, Oggetto, Body, Mail, {""})
 													End If
 												End If
 											Else
@@ -568,7 +568,7 @@ Public Class wsGiocatori
 									Rec.Close
 
 									Sql = "Select MailGenitore1, MailGenitore2, B.Cognome + ' ' + B.Nome As Genitore3 , Genitore1, Genitore2, MailGenitore3, " &
-										"Maggiorenne, GenitoriSeparati, AffidamentoCongiunto, idTutore " &
+										"B.Maggiorenne, GenitoriSeparati, AffidamentoCongiunto, idTutore " &
 										"From GiocatoriDettaglio A " &
 										"Left Join Giocatori B On A.idGiocatore = B.idGiocatore " &
 										"Where A.idGiocatore = " & idGiocatore
@@ -613,28 +613,46 @@ Public Class wsGiocatori
 													Percorso &= "/"
 												End If
 
-												Dim m As New mail
-												Dim Oggetto As String = "Richiesta Firma inCalcio"
-												Dim Body As String = ""
-
-												If Genitore = 3 Then
-													Body &= "E' stata richiesta la firma di " & nomeGenitore & " dalla direzione della società " & NomeSquadra & " per l'iscrizione all'anno " & Descrizione & ". <br /><br />"
-													Body &= "Per effettuare l'operazione eseguire il seguente link:<br /><br />"
-												Else
-													Body &= "E' stata richiesta la firma di " & nomeGenitore & " dalla direzione della società " & NomeSquadra & " per l'iscrizione all'anno " & Descrizione & " del giocatore " & Nominativo & ".<br /><br />"
-													Body &= "Per effettuare l'operazione eseguire il seguente link:<br /><br />"
-												End If
-
-												Body &= "<a href= """ & Percorso & "?firma=true&codSquadra=" & Squadra & "&id=" & idGiocatore & "&squadra=" & NomeSquadra.Replace(" ", "_") & "&anno=" & Anno & "&genitore=" & Genitore & "&privacy=" & Privacy & "&tipoUtente=1"">"
-												Body &= "Click per firmare"
-												Body &= "</a>"
-
-												' Dim ChiScrive As String = "notifiche@incalcio.cloud"
 												Dim PathAllegati As String = gf.LeggeFileIntero(Server.MapPath(".") & "\Impostazioni\PathAllegati.txt")
 												Dim P() As String = PathAllegati.Split(";")
 												If Strings.Right(P(0), 1) = "\" Then
 													P(0) = Mid(P(0), 1, P(0).Length - 1)
 												End If
+
+												Dim m As New mail
+												Dim Oggetto As String = "Richiesta Firma inCalcio"
+												Dim Body As String = ""
+												Dim fileFirma As String = P(0) & "\" & Squadra & "\Scheletri\base_firma.txt"
+												If Not File.Exists(fileFirma) Then
+													fileFirma = Server.MapPath(".") & "\Scheletri\base_firma.txt"
+												End If
+												Body = gf.LeggeFileIntero(fileFirma)
+
+												'If Genitore = 3 Then
+												'	Body &= "E' stata richiesta la firma di " & nomeGenitore & " dalla direzione della società " & NomeSquadra & " per l'iscrizione all'anno " & Descrizione & ". <br /><br />"
+												'	Body &= "Per effettuare l'operazione eseguire il seguente link:<br /><br />"
+
+
+												'Else
+												' Body &= "E' stata richiesta la firma di " & nomeGenitore & " dalla direzione della società " & NomeSquadra & " per l'iscrizione all'anno " & Descrizione & " del giocatore " & Nominativo & ".<br /><br />"
+												' Body &= "Per effettuare l'operazione eseguire il seguente link:<br /><br />"
+
+												Body = Body.Replace("***Nominativo Padre***", nomeGenitore)
+												Body = Body.Replace("***Nome societa menu settaggi***", NomeSquadra)
+												Body = Body.Replace("***anno menu settaggi***", Descrizione)
+												Body = Body.Replace("***cognome menu anagrafica3***", Nominativo)
+												Body = Body.Replace("***Nome menu anagrafica3***", "")
+
+												Dim link As String = "<a href= """ & Percorso & "?firma=true&codSquadra=" & Squadra & "&id=" & idGiocatore & "&squadra=" & NomeSquadra.Replace(" ", "_") & "&anno=" & Anno & "&genitore=" & Genitore & "&privacy=" & Privacy & "&tipoUtente=1"">"
+												link &= "Click per firmare"
+												link &= "</a>"
+
+												Body = Body.Replace("*** nome link****", link)
+												Body = Body.Replace("***nome societ&agrave; menu settaggi***", NomeSquadra)
+												'End If
+
+
+												' Dim ChiScrive As String = "notifiche@incalcio.cloud"
 												Dim fileDaCopiare As String = P(0) & "\" & Squadra & "\Firme\iscrizione_" & Anno & "_" & idGiocatore & ".html"
 												Dim fileDaCopiarePDF As String = P(0) & "\" & Squadra & "\Firme\iscrizione_" & Anno & "_" & idGiocatore & ".pdf"
 												Dim fileLog As String = P(0) & "\" & Squadra & "\Firme\iscrizione_" & Anno & "_" & idGiocatore & ".log"
@@ -649,9 +667,9 @@ Public Class wsGiocatori
 													fileScheletro = Server.MapPath(".") & "\Scheletri\base_iscrizione_.txt"
 												End If
 
-												Dim fileScheletroPrivacy As String = P(0) & Squadra & "\Scheletri\Informativa_privacy.txt"
+												Dim fileScheletroPrivacy As String = P(0) & Squadra & "\Scheletri\base_privacy.txt"
 												If Not File.Exists(fileScheletroPrivacy) Then
-													fileScheletroPrivacy = Server.MapPath(".") & "\Scheletri\Informativa_privacy.txt"
+													fileScheletroPrivacy = Server.MapPath(".") & "\Scheletri\base_privacy.txt"
 												End If
 
 												If File.Exists(fileScheletro) And File.Exists(fileScheletroPrivacy) Then
@@ -1587,6 +1605,12 @@ Public Class wsGiocatori
 		Dim FirmaAnalogicaGenitore1 As String = ""
 		Dim FirmaAnalogicaGenitore2 As String = ""
 		Dim FirmaAnalogicaGenitore3 As String = ""
+		Dim quanteFirme As Integer = -1
+		If iscrFirmaEntrambi = "S" Then
+			quanteFirme = 2
+		Else
+			quanteFirme = 1
+		End If
 
 		Sql = "Select * From GiocatoriDettaglio Where idGiocatore=" & idGiocatore
 		Rec2 = LeggeQuery(Conn, Sql, Connessione)
@@ -1609,6 +1633,7 @@ Public Class wsGiocatori
 				FirmaAnalogicaGenitore1 = "" & Rec2("FirmaAnalogicaGenitore1").Value
 				FirmaAnalogicaGenitore2 = "" & Rec2("FirmaAnalogicaGenitore2").Value
 				FirmaAnalogicaGenitore3 = "" & Rec2("FirmaAnalogicaGenitore3").Value
+
 			End If
 			Rec2.Close
 		End If
@@ -1740,8 +1765,13 @@ Public Class wsGiocatori
 						Titolo3 = "Tutte le firme validate"
 					Else
 						If Validate > 0 Then
-							Semaforo3 = "giallo"
-							Titolo3 = "Firme non validate (" & Validate & "/3)"
+							If Validate < quanteFirme Then
+								Semaforo3 = "giallo"
+								Titolo3 = "Firme non validate (" & Validate & "/" & quanteFirme & ")"
+							Else
+								Semaforo3 = "verde"
+								Titolo3 = "Tutte le firme validate (" & quanteFirme & ")"
+							End If
 						Else
 							Semaforo3 = "rosso"
 							Titolo3 = "Nessuna firma validata"
@@ -1754,8 +1784,13 @@ Public Class wsGiocatori
 							Titolo3 = "Tutte le firme validate"
 						Else
 							If Validate > 0 Then
-								Semaforo3 = "giallo"
-								Titolo3 = "Firme non validate (" & Validate & "/2)"
+								If Validate < quanteFirme Then
+									Semaforo3 = "giallo"
+									Titolo3 = "Firme non validate (" & Validate & "/" & quanteFirme & ")"
+								Else
+									Semaforo3 = "verde"
+									Titolo3 = "Tutte le firme validate (" & quanteFirme & ")"
+								End If
 							Else
 								Semaforo3 = "rosso"
 								Titolo3 = "Nessuna firma validata"
@@ -1767,8 +1802,13 @@ Public Class wsGiocatori
 							Titolo3 = "Tutte le firme validate"
 						Else
 							If Validate > 0 Then
-								Semaforo3 = "giallo"
-								Titolo3 = "Firme non validate (" & Validate & "/2)"
+								If Validate < quanteFirme Then
+									Semaforo3 = "giallo"
+									Titolo3 = "Firme non validate (" & Validate & "/" & quanteFirme & ")"
+								Else
+									Semaforo3 = "verde"
+									Titolo3 = "Tutte le firme validate (" & quanteFirme & ")"
+								End If
 							Else
 								Semaforo3 = "rosso"
 								Titolo3 = "Nessuna firma validata"
@@ -1782,8 +1822,13 @@ Public Class wsGiocatori
 					Titolo3 = "Tutte le firme validate"
 				Else
 					If Validate > 0 Then
-						Semaforo3 = "giallo"
-						Titolo3 = "Firme non validate (" & Validate & "/3)"
+						If Validate < quanteFirme Then
+							Semaforo3 = "giallo"
+							Titolo3 = "Firme non validate (" & Validate & "/" & quanteFirme & ")"
+						Else
+							Semaforo3 = "verde"
+							Titolo3 = "Tutte le firme validate (" & quanteFirme & ")"
+						End If
 					Else
 						Semaforo3 = "rosso"
 						Titolo3 = "Nessuna firma validata"
@@ -2516,7 +2561,7 @@ Public Class wsGiocatori
 	Public Function SalvaGiocatore(Squadra As String, idAnno As String, idCategoria As String, idGiocatore As String, idRuolo As String, Cognome As String, Nome As String, EMail As String, Telefono As String,
 								   Soprannome As String, DataDiNascita As String, Indirizzo As String, CodFiscale As String, Maschio As String, Citta As String, Matricola As String,
 								   NumeroMaglia As String, idCategoria2 As String, idCategoria3 As String, Categorie As String, RapportoCompleto As String,
-								   idTaglia As String, Modalita As String, Cap As String, CittaNascita As String) As String
+								   idTaglia As String, Modalita As String, Cap As String, CittaNascita As String, Mittente As String) As String
 		Dim Ritorno As String = ""
 		Dim Connessione As String = LeggeImpostazioniDiBase(Server.MapPath("."), Squadra)
 
@@ -2610,7 +2655,7 @@ Public Class wsGiocatori
 								Body &= "La password valida per il solo primo accesso è: " & nuovaPass(0) & "<br /><br />"
 								Dim ChiScrive As String = "notifiche@incalcio.cloud"
 
-								Ritorno = m.SendEmail(Squadra, "", Oggetto, Body, EMail, {""})
+								Ritorno = m.SendEmail(Squadra, Mittente, Oggetto, Body, EMail, {""})
 							End If
 						End If
 					Else
@@ -2945,7 +2990,7 @@ Public Class wsGiocatori
 	<WebMethod()>
 	Public Function SalvaPagamento(Squadra As String, idAnno As String, idGiocatore As String, Pagamento As String, Commento As String,
 								   idPagatore As String, idRegistratore As String, Note As String, Validato As String, idTipoPagamento As String,
-								   idRata As String, idQuota As String, Suffisso As String, sNumeroRicevuta As String, DataRicevuta As String) As String
+								   idRata As String, idQuota As String, Suffisso As String, sNumeroRicevuta As String, DataRicevuta As String, idUtente As String) As String
 		Dim Ritorno As String = ""
 		Dim Connessione As String = LeggeImpostazioniDiBase(Server.MapPath("."), Squadra)
 
@@ -3138,19 +3183,19 @@ Public Class wsGiocatori
 							If Strings.Right(p(0), 1) <> "\" Then
 								p(0) &= "\"
 							End If
+							p(2) = p(2).Replace(vbCrLf, "").Trim
 							If Strings.Right(p(2), 1) <> "/" Then
 								p(2) = p(2) & "/"
 							End If
 							' Dim url As String = p(2) & NomeSquadra.Replace(" ", "_") & "/Societa/" & idAnno & "_1.jpg"
 
 							Dim pp As String = gf.LeggeFileIntero(Server.MapPath(".") & "\Impostazioni\Paths.txt")
-							pp = pp.Trim()
+							pp = pp.Replace(vbCrLf, "").Trim
 							If Strings.Right(pp, 1) = "\" Then
 								pp = Mid(pp, 1, pp.Length - 1)
 							End If
 							Dim Esten As String = Format(Now.Second, "00") & "_" & Now.Millisecond & RitornaValoreRandom(55)
 
-							p(2) = p(2).Replace(vbCrLf, "")
 							Dim nomeImm As String = p(2) & NomeSquadra.Replace(" ", "_") & "/Societa/" & idAnno & "_1.kgb"
 							Dim pathImm As String = pp & "\" & NomeSquadra.Replace(" ", "_") & "\Societa\" & idAnno & "_1.kgb"
 							Dim nomeImmConv As String = ""
@@ -3225,17 +3270,19 @@ Public Class wsGiocatori
 							Body = Body.Replace("***IMPORTO LETTERE***", Cifre1 & Altro2)
 
 							filePaths = gf.LeggeFileIntero(Server.MapPath(".") & "\Impostazioni\Paths.txt")
+							filePaths = filePaths.Replace(vbCrLf, "").Trim
 							If Strings.Right(filePaths, 1) <> "\" Then
 								filePaths &= "\"
 							End If
 							' Dim pathFirma As String = filePaths & NomeSquadra.Replace(" ", "_") & "\Firme\" & idAnno & "_" & idGiocatore & "_" & idPagatore & ".png"
 							' Dim pathFirma As String = filePaths & NomeSquadra.Replace(" ", "_") & "\Segreteria\" & idAnno & ".kgb"
 
-							Dim pathFirma As String = filePaths & NomeSquadra.Replace(" ", "_") & "\Segreteria\" & idAnno & ".kgb"
+							Dim pathFirma As String = filePaths & NomeSquadra.Replace(" ", "_").Trim & "\Utenti\" & idAnno & "_" & idUtente & "_Firma.kgb"
+							' Return pathFirma
 							If File.Exists(pathFirma) Then
-								Dim urlFirma As String = pp & "\" & NomeSquadra.Replace(" ", "_") & "\Segreteria\" & idAnno & ".kgb"
-								Dim pathFirmaConv As String = p(2) & "/Appoggio/Segreteria_" & Esten & ".png"
-								Dim urlFirmaConv As String = pp & "\Appoggio\Segreteria_" & Esten & ".png"
+								Dim urlFirma As String = pp & "\" & NomeSquadra.Replace(" ", "_").Trim & "\Utenti\" & idAnno & "_" & idUtente & "_Firma.kgb"
+								'Dim pathFirmaConv As String = p(2) & "/Appoggio/Firma_" & Esten & ".png"
+								Dim urlFirmaConv As String = pp & "\Appoggio\Firma_" & Esten & ".png"
 								c.DecryptFile(CryptPasswordString, urlFirma, urlFirmaConv)
 
 								Body = Body.Replace("***URL FIRMA***", urlFirmaConv)
@@ -3278,7 +3325,7 @@ Public Class wsGiocatori
 	<WebMethod()>
 	Public Function ModificaPagamento(Squadra As String, idPagamento As String, idAnno As String, idGiocatore As String, Pagamento As String, Commento As String,
 								   idPagatore As String, idRegistratore As String, Note As String, Validato As String, idTipoPagamento As String,
-								   idRata As String, idQuota As String, Suffisso As String, NumeroRicevuta As String, DataRicevuta As String) As String
+								   idRata As String, idQuota As String, Suffisso As String, NumeroRicevuta As String, DataRicevuta As String, idUtente As String) As String
 		Dim Ritorno As String = ""
 		Dim Connessione As String = LeggeImpostazioniDiBase(Server.MapPath("."), Squadra)
 
@@ -3458,19 +3505,19 @@ Public Class wsGiocatori
 							If Strings.Right(p(0), 1) <> "\" Then
 								p(0) &= "\"
 							End If
+							p(2) = p(2).Replace(vbCrLf, "").Trim
 							If Strings.Right(p(2), 1) <> "/" Then
 								p(2) = p(2) & "/"
 							End If
 							' Dim url As String = p(2) & NomeSquadra.Replace(" ", "_") & "/Societa/" & idAnno & "_1.jpg"
 
 							Dim pp As String = gf.LeggeFileIntero(Server.MapPath(".") & "\Impostazioni\Paths.txt")
-							pp = pp.Trim()
+							pp = pp.Replace(vbCrLf, "").Trim
 							If Strings.Right(pp, 1) = "\" Then
 								pp = Mid(pp, 1, pp.Length - 1)
 							End If
 							Dim Esten As String = Format(Now.Second, "00") & "_" & Now.Millisecond & RitornaValoreRandom(55)
 
-							p(2) = p(2).Replace(vbCrLf, "")
 							Dim nomeImm As String = p(2) & NomeSquadra.Replace(" ", "_") & "/Societa/" & idAnno & "_1.kgb"
 							Dim pathImm As String = pp & "\" & NomeSquadra.Replace(" ", "_") & "\Societa\" & idAnno & "_1.kgb"
 							Dim nomeImmConv As String = ""
@@ -3557,17 +3604,21 @@ Public Class wsGiocatori
 							Body = Body.Replace("***IMPORTO LETTERE***", Cifre1 & Altro2)
 
 							filePaths = gf.LeggeFileIntero(Server.MapPath(".") & "\Impostazioni\Paths.txt")
+							filePaths = filePaths.Replace(vbCrLf, "").Trim
 							If Strings.Right(filePaths, 1) <> "\" Then
 								filePaths &= "\"
 							End If
 							' Dim pathFirma As String = filePaths & NomeSquadra.Replace(" ", "_") & "\Firme\" & idAnno & "_" & idGiocatore & "_" & idPagatore & ".png"
 							' Dim pathFirma As String = filePaths & NomeSquadra.Replace(" ", "_") & "\Segreteria\" & idAnno & ".kgb"
 
-							Dim pathFirma As String = filePaths & NomeSquadra.Replace(" ", "_") & "\Segreteria\" & idAnno & ".kgb"
+							Dim pathFirma As String = filePaths & NomeSquadra.Replace(" ", "_").Trim & "\Utenti\" & idAnno & "_" & idUtente & "_Firma.kgb"
+							'Sql = "rollback"
+							'Dim Ritorno2 As String = EsegueSql(Conn, Sql, Connessione)
+							'Return pathFirma
 							If File.Exists(pathFirma) Then
-								Dim urlFirma As String = pp & "\" & NomeSquadra.Replace(" ", "_") & "\Segreteria\" & idAnno & ".kgb"
-								Dim pathFirmaConv As String = p(2) & "/Appoggio/Segreteria_" & Esten & ".png"
-								Dim urlFirmaConv As String = pp & "\Appoggio\Segreteria_" & Esten & ".png"
+								Dim urlFirma As String = pp & "\" & NomeSquadra.Replace(" ", "_").Trim & "\Utenti\" & idAnno & "_" & idUtente & "_Firma.kgb"
+								'Dim pathFirmaConv As String = p(2) & "/Appoggio/Firma_" & Esten & ".png"
+								Dim urlFirmaConv As String = pp & "\Appoggio\Firma_" & Esten & ".png"
 								c.DecryptFile(CryptPasswordString, urlFirma, urlFirmaConv)
 
 								Body = Body.Replace("***URL FIRMA***", urlFirmaConv)

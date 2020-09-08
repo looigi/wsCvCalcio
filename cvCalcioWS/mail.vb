@@ -29,14 +29,14 @@ Public Class mail
 			End If
 			gf.CreaDirectoryDaPercorso(pp(1))
 			nomeFileLogmail = pp(1) & "logMail_" & Squadra.Replace(" ", "_") & "_" & Now.Day & "_" & Now.Month & "_" & Now.Year & ".txt"
-			Dim Datella As String = Format(Now.Day, "00") & "/" & Format(Now.Month, "00") & "/" & Now.Year & " " & Format(Now.Hour, "00") & ":" & Format(Now.Minute, "00") & ":" & Format(Now.Second, "00")
-			Dim Allegati As String = ""
-			For Each a As String In s.Allegato
-				Allegati &= a & ";"
-			Next
-			gf.ApreFileDiTestoPerScrittura(nomeFileLogMail)
-			gf.ScriveTestoSuFileAperto(Datella & " - Nuova Mail: " & s.Squadra & "/" & s.Mittente & "/" & s.Oggetto & "/" & s.Ricevente & "/" & Allegati & "/" & s.AllegatoOMultimedia)
-			gf.ChiudeFileDiTestoDopoScrittura()
+			'Dim Datella As String = Format(Now.Day, "00") & "/" & Format(Now.Month, "00") & "/" & Now.Year & " " & Format(Now.Hour, "00") & ":" & Format(Now.Minute, "00") & ":" & Format(Now.Second, "00")
+			'Dim Allegati As String = ""
+			'For Each a As String In s.Allegato
+			'	Allegati &= a & ";"
+			'Next
+			'gf.ApreFileDiTestoPerScrittura(nomeFileLogMail)
+			'gf.ScriveTestoSuFileAperto(Datella & " - Nuova Mail: " & s.Squadra & "/" & s.Mittente & "/" & s.Oggetto & "/" & s.Ricevente & "/" & Allegati & "/" & s.AllegatoOMultimedia)
+			'gf.ChiudeFileDiTestoDopoScrittura()
 		End If
 
 		avviaTimer()
@@ -120,10 +120,13 @@ Public Class mail
 			mail.Subject = oggetto
 			mail.IsBodyHtml = True
 			If newBody <> "" Then
-				mail.Body = CreaCorpoMail(Squadra, mail, newBody)
+				mail.Body = newBody ' CreaCorpoMail(Squadra, mail, newBody)
 			Else
 				mail.Body = ""
 			End If
+
+			mail.Body &= "<br><hr />"
+			mail.Body &= "<span style=""font-family: Verdana; font-size: 12px;"">Mail inviata tramite InCalcio, software per la gestione delle società di calcio – <a href=""www.incalcio.it"">www.incalcio.it</a> – <a href=""mailto:info@incalcio.it"">info@incalcio.it</a></span>"
 
 			Dim Data As Attachment = Nothing
 			If Allegato.Length > 0 Then

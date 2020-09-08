@@ -840,8 +840,7 @@ Public Class wsUtentiLocali
 							"PasswordScaduta=0, " &
 							"Telefono='" & Telefono & "', " &
 							"Eliminato='N', " &
-							"idGiocatore=-1, " &
-							"AmmOriginale='" & AmmOriginale & "' " &
+							"idGiocatore=-1 " &
 							"Where idUtente=" & idUtente
 						Ritorno = EsegueSql(Conn, Sql, Connessione)
 						If Ritorno.Contains(StringaErrore) Then

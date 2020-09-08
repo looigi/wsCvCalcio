@@ -170,7 +170,7 @@ Public Class wsQuote
 								Sql = "Select A.* From Giocatori A " &
 									"Left Join GiocatoriDettaglio B On A.idGiocatore = B.idGiocatore " &
 									"Left Join GiocatoriPagamenti C On A.idGiocatore = C.idGiocatore " &
-									"Where B.idQuota = " & qq(0) & " And (C.Progressivo Not In (" & qq(1) & ") Or C.Progressivo Is Null)"
+									"Where B.idQuota = " & qq(0) & " And (C.Progressivo Not In (" & qq(1) & ") Or C.Progressivo Is Null) And C.NumeroRicevuta <> 'Bozza'"
 								Rec2 = LeggeQuery(Conn, Sql, Connessione)
 								If TypeOf (Rec2) Is String Then
 									Ritorno = Rec2

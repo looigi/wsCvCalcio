@@ -97,6 +97,41 @@ Public Class wsTemplates
 	End Function
 
 	<WebMethod()>
+	Public Function eliminaFileScheletroFirma(Squadra As String) As String
+		Dim gf As New GestioneFilesDirectory
+		Dim filePaths As String = gf.LeggeFileIntero(HttpContext.Current.Server.MapPath(".") & "\Impostazioni\PathAllegati.txt")
+		Dim p() As String = filePaths.Split(";")
+		If Strings.Right(p(0), 1) <> "\" Then
+			p(0) &= "\"
+		End If
+		Dim pathFilePosta As String = p(0) & Squadra & "\Scheletri\base_firma.txt"
+		Dim Ritorno As String = "*"
+		If File.Exists(pathFilePosta) Then
+			File.Delete(pathFilePosta)
+		End If
+
+		Return Ritorno
+	End Function
+
+	<WebMethod()>
+	Public Function ritornaNomeFileScheletroFirma(Squadra As String) As String
+		Dim gf As New GestioneFilesDirectory
+		Dim filePaths As String = gf.LeggeFileIntero(HttpContext.Current.Server.MapPath(".") & "\Impostazioni\PathAllegati.txt")
+		Dim p() As String = filePaths.Split(";")
+		If Strings.Right(p(0), 1) <> "\" Then
+			p(0) &= "\"
+		End If
+		Dim pathFilePosta As String = p(0) & Squadra & "\Scheletri\base_firma.txt"
+		Dim Ritorno As String = "MODIFICATO"
+		If Not File.Exists(pathFilePosta) Then
+			pathFilePosta = HttpContext.Current.Server.MapPath(".") & "\Scheletri\base_firma.txt"
+			Ritorno = "ORIGINALE"
+		End If
+
+		Return Ritorno
+	End Function
+
+	<WebMethod()>
 	Public Function ritornaNomeFileScheletroConvocazione(Squadra As String) As String
 		Dim gf As New GestioneFilesDirectory
 		Dim filePaths As String = gf.LeggeFileIntero(HttpContext.Current.Server.MapPath(".") & "\Impostazioni\PathAllegati.txt")

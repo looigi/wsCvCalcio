@@ -84,6 +84,56 @@ Public Class wsAllenamenti
 	End Function
 
 	<WebMethod()>
+	Public Function RitornaOreAllenamenti(Squadra As String, ByVal idAnno As String, idCategoria As String, Data As String) As String
+		Dim Ritorno As String = ""
+		Dim Connessione As String = LeggeImpostazioniDiBase(Server.MapPath("."), Squadra)
+
+		If Connessione = "" Then
+			Ritorno = ErroreConnessioneNonValida
+		Else
+			Dim Conn As Object = ApreDB(Connessione)
+
+			If TypeOf (Conn) Is String Then
+				Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
+			Else
+				Dim Rec As Object = Server.CreateObject("ADODB.Recordset")
+				Dim Sql As String = ""
+
+				Try
+					Dim sq() As String = Squadra.Split("_")
+					Dim codSquadra As Integer = Val(sq(1))
+					Dim NomeSquadra As String = ""
+					Dim Ok As Boolean = True
+
+					Sql = "Select Orella From Allenamenti Where Datella = '" & Data & "' And idCategoria = " & idCategoria & " Group By Orella"
+					Rec = LeggeQuery(Conn, Sql, Connessione)
+					If TypeOf (Rec) Is String Then
+						Ritorno = Rec
+					Else
+						If Rec.Eof Then
+							Ritorno = StringaErrore & " Nessun allenamento rilevato"
+						Else
+							Ritorno = ""
+							Do Until Rec.Eof
+								Ritorno &= Rec("Orella").Value & ";"
+
+								Rec.MoveNext()
+							Loop
+						End If
+						Rec.Close()
+					End If
+				Catch ex As Exception
+					Ritorno = StringaErrore & " " & ex.Message
+				End Try
+
+				Conn.Close()
+			End If
+		End If
+
+		Return Ritorno
+	End Function
+
+	<WebMethod()>
 	Public Function RitornaAllenamentiCategoria(Squadra As String, ByVal idAnno As String, idCategoria As String, Data As String, Ora As String, Stampa As String) As String
 		Dim Ritorno As String = ""
 		Dim Connessione As String = LeggeImpostazioniDiBase(Server.MapPath("."), Squadra)

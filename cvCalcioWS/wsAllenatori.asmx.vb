@@ -47,7 +47,7 @@ Public Class wsAllenatori
 	<WebMethod()>
 	Public Function SalvaAllenatore(Squadra As String, idAnno As String, idCategoria As String, idAllenatore As String,
 									Cognome As String, Nome As String, EMail As String, Telefono As String, idTipologia As String,
-									TipologiaOperazione As String, Tendina As String) As String
+									TipologiaOperazione As String, Tendina As String, Mittente As String) As String
 		Dim Ritorno As String = ""
 		Dim Connessione As String = LeggeImpostazioniDiBase(Server.MapPath("."), Squadra)
 
@@ -185,7 +185,7 @@ Public Class wsAllenatori
 											Body &= "La password valida per il solo primo accesso è: " & nuovaPass(0) & "<br /><br />"
 											Dim ChiScrive As String = "notifiche@incalcio.cloud"
 
-											Ritorno = m.SendEmail(Squadra, "", Oggetto, Body, EMail, {""})
+											Ritorno = m.SendEmail(Squadra, Mittente, Oggetto, Body, EMail, {""})
 										End If
 									End If
 								End If
