@@ -96,10 +96,9 @@ Public Class mail
 		Dim Ritorno As String = ""
 		Dim mail As MailMessage = New MailMessage()
 		Dim Credenziali As String = gf.LeggeFileIntero(pathMail & "\Impostazioni\CredenzialiPosta.txt")
+		Dim Datella As String = Format(Now.Day, "00") & "/" & Format(Now.Month, "00") & "/" & Now.Year & " " & Format(Now.Hour, "00") & ":" & Format(Now.Minute, "00") & ":" & Format(Now.Second, "00")
 
 		If effettuaLogMail Then
-			Dim Datella As String = Format(Now.Day, "00") & "/" & Format(Now.Month, "00") & "/" & Now.Year & " " & Format(Now.Hour, "00") & ":" & Format(Now.Minute, "00") & ":" & Format(Now.Second, "00")
-
 			gf.ApreFileDiTestoPerScrittura(nomeFileLogmail)
 			gf.ScriveTestoSuFileAperto(Datella & " - Inizio")
 		End If
@@ -108,6 +107,10 @@ Public Class mail
 			Dim cr() As String = Credenziali.Split(";")
 			Dim Utenza As String = cr(0)
 			Dim Password As String = cr(1).Replace(vbCrLf, "")
+
+			If effettuaLogMail Then
+				gf.ScriveTestoSuFileAperto(Datella & " - Inizio 1")
+			End If
 
 			If Mittente = "" Then
 				Mittente = Utenza
@@ -123,6 +126,10 @@ Public Class mail
 				mail.Body = newBody ' CreaCorpoMail(Squadra, mail, newBody)
 			Else
 				mail.Body = ""
+			End If
+
+			If effettuaLogMail Then
+				gf.ScriveTestoSuFileAperto(Datella & " - Inizio 2")
 			End If
 
 			mail.Body &= "<br><hr />"
@@ -151,11 +158,11 @@ Public Class mail
 								Allegatone = paths & Allegatone
 							End If
 						End If
-						If effettuaLogMail Then
-							Dim Datella As String = Format(Now.Day, "00") & "/" & Format(Now.Month, "00") & "/" & Now.Year & " " & Format(Now.Hour, "00") & ":" & Format(Now.Minute, "00") & ":" & Format(Now.Second, "00")
 
+						If effettuaLogMail Then
 							gf.ScriveTestoSuFileAperto(Datella & " - Aggiunge Allegato: " & Allegatone)
 						End If
+
 						Data = New Attachment(Allegatone, MediaTypeNames.Application.Octet)
 						Dim disposition As ContentDisposition = Data.ContentDisposition
 						disposition.CreationDate = System.IO.File.GetCreationTime(Allegatone)
@@ -163,7 +170,15 @@ Public Class mail
 						disposition.ReadDate = System.IO.File.GetLastAccessTime(Allegatone)
 						mail.Attachments.Add(Data)
 					End If
+
+					If effettuaLogMail Then
+						gf.ScriveTestoSuFileAperto(Datella & " - Inizio 2-1")
+					End If
 				Next
+			End If
+
+			If effettuaLogMail Then
+				gf.ScriveTestoSuFileAperto(Datella & " - Inizio 3")
 			End If
 			'mail.BodyEncoding = System.Text.Encoding.GetEncoding("utf-8")
 			'Dim plainView As System.Net.Mail.AlternateView = System.Net.Mail.AlternateView.CreateAlternateViewFromString(System.Text.RegularExpressions.Regex.Replace(newBody, "< (.|\n) *?>", String.Empty), Nothing, "text/plain")
@@ -180,8 +195,6 @@ Public Class mail
 			smtpClient = Nothing
 
 			If effettuaLogMail Then
-				Dim Datella As String = Format(Now.Day, "00") & "/" & Format(Now.Month, "00") & "/" & Now.Year & " " & Format(Now.Hour, "00") & ":" & Format(Now.Minute, "00") & ":" & Format(Now.Second, "00")
-
 				gf.ScriveTestoSuFileAperto(Datella & " - Invio in corso")
 			End If
 
@@ -191,24 +204,18 @@ Public Class mail
 
 			Ritorno = "*"
 			If effettuaLogMail Then
-				Dim Datella As String = Format(Now.Day, "00") & "/" & Format(Now.Month, "00") & "/" & Now.Year & " " & Format(Now.Hour, "00") & ":" & Format(Now.Minute, "00") & ":" & Format(Now.Second, "00")
-
 				gf.ScriveTestoSuFileAperto(Datella & " - Invio effettuato")
 			End If
 		Catch ex As Exception
 			Ritorno = StringaErrore & ex.Message
 
 			If effettuaLogMail Then
-				Dim Datella As String = Format(Now.Day, "00") & "/" & Format(Now.Month, "00") & "/" & Now.Year & " " & Format(Now.Hour, "00") & ":" & Format(Now.Minute, "00") & ":" & Format(Now.Second, "00")
-
 				gf.ScriveTestoSuFileAperto(Datella & " - Errore nell'invio: " & ex.Message)
 			End If
 		End Try
 		'smtpClient.Dispose()
 
 		If effettuaLogMail Then
-			Dim Datella As String = Format(Now.Day, "00") & "/" & Format(Now.Month, "00") & "/" & Now.Year & " " & Format(Now.Hour, "00") & ":" & Format(Now.Minute, "00") & ":" & Format(Now.Second, "00")
-
 			gf.ScriveTestoSuFileAperto(Datella & "-----------------------------------------------------------------")
 			gf.ScriveTestoSuFileAperto(Datella & "")
 			gf.ChiudeFileDiTestoDopoScrittura()

@@ -799,7 +799,7 @@ Public Class wsKit
 					If TypeOf (Rec) Is String Then
 						Ritorno = Rec
 					Else
-						If Rec(0).Value Is DBNull.Value Then
+						If Rec.Eof Then
 							Ritorno = "ERROR: Nessun elemento rilevato"
 						Else
 							Do Until Rec.Eof
@@ -843,7 +843,7 @@ Public Class wsKit
 					If TypeOf (Rec) Is String Then
 						Ritorno = Rec
 					Else
-						If Rec(0).Value Is DBNull.Value Then
+						If Rec.Eof Then
 							Ritorno = -1
 						Else
 							Do Until Rec.Eof

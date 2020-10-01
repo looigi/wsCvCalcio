@@ -1,0 +1,4 @@
+16/09/2020 13:26:13--------------------------------------------------------------------------
+16/09/2020 13:26:13: Select A.idGiocatore, Progressivo, Pagamento, DataPagamento, B.Cognome, B.Nome, A.Validato, Case A.idTipoPagamento When 1 Then 'Rata' When 2 Then 'Altro' Else '' End As TipoPagamento, A.idRata, A.Note, A.idUtentePagatore, A.Commento, B.Maggiorenne, A.NumeroRicevuta, C.MetodoPagamento, D.Cognome + ' ' + D.Nome As Nominativo From GiocatoriPagamenti A Left Join Giocatori B On A.idGiocatore = B.idGiocatore Left Join MetodiPagamento C On A.MetodoPagamento = C.idMetodoPagamento Left Join [Generale].[dbo].[Utenti] D On A.idUtenteRegistratore = D.idUtente Where A.Eliminato = 'N' Order By DataPagamento Desc
+16/09/2020 13:26:13--------------------------------------------------------------------------
+

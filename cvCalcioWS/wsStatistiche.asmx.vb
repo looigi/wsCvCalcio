@@ -32,9 +32,14 @@ Public Class wsStatistiche
 				End If
 
 				Sql = "Select " & Altro & " * From ( " &
+					"Select 'Cert. Scad.' As Cosa, A.idGiocatore As Id, 'Certificato medico scaduto' As PrimoCampo, A.Cognome + ' ' + A.Nome As SecondoCampo, B.ScadenzaCertificatoMedico As Data From Giocatori A " &
+					"Left Join GiocatoriDettaglio B On A.idGiocatore = B.idGiocatore " &
+					"Where B.ScadenzaCertificatoMedico Is Not Null And B.ScadenzaCertificatoMedico <> '' " &
+					"And Convert(DateTime, B.ScadenzaCertificatoMedico, 121) < CURRENT_TIMESTAMP " &
+					"Union All " &
 					"Select 'Cert. Med.' As Cosa, A.idGiocatore As Id, A.Cognome As PrimoCampo, A.Nome As SecondoCampo, CONVERT(date, B.ScadenzaCertificatoMedico) As Data From Giocatori A " &
 					"Left Join GiocatoriDettaglio B On A.idGiocatore = B.idGiocatore " &
-					"Where CertificatoMedico = 'S' And A.Eliminato = 'N' " &
+					"Where CertificatoMedico = 'S' And A.Eliminato = 'N' And Convert(DateTime, B.ScadenzaCertificatoMedico ,121) <= DateAdd(Day, 30, CURRENT_TIMESTAMP) " &
 					"Union All " &
 					"Select 'Partita' As Cosa, idPartita As Id, B.Descrizione As PrimoCampo, C.Descrizione As SecondoCampo, CONVERT(date, DataOra) As Data From Partite A " &
 					"Left Join Categorie B On A.idCategoria = B.idCategoria " &
@@ -42,7 +47,7 @@ Public Class wsStatistiche
 					"Union All " &
 					"Select 'Evento' As Cosa, idEvento As Id, Titolo As PrimoCampo, '' As SecondoCampo, CONVERT(date, Inizio) As Data From EventiCalendario " &
 					"Where idTipologia = 2) A  " &
-					"Where Data > GETDATE() " &
+					"Where Data > GETDATE() Or Cosa = 'Cert. Scad.' " &
 					"Order By Data"
 				Rec = LeggeQuery(Conn, Sql, Connessione)
 				If TypeOf (Rec) Is String Then
@@ -239,7 +244,7 @@ Public Class wsStatistiche
 				'	End If
 
 				Dim Tutti As Integer = 0
-				Sql = "Select Count(*) From Giocatori Where Eliminato='N' And RapportoCompleto='S'"
+				Sql = "Select Count(*) From Giocatori Where Eliminato='N'" '  And RapportoCompleto='S'"
 				Rec = LeggeQuery(Conn, Sql, Connessione)
 				If TypeOf (Rec) Is String Then
 					Ritorno = Rec
@@ -255,7 +260,7 @@ Public Class wsStatistiche
 
 				If Ok Then
 					Sql = "Select YEAR(CONVERT(date, DataDiNascita)) As Anno, Count(*) As Quanti From Giocatori " &
-						"Where Eliminato = 'N' And RapportoCompleto='S' " &
+						"Where Eliminato = 'N' " & ' And RapportoCompleto='S' " &
 						"Group By YEAR(CONVERT(date, DataDiNascita)) " &
 						"Order By 1"
 					Rec = LeggeQuery(Conn, Sql, Connessione)
@@ -312,10 +317,11 @@ Public Class wsStatistiche
 			'End If
 		End If
 
-		If Ritorno = "" Then Ritorno = StringaErrore & " Nessun dato rilevato"
+		' If Ritorno = "" Then Ritorno = StringaErrore & " Nessun dato rilevato"
 
 		Return Ritorno
 	End Function
+
 	<WebMethod()>
 	Public Function RitornaStatisticheAvversari(Squadra As String, idAnno As String, SoloAnno As String, idCategoria As String) As String
 		Dim Ritorno As String = ""

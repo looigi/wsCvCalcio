@@ -97,8 +97,10 @@
     <Content Include="wsGenitori.asmx" />
     <Content Include="wsGiocatoriSezione.asmx" />
     <Content Include="wsKit.asmx" />
+    <Content Include="wsMetodiPagamento.asmx" />
     <Content Include="wsPermessiUtente.asmx" />
     <Content Include="wsQuote.asmx" />
+    <Content Include="wsReports.asmx" />
     <Content Include="wsRisposte.asmx" />
     <Content Include="wsStatAllenamenti.asmx" />
     <Content Include="wsAllenamenti.asmx" />
@@ -121,6 +123,7 @@
     <Content Include="wsUtenti.asmx" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="CodiceFiscale.vb" />
     <Compile Include="CriptaFiles.vb" />
     <Compile Include="CryptEncrypt.vb" />
     <Compile Include="GestioneFilesDirectory.vb" />
@@ -156,12 +159,20 @@
       <DependentUpon>wsKit.asmx</DependentUpon>
       <SubType>Component</SubType>
     </Compile>
+    <Compile Include="wsMetodiPagamento.asmx.vb">
+      <DependentUpon>wsMetodiPagamento.asmx</DependentUpon>
+      <SubType>Component</SubType>
+    </Compile>
     <Compile Include="wsPermessiUtente.asmx.vb">
       <DependentUpon>wsPermessiUtente.asmx</DependentUpon>
       <SubType>Component</SubType>
     </Compile>
     <Compile Include="wsQuote.asmx.vb">
       <DependentUpon>wsQuote.asmx</DependentUpon>
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="wsReports.asmx.vb">
+      <DependentUpon>wsReports.asmx</DependentUpon>
       <SubType>Component</SubType>
     </Compile>
     <Compile Include="wsRisposte.asmx.vb">

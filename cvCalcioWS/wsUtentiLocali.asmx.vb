@@ -9,6 +9,116 @@ Public Class wsUtentiLocali
 	Inherits System.Web.Services.WebService
 
 	<WebMethod()>
+	Public Function ErroriLogin(idUtente As String, Errore As String) As String
+		Dim Ritorno As String = ""
+		Dim Connessione As String = LeggeImpostazioniDiBase(Server.MapPath("."), "")
+
+		If Connessione = "" Then
+			Ritorno = ErroreConnessioneNonValida
+		Else
+			Dim Conn As Object = ApreDB(Connessione)
+
+			If TypeOf (Conn) Is String Then
+				Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
+			Else
+				Dim Rec As Object = Server.CreateObject("ADODB.Recordset")
+				Dim Sql As String = ""
+				Dim idEve As Integer
+
+				If Errore = "S" Then
+					Sql = "SELECT Max(Contatore)+1 FROM ErroriLogin Where idUtente=" & idUtente
+					Rec = LeggeQuery(Conn, Sql, Connessione)
+					If TypeOf (Rec) Is String Then
+						Ritorno = Rec
+					Else
+						If Rec(0).Value Is DBNull.Value Then
+							idEve = 1
+							Sql = "Insert Into ErroriLogin Values (" & idUtente & ", " & idEve & ")"
+						Else
+							idEve = Rec(0).Value
+							Sql = "Update ErroriLogin Set Contatore = " & idEve
+						End If
+						Rec.Close()
+					End If
+
+					If idEve > 3 Then
+						' Troppi errori. Faccio scadere la login
+						Sql = "SELECT * FROM Utente Where idUtente=" & idUtente
+						Rec = LeggeQuery(Conn, Sql, Connessione)
+						If TypeOf (Rec) Is String Then
+							Ritorno = Rec
+						Else
+							Dim Utente As String = Rec("Utente").Value
+							Ritorno = RitornaMailDopoRichiesta(Utente)
+							Rec.Close
+
+							Ritorno = "ERROR: password scaduta"
+						End If
+					End If
+				Else
+					Sql = "SELECT * FROM ErroriLogin Where idUtente=" & idUtente
+					Rec = LeggeQuery(Conn, Sql, Connessione)
+					If TypeOf (Rec) Is String Then
+						Ritorno = Rec
+					Else
+						If Rec.Eof Then
+							Sql = "Insert Into ErroriLogin Values (" & idUtente & ", 0)"
+						Else
+							Sql = "Update ErroriLogin Set Contatore = 0 Where idUtente=" & idUtente
+						End If
+						Rec.Close()
+					End If
+				End If
+
+				If Sql <> "" Then
+					Ritorno = EsegueSql(Conn, Sql, Connessione)
+				End If
+			End If
+		End If
+
+		Return Ritorno
+	End Function
+
+	<WebMethod()>
+	Public Function SalvaLogAccessi(idUtente As String, Descrizione As String) As String
+		Dim Ritorno As String = ""
+		Dim Connessione As String = LeggeImpostazioniDiBase(Server.MapPath("."), "")
+
+		If Connessione = "" Then
+			Ritorno = ErroreConnessioneNonValida
+		Else
+			Dim Conn As Object = ApreDB(Connessione)
+
+			If TypeOf (Conn) Is String Then
+				Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
+			Else
+				Dim Rec As Object = Server.CreateObject("ADODB.Recordset")
+				Dim Sql As String = ""
+				Dim idEve As Integer
+
+				Sql = "SELECT Max(Progressivo)+1 FROM LogAccessi"
+				Rec = LeggeQuery(Conn, Sql, Connessione)
+				If TypeOf (Rec) Is String Then
+					Ritorno = Rec
+				Else
+					If Rec(0).Value Is DBNull.Value Then
+						idEve = 1
+					Else
+						idEve = Rec(0).Value
+					End If
+					Rec.Close()
+				End If
+
+				Dim Datella As String = Format(Now.Day, "00") & "/" & Format(Now.Month, "00") & "/" & Now.Year & " " & Format(Now.Hour, "00") & ":" & Format(Now.Minute, "00") & ":" & Format(Now.Second, "00")
+				Sql = "Insert Into LogAccessi Values (" & idUtente & ", " & idEve & ", '" & Datella & "', '" & Descrizione.Replace("'", "''") & "')"
+				Ritorno = EsegueSql(Conn, Sql, Connessione)
+			End If
+		End If
+
+		Return Ritorno
+	End Function
+
+	<WebMethod()>
 	Public Function RitornaUtentiGenitori(Squadra As String) As String
 		Dim Ritorno As String = ""
 		Dim ConnessioneGenerale As String = LeggeImpostazioniDiBase(Server.MapPath("."), Squadra)
@@ -117,66 +227,7 @@ Public Class wsUtentiLocali
 
 	<WebMethod()>
 	Public Function RitornaMailDimenticata(ByVal Utente As String) As String
-		Dim Ritorno As String = ""
-		Dim Connessione As String = LeggeImpostazioniDiBase(Server.MapPath("."), "")
-
-		If Connessione = "" Then
-			Ritorno = ErroreConnessioneNonValida
-		Else
-			Dim Conn As Object = ApreDB(Connessione)
-
-			If TypeOf (Conn) Is String Then
-				Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
-			Else
-				Dim Rec As Object = Server.CreateObject("ADODB.Recordset")
-				Dim Sql As String = ""
-
-				Sql = "SELECT Utenti.idAnno, idUtente, Utente, Cognome, Nome, " &
-						"Password, EMail, idCategoria, Utenti.idTipologia, Utenti.idSquadra, Descrizione As Squadra " &
-						"FROM Utenti Left Join Squadre On Utenti.idSquadra = Squadre.idSquadra " &
-						"Where Upper(Utente)='" & Utente.ToUpper.Replace("'", "''") & "'" ' And idAnno=" & idAnno
-				Rec = LeggeQuery(Conn, Sql, Connessione)
-				If TypeOf (Rec) Is String Then
-					Ritorno = Rec
-				Else
-					If Rec.Eof Then
-						Ritorno = StringaErrore & " Nessun utente rilevato"
-					Else
-						If Rec("EMail").Value = "" And Rec("Utente").Value = "" Then
-							Ritorno = StringaErrore & " Nessuna mail rilevata"
-						Else
-							Dim idUtente As Integer = Rec("idUtente").Value
-							Dim EMail As String = Rec("EMail").value
-							If EMail = "" Then
-								EMail = Rec("Utente").Value
-							End If
-							Dim pass As String = generaPassRandom()
-							Dim nuovaPass() = pass.Split(";")
-
-							Try
-								Sql = "Update Utenti Set Password='" & nuovaPass(1).Replace("'", "''") & "', PasswordScaduta=1 " &
-									"Where idUtente=" & idUtente
-								Ritorno = EsegueSql(Conn, Sql, Connessione)
-								If Not Ritorno.Contains(StringaErrore) Then
-									Dim m As New mail
-									Dim Oggetto As String = "Reset password inCalcio"
-									Dim Body As String = ""
-									Body &= "La Sua password relativa al sito inCalcio è stata modificata dietro sua richiesta. <br /><br />"
-									Body &= "La nuova password valida per il solo primo accesso è: " & nuovaPass(0) & "<br /><br />"
-									Dim ChiScrive As String = "notifiche@incalcio.cloud"
-
-									Ritorno = m.SendEmail("", "", Oggetto, Body, EMail, {""})
-								End If
-							Catch ex As Exception
-								Ritorno = StringaErrore & " " & ex.Message
-							End Try
-						End If
-					End If
-				End If
-			End If
-		End If
-
-		Return Ritorno
+		Return RitornaMailDopoRichiesta(Utente)
 	End Function
 
 	<WebMethod()>

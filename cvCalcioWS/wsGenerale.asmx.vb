@@ -13,6 +13,58 @@ Public Class wsGenerale
 	Inherits System.Web.Services.WebService
 
 	<WebMethod()>
+	Public Function AggiungeCFaCSV(NomeFile As String) As String
+		Dim gf As New GestioneFilesDirectory
+		Dim Tutto As String = gf.LeggeFileIntero(NomeFile)
+		Dim Righe() As String = Tutto.Split(vbCrLf)
+		Dim cf As New CodiceFiscale
+		Dim Righelle As Integer = 0
+
+		gf.ApreFileDiTestoPerScrittura("C:\Users\looigi\Desktop\NuovoFileIscritti.csv")
+		For Each r As String In Righe
+			If r <> "" Then
+				r = r.Replace(vbLf, "")
+				Dim campi() As String = r.Split(";")
+				If campi.Length > 4 Then
+					Dim DataNascita As String = campi(3).Trim & "-" & campi(4).Trim.Replace("-", "")
+					DataNascita = DataNascita.ToUpper.Replace("GEN", "01")
+					DataNascita = DataNascita.ToUpper.Replace("FEB", "02")
+					DataNascita = DataNascita.ToUpper.Replace("MAR", "03")
+					DataNascita = DataNascita.ToUpper.Replace("APR", "04")
+					DataNascita = DataNascita.ToUpper.Replace("MAG", "05")
+					DataNascita = DataNascita.ToUpper.Replace("GIU", "06")
+					DataNascita = DataNascita.ToUpper.Replace("LUG", "07")
+					DataNascita = DataNascita.ToUpper.Replace("AGO", "08")
+					DataNascita = DataNascita.ToUpper.Replace("SET", "09")
+					DataNascita = DataNascita.ToUpper.Replace("OTT", "10")
+					DataNascita = DataNascita.ToUpper.Replace("NOV", "11")
+					DataNascita = DataNascita.ToUpper.Replace("DIC", "12")
+					DataNascita = DataNascita.ToUpper.Replace("/", "-")
+					DataNascita = DataNascita.ToUpper.Replace("--", "-")
+					Dim Nome As String = campi(1)
+					Dim Cognome As String = campi(2)
+					Dim Comune As String = campi(5)
+					Dim scf As String = ""
+					If DataNascita.Length > 6 Then
+						scf = cf.CreaCodiceFiscale(Cognome, Nome, DataNascita, Comune, True)
+					Else
+						DataNascita = ""
+						scf = ""
+					End If
+					If scf.Length > 10 Or scf = "" Then
+						Dim nuovaRiga As String = Cognome & ";" & Nome & ";" & Comune & ";" & DataNascita & ";" & scf & ";"
+						gf.ScriveTestoSuFileAperto(nuovaRiga)
+						Righelle += 1
+					End If
+				End If
+			End If
+		Next
+		gf.ChiudeFileDiTestoDopoScrittura()
+
+		Return Righelle
+	End Function
+
+	<WebMethod()>
 	Public Function TestDataMaggiorenne(Valore As String) As String
 		Dim d() As String = Valore.Split("/")
 		Valore = d(2) & "-" & d(1) & "-" & d(0)
@@ -689,7 +741,7 @@ Public Class wsGenerale
 									  Indirizzo As String, CampoSquadra As String, NomePolisportiva As String, Mail As String, PEC As String,
 									  Telefono As String, PIva As String, CodiceFiscale As String, CodiceUnivoco As String, SitoWeb As String, MittenteMail As String,
 									  GestionePagamenti As String, CostoScuolaCalcio As String, idUtente As String, Widgets As String, Suffisso As String,
-									  IscrFirmaEntrambi As String) As String
+									  IscrFirmaEntrambi As String, ModuloAssociato As String) As String
 		Dim Ritorno As String = ""
 		Dim Connessione As String = LeggeImpostazioniDiBase(Server.MapPath("."), Cod_Squadra)
 
@@ -724,7 +776,8 @@ Public Class wsGenerale
 					"GestionePagamenti = '" & GestionePagamenti & "', " &
 					"CostoScuolaCalcio=" & CostoScuolaCalcio & ", " &
 					"Suffisso='" & Suffisso & "', " &
-					"iscrFirmaEntrambi='" & IscrFirmaEntrambi & "' " &
+					"iscrFirmaEntrambi='" & IscrFirmaEntrambi & "', " &
+					"ModuloAssociato='" & ModuloAssociato & "' " &
 					"Where idAnno = " & idAnno
 				Ritorno = EsegueSql(Conn, Sql, Connessione)
 
@@ -870,6 +923,7 @@ Public Class wsGenerale
 											Widgets & ";" &
 											Rec("Suffisso").Value & ";" &
 											Rec("iscrFirmaEntrambi").Value & ";" &
+											Rec("ModuloAssociato").Value & ";" &
 											"§"
 
 										Rec.MoveNext()
@@ -1512,7 +1566,7 @@ Public Class wsGenerale
 	End Function
 
 	<WebMethod()>
-	Public Function RichiedeFirma(Squadra As String, CodSquadra As String, idUtente As String, Mail As String, Privacy As String) As String
+	Public Function RichiedeFirma(Squadra As String, CodSquadra As String, idUtente As String, Mail As String, Privacy As String, Mittente As String) As String
 		' RichiedeFirma?Squadra= 0002_00160&idGiocatore=432&Genitore=1 
 		Dim Ritorno As String = ""
 		Dim Connessione As String = LeggeImpostazioniDiBase(Server.MapPath("."), CodSquadra)
@@ -1549,7 +1603,7 @@ Public Class wsGenerale
 					Body &= "Click per firmare"
 					Body &= "</a>"
 
-					Ritorno = m.SendEmail(Squadra, "", Oggetto, Body, Mail, {""})
+					Ritorno = m.SendEmail(Squadra, Mittente, Oggetto, Body, Mail, {""})
 				End If
 			End If
 		End If
@@ -1709,7 +1763,11 @@ Public Class wsGenerale
 					' File.Copy(fileOrigine, fileDestinazione)
 
 					Ritorno = urlIniziale & "Appoggio/" & Datella & ".jpg"
-
+					quanteConversioni += 1
+					If quanteConversioni > 50 Then
+						PulisceCartellaTemporanea()
+						quanteConversioni = 0
+					End If
 					'Dim t As New Timer With {.Interval = 10000}
 					't.Tag = DateTime.Now
 					'AddHandler t.Tick, Sub(sender, e) MyTickHandler(t, fileDestinazione)
@@ -1787,4 +1845,30 @@ Public Class wsGenerale
 		Return Ritorno
 	End Function
 
+	<WebMethod()>
+	Public Function StampaHTML(fileToPrint As String) As String
+		Dim gf As New GestioneFilesDirectory
+		Dim cont As String = gf.LeggeFileIntero(HttpContext.Current.Server.MapPath(".") & "\Impostazioni\PathAllegati.txt")
+		Dim pp() As String = cont.Split(";")
+		Dim path As String = pp(2).Replace(vbCrLf, "")
+		path = path.Replace("Multimedia", "Allegati")
+		If Strings.Right(path, 1) <> "/" Then
+			path &= "/"
+		End If
+		Dim pathFisico As String = pp(0).Trim
+		If Strings.Right(pathFisico, 1) <> "\" Then
+			pathFisico &= "\"
+		End If
+		fileToPrint = fileToPrint.Replace(path, pathFisico)
+		fileToPrint = fileToPrint.Replace("/", "\")
+
+		Using printProcess As Process = New Process()
+			Dim systemPath As String = Environment.GetFolderPath(Environment.SpecialFolder.System)
+			printProcess.StartInfo.FileName = systemPath + "\rundll32.exe"
+			printProcess.StartInfo.Arguments = systemPath + "\mshtml.dll,PrintHTML """ & fileToPrint & """"
+			printProcess.Start()
+		End Using
+
+		Return fileToPrint
+	End Function
 End Class

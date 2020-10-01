@@ -22,7 +22,7 @@ Public Class wsPartite
 								 idUnioneCalendario As String, TGA1 As String, TGA2 As String, TGA3 As String, Dirigenti As String, idArbitro As String,
 								 RisultatoATempi As String, RigoriPropri As String, RigoriAvv As String, EventiPrimoTempo As String,
 								 EventiSecondoTempo As String, EventiTerzoTempo As String, Mittente As String, DataOraAppuntamento As String, LuogoAppuntamento As String,
-								 MezzoTrasporto As String, MandaMail As String, InFormazione As String) As String
+								 MezzoTrasporto As String, MandaMail As String, InFormazione As String, ShootOut As String, Tempi As String, PartitaConRigori As String) As String
 
 		Dim Ritorno As String = ""
 		Dim Connessione As String = LeggeImpostazioniDiBase(Server.MapPath("."), Squadra)
@@ -291,7 +291,10 @@ Public Class wsPartite
 							"'" & RisultatoATempi & "', " &
 							"'" & DataOraAppuntamento & "', " &
 							"'" & LuogoAppuntamento.Replace("-", "") & "', " &
-							"'" & MezzoTrasporto & "' " &
+							"'" & MezzoTrasporto & "', " &
+							"'" & ShootOut & "',  " &
+							" " & Tempi & ", " &
+							"'" & PartitaConRigori & "' " &
 							")"
 						Ritorno = EsegueSql(Conn, Sql, Connessione)
 						If Ritorno.Contains(StringaErrore) Then
@@ -554,7 +557,10 @@ Public Class wsPartite
 
 							Do Until Rec.Eof()
 								If "" & Rec("Mail").Value <> "" Then
-									Sql = "Select * From GiocatoriDettaglio Where idGiocatore=" & Rec("idGiocatore").Value ' & " And Progressivo=" & Rec("Progressivo").Value
+									Sql = "Select * From GiocatoriDettaglio A " &
+										"Left Join Giocatori B On A.idGiocatore = B.idGiocatore " &
+										"Where A.idGiocatore=" & Rec("idGiocatore").Value & " " &
+										"Order By Cognome, Nome"
 									Rec2 = LeggeQuery(Conn, Sql, Connessione)
 									If Not Rec2.Eof Then
 										Dim genitore As String = ""
@@ -572,6 +578,9 @@ Public Class wsPartite
 											Dim g() As String = genitore.Split(" ")
 											cognome = g(0)
 											nome = g(1)
+										Else
+											cognome = genitore
+											nome = ""
 										End If
 
 										MailsConvocati.Add(cognome & ";" & nome & ";" & Rec("Mail").Value & ";C;" & Rec("idGiocatore").Value)
@@ -1316,13 +1325,13 @@ Public Class wsPartite
 						"Partite.idUnioneCalendario, Partite.DataOra, Partite.Giocata, Partite.OraConv, Risultati.Risultato, Risultati.Note, " &
 						"RisultatiAggiuntivi.RisGiochetti, RisultatiAggiuntivi.GoalAvvPrimoTempo, RisultatiAggiuntivi.GoalAvvSecondoTempo, " &
 						"RisultatiAggiuntivi.GoalAvvTerzoTempo, SquadreAvversarie.Descrizione AS Avversario, CampiAvversari.Descrizione AS Campo, " &
-						"TipologiePartite.Descrizione AS Tipologia, Allenatori.Cognome+' '+Allenatori.Nome AS Allenatore, Categorie.Descrizione As Categoria, " &
+						"TipologiePartite.Descrizione AS Tipologia, Allenatori.Cognome+' '+Allenatori.Nome AS Allenatore, Categorie.AnnoCategoria + '-' + Categorie.Descrizione As Categoria, " &
 						"CampiAvversari.Indirizzo as CampoIndirizzo, Partite.Casa, Allenatori.idAllenatore, CampiEsterni.Descrizione As CampoEsterno, " &
 						"RisultatiAggiuntivi.Tempo1Tempo, RisultatiAggiuntivi.Tempo2Tempo, RisultatiAggiuntivi.Tempo3Tempo, " &
 						"CoordinatePartite.Lat, CoordinatePartite.Lon, TempiGoalAvversari.TempiPrimoTempo, TempiGoalAvversari.TempiSecondoTempo, TempiGoalAvversari.TempiTerzoTempo, " &
 						"MeteoPartite.Tempo, MeteoPartite.Gradi, MeteoPartite.Umidita, MeteoPartite.Pressione, MeteoPartite.Icona, ArbitriPartite.idArbitro, Arbitri.Cognome + ' ' + Arbitri.Nome As Arbitro, " &
 						"Partite.RisultatoATempi, Partite.DataOraAppuntamento, Partite.LuogoAppuntamento, Partite.MezzoTrasporto, Categorie.AnticipoConvocazione, Anni.Indirizzo, Anni.Lat, Anni.Lon, " &
-						"Anni.CampoSquadra, Anni.NomePolisportiva " &
+						"Anni.CampoSquadra, Anni.NomePolisportiva, Partite.ShootOut, Partite.Tempi, Partite.PartitaConRigori " &
 						"FROM Partite LEFT JOIN Risultati ON Partite.idPartita = Risultati.idPartita " &
 						"LEFT JOIN RisultatiAggiuntivi ON Partite.idPartita = RisultatiAggiuntivi.idPartita " &
 						"LEFT JOIN SquadreAvversarie ON Partite.idAvversario = SquadreAvversarie.idAvversario " &
@@ -1579,6 +1588,9 @@ Public Class wsPartite
 								Ritorno &= Rec("Lon").Value & ";"
 								Ritorno &= Rec("CampoSquadra").Value & ";"
 								Ritorno &= Rec("NomePolisportiva").Value & ";"
+								Ritorno &= Rec("ShootOut").Value & ";"
+								Ritorno &= Rec("Tempi").Value & ";"
+								Ritorno &= Rec("PartitaConRigori").Value & ";"
 								Ritorno &= "§"
 
 								Rec.MoveNext()
@@ -1909,11 +1921,11 @@ Public Class wsPartite
 								Rec.Close
 
 								Convocati &= "<table style=""width: 100%;"" cellpadding=""0px"" cellspacing=""0px"">"
-								For i As Integer = 1 To 12
+								For i As Integer = 0 To 11
 									Dim Riga As String = "<tr>"
 
 									Riga &= "<td style=""width: 10%;"" class=""adestra"">"
-									Riga &= "<span class=""titolo3"">" & i & "</span>"
+									Riga &= "<span class=""titolo3"">" & i + 1 & "</span>"
 									Riga &= "</td>"
 
 									Riga &= "<td style=""width:10px;"">"
@@ -1929,7 +1941,7 @@ Public Class wsPartite
 									Riga &= "</td>"
 
 									Riga &= "<td style=""width: 10%;"" class=""adestra"">"
-									Riga &= "<span class=""titolo3"">" & i + 12 & "</span>"
+									Riga &= "<span class=""titolo3"">" & i + 11 & "</span>"
 									Riga &= "</td>"
 
 									Riga &= "<td style=""width:10px;"">"
@@ -2077,7 +2089,9 @@ Public Class wsPartite
 						Dim Giocatori As List(Of String) = New List(Of String)
 
 						Do Until Rec.Eof
-							Giocatori.Add(Rec(0).Value)
+							If Not Rec(0).Value Is DBNull.Value Then
+								Giocatori.Add(Rec(0).Value)
+							End If
 
 							Rec.MoveNext
 						Loop
@@ -2098,4 +2112,144 @@ Public Class wsPartite
 		Return Ritorno
 	End Function
 
+	<WebMethod()>
+	Public Function AggiungeSostituzioni(Squadra As String, idPartita As String, Dati As String) As String
+		Dim Ritorno As String = ""
+		Dim Connessione As String = LeggeImpostazioniDiBase(Server.MapPath("."), Squadra)
+		Dim gf As New GestioneFilesDirectory
+
+		If Connessione = "" Then
+			Ritorno = ErroreConnessioneNonValida
+		Else
+			Dim Conn As Object = ApreDB(Connessione)
+
+			If TypeOf (Conn) Is String Then
+				Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
+			Else
+				Dim Rec As Object = Server.CreateObject("ADODB.Recordset")
+				Dim Sql As String = ""
+				Dim Ok As Boolean = True
+
+				Sql = "Begin transaction"
+				Ritorno = EsegueSql(Conn, Sql, Connessione)
+				If Ritorno <> "*" Then
+					Ok = False
+				End If
+
+				If Ok Then
+					Sql = "Delete From PartiteSostituzioni Where idPartita = " & idPartita
+					Ritorno = EsegueSql(Conn, Sql, Connessione)
+					If Ritorno <> "*" Then
+						Ok = False
+					End If
+				End If
+
+				If Ok Then
+					Dim campi() As String = Dati.Split("§")
+					For Each c As String In campi
+						If c <> "" Then
+							Dim cc() As String = c.Split(";")
+							Dim idSostituito As String = cc(0)
+							Dim idEntrante As String = cc(1)
+							Dim Tempo As String = cc(2)
+							Dim Minuto As String = cc(3)
+							Dim Progressivo As Integer
+
+							Sql = "Select Max(Progressivo)+1 From PartiteSostituzioni Where idPartita=" & idPartita & " And Tempo=" & Tempo
+							Rec = LeggeQuery(Conn, Sql, Connessione)
+							If TypeOf (Rec) Is String Then
+								Ritorno = Rec
+								Ok = False
+							Else
+								If Rec(0).Value Is DBNull.Value Then
+									Progressivo = 1
+								Else
+									Progressivo = Rec(0).Value
+								End If
+								Rec.Close
+							End If
+
+							If Ok Then
+								Sql = "Insert Into PartiteSostituzioni Values (" & idPartita & ", " & Tempo & ", " & Progressivo & ", " & idSostituito & ", " & idEntrante & ", " & Minuto & ")"
+								Ritorno = EsegueSql(Conn, Sql, Connessione)
+								If Ritorno <> "*" Then
+									Ok = False
+									Exit For
+								End If
+							End If
+						End If
+					Next
+				End If
+
+				If Ok Then
+					Ritorno = "*"
+					Sql = "Commit"
+					Dim Ritorno2 As String = EsegueSql(Conn, Sql, Connessione)
+				Else
+					Sql = "Rollback"
+					Dim Ritorno2 As String = EsegueSql(Conn, Sql, Connessione)
+				End If
+
+				Conn.Close()
+			End If
+		End If
+
+		Return Ritorno
+	End Function
+
+	<WebMethod()>
+	Public Function RitornaSostituzioni(Squadra As String, idPartita As String) As String
+		Dim Ritorno As String = ""
+		Dim Connessione As String = LeggeImpostazioniDiBase(Server.MapPath("."), Squadra)
+		Dim gf As New GestioneFilesDirectory
+
+		If Connessione = "" Then
+			Ritorno = ErroreConnessioneNonValida
+		Else
+			Dim Conn As Object = ApreDB(Connessione)
+
+			If TypeOf (Conn) Is String Then
+				Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
+			Else
+				Dim Rec As Object = Server.CreateObject("ADODB.Recordset")
+				Dim Sql As String = "Select * From PartiteSostituzioni Where idPartita=" & idPartita & " Order By Tempo, Minuto"
+				Rec = LeggeQuery(Conn, Sql, Connessione)
+				If TypeOf (Rec) Is String Then
+					Ritorno = Rec
+				Else
+					Do Until Rec.Eof
+						Ritorno &= Rec("idSostituito").Value & ";" & Rec("idEntrante").Value & ";" & Rec("Tempo").Value & ";" & Rec("Minuto").Value & "§"
+
+						Rec.MoveNext
+					Loop
+					Rec.Close
+				End If
+			End If
+		End If
+
+		Return Ritorno
+	End Function
+
+	<WebMethod()>
+	Public Function EliminaSostituzione(Squadra As String, idPartita As String, Progressivo As String) As String
+		Dim Ritorno As String = ""
+		Dim Connessione As String = LeggeImpostazioniDiBase(Server.MapPath("."), Squadra)
+		Dim gf As New GestioneFilesDirectory
+
+		If Connessione = "" Then
+			Ritorno = ErroreConnessioneNonValida
+		Else
+			Dim Conn As Object = ApreDB(Connessione)
+
+			If TypeOf (Conn) Is String Then
+				Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
+			Else
+				Dim Rec As Object = Server.CreateObject("ADODB.Recordset")
+				Dim Sql As String = "Delete From PartiteSostituzioni Where idPartita=" & idPartita & " And Progressivo=" & Progressivo
+				Ritorno = EsegueSql(Conn, Sql, Connessione)
+			End If
+		End If
+
+		Return Ritorno
+	End Function
 End Class

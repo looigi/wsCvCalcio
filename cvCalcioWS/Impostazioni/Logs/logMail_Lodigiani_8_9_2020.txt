@@ -1,0 +1,7 @@
+08/09/2020 19:46:41 - Timer avviato. Mail da scodare: 1
+08/09/2020 19:46:46 - Scodo Mail: Lodigiani//Creazione nuova società/looigi@gmail.com
+08/09/2020 19:46:48 - Inizio
+08/09/2020 19:47:12 - Invio in corso
+08/09/2020 19:47:12 - Errore nell'invio: Riferimento a un oggetto non impostato su un'istanza di oggetto.
+08/09/2020 19:47:12-----------------------------------------------------------------
+08/09/2020 19:47:12

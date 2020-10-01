@@ -11,7 +11,7 @@ Public Class wsQuote
 	Inherits System.Web.Services.WebService
 
 	<WebMethod()>
-	Public Function StampaListaRicevute(Squadra As String, NomeSquadra As String) As String
+	Public Function StampaListaRicevute(Squadra As String, NomeSquadra As String, DataInizio As String, DataFine As String) As String
 		Dim Ritorno As String = ""
 		Dim Connessione As String = LeggeImpostazioniDiBase(Server.MapPath("."), Squadra)
 
@@ -27,11 +27,13 @@ Public Class wsQuote
 				Dim Sql As String = ""
 
 				Sql = "Select A.idGiocatore, Progressivo, Pagamento, DataPagamento, B.Cognome, B.Nome, A.Validato, Case A.idTipoPagamento When 1 Then 'Rata' When 2 Then 'Altro' Else '' End As TipoPagamento, " &
-						"A.idRata, A.Note, A.idUtentePagatore, A.Commento, B.Maggiorenne, A.NumeroRicevuta From " &
+						"A.idRata, A.Note, A.idUtentePagatore, A.Commento, B.Maggiorenne, A.NumeroRicevuta, C.MetodoPagamento, D.Cognome + ' ' + D.Nome As Nominativo, A.idTipoPagamento From " &
 						"GiocatoriPagamenti A " &
 						"Left Join Giocatori B On A.idGiocatore = B.idGiocatore " &
-						"Where A.Eliminato = 'N' " &
-						"Order By DataPagamento Desc"
+						"Left Join MetodiPagamento C On A.MetodoPagamento = C.idMetodoPagamento " &
+						"Left Join [Generale].[dbo].[Utenti] D On A.idUtenteRegistratore = D.idUtente " &
+						"Where A.Eliminato = 'N' And DataPagamento Between '" & DataInizio & "' And '" & DataFine & "' " &
+						"Order By A.NumeroRicevuta Desc"
 				Rec = LeggeQuery(Conn, Sql, Connessione)
 				If TypeOf (Rec) Is String Then
 					Ritorno = Rec
@@ -39,8 +41,14 @@ Public Class wsQuote
 					If Rec.Eof Then
 						Ritorno = StringaErrore & " Nessuna ricevuta rilevata"
 					Else
-						Ritorno = "<table style=""width: 100%;"">"
-						Ritorno &= "<tr><th>Numero Ricevuta</th><th>Data Pagamento</th><th>Importo</th><th>Nominativo</th><th>Stato</th><th>Tipo Pagamento</th><th>Descrizione</th></tr>"
+						Ritorno = "<table style=""width: 100%;"" cellpadding=""0"" cellspacing=""0"">"
+						Ritorno &= "<tr><th>Numero Ricevuta</th><th>Data Pagamento</th><th>Importo</th><th>Nominativo</th><th>Stato</th><th>Tipo Pagamento</th><th>Metodo Pagamento</th><th>Registrante</th><th>Descrizione</th><th>Note</th></tr>"
+						Dim totale As Single = 0
+						Dim totRata As Single = 0
+						Dim totAltro As String = 0
+						Dim metodi As New List(Of String)
+						Dim totMetodi As New List(Of Single)
+
 						Do Until Rec.Eof
 							Dim Stato As String = ""
 							Dim TipoPag As String = ""
@@ -50,33 +58,74 @@ Public Class wsQuote
 							Else
 								Stato = "Bozza"
 							End If
-							Dim idTP As String = ""
-							'If Rec("idTipoPagamento").Value Is DBNull.Value Then
-							'	idTP = ""
-							'Else
-							'	idTP = Rec("idTipoPagamento").Value
-							'End If
-							'If idTP = 1 Then
-							'	TipoPag = "Rata"
-							'Else
-							'	TipoPag = "Altro"
-							'End If
 
-							Dim pag As String = ("" & Rec("Pagamento").Value).replace(",", ".")
-
+							Dim pag As String = ("" & Rec("Pagamento").Value) '.replace(",", ".")
+							Dim pag2 As String = FormatCurrency(pag)
+							Dim d As String = Rec("DataPagamento").Value
+							Dim sData As String = ""
+							If d.Contains("-") Then
+								Dim dd() As String = d.Split("-")
+								sData = dd(2) & "/" & dd(1) & "/" & dd(0)
+							End If
 							Ritorno &= "<tr>"
 							Ritorno &= "<td>" & Rec("NumeroRicevuta").Value & "</td>"
-							Ritorno &= "<td>" & Rec("DataPagamento").Value & "</td>"
-							Ritorno &= "<td style=""text-align: right;"">" & pag & "</td>"
-							Ritorno &= "<td>" & Rec("Cognome").Value & " " & Rec("Nome").Value & "</td>"
-							Ritorno &= "<td>" & Stato & "</td>"
-							Ritorno &= "<td>" & Rec("TipoPagamento").Value & "</td>"
-							Ritorno &= "<td>" & Rec("Commento").Value & "</td>"
+							Ritorno &= "<td style=""padding-left: 3px;"">" & sData & "</td>"
+							Ritorno &= "<td style=""text-align: right; padding-left: 3px;"">" & pag2 & "</td>"
+							Ritorno &= "<td style=""padding-left: 3px;"">" & Rec("Cognome").Value & " " & Rec("Nome").Value & "</td>"
+							Ritorno &= "<td style=""padding-left: 3px;"">" & Stato & "</td>"
+							Ritorno &= "<td style=""padding-left: 3px;"">" & Rec("TipoPagamento").Value & "</td>"
+							Ritorno &= "<td style=""padding-left: 3px;"">" & Rec("MetodoPagamento").Value & "</td>"
+							Ritorno &= "<td style=""padding-left: 3px;"">" & Rec("Nominativo").Value & "</td>"
+							Ritorno &= "<td style=""padding-left: 3px;"">" & Rec("Commento").Value & "</td>"
+							Ritorno &= "<td style=""padding-left: 3px;"">" & Rec("Note").Value & "</td>"
 							Ritorno &= "</tr>"
+							Ritorno &= "<tr><td><hr /></td><td><hr /></td><td><hr /></td><td><hr /></td><td><hr /></td><td><hr /></td><td><hr /></td><td><hr /></td><td><hr /></td><td><hr /></td></tr>"
+
+							Dim idTP As String = ""
+							If Rec("idTipoPagamento").Value Is DBNull.Value Then
+								idTP = ""
+							Else
+								idTP = Rec("idTipoPagamento").Value
+							End If
+							If idTP = 1 Then
+								totRata += Val(pag)
+							Else
+								totAltro += Val(pag)
+							End If
+
+							Dim metodo As String = "" & Rec("MetodoPagamento").Value
+							Dim qm1 As Integer = 0
+							Dim okm As Boolean = False
+							For Each m As String In metodi
+								If m = metodo Then
+									totMetodi(qm1) += Val(pag)
+									okm = True
+									Exit For
+								End If
+								qm1 += 1
+							Next
+							If Not okm Then
+								totMetodi.Add(Val(pag))
+								metodi.Add(metodo)
+							End If
+
+							totale += Val(pag)
 
 							Rec.MoveNext
 						Loop
+						Dim qm As Integer = 0
+						For Each m As String In metodi
+							Ritorno &= "<tr><td></td><td style=""text-align: left; font-weight: bold; padding-left: 3px;"">" & m & "</td><td style=""text-align: right; font-weight: bold;"">" & FormatCurrency(totMetodi(qm)) & "</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>"
+							qm += 1
+						Next
+						Ritorno &= "<tr><td><hr /></td><td><hr /></td><td><hr /></td><td><hr /></td><td><hr /></td><td><hr /></td><td><hr /></td><td><hr /></td><td><hr /></td><td><hr /></td></tr>"
+						Ritorno &= "<tr><td></td><td style=""text-align: left; font-weight: bold; padding-left: 3px;"">Rata</td><td style=""text-align: right; font-weight: bold;"">" & FormatCurrency(totRata) & "</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>"
+						Ritorno &= "<tr><td></td><td style=""text-align: left; font-weight: bold; padding-left: 3px;"">Altro</td><td style=""text-align: right; font-weight: bold;"">" & FormatCurrency(totAltro) & "</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>"
+						Ritorno &= "<tr><td></td><td style=""text-align: left; font-weight: bold; padding-left: 3px;"">Totale</td><td style=""text-align: right; font-weight: bold;"">" & FormatCurrency(totale) & "</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>"
 						Ritorno &= "</table>"
+
+						'Ritorno &= "<hr /><div style=""text-algin: center; width: 100%;"">Stampato tramite InCalcio – www.incalcio.it – info@incalcio.it</div>"
+
 						Rec.Close
 
 						Dim gf As New GestioneFilesDirectory
@@ -113,7 +162,7 @@ Public Class wsQuote
 						gf.CreaAggiornaFile(nomeFileHtml, filetto)
 
 						Dim pp2 As New pdfGest
-						Ritorno = pp2.ConverteHTMLInPDF(nomeFileHtml, nomeFilePDF, "")
+						Ritorno = pp2.ConverteHTMLInPDF(nomeFileHtml, nomeFilePDF, "",, True)
 						If Ritorno = "*" Then
 							Ritorno = "Appoggio/" & Esten & ".pdf"
 						End If
@@ -170,7 +219,8 @@ Public Class wsQuote
 								Sql = "Select A.* From Giocatori A " &
 									"Left Join GiocatoriDettaglio B On A.idGiocatore = B.idGiocatore " &
 									"Left Join GiocatoriPagamenti C On A.idGiocatore = C.idGiocatore " &
-									"Where B.idQuota = " & qq(0) & " And (C.Progressivo Not In (" & qq(1) & ") Or C.Progressivo Is Null) And C.NumeroRicevuta <> 'Bozza'"
+									"Where B.idQuota = " & qq(0) & " And " &
+									"(C.Progressivo Is Null Or (C.Progressivo In (" & qq(1) & ") And (C.NumeroRicevuta = 'Bozza' Or C.NumeroRicevuta Is Null)))"
 								Rec2 = LeggeQuery(Conn, Sql, Connessione)
 								If TypeOf (Rec2) Is String Then
 									Ritorno = Rec2
@@ -225,11 +275,14 @@ Public Class wsQuote
 
 				Try
 					Sql = "Select A.idGiocatore, Progressivo, Pagamento, DataPagamento, B.Cognome, B.Nome, A.Validato, A.idTipoPagamento, " &
-						"A.idRata, A.Note, A.idUtentePagatore, A.Commento, B.Maggiorenne, A.NumeroRicevuta From " &
+						"A.idRata, A.Note, A.idUtentePagatore, A.Commento, B.Maggiorenne, A.NumeroRicevuta, C.idMetodoPagamento, D.Cognome + ' ' + D.Nome As Nominativo, C.MetodoPagamento, E.idQuota From " &
 						"GiocatoriPagamenti A " &
 						"Left Join Giocatori B On A.idGiocatore = B.idGiocatore " &
+						"Left Join GiocatoriDettaglio E On A.idGiocatore = E.idGiocatore " &
+						"Left Join MetodiPagamento C On A.MetodoPagamento = C.idMetodoPagamento " &
+						"Left Join [Generale].[dbo].[Utenti] D On A.idUtenteRegistratore = D.idUtente " &
 						"Where A.Eliminato = 'N' And B.Eliminato = 'N' " &
-						"Order By DataPagamento Desc, Progressivo Desc"
+						"Order By NumeroRicevuta Desc" ' DataPagamento Desc, Progressivo Desc"
 					Rec = LeggeQuery(Conn, Sql, Connessione)
 					If TypeOf (Rec) Is String Then
 						Ritorno = Rec
@@ -242,10 +295,10 @@ Public Class wsQuote
 								Dim nn As String = ("" & Rec("Note").Value).replace(";", "*PV*")
 								Ritorno &= Rec("idGiocatore").Value & ";" & Rec("Progressivo").Value & ";" & Rec("Pagamento").Value & ";" &
 									Rec("DataPagamento").Value & ";" & Rec("Cognome").Value & ";" & Rec("Nome").Value & ";" & Rec("Validato").Value & ";" &
-									Rec("idTipoPagamento").Value & ";" & Rec("idRata").Value & ";" & nn & ";" &
-									Rec("idUtentePagatore").Value & ";" & Rec("Commento").Value & ";" & Rec("Maggiorenne").Value & ";" &
-									Rec("NumeroRicevuta").Value &
-									"§"
+									Rec("idTipoPagamento").Value & ";" & Rec("idRata").Value.replace(";", ":") & ";" & nn & ";" &
+									Rec("idUtentePagatore").Value & ";" & Rec("Commento").Value & ";" & Rec("idQuota").Value & ";" & Rec("Maggiorenne").Value & ";" &
+									Rec("NumeroRicevuta").Value & ";" & Rec("idMetodoPagamento").Value & ";" & Rec("Nominativo").Value & ";" &
+									Rec("MetodoPagamento").Value & "§"
 
 								Rec.MoveNext
 							Loop
@@ -326,6 +379,21 @@ Public Class wsQuote
 									For i As Integer = q To 5
 										Ritorno &= "N;;;;"
 									Next
+								End If
+
+								Sql = "Select * From GiocatoriPagamenti Where idQuota = " & Rec("idQuota").Value & " And Eliminato='N'"
+								Rec2 = LeggeQuery(Conn, Sql, Connessione)
+								If TypeOf (Rec2) Is String Then
+									Ritorno = Rec2
+
+									Ok = False
+									Exit Do
+								Else
+									If Rec2.Eof() Then
+										Ritorno &= "S;"
+									Else
+										Ritorno &= "N;"
+									End If
 								End If
 
 								Ritorno &= "§"

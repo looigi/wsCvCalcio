@@ -248,6 +248,8 @@ Public Class wsSuperUser
 													"null, " &
 													"null, " &
 													"null, " &
+													"null, " &
+													"null, " &
 													"null " &
 													")"
 												Ritorno = EsegueSql(ConnDbVuoto, Sql, ConnessioneDBVuoto)

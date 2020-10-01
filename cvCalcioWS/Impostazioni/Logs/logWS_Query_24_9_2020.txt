@@ -1,0 +1,164 @@
+24/09/2020 11:31:23--------------------------------------------------------------------------
+24/09/2020 11:31:23: Select * From Anni
+24/09/2020 11:31:23--------------------------------------------------------------------------
+
+24/09/2020 11:31:24--------------------------------------------------------------------------
+24/09/2020 11:31:24: Select * From [Generale].[dbo].[Squadre] Where idSquadra = 2
+24/09/2020 11:31:24--------------------------------------------------------------------------
+
+24/09/2020 11:31:27--------------------------------------------------------------------------
+24/09/2020 11:31:27: Select * From Giocatori A Left Join GiocatoriDettaglio B On A.idGiocatore = B.idGiocatore Where YEAR(Convert(DateTime, DataDiNascita ,121)) > Year(CURRENT_TIMESTAMP) - 12 And A.Eliminato = 'N' Order By Cognome, Nome
+24/09/2020 11:31:27--------------------------------------------------------------------------
+
+24/09/2020 11:31:35--------------------------------------------------------------------------
+24/09/2020 11:31:35: Select Quantita, QuantitaConsegnata from KitComposizione A Left Join KitGiocatori B On A.idTipoKit = B.idTipokit And A.idElemento = B.idElemento Where B.idGiocatore = 553
+24/09/2020 11:31:35--------------------------------------------------------------------------
+
+24/09/2020 11:31:49--------------------------------------------------------------------------
+24/09/2020 11:31:49: Select Quantita, QuantitaConsegnata from KitComposizione A Left Join KitGiocatori B On A.idTipoKit = B.idTipokit And A.idElemento = B.idElemento Where B.idGiocatore = 550
+24/09/2020 11:31:49--------------------------------------------------------------------------
+
+24/09/2020 11:31:50--------------------------------------------------------------------------
+24/09/2020 11:31:50: Select Quantita, QuantitaConsegnata from KitComposizione A Left Join KitGiocatori B On A.idTipoKit = B.idTipokit And A.idElemento = B.idElemento Where B.idGiocatore = 555
+24/09/2020 11:31:50--------------------------------------------------------------------------
+
+24/09/2020 11:31:50--------------------------------------------------------------------------
+24/09/2020 11:31:50: Select Quantita, QuantitaConsegnata from KitComposizione A Left Join KitGiocatori B On A.idTipoKit = B.idTipokit And A.idElemento = B.idElemento Where B.idGiocatore = 548
+24/09/2020 11:31:50--------------------------------------------------------------------------
+
+24/09/2020 11:31:51--------------------------------------------------------------------------
+24/09/2020 11:31:51: Select Quantita, QuantitaConsegnata from KitComposizione A Left Join KitGiocatori B On A.idTipoKit = B.idTipokit And A.idElemento = B.idElemento Where B.idGiocatore = 547
+24/09/2020 11:31:51--------------------------------------------------------------------------
+
+24/09/2020 11:31:51--------------------------------------------------------------------------
+24/09/2020 11:31:51: Select Quantita, QuantitaConsegnata from KitComposizione A Left Join KitGiocatori B On A.idTipoKit = B.idTipokit And A.idElemento = B.idElemento Where B.idGiocatore = 549
+24/09/2020 11:31:51--------------------------------------------------------------------------
+
+24/09/2020 11:31:51--------------------------------------------------------------------------
+24/09/2020 11:31:51: Select Quantita, QuantitaConsegnata from KitComposizione A Left Join KitGiocatori B On A.idTipoKit = B.idTipokit And A.idElemento = B.idElemento Where B.idGiocatore = 552
+24/09/2020 11:31:51--------------------------------------------------------------------------
+
+24/09/2020 11:31:51--------------------------------------------------------------------------
+24/09/2020 11:31:51: Select Quantita, QuantitaConsegnata from KitComposizione A Left Join KitGiocatori B On A.idTipoKit = B.idTipokit And A.idElemento = B.idElemento Where B.idGiocatore = 539
+24/09/2020 11:31:51--------------------------------------------------------------------------
+
+24/09/2020 11:31:51--------------------------------------------------------------------------
+24/09/2020 11:31:51: Select Quantita, QuantitaConsegnata from KitComposizione A Left Join KitGiocatori B On A.idTipoKit = B.idTipokit And A.idElemento = B.idElemento Where B.idGiocatore = 544
+24/09/2020 11:31:51--------------------------------------------------------------------------
+
+24/09/2020 11:31:52--------------------------------------------------------------------------
+24/09/2020 11:31:52: Select Quantita, QuantitaConsegnata from KitComposizione A Left Join KitGiocatori B On A.idTipoKit = B.idTipokit And A.idElemento = B.idElemento Where B.idGiocatore = 554
+24/09/2020 11:31:52--------------------------------------------------------------------------
+
+24/09/2020 11:31:52--------------------------------------------------------------------------
+24/09/2020 11:31:52: Select Quantita, QuantitaConsegnata from KitComposizione A Left Join KitGiocatori B On A.idTipoKit = B.idTipokit And A.idElemento = B.idElemento Where B.idGiocatore = 1
+24/09/2020 11:31:52--------------------------------------------------------------------------
+
+24/09/2020 11:31:53--------------------------------------------------------------------------
+24/09/2020 11:31:53: Select Quantita, QuantitaConsegnata from KitComposizione A Left Join KitGiocatori B On A.idTipoKit = B.idTipokit And A.idElemento = B.idElemento Where B.idGiocatore = 2
+24/09/2020 11:31:53--------------------------------------------------------------------------
+
+24/09/2020 11:31:53--------------------------------------------------------------------------
+24/09/2020 11:31:53: Select Quantita, QuantitaConsegnata from KitComposizione A Left Join KitGiocatori B On A.idTipoKit = B.idTipokit And A.idElemento = B.idElemento Where B.idGiocatore = 546
+24/09/2020 11:31:53--------------------------------------------------------------------------
+
+24/09/2020 11:31:53--------------------------------------------------------------------------
+24/09/2020 11:31:53: Select Quantita, QuantitaConsegnata from KitComposizione A Left Join KitGiocatori B On A.idTipoKit = B.idTipokit And A.idElemento = B.idElemento Where B.idGiocatore = 542
+24/09/2020 11:31:53--------------------------------------------------------------------------
+
+24/09/2020 11:31:53--------------------------------------------------------------------------
+24/09/2020 11:31:53: Select Quantita, QuantitaConsegnata from KitComposizione A Left Join KitGiocatori B On A.idTipoKit = B.idTipokit And A.idElemento = B.idElemento Where B.idGiocatore = 551
+24/09/2020 11:31:53--------------------------------------------------------------------------
+
+24/09/2020 11:32:34--------------------------------------------------------------------------
+24/09/2020 11:32:34: Select * From Anni
+24/09/2020 11:32:34--------------------------------------------------------------------------
+
+24/09/2020 11:32:34--------------------------------------------------------------------------
+24/09/2020 11:32:34: Select * From [Generale].[dbo].[Squadre] Where idSquadra = 2
+24/09/2020 11:32:34--------------------------------------------------------------------------
+
+24/09/2020 11:32:36--------------------------------------------------------------------------
+24/09/2020 11:32:36: Select * From Giocatori A Left Join GiocatoriDettaglio B On A.idGiocatore = B.idGiocatore Where YEAR(Convert(DateTime, DataDiNascita ,121)) > Year(CURRENT_TIMESTAMP) - 12 And A.Eliminato = 'N' Order By Cognome, Nome
+24/09/2020 11:32:36--------------------------------------------------------------------------
+
+24/09/2020 11:32:36--------------------------------------------------------------------------
+24/09/2020 11:32:36: Select Quantita, QuantitaConsegnata from KitComposizione A Left Join KitGiocatori B On A.idTipoKit = B.idTipokit And A.idElemento = B.idElemento Where B.idGiocatore = 553
+24/09/2020 11:32:36--------------------------------------------------------------------------
+
+24/09/2020 11:32:37--------------------------------------------------------------------------
+24/09/2020 11:32:37: Select Quantita, QuantitaConsegnata from KitComposizione A Left Join KitGiocatori B On A.idTipoKit = B.idTipokit And A.idElemento = B.idElemento Where B.idGiocatore = 550
+24/09/2020 11:32:37--------------------------------------------------------------------------
+
+24/09/2020 11:33:48--------------------------------------------------------------------------
+24/09/2020 11:33:48--------------------------------------------------------------------------
+24/09/2020 11:33:48--------------------------------------------------------------------------
+
+24/09/2020 11:33:48--------------------------------------------------------------------------
+24/09/2020 11:33:48: Select * From [Generale].[dbo].[Squadre] Where idSquadra = 2
+24/09/2020 11:33:48--------------------------------------------------------------------------
+
+24/09/2020 11:35:05--------------------------------------------------------------------------
+24/09/2020 11:35:05: Select * From Giocatori A Left Join GiocatoriDettaglio B On A.idGiocatore = B.idGiocatore Where YEAR(Convert(DateTime, DataDiNascita ,121)) > Year(CURRENT_TIMESTAMP) - 12 And A.Eliminato = 'N' Order By Cognome, Nome
+24/09/2020 11:35:05--------------------------------------------------------------------------
+
+24/09/2020 11:35:05--------------------------------------------------------------------------
+24/09/2020 11:35:05: Select Quantita, QuantitaConsegnata from KitComposizione A Left Join KitGiocatori B On A.idTipoKit = B.idTipokit And A.idElemento = B.idElemento Where B.idGiocatore = 553
+24/09/2020 11:35:05--------------------------------------------------------------------------
+
+24/09/2020 11:35:05--------------------------------------------------------------------------
+24/09/2020 11:35:05: Select Quantita, QuantitaConsegnata from KitComposizione A Left Join KitGiocatori B On A.idTipoKit = B.idTipokit And A.idElemento = B.idElemento Where B.idGiocatore = 550
+24/09/2020 11:35:05--------------------------------------------------------------------------
+
+24/09/2020 11:35:05--------------------------------------------------------------------------
+24/09/2020 11:35:05: Select Quantita, QuantitaConsegnata from KitComposizione A Left Join KitGiocatori B On A.idTipoKit = B.idTipokit And A.idElemento = B.idElemento Where B.idGiocatore = 555
+24/09/2020 11:35:05--------------------------------------------------------------------------
+
+24/09/2020 11:35:05--------------------------------------------------------------------------
+24/09/2020 11:35:05: Select Quantita, QuantitaConsegnata from KitComposizione A Left Join KitGiocatori B On A.idTipoKit = B.idTipokit And A.idElemento = B.idElemento Where B.idGiocatore = 548
+24/09/2020 11:35:05--------------------------------------------------------------------------
+
+24/09/2020 11:35:05--------------------------------------------------------------------------
+24/09/2020 11:35:05: Select Quantita, QuantitaConsegnata from KitComposizione A Left Join KitGiocatori B On A.idTipoKit = B.idTipokit And A.idElemento = B.idElemento Where B.idGiocatore = 547
+24/09/2020 11:35:05--------------------------------------------------------------------------
+
+24/09/2020 11:35:05--------------------------------------------------------------------------
+24/09/2020 11:35:05: Select Quantita, QuantitaConsegnata from KitComposizione A Left Join KitGiocatori B On A.idTipoKit = B.idTipokit And A.idElemento = B.idElemento Where B.idGiocatore = 549
+24/09/2020 11:35:05--------------------------------------------------------------------------
+
+24/09/2020 11:35:05--------------------------------------------------------------------------
+24/09/2020 11:35:05: Select Quantita, QuantitaConsegnata from KitComposizione A Left Join KitGiocatori B On A.idTipoKit = B.idTipokit And A.idElemento = B.idElemento Where B.idGiocatore = 552
+24/09/2020 11:35:05--------------------------------------------------------------------------
+
+24/09/2020 11:35:06--------------------------------------------------------------------------
+24/09/2020 11:35:06: Select Quantita, QuantitaConsegnata from KitComposizione A Left Join KitGiocatori B On A.idTipoKit = B.idTipokit And A.idElemento = B.idElemento Where B.idGiocatore = 539
+24/09/2020 11:35:06--------------------------------------------------------------------------
+
+24/09/2020 11:35:06--------------------------------------------------------------------------
+24/09/2020 11:35:06: Select Quantita, QuantitaConsegnata from KitComposizione A Left Join KitGiocatori B On A.idTipoKit = B.idTipokit And A.idElemento = B.idElemento Where B.idGiocatore = 544
+24/09/2020 11:35:06--------------------------------------------------------------------------
+
+24/09/2020 11:35:06--------------------------------------------------------------------------
+24/09/2020 11:35:06: Select Quantita, QuantitaConsegnata from KitComposizione A Left Join KitGiocatori B On A.idTipoKit = B.idTipokit And A.idElemento = B.idElemento Where B.idGiocatore = 554
+24/09/2020 11:35:06--------------------------------------------------------------------------
+
+24/09/2020 11:35:06--------------------------------------------------------------------------
+24/09/2020 11:35:06: Select Quantita, QuantitaConsegnata from KitComposizione A Left Join KitGiocatori B On A.idTipoKit = B.idTipokit And A.idElemento = B.idElemento Where B.idGiocatore = 1
+24/09/2020 11:35:06--------------------------------------------------------------------------
+
+24/09/2020 11:35:06--------------------------------------------------------------------------
+24/09/2020 11:35:06: Select Quantita, QuantitaConsegnata from KitComposizione A Left Join KitGiocatori B On A.idTipoKit = B.idTipokit And A.idElemento = B.idElemento Where B.idGiocatore = 2
+24/09/2020 11:35:06--------------------------------------------------------------------------
+
+24/09/2020 11:35:06--------------------------------------------------------------------------
+24/09/2020 11:35:06: Select Quantita, QuantitaConsegnata from KitComposizione A Left Join KitGiocatori B On A.idTipoKit = B.idTipokit And A.idElemento = B.idElemento Where B.idGiocatore = 546
+24/09/2020 11:35:06--------------------------------------------------------------------------
+
+24/09/2020 11:35:07--------------------------------------------------------------------------
+24/09/2020 11:35:07: Select Quantita, QuantitaConsegnata from KitComposizione A Left Join KitGiocatori B On A.idTipoKit = B.idTipokit And A.idElemento = B.idElemento Where B.idGiocatore = 542
+24/09/2020 11:35:07--------------------------------------------------------------------------
+
+24/09/2020 11:35:07--------------------------------------------------------------------------
+24/09/2020 11:35:07: Select Quantita, QuantitaConsegnata from KitComposizione A Left Join KitGiocatori B On A.idTipoKit = B.idTipokit And A.idElemento = B.idElemento Where B.idGiocatore = 551
+24/09/2020 11:35:07--------------------------------------------------------------------------
+

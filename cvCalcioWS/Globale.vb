@@ -13,6 +13,8 @@ Module Globale
 
 	Public nomeFileLogmail As String = ""
 
+	Public quanteConversioni As Integer = 0
+
 	Public Structure strutturaMail
 		Dim Squadra As String
 		Dim Mittente As String
@@ -1216,8 +1218,8 @@ Module Globale
 
 		For i As Integer = 1 To qFiletti
 			Dim DataFile As DateTime = FileDateTime(Filetti(i))
-			Dim Differenza As Integer = DateAndTime.DateDiff(DateInterval.Minute, DataFile, Now)
-			If Differenza > 3 Then
+			Dim Differenza As Integer = DateAndTime.DateDiff(DateInterval.Second, DataFile, Now)
+			If Differenza > 30 Then
 				File.Delete(Filetti(i))
 				Quanti += 1
 			End If
@@ -1225,4 +1227,441 @@ Module Globale
 
 		' Return Quanti
 	End Sub
+
+	Public Function RitornaMailDopoRichiesta(Utente As String) As String
+		Dim Ritorno As String = ""
+		Dim Connessione As String = LeggeImpostazioniDiBase(HttpContext.Current.Server.MapPath("."), "")
+
+		If Connessione = "" Then
+			Ritorno = ErroreConnessioneNonValida
+		Else
+			Dim Conn As Object = ApreDB(Connessione)
+
+			If TypeOf (Conn) Is String Then
+				Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
+			Else
+				Dim Rec As Object = HttpContext.Current.Server.CreateObject("ADODB.Recordset")
+				Dim Sql As String = ""
+
+				Sql = "SELECT Utenti.idAnno, idUtente, Utente, Cognome, Nome, " &
+						"Password, EMail, idCategoria, Utenti.idTipologia, Utenti.idSquadra, Descrizione As Squadra " &
+						"FROM Utenti Left Join Squadre On Utenti.idSquadra = Squadre.idSquadra " &
+						"Where Upper(Utente)='" & Utente.ToUpper.Replace("'", "''") & "'" ' And idAnno=" & idAnno
+				Rec = LeggeQuery(Conn, Sql, Connessione)
+				If TypeOf (Rec) Is String Then
+					Ritorno = Rec
+				Else
+					If Rec.Eof Then
+						Ritorno = StringaErrore & " Nessun utente rilevato"
+					Else
+						If Rec("EMail").Value = "" And Rec("Utente").Value = "" Then
+							Ritorno = StringaErrore & " Nessuna mail rilevata"
+						Else
+							Dim idUtente As Integer = Rec("idUtente").Value
+							Dim EMail As String = Rec("EMail").value
+							If EMail = "" Then
+								EMail = Rec("Utente").Value
+							End If
+							Dim pass As String = generaPassRandom()
+							Dim nuovaPass() = pass.Split(";")
+
+							Try
+								Sql = "Update Utenti Set Password='" & nuovaPass(1).Replace("'", "''") & "', PasswordScaduta=1 " &
+									"Where idUtente=" & idUtente
+								Ritorno = EsegueSql(Conn, Sql, Connessione)
+								If Not Ritorno.Contains(StringaErrore) Then
+									Dim m As New mail
+									Dim Oggetto As String = "Reset password inCalcio"
+									Dim Body As String = ""
+									Body &= "La Sua password relativa al sito inCalcio è stata modificata dietro sua richiesta. <br /><br />"
+									Body &= "La nuova password valida per il solo primo accesso è: " & nuovaPass(0) & "<br /><br />"
+									Dim ChiScrive As String = "notifiche@incalcio.cloud"
+
+									Ritorno = m.SendEmail("", "", Oggetto, Body, EMail, {""})
+								End If
+							Catch ex As Exception
+								Ritorno = StringaErrore & " " & ex.Message
+							End Try
+						End If
+					End If
+				End If
+			End If
+		End If
+
+		Return Ritorno
+	End Function
+
+	Public Function GeneraRicevutaEScontrino(Squadra As String, NomeSquadra As String, idAnno As String, idGiocatore As String, idPagamento As String, idUtente As String) As String
+		Dim Ritorno As String = ""
+		Dim Ok As Boolean = True
+
+		Try
+			Dim Connessione As String = LeggeImpostazioniDiBase(HttpContext.Current.Server.MapPath("."), Squadra)
+
+			If Connessione = "" Then
+				Ritorno = ErroreConnessioneNonValida
+			Else
+				Dim Conn As Object = ApreDB(Connessione)
+
+				If TypeOf (Conn) Is String Then
+					Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
+				Else
+					Dim Rec As Object = HttpContext.Current.Server.CreateObject("ADODB.Recordset")
+					Dim Sql As String = "Select * From GiocatoriPagamenti Where idGiocatore=" & idGiocatore & " And Progressivo=" & idPagamento
+					Rec = LeggeQuery(Conn, Sql, Connessione)
+					If Rec.Eof() Then
+						Ritorno = StringaErrore & " Dati ricevuta non presenti"
+					Else
+						Dim Pagamento As String = "" & Rec("Pagamento").Value
+						Dim DataRicevuta As String = "" & Rec("DataPagamento").Value
+						Dim Commento As String = "" & Rec("Commento").Value
+						Dim idPagatore As String = "" & Rec("idUtentePagatore").Value
+						Dim idRegistratore As String = "" & Rec("idUtenteRegistratore").Value
+						Dim Note As String = "" & Rec("Note").Value
+						Dim Validato As String = "" & Rec("Validato").Value
+						Dim idTipoPagamento As String = "" & Rec("idTipoPagamento").Value
+						Dim idRata As String = "" & Rec("idRata").Value
+						Dim idQuota As String = "" & Rec("idQuota").Value
+						Dim idModalitaPagamento As String = "" & Rec("MetodoPagamento").Value
+						Dim NumeroRicevuta As String = "" & Rec("NumeroRicevuta").Value
+						Rec.Close
+
+						Dim nomeRate As String = ""
+						Dim rr As New List(Of String)
+						If idRata.Contains(";") Then
+							Dim r() As String = idRata.Split(";")
+							For Each r2 As String In r
+								rr.Add(r2)
+							Next
+						Else
+							Dim r As String = idRata
+							rr.Add(r)
+						End If
+
+						For Each r As String In rr
+							If r <> "" Then
+								Sql = "Select * From QuoteRate Where idQuota=" & idQuota & " And Progressivo=" & r
+								Rec = LeggeQuery(Conn, Sql, Connessione)
+								If Not Rec.Eof Then
+									nomeRate &= Rec("DescRata").Value & "<br />"
+								End If
+							End If
+						Next
+
+						Dim Cognome As String = ""
+						Dim CognomePagatore As String = ""
+						Dim Nome As String = ""
+						Dim CognomeIscritto As String = ""
+						Dim NomeIscritto As String = ""
+						Dim CodFiscalePagatore As String = ""
+						Dim CodFiscaleIscritto As String = ""
+						Dim NomePolisportiva As String = ""
+						Dim Indirizzo As String = ""
+						Dim CodiceFiscale As String = ""
+						Dim PIva As String = ""
+						Dim Telefono As String = ""
+						Dim eMail As String = ""
+						Dim indirizzoPagatore As String = ""
+						Dim Suffisso As String = ""
+
+						Sql = "SELECT * FROM Anni"
+						Rec = LeggeQuery(Conn, Sql, Connessione)
+						If Rec.Eof() Then
+							Ritorno = StringaErrore & " Nessuna squadra rilevata"
+							Ok = False
+						Else
+							NomeSquadra = Rec("NomeSquadra").Value
+							NomePolisportiva = Rec("NomePolisportiva").Value
+							Indirizzo = Rec("Indirizzo").Value
+							CodiceFiscale = Rec("CodiceFiscale").Value
+							PIva = Rec("PIva").Value
+							Telefono = Rec("Telefono").Value
+							eMail = Rec("Mail").Value
+							Suffisso = Rec("Suffisso").Value
+						End If
+						Rec.Close()
+
+						If Ok Then
+							If idPagatore = 3 Then
+								Sql = "SELECT * FROM Giocatori Where idGiocatore=" & idGiocatore
+								Rec = LeggeQuery(Conn, Sql, Connessione)
+								If Rec.Eof() Then
+									Ritorno = StringaErrore & " Nessun giocatore rilevato"
+									Ok = False
+								Else
+									Cognome = Rec("Cognome").Value
+									Nome = Rec("Nome").Value
+									CodFiscalePagatore = Rec("CodFiscale").Value
+
+									CognomeIscritto = Rec("Cognome").Value
+									NomeIscritto = Rec("Nome").Value
+									CodFiscaleIscritto = Rec("CodFiscale").Value
+								End If
+								Rec.Close()
+							Else
+								Sql = "SELECT * FROM Giocatori Where idGiocatore=" & idGiocatore
+								Rec = LeggeQuery(Conn, Sql, Connessione)
+								If Rec.Eof() Then
+									Ritorno = StringaErrore & " Nessun giocatore rilevato"
+									Ok = False
+								Else
+									CognomeIscritto = Rec("Cognome").Value
+									NomeIscritto = Rec("Nome").Value
+									CodFiscaleIscritto = Rec("CodFiscale").Value
+								End If
+								Rec.Close()
+
+								Sql = "SELECT * FROM GiocatoriDettaglio Where idGiocatore=" & idGiocatore
+								Rec = LeggeQuery(Conn, Sql, Connessione)
+								If Rec.Eof() Then
+									Ritorno = StringaErrore & " Nessun dettaglio giocatore rilevato"
+									Ok = False
+								Else
+									If idPagatore = 1 Then
+										CognomePagatore = "" & Rec("Genitore1").Value
+										indirizzoPagatore = "" & Rec("Indirizzo1").Value
+										CodFiscalePagatore = "" & Rec("CodFiscale1").Value
+									Else
+										CognomePagatore = "" & Rec("Genitore2").Value
+										indirizzoPagatore = "" & Rec("Indirizzo2").Value
+										CodFiscalePagatore = "" & Rec("CodFiscale2").Value
+									End If
+								End If
+								Rec.Close()
+							End If
+						End If
+
+						If Ok Then
+							Dim gf As New GestioneFilesDirectory
+							Dim filePaths As String = gf.LeggeFileIntero(HttpContext.Current.Server.MapPath(".") & "\Impostazioni\PathAllegati.txt")
+							Dim p() As String = filePaths.Split(";")
+							If Strings.Right(p(0), 1) <> "\" Then
+								p(0) &= "\"
+							End If
+							p(2) = p(2).Replace(vbCrLf, "").Trim
+							If Strings.Right(p(2), 1) <> "/" Then
+								p(2) = p(2) & "/"
+							End If
+							' Dim url As String = p(2) & NomeSquadra.Replace(" ", "_") & "/Societa/" & idAnno & "_1.jpg"
+
+							Dim pp As String = gf.LeggeFileIntero(HttpContext.Current.Server.MapPath(".") & "\Impostazioni\Paths.txt")
+							pp = pp.Replace(vbCrLf, "").Trim
+							If Strings.Right(pp, 1) = "\" Then
+								pp = Mid(pp, 1, pp.Length - 1)
+							End If
+							Dim Esten As String = Format(Now.Second, "00") & "_" & Now.Millisecond & RitornaValoreRandom(55)
+
+							Dim nomeImm As String = p(2) & NomeSquadra.Replace(" ", "_") & "/Societa/" & idAnno & "_1.kgb"
+							Dim pathImm As String = pp & "\" & NomeSquadra.Replace(" ", "_") & "\Societa\" & idAnno & "_1.kgb"
+							Dim nomeImmConv As String = ""
+							Dim c As New CriptaFiles
+							If File.Exists(pathImm) Then
+								nomeImmConv = p(2) & "" & NomeSquadra.Replace(" ", "_") & "/Societa/Societa_1.png"
+								Dim pathImmConv As String = pp & "\" & NomeSquadra.Replace(" ", "_") & "\Societa\Societa_1.png"
+								c.DecryptFile(CryptPasswordString, pathImm, pathImmConv)
+							End If
+
+							Dim pathRicevuta As String = p(0) & Squadra & "\Scheletri\ricevuta_pagamento.txt"
+							If Not File.Exists(pathRicevuta) Then
+								pathRicevuta = HttpContext.Current.Server.MapPath(".") & "\Scheletri\ricevuta_pagamento.txt"
+							End If
+							Dim Body As String = gf.LeggeFileIntero(pathRicevuta)
+							Dim path As String = p(0) & "\" & Squadra & "\Ricevute\Anno" & idAnno & "\" & idGiocatore & "\"
+							gf.CreaDirectoryDaPercorso(path)
+							Dim fileFinale As String = path & "Ricevuta_" & idPagamento & ".pdf"
+							Dim fileAppoggio As String = path & "Ricevuta_" & idPagamento & ".html"
+
+							Dim Intero As String
+							Dim Virgola As String
+
+							If Pagamento.Contains(",") Or Pagamento.Contains(".") Then
+								If Pagamento.Contains(".") Then
+									Dim pp1() As String = Pagamento.Split(".")
+									Intero = pp1(0)
+									Virgola = pp1(1)
+								Else
+									Dim pp22() As String = Pagamento.Split(",")
+									Intero = pp22(0)
+									Virgola = pp22(1)
+								End If
+							Else
+								Intero = Pagamento
+								Virgola = ""
+							End If
+
+							If Virgola = "" Then
+								Virgola = "00"
+							Else
+								If Virgola.Length = 1 Then
+									Virgola = "0" & Virgola
+								Else
+									If Virgola > 2 Then
+										Virgola = Mid(Virgola, 1, 2)
+									End If
+								End If
+							End If
+
+							Dim Dati As String = "C.F.: " & CodiceFiscale & " P.I.:" & PIva & "<br />Telefono: " & Telefono & "<br />E-Mail: " & eMail
+							Dim Altro As String = ""
+							If Commento <> "" Then
+								Altro = "- " & Commento
+							End If
+
+							Body = Body.Replace("***URL LOGO***", nomeImmConv)
+							Body = Body.Replace("***NOME POLISPORTIVA***", NomePolisportiva)
+							Body = Body.Replace("***INDIRIZZO***", Indirizzo)
+							Body = Body.Replace("***DATI***", Dati)
+							If NumeroRicevuta <> "" Then
+								Body = Body.Replace("***NUMERO_RICEVUTA***", NumeroRicevuta)
+							Else
+								If Suffisso <> "" Then
+									Body = Body.Replace("***NUMERO_RICEVUTA***", idPagamento & "/" & Suffisso & "/" & Now.Year)
+								Else
+									Body = Body.Replace("***NUMERO_RICEVUTA***", idPagamento & "/" & Now.Year)
+								End If
+							End If
+							If DataRicevuta <> "" Then
+								Dim d() As String = DataRicevuta.Split("-")
+								Dim sDataRicevuta As String = d(2) & "/" & d(1) & "/" & d(0)
+								Body = Body.Replace("***DATA_RICEVUTA***", sDataRicevuta) ' Format(Now.Day, "00") & "/" & Format(Now.Month, "00") & "/" & Now.Year)
+							Else
+								Body = Body.Replace("***DATA_RICEVUTA***", Format(Now.Day, "00") & "/" & Format(Now.Month, "00") & "/" & Now.Year)
+							End If
+							Body = Body.Replace("***NOME***", CognomePagatore & " " & CodFiscalePagatore & " - " & indirizzoPagatore)
+							Body = Body.Replace("***MOTIVAZIONE***", CognomeIscritto & " " & NomeIscritto & " " & CodFiscaleIscritto & " " & Altro & "<br />" & nomeRate)
+							Body = Body.Replace("***IMPORTO***", Intero)
+							Body = Body.Replace("***VIRGOLE***", Virgola)
+
+							Dim Cifre1 As String = convertNumberToReadableString(Val(Intero))
+							Dim Cifre2 As String = convertNumberToReadableString(Val(Virgola))
+							Dim Altro2 As String = ""
+							If Cifre2 <> "" Then
+								Altro2 = "/" & Virgola
+							End If
+							Body = Body.Replace("***IMPORTO LETTERE***", Cifre1 & Altro2)
+
+							filePaths = gf.LeggeFileIntero(HttpContext.Current.Server.MapPath(".") & "\Impostazioni\Paths.txt")
+							filePaths = filePaths.Replace(vbCrLf, "").Trim
+							If Strings.Right(filePaths, 1) <> "\" Then
+								filePaths &= "\"
+							End If
+							' Dim pathFirma As String = filePaths & NomeSquadra.Replace(" ", "_") & "\Firme\" & idAnno & "_" & idGiocatore & "_" & idPagatore & ".png"
+							' Dim pathFirma As String = filePaths & NomeSquadra.Replace(" ", "_") & "\Segreteria\" & idAnno & ".kgb"
+
+							Dim pathFirma As String = filePaths & NomeSquadra.Replace(" ", "_").Trim & "\Utenti\" & idAnno & "_" & idUtente & "_Firma.kgb"
+							'Sql = "rollback"
+							'Dim Ritorno2 As String = EsegueSql(Conn, Sql, Connessione)
+							'Return pathFirma
+							If File.Exists(pathFirma) Then
+								Dim urlFirma As String = pp & "\" & NomeSquadra.Replace(" ", "_").Trim & "\Utenti\" & idAnno & "_" & idUtente & "_Firma.kgb"
+								'Dim pathFirmaConv As String = p(2) & "/Appoggio/Firma_" & Esten & ".png"
+								Dim urlFirmaConv As String = pp & "\Appoggio\Firma_" & Esten & ".png"
+								c.DecryptFile(CryptPasswordString, urlFirma, urlFirmaConv)
+
+								Body = Body.Replace("***URL FIRMA***", urlFirmaConv)
+							Else
+								Body = Body.Replace("***URL FIRMA***", "")
+							End If
+
+							' Body = Body & "<hr /><div style=""text-algin: center; width: 100%;"">Stampato tramite InCalcio – www.incalcio.it – info@incalcio.it</div>"
+
+							gf.EliminaFileFisico(fileAppoggio)
+							gf.ApreFileDiTestoPerScrittura(fileAppoggio)
+							gf.ScriveTestoSuFileAperto(Body)
+
+							gf.ChiudeFileDiTestoDopoScrittura()
+
+							' Scontrino
+							Dim pathScontr As String = p(0) & Squadra & "\Scheletri\ricevuta_scontrino.txt"
+							If Not File.Exists(pathScontr) Then
+								pathScontr = HttpContext.Current.Server.MapPath(".") & "\Scheletri\ricevuta_scontrino.txt"
+							End If
+							Dim BodyScontrino As String = gf.LeggeFileIntero(pathScontr)
+							Dim pathScontrino As String = p(0) & "\" & Squadra & "\Ricevute\Anno" & idAnno & "\" & idGiocatore & "\"
+							gf.CreaDirectoryDaPercorso(pathScontrino)
+							Dim fileFinaleScontrino As String = path & "Scontrino_" & idPagamento & ".pdf"
+							Dim fileAppoggioScontrino As String = path & "Scontrino_" & idPagamento & ".html"
+							BodyScontrino = BodyScontrino.Replace("***NOME POLISPORTIVA***", NomePolisportiva)
+							BodyScontrino = BodyScontrino.Replace("***INDIRIZZO***", Indirizzo)
+							BodyScontrino = BodyScontrino.Replace("***DATI***", Dati)
+							If NumeroRicevuta <> "" Then
+								BodyScontrino = BodyScontrino.Replace("***NUMERO_RICEVUTA***", NumeroRicevuta)
+							Else
+								If Suffisso <> "" Then
+									BodyScontrino = BodyScontrino.Replace("***NUMERO_RICEVUTA***", idPagamento & "/" & Suffisso & "/" & Now.Year)
+								Else
+									BodyScontrino = BodyScontrino.Replace("***NUMERO_RICEVUTA***", idPagamento & "/" & Now.Year)
+								End If
+							End If
+							If DataRicevuta <> "" Then
+								Dim d() As String = DataRicevuta.Split("-")
+								Dim sDataRicevuta As String = d(2) & "/" & d(1) & "/" & d(0)
+								BodyScontrino = BodyScontrino.Replace("***DATA_RICEVUTA***", sDataRicevuta) ' Format(Now.Day, "00") & "/" & Format(Now.Month, "00") & "/" & Now.Year)
+							Else
+								BodyScontrino = BodyScontrino.Replace("***DATA_RICEVUTA***", Format(Now.Day, "00") & "/" & Format(Now.Month, "00") & "/" & Now.Year)
+							End If
+							BodyScontrino = BodyScontrino.Replace("***MOTIVAZIONE***", CognomeIscritto & " " & NomeIscritto & " " & CodFiscaleIscritto & " " & Altro & "<br />" & nomeRate)
+							BodyScontrino = BodyScontrino.Replace("***IMPORTO***", Intero & "." & Virgola)
+
+							nomeImm = p(2) & NomeSquadra.Replace(" ", "_") & "/Societa/" & idAnno & "_1.kgb"
+							pathImm = pp & "\" & NomeSquadra.Replace(" ", "_") & "\Societa\" & idAnno & "_1.kgb"
+							If File.Exists(pathImm) Then
+								nomeImmConv = p(2) & "/" & NomeSquadra.Replace(" ", "_") & "/Societa/Societa_1.png"
+								Dim pathImmConv As String = pp & "\" & NomeSquadra.Replace(" ", "_") & "\Societa\Societa_1.png"
+								c.DecryptFile(CryptPasswordString, pathImm, pathImmConv)
+
+								BodyScontrino = BodyScontrino.Replace("***immagine logo menu settaggi***", "<img src=""" & nomeImmConv & """ style=""width: 240px; height: 240px;"" />")
+							Else
+								BodyScontrino = BodyScontrino.Replace("***immagine logo menu settaggi***", "")
+							End If
+							BodyScontrino = BodyScontrino.Replace("***NOME***", CognomePagatore & " " & indirizzoPagatore & "<br />" & CodFiscalePagatore)
+
+							BodyScontrino = BodyScontrino & "<hr /><div style=""text-algin: center; width: 100%;"">Stampato tramite InCalcio – www.incalcio.it<br />info@incalcio.it</div>"
+
+							gf.EliminaFileFisico(fileAppoggioScontrino)
+							gf.ApreFileDiTestoPerScrittura(fileAppoggioScontrino)
+							gf.ScriveTestoSuFileAperto(BodyScontrino)
+							gf.ChiudeFileDiTestoDopoScrittura()
+							' Scontrino
+
+							Dim pp2 As New pdfGest
+							Ritorno = pp2.ConverteHTMLInPDF(fileAppoggio, fileFinale, "")
+							Dim Ritorno2 As String = pp2.ConverteHTMLInPDF(fileAppoggioScontrino, fileFinaleScontrino, "", True)
+							If Ritorno <> "*" And Ritorno2 <> "*" Then
+								Ok = False
+							Else
+								If Ritorno2 <> "*" Then
+									Ritorno = Ritorno2
+								End If
+							End If
+						End If
+					End If
+				End If
+			End If
+
+		Catch ex As Exception
+			Ritorno = StringaErrore & " " & ex.Message
+		End Try
+
+		Return Ritorno
+	End Function
+
+	'Public Function DecriptaImmagine(NomeSquadra As String, Tipologia As String, NomeImmagine As String) As String
+	'Dim c As New CriptaFiles
+	'Dim Immagine As String = ""
+	'Dim Esten2 As String = Format(Now.Second, "00") & "_" & Now.Millisecond & RitornaValoreRandom(55)
+	'Dim pathImmagine As String = P(2) & "/" & NomeSquadra.Replace(" ", "_") & "/" & Tipologia & "/" & NomeImmagine & ".kgb"
+	'Dim urlImmagine As String = pp & "\" & NomeSquadra.Replace(" ", "_") & "\" & Tipologia & "\" & NomeImmagine & ".kgb"
+	'Dim pathImmagineConvertita As String = P(2) & "/Appoggio/" & NomeImmagine & "_" & Esten2 & ".png"
+	'Dim urlImmagineConvertita As String = pp & "\Appoggio\" & NomeImmagine & "_" & Esten2 & ".png"
+	'If File.Exists(urlImmagine) Then
+	'	c.DecryptFile(CryptPasswordString, pathImmagine, pathImmagineConvertita)
+
+	'	Immagine = "<img src=""" & urlImmagineConvertita & """ style=""width: 50px; height: 50px;"" />"
+	'Else
+	'	Immagine = ""
+	'End If
+
+	'Return Immagine
+	'End Function
 End Module

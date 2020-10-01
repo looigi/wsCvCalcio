@@ -1,0 +1,7 @@
+22/09/2020 07:30:00 - Timer avviato. Mail da scodare: 1
+22/09/2020 07:30:05 - Scodo Mail: 0001_00002/looigi@gmail.com/Invio/looigi@gmail.com
+22/09/2020 07:30:17 - Inizio
+22/09/2020 07:30:28 - Aggiunge Allegato: D:\VB.Net\Miei\WEB\SSDCastelverdeCalcio\CVCalcio\App_Themes\Standard\Images\0001_00002\Ricevute\Anno1\550\Ricevuta_1.pdf
+22/09/2020 07:30:31 - Errore nell'invio: Impossibile trovare una parte del percorso 'D:\VB.Net\Miei\WEB\SSDCastelverdeCalcio\CVCalcio\App_Themes\Standard\Images\0001_00002\Ricevute\Anno1\550\Ricevuta_1.pdf'.
+22/09/2020 07:30:33-----------------------------------------------------------------
+22/09/2020 07:30:33

@@ -57,7 +57,7 @@ Public Class wsRisposte
 								Ok = False
 							Else
 								If Not Rec.Eof Then
-									Dim EMAilAllenatore As String = Rec("EMail").Value
+									Dim EMAilAllenatore As String = "" & Rec("EMail").Value
 									Dim Casa As String = "" & Rec("Casa").Value
 									Dim DataOra As String = "" & Rec("DataOra").Value
 									Dim Campo As String = "" & Rec("Campo").Value

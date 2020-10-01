@@ -77,6 +77,9 @@ Module mdlTrasfSMS
         ' Routine che esegue una query sul db
         Try
             Conn.Execute(Sql)
+            If effettuaLog Then
+                ThreadScriveLog(Datella & ": OK")
+            End If
         Catch ex As Exception
             Ritorno = StringaErrore & " " & ex.Message
             If effettuaLog Then

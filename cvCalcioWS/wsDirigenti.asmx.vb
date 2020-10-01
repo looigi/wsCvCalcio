@@ -260,6 +260,7 @@ Public Class wsDirigenti
 						" " & id & " " &
 						")"
 					Ritorno = EsegueSql(Conn, Sql, Connessione)
+					Progressivo += 1
 					If Ritorno.Contains(StringaErrore) Then
 						Ok = False
 						Exit For
