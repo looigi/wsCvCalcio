@@ -255,7 +255,9 @@ Public Class wsCategorie
 									Ritorno = "" ' StringaErrore & " Nessuna categoria rilevata"
 								Else
 									Ritorno = ""
-									Ritorno &= "-1;Tutte le categorie;0§"
+									If idTipologia = "1" Or idTipologia = "0" Then
+										Ritorno &= "-1;Tutte le categorie;0§"
+									End If
 									Do Until Rec.Eof
 										Ritorno &= Rec("idCategoria").Value.ToString & ";" & Rec("Descrizione").Value.ToString & ";" &
 											Rec("AnticipoConvocazione").Value & ";" & Rec("RisultatoATempi").Value & ";" &

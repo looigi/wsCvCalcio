@@ -67,7 +67,11 @@ Public Class wsMultimedia
 	<WebMethod()>
     Public Function EliminaMultimedia(Immagine As String) As String
         Dim gf As New GestioneFilesDirectory
-		Dim PathIniziale As String = gf.LeggeFileIntero(Server.MapPath(".") & "/Impostazioni/Paths.txt")
+		Dim paths() As String = gf.LeggeFileIntero(Server.MapPath(".") & "/Impostazioni/PathAllegati.txt").Split(";")
+		Dim PathIniziale As String = paths(0).Replace(vbCrLf, "")
+		If Strings.Right(PathIniziale, 1) <> "\" Then
+			PathIniziale &= "\"
+		End If
 		Dim Ritorno As String = ""
 
 		If File.Exists(PathIniziale & Immagine) Then

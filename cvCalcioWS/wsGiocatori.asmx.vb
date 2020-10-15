@@ -1081,14 +1081,14 @@ Public Class wsGiocatori
 					Contenuto = Contenuto.Replace("***codice fiscale menu anagrafica1***", CodFiscale1)
 					Contenuto = Contenuto.Replace("****indirizzo menu anagrafica1***", Indirizzo1)
 					Contenuto = Contenuto.Replace("***citta1***", Citta1)
-					Contenuto = Contenuto.Replace("***?Cap1***", Cap1)
+					Contenuto = Contenuto.Replace("***Cap1***", Cap1)
 					Contenuto = Contenuto.Replace("*** mail menu anagrafica1***", Mail1)
 					Contenuto = Contenuto.Replace("***telefono menu anagrafica1***", Indirizzo1)
 
 					Contenuto = Contenuto.Replace("****cognome menu anagrafica2***", Gen2(1))
 					Contenuto = Contenuto.Replace("***Nome menu anagrafica2***", Gen2(0))
 					Contenuto = Contenuto.Replace("***Data di nascita menu anagrafica2***", DataDiNascita2)
-					Contenuto = Contenuto.Replace("***Citta di nascita2;***", CittaNascita2)
+					Contenuto = Contenuto.Replace("***Citta di nascita2***", CittaNascita2)
 					Contenuto = Contenuto.Replace("***codice fiscale menu anagrafica2***", CodFiscale2)
 					Contenuto = Contenuto.Replace("****indirizzo menu anagrafica2***", Indirizzo2)
 					Contenuto = Contenuto.Replace("***citta2***", Citta2)
@@ -1103,18 +1103,18 @@ Public Class wsGiocatori
 					Contenuto = Contenuto.Replace("***codice fiscale menu anagrafica1***", "")
 					Contenuto = Contenuto.Replace("****indirizzo menu anagrafica1***", "")
 					Contenuto = Contenuto.Replace("***citta1***", "")
-					Contenuto = Contenuto.Replace("***cap1***", "")
+					Contenuto = Contenuto.Replace("***Cap1***", "")
 					Contenuto = Contenuto.Replace("*** mail menu anagrafica1***", "")
 					Contenuto = Contenuto.Replace("***telefono menu anagrafica1***", "")
 
 					Contenuto = Contenuto.Replace("****cognome menu anagrafica2***", "")
 					Contenuto = Contenuto.Replace("***Nome menu anagrafica2***", "")
 					Contenuto = Contenuto.Replace("***Data di nascita menu anagrafica2***", "")
-					Contenuto = Contenuto.Replace("***Citta di nascita2;***", "")
+					Contenuto = Contenuto.Replace("***Citta di nascita2***", "")
 					Contenuto = Contenuto.Replace("***codice fiscale menu anagrafica2***", "")
 					Contenuto = Contenuto.Replace("****indirizzo menu anagrafica2***", "")
 					Contenuto = Contenuto.Replace("***citta2***", "")
-					Contenuto = Contenuto.Replace("***cap2***", "")
+					Contenuto = Contenuto.Replace("***Cap2***", "")
 					Contenuto = Contenuto.Replace("*** mail menu anagrafica2***", "")
 					Contenuto = Contenuto.Replace("***telefono menu anagrafica2***", "")
 				End If
@@ -1270,6 +1270,67 @@ Public Class wsGiocatori
 	End Function
 
 	<WebMethod()>
+	Public Function SalvaGiocatoriNote(Squadra As String, ByVal idGiocatore As String, Notelle As String) As String
+		Dim Ritorno As String = ""
+		Dim Connessione As String = LeggeImpostazioniDiBase(Server.MapPath("."), Squadra)
+
+		If Connessione = "" Then
+			Ritorno = ErroreConnessioneNonValida
+		Else
+			Dim Conn As Object = ApreDB(Connessione)
+
+			If TypeOf (Conn) Is String Then
+				Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
+			Else
+				Dim Rec As Object = Server.CreateObject("ADODB.Recordset")
+				Dim Sql As String = ""
+
+				Sql = "Delete From GiocatoriNote Where idGiocatore=" & idGiocatore
+				Ritorno = EsegueSql(Conn, Sql, Connessione)
+				If Ritorno = "*" Then
+					Sql = "Insert Into GiocatoriNote Values (" & idGiocatore & ", '" & Notelle & "')"
+					Ritorno = EsegueSql(Conn, Sql, Connessione)
+				End If
+			End If
+		End If
+
+		Return Ritorno
+	End Function
+
+	<WebMethod()>
+	Public Function RitornaGiocatoriNote(Squadra As String, ByVal idGiocatore As String) As String
+		Dim Ritorno As String = ""
+		Dim Connessione As String = LeggeImpostazioniDiBase(Server.MapPath("."), Squadra)
+
+		If Connessione = "" Then
+			Ritorno = ErroreConnessioneNonValida
+		Else
+			Dim Conn As Object = ApreDB(Connessione)
+
+			If TypeOf (Conn) Is String Then
+				Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
+			Else
+				Dim Rec As Object = Server.CreateObject("ADODB.Recordset")
+				Dim Sql As String = ""
+
+				Sql = "Select * From GiocatoriNote Where idGiocatore=" & idGiocatore
+				Rec = LeggeQuery(Conn, Sql, Connessione)
+				If TypeOf (Rec) Is String Then
+					Ritorno = Rec
+				Else
+					If Rec.Eof Then
+						Ritorno = ""
+					Else
+						Ritorno = Rec("Nota").Value
+					End If
+				End If
+			End If
+		End If
+
+		Return Ritorno
+	End Function
+
+	<WebMethod()>
 	Public Function RitornaGiocatoriCategoria(Squadra As String, ByVal idAnno As String, ByVal idCategoria As String) As String
 		Dim Ritorno As String = ""
 		Dim Connessione As String = LeggeImpostazioniDiBase(Server.MapPath("."), Squadra)
@@ -1291,13 +1352,15 @@ Public Class wsGiocatori
 				End If
 
 				Try
-					Sql = "SELECT idGiocatore, Ruoli.idRuolo As idR, Cognome, Nome, Ruoli.Descrizione, EMail, Telefono, Soprannome, DataDiNascita, Indirizzo, " &
+					Sql = "SELECT Giocatori.idGiocatore, Ruoli.idRuolo As idR, Cognome, Nome, Ruoli.Descrizione, EMail, Telefono, Soprannome, DataDiNascita, Indirizzo, " &
 						"CodFiscale, Maschio, Citta, Matricola, NumeroMaglia, Giocatori.idCategoria, idCategoria2, Categorie.Descrizione As Categoria2, idCategoria3, Cat3.Descrizione As Categoria3, Cat1.Descrizione As Categoria1, " &
-						"Giocatori.Categorie, Giocatori.RapportoCompleto, Giocatori.Cap, Giocatori.CittaNascita, Giocatori.Maggiorenne " &
-						"FROM (((Giocatori " &
-						"Left Join [Generale].[dbo].[Ruoli] On Giocatori.idRuolo=Ruoli.idRuolo) " &
-						"Left Join Categorie On Categorie.idCategoria=Giocatori.idCategoria2 And Categorie.idAnno=Giocatori.idAnno) " &
-						"Left Join Categorie As Cat3 On Cat3.idCategoria=Giocatori.idCategoria3 And Cat3.idAnno=Giocatori.idAnno) " &
+						"Giocatori.Categorie, Giocatori.RapportoCompleto, Giocatori.Cap, Giocatori.CittaNascita, Giocatori.Maggiorenne, " &
+						"Cat4.ScadenzaCertificatoMedico, Cat4.CertificatoMedico " &
+						"FROM Giocatori " &
+						"Left Join [Generale].[dbo].[Ruoli] On Giocatori.idRuolo=Ruoli.idRuolo " &
+						"Left Join Categorie On Categorie.idCategoria=Giocatori.idCategoria2 And Categorie.idAnno=Giocatori.idAnno " &
+						"Left Join Categorie As Cat3 On Cat3.idCategoria=Giocatori.idCategoria3 And Cat3.idAnno=Giocatori.idAnno " &
+						"Left Join GiocatoriDettaglio As Cat4 On Cat4.idGiocatore=Giocatori.idGiocatore " &
 						"Left Join Categorie As Cat1 On Cat1.idCategoria=Giocatori.idCategoria And Cat1.idAnno=Giocatori.idAnno " &
 						"Where Giocatori.Eliminato='N' And Giocatori.idAnno=" & idAnno & " " & Altro & " " &
 						"And RapportoCompleto = 'S' " &
@@ -1312,6 +1375,17 @@ Public Class wsGiocatori
 						Else
 							Ritorno = ""
 							Do Until Rec.Eof
+								Dim dat As Date = Nothing
+								Dim Scaduto As String = "S"
+
+								If Not Rec("ScadenzaCertificatoMedico").Value Is DBNull.Value And Rec("ScadenzaCertificatoMedico").Value <> "" Then
+									dat = Convert.ToDateTime(Rec("ScadenzaCertificatoMedico").Value)
+									Dim days As Long = DateDiff(DateInterval.Day, dat, Now)
+									If days > 0 Then
+										Scaduto = "N"
+									End If
+								End If
+
 								Ritorno &= Rec("idGiocatore").Value.ToString & ";" &
 									Rec("idR").Value.ToString & ";" &
 									Rec("Cognome").Value.ToString.Trim & ";" &
@@ -1338,6 +1412,8 @@ Public Class wsGiocatori
 									Rec("Cap").Value.ToString & ";" &
 									Rec("CittaNascita").Value.ToString & ";" &
 									Rec("Maggiorenne").Value & ";" &
+									Rec("CertificatoMedico").Value & ";" &
+									Scaduto & ";" &
 									"§"
 
 								Rec.MoveNext()
@@ -4054,7 +4130,7 @@ Public Class wsGiocatori
 								gf.CreaDirectoryDaPercorso(fileDaCopiare)
 								' Dim fileScheletro As String = Server.MapPath(".") & "\Scheletri\base_iscrizione_.txt"
 
-								Dim fileScheletro As String = P(0) & Squadra & "\Scheletri\base_iscrizione_.txt"
+								Dim fileScheletro As String = P(0) & "\" & Squadra & "\Scheletri\base_iscrizione_.txt"
 								If Not File.Exists(fileScheletro) Then
 									fileScheletro = HttpContext.Current.Server.MapPath(".") & "\Scheletri\base_iscrizione_.txt"
 								End If
@@ -4070,7 +4146,13 @@ Public Class wsGiocatori
 
 											fileFirme = fileFirme.Replace("***HEIGHT MADRE***", "0px")
 											fileFirme = fileFirme.Replace("***VIS MADRE***", "hidden")
+
+											fileFirme = fileFirme.Replace("***HEIGHT GIOCATORE***", "auto")
+											fileFirme = fileFirme.Replace("***VIS GIOCATORE***", "visible")
 										Else
+											fileFirme = fileFirme.Replace("***HEIGHT GIOCATORE***", "0px")
+											fileFirme = fileFirme.Replace("***VIS GIOCATORE***", "hidden")
+
 											If GenitoriSeparati = "S" Then
 												If AffidamentoCongiunto = "S" Then
 													If iscrFirmaEntrambi = "S" Then

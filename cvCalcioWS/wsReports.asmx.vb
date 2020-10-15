@@ -123,11 +123,11 @@ Public Class wsReports
 					Else
 						If Dato = "1" Then
 							' Stampa per scuola calcio
-							Sql &= "YEAR(Convert(DateTime, DataDiNascita ,121)) > Year(CURRENT_TIMESTAMP) - 12"
+							Sql &= "YEAR(Convert(DateTime, DataDiNascita ,121)) >= Year(CURRENT_TIMESTAMP) - 12"
 							Altro &= "per scuola calcio"
 						Else
 							' Stampa per agonistica
-							Sql &= "YEAR(Convert(DateTime, DataDiNascita ,121)) <= Year(CURRENT_TIMESTAMP) - 12 And YEAR(Convert(DateTime, DataDiNascita ,121)) >= Year(CURRENT_TIMESTAMP) - 25"
+							Sql &= "YEAR(Convert(DateTime, DataDiNascita ,121)) < Year(CURRENT_TIMESTAMP) - 12 And YEAR(Convert(DateTime, DataDiNascita ,121)) >= Year(CURRENT_TIMESTAMP) - 25"
 							Altro &= "per agonistica"
 						End If
 					End If
@@ -409,7 +409,7 @@ Public Class wsReports
 											Rec2.Close()
 										End If
 
-										'DettaglioKit &= "<br /><br />Tutto: " & Tutto & "<br />Qualcosa: " & Qualcosa
+										' DettaglioKit &= "<br /><br />Tutto: " & Tutto & "<br />Qualcosa: " & Qualcosa
 
 										If KitConsegnato = "1" Then
 											' Kit consegnato Sì
@@ -427,7 +427,7 @@ Public Class wsReports
 
 										If KitConsegnato = "3" Then
 											' Kit consegnato Parziale
-											If Qualcosa = False And Tutto = False Then
+											If Qualcosa = False Or Tutto = True Then
 												Stampa = False
 											End If
 										End If
@@ -459,7 +459,7 @@ Public Class wsReports
 
 								Output &= "<tr><td>" & Immagine & "</td><td>" & Rec("Cognome").Value & "</td><td>" & Rec("Nome").Value & "</td><td>" & ddn & "</td><td>" & Rec("NumeroMaglia").Value & "</td><td>" & Rec("Matricola").Value & "</td>"
 								If Val(Certificato) > 0 Then
-									Dim d As String = Rec("ScadenzaCertificatoMedico").Value
+									Dim d As String = "" & Rec("ScadenzaCertificatoMedico").Value
 									Dim sData As String = ""
 									If d.Contains("-") Then
 										Dim dd() As String = d.Split("-")

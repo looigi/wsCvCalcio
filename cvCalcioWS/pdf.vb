@@ -46,6 +46,7 @@ Public Class pdfGest
 			If Orizzontale = True Then
 				converter.Options.PdfPageOrientation = PdfPageOrientation.Landscape
 			End If
+			converter.Options.JpegCompressionEnabled = False
 			converter.Options.MarginLeft = 50
 			converter.Options.MarginRight = 50
 			converter.Options.MarginTop = 50
@@ -69,6 +70,7 @@ Public Class pdfGest
 		Else
 			'converter.Options.PdfPageSize = PdfPageSize.Custom
 			'converter.Options.PdfPageCustomSize = New Drawing.SizeF(200, 300)
+			converter.Options.JpegCompressionEnabled = False
 			converter.Options.MarginLeft = 2
 			converter.Options.MarginRight = 2
 			converter.Options.MarginTop = 2

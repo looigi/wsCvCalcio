@@ -161,7 +161,7 @@ Public Class wsDirigenti
 										"'" & nuovaPass(1).Replace("'", "''") & "', " &
 										"'" & EMail.Replace("'", "''") & "', " &
 										"-1, " &
-										"2, " &
+										"8, " &
 										" " & idSquadra & ", " &
 										"1, " &
 										"'" & Telefono & "', " &
@@ -181,9 +181,9 @@ Public Class wsDirigenti
 									Else
 										If Tendina = "N" Then
 											Dim m As New mail
-											Dim Oggetto As String = "Nuovo utente inCalcio"
+											Dim Oggetto As String = "Nuovo dirigente inCalcio"
 											Dim Body As String = ""
-											Body &= "E' stato creato l'utente '" & Cognome.ToUpper & " " & Nome.ToUpper & "'. <br />"
+											Body &= "E' stato creato il dirigente '" & Cognome.ToUpper & " " & Nome.ToUpper & "'. <br />"
 											Body &= "Per accedere al sito sarà possibile digitare la mail rilasciata alla segreteria in fase di iscrizione: " & EMail & "<br />"
 											Body &= "La password valida per il solo primo accesso è: " & nuovaPass(0) & "<br /><br />"
 											Dim ChiScrive As String = "notifiche@incalcio.cloud"

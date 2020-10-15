@@ -22,7 +22,8 @@ Public Class wsPartite
 								 idUnioneCalendario As String, TGA1 As String, TGA2 As String, TGA3 As String, Dirigenti As String, idArbitro As String,
 								 RisultatoATempi As String, RigoriPropri As String, RigoriAvv As String, EventiPrimoTempo As String,
 								 EventiSecondoTempo As String, EventiTerzoTempo As String, Mittente As String, DataOraAppuntamento As String, LuogoAppuntamento As String,
-								 MezzoTrasporto As String, MandaMail As String, InFormazione As String, ShootOut As String, Tempi As String, PartitaConRigori As String) As String
+								 MezzoTrasporto As String, MandaMail As String, InFormazione As String, ShootOut As String, Tempi As String, PartitaConRigori As String,
+								 idCapitano As String, CreaSchedaPartita As String, TempiGoalAvversari1T As String, TempiGoalAvversari2T As String, TempiGoalAvversari3T As String) As String
 
 		Dim Ritorno As String = ""
 		Dim Connessione As String = LeggeImpostazioniDiBase(Server.MapPath("."), Squadra)
@@ -43,6 +44,20 @@ Public Class wsPartite
 				Ritorno = EsegueSql(Conn, Sql, Connessione)
 				If Ritorno <> "*" Then
 					Ok = False
+				End If
+
+				If Ok Then
+					Try
+						Sql = "Delete From RisultatiAvversariMinuti Where idPartita=" & idPartita
+						Ritorno = EsegueSql(Conn, Sql, Connessione)
+						If Ritorno.Contains(StringaErrore) Then
+							Ok = False
+						End If
+
+					Catch ex As Exception
+						Ritorno = StringaErrore & " " & ex.Message
+						Ok = False
+					End Try
 				End If
 
 				If Ok Then
@@ -229,7 +244,7 @@ Public Class wsPartite
 
 				If Ok Then
 					Try
-						Sql = "delete from RigoriPropri Where idPartita=" & idPartita & " And idAnno=" & idAnno
+						Sql = "Delete from RigoriPropri Where idPartita=" & idPartita & " And idAnno=" & idAnno
 						Ritorno = EsegueSql(Conn, Sql, Connessione)
 						If Ritorno.Contains(StringaErrore) Then
 							Ok = False
@@ -243,7 +258,7 @@ Public Class wsPartite
 
 				If Ok Then
 					Try
-						Sql = "delete from EventiPartita Where idPartita=" & idPartita & " And idAnno=" & idAnno
+						Sql = "Delete from EventiPartita Where idPartita=" & idPartita & " And idAnno=" & idAnno
 						Ritorno = EsegueSql(Conn, Sql, Connessione)
 						If Ritorno.Contains(StringaErrore) Then
 							Ok = False
@@ -258,6 +273,20 @@ Public Class wsPartite
 				If Ok Then
 					Try
 						Sql = "Delete From InFormazione Where idPartita=" & idPartita
+						Ritorno = EsegueSql(Conn, Sql, Connessione)
+						If Ritorno.Contains(StringaErrore) Then
+							Ok = False
+						End If
+
+					Catch ex As Exception
+						Ritorno = StringaErrore & " " & ex.Message
+						Ok = False
+					End Try
+				End If
+
+				If Ok Then
+					Try
+						Sql = "Delete From PartiteCapitani Where idPartita=" & idPartita
 						Ritorno = EsegueSql(Conn, Sql, Connessione)
 						If Ritorno.Contains(StringaErrore) Then
 							Ok = False
@@ -313,6 +342,24 @@ Public Class wsPartite
 								" " & idPartita & ", " &
 								"'" & Campo.Replace("'", "''") & "' " &
 								")"
+							Ritorno = EsegueSql(Conn, Sql, Connessione)
+							If Ritorno.Contains(StringaErrore) Then
+								Ok = False
+							End If
+						Catch ex As Exception
+							Ritorno = StringaErrore & " " & ex.Message
+							Ok = False
+						End Try
+					End If
+				End If
+
+				If Ok Then
+					If idCapitano <> "" And idCapitano <> "-1" Then
+						Try
+							Sql = "Insert Into PartiteCapitani Values (" &
+						" " & idPartita & ", " &
+						" " & idCapitano & " " &
+						")"
 							Ritorno = EsegueSql(Conn, Sql, Connessione)
 							If Ritorno.Contains(StringaErrore) Then
 								Ok = False
@@ -1077,17 +1124,47 @@ Public Class wsPartite
 				End If
 
 				If Ok Then
+					Sql = "Insert Into RisultatiAvversariMinuti Values (" &
+									" " & idPartita & ", " &
+									"1, " &
+									"'" & TempiGoalAvversari1T & "' " &
+									")"
+					Ritorno = EsegueSql(Conn, Sql, Connessione)
+					If Ritorno.Contains(StringaErrore) Then
+						Ok = False
+					Else
+						Sql = "Insert Into RisultatiAvversariMinuti Values (" &
+									" " & idPartita & ", " &
+									"2, " &
+									"'" & TempiGoalAvversari2T & "' " &
+									")"
+						Ritorno = EsegueSql(Conn, Sql, Connessione)
+						If Ritorno.Contains(StringaErrore) Then
+							Ok = False
+						Else
+							Sql = "Insert Into RisultatiAvversariMinuti Values (" &
+									" " & idPartita & ", " &
+									"3, " &
+									"'" & TempiGoalAvversari3T & "' " &
+									")"
+							Ritorno = EsegueSql(Conn, Sql, Connessione)
+							If Ritorno.Contains(StringaErrore) Then
+								Ok = False
+							End If
+						End If
+					End If
+				End If
+
+				If Ok Then
 					Ritorno = "*"
 					Sql = "Commit"
 					Dim Ritorno2 As String = EsegueSql(Conn, Sql, Connessione)
 
-					' POI VA RIMESSO
-
-					'If Not Ritorno2.Contains(StringaErrore) Then
-					'	CreaHtmlPartita(Squadra, Conn, Connessione, idAnno, idPartita)
-					'End If
-
-					' POI VA RIMESSO
+					If Not Ritorno2.Contains(StringaErrore) Then
+						If CreaSchedaPartita = "S" Then
+							Ritorno = CreaHtmlPartita(Squadra, Conn, Connessione, idAnno, idPartita)
+						End If
+					End If
 				Else
 					Sql = "Rollback"
 					Dim Ritorno2 As String = EsegueSql(Conn, Sql, Connessione)
@@ -1331,7 +1408,8 @@ Public Class wsPartite
 						"CoordinatePartite.Lat, CoordinatePartite.Lon, TempiGoalAvversari.TempiPrimoTempo, TempiGoalAvversari.TempiSecondoTempo, TempiGoalAvversari.TempiTerzoTempo, " &
 						"MeteoPartite.Tempo, MeteoPartite.Gradi, MeteoPartite.Umidita, MeteoPartite.Pressione, MeteoPartite.Icona, ArbitriPartite.idArbitro, Arbitri.Cognome + ' ' + Arbitri.Nome As Arbitro, " &
 						"Partite.RisultatoATempi, Partite.DataOraAppuntamento, Partite.LuogoAppuntamento, Partite.MezzoTrasporto, Categorie.AnticipoConvocazione, Anni.Indirizzo, Anni.Lat, Anni.Lon, " &
-						"Anni.CampoSquadra, Anni.NomePolisportiva, Partite.ShootOut, Partite.Tempi, Partite.PartitaConRigori " &
+						"Anni.CampoSquadra, Anni.NomePolisportiva, Partite.ShootOut, Partite.Tempi, Partite.PartitaConRigori, PartiteCapitani.idCapitano, " &
+						"RisultatiAvversariMinuti1.Minuti As TempiGAvv1, RisultatiAvversariMinuti2.Minuti As TempiGAvv2, RisultatiAvversariMinuti3.Minuti As TempiGAvv3 " &
 						"FROM Partite LEFT JOIN Risultati ON Partite.idPartita = Risultati.idPartita " &
 						"LEFT JOIN RisultatiAggiuntivi ON Partite.idPartita = RisultatiAggiuntivi.idPartita " &
 						"LEFT JOIN SquadreAvversarie ON Partite.idAvversario = SquadreAvversarie.idAvversario " &
@@ -1346,7 +1424,12 @@ Public Class wsPartite
 						"LEFT JOIN ArbitriPartite On Partite.idPartita = ArbitriPartite.idPartita And ArbitriPartite.idAnno = Partite.idAnno " &
 						"LEFT JOIN Arbitri On ArbitriPartite.idArbitro=Arbitri.idArbitro And ArbitriPartite.idAnno=Arbitri.idAnno " &
 						"LEFT JOIN Anni On Partite.idAnno = Anni.idAnno " &
+						"LEFT JOIN PartiteCapitani On Partite.idPartita = PartiteCapitani.idPartita " &
+						"LEFT JOIN RisultatiAvversariMinuti As RisultatiAvversariMinuti1 On Partite.idPartita = RisultatiAvversariMinuti1.idPartita And RisultatiAvversariMinuti1.idTempo = 1 " &
+						"LEFT JOIN RisultatiAvversariMinuti As RisultatiAvversariMinuti2 On Partite.idPartita = RisultatiAvversariMinuti2.idPartita And RisultatiAvversariMinuti1.idTempo = 2 " &
+						"LEFT JOIN RisultatiAvversariMinuti As RisultatiAvversariMinuti3 On Partite.idPartita = RisultatiAvversariMinuti3.idPartita And RisultatiAvversariMinuti1.idTempo = 3 " &
 						"WHERE Partite.idPartita=" & idPartita & " And Partite.idAnno=" & idAnno
+
 					Rec = LeggeQuery(Conn, Sql, Connessione)
 					If TypeOf (Rec) Is String Then
 						Ritorno = Sql & "--->" & Rec
@@ -1591,6 +1674,10 @@ Public Class wsPartite
 								Ritorno &= Rec("ShootOut").Value & ";"
 								Ritorno &= Rec("Tempi").Value & ";"
 								Ritorno &= Rec("PartitaConRigori").Value & ";"
+								Ritorno &= Rec("idCapitano").Value & ";"
+								Ritorno &= Rec("TempiGAvv1").Value & ";"
+								Ritorno &= Rec("TempiGAvv2").Value & ";"
+								Ritorno &= Rec("TempiGAvv3").Value & ";"
 								Ritorno &= "§"
 
 								Rec.MoveNext()
