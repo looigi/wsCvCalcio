@@ -113,6 +113,15 @@ Public Class wsDirigenti
 							Ok = False
 						Else
 							If TipologiaOperazione = "INSERIMENTO" Then
+								If Not Ritorno.Contains(StringaErrore) Then
+									Sql = "Delete From UtentiCategorie Where idUtente = " & idDir
+									Ritorno = EsegueSql(Conn, Sql, Connessione)
+								End If
+								If Not Ritorno.Contains(StringaErrore) Then
+									Sql = "Insert Into UtentiCategorie Values (" & idDir & ", 1, " & idCategoria & ")"
+									Ritorno = EsegueSql(Conn, Sql, Connessione)
+								End If
+
 								' Aggiunge Utente
 								Dim idGenitore As Integer = -1
 

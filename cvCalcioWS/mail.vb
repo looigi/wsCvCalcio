@@ -198,8 +198,12 @@ Public Class mail
 				gf.ScriveTestoSuFileAperto(Datella & " - Invio in corso")
 			End If
 
-			If Allegato.Length > 0 Then
-				Data.Dispose()
+			If Allegato.Length > 0 And Not Data Is Nothing Then
+				Try
+					Data.Dispose()
+				Catch ex As Exception
+
+				End Try
 			End If
 
 			Ritorno = "*"

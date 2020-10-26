@@ -796,7 +796,7 @@ Public Class wsGiocatori
 
 																				fileFirme = fileFirme.Replace("***VIS MADRE***", "block")
 																			Else
-																				If ceGenitore1 Then
+																				If ceGenitore1 = "S" Then
 																					fileFirme = fileFirme.Replace("***VIS PADRE***", "block")
 
 																					fileFirme = fileFirme.Replace("***VIS MADRE***", "none")
@@ -1381,7 +1381,7 @@ Public Class wsGiocatori
 								If Not Rec("ScadenzaCertificatoMedico").Value Is DBNull.Value And Rec("ScadenzaCertificatoMedico").Value <> "" Then
 									dat = Convert.ToDateTime(Rec("ScadenzaCertificatoMedico").Value)
 									Dim days As Long = DateDiff(DateInterval.Day, dat, Now)
-									If days > 0 Then
+									If days < 0 Then
 										Scaduto = "N"
 									End If
 								End If
@@ -3705,7 +3705,7 @@ Public Class wsGiocatori
 	Public Function ModificaPagamento(Squadra As String, idPagamento As String, idAnno As String, idGiocatore As String, Pagamento As String, Commento As String,
 								   idPagatore As String, idRegistratore As String, Note As String, Validato As String, idTipoPagamento As String,
 								   idRata As String, idQuota As String, Suffisso As String, NumeroRicevuta As String, DataRicevuta As String, idUtente As String,
-								   idModalitaPagamento As String) As String
+								   idModalitaPagamento As String, Stato As String, Modifica As String) As String
 		Dim Ritorno As String = ""
 		Dim Connessione As String = LeggeImpostazioniDiBase(Server.MapPath("."), Squadra)
 
@@ -3743,14 +3743,16 @@ Public Class wsGiocatori
 
 				If Not Ritorno.Contains(StringaErrore) Then
 					'Dim DataPagamento As String = Now.Year & "-" & Format(Now.Month, "00") & "-" & Format(Now.Day, "00") & " " & Format(Now.Hour, "00") & ":" & Format(Now.Minute, "00") & ":" & Format(Now.Second, "00")
-					If NumeroRicevuta <> "" And NumeroRicevuta <> "Bozza" And Validato = "N" Then
-						Sql = "SELECT * FROM GiocatoriPagamenti Where NumeroRicevuta='" & NumeroRicevuta & "'"
-						Rec = LeggeQuery(Conn, Sql, Connessione)
-						If Not Rec.Eof() Then
-							Ritorno = StringaErrore & " Numero ricevuta già presente"
-							Ok = False
+					If Modifica <> "AMM-SUPERUSER" And Stato <> "Bozza" Then
+						If NumeroRicevuta <> "" And NumeroRicevuta <> "Bozza" And Validato = "N" Then
+							Sql = "SELECT * FROM GiocatoriPagamenti Where NumeroRicevuta='" & NumeroRicevuta & "'"
+							Rec = LeggeQuery(Conn, Sql, Connessione)
+							If Not Rec.Eof() Then
+								Ritorno = StringaErrore & " Numero ricevuta già presente"
+								Ok = False
+							End If
+							Rec.Close()
 						End If
-						Rec.Close()
 					End If
 
 					If Ok Then
@@ -3809,11 +3811,11 @@ Public Class wsGiocatori
 									Else
 										If idPagatore = 1 Then
 											CognomePagatore = "" & Rec("Genitore1").Value
-											indirizzopagatore = "" & Rec("Indirizzo1").Value
+											indirizzoPagatore = "" & Rec("Indirizzo1").Value
 											CodFiscalePagatore = "" & Rec("CodFiscale1").Value
 										Else
 											CognomePagatore = "" & Rec("Genitore2").Value
-											indirizzopagatore = "" & Rec("Indirizzo2").Value
+											indirizzoPagatore = "" & Rec("Indirizzo2").Value
 											CodFiscalePagatore = "" & Rec("CodFiscale2").Value
 										End If
 									End If
@@ -3897,10 +3899,10 @@ Public Class wsGiocatori
 										Altro &
 										"Where idGiocatore = " & idGiocatore & " And Progressivo = " & idPagamento
 									Ritorno = EsegueSql(Conn, Sql, Connessione)
-										If Ritorno.Contains(StringaErrore) Then
-											Ok = False
-										End If
+									If Ritorno.Contains(StringaErrore) Then
+										Ok = False
 									End If
+								End If
 								'End If
 							End If
 						Catch ex As Exception
@@ -3964,7 +3966,7 @@ Public Class wsGiocatori
 				If Not Ritorno.Contains(StringaErrore) Then
 					Try
 						Sql = "Update GiocatoriPagamenti Set " &
-							"Eliminato='S' " &
+							"Eliminato='S', Quota = -1 " &
 							"Where idAnno=" & idAnno & " And idGiocatore=" & idGiocatore & " And Progressivo=" & Progressivo
 						Ritorno = EsegueSql(Conn, Sql, Connessione)
 						If Ritorno.Contains(StringaErrore) Then

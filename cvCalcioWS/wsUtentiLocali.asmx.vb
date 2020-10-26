@@ -264,7 +264,7 @@ Public Class wsUtentiLocali
 				Try
 					Sql = "SELECT Utenti.idAnno, idUtente, Utente, Cognome, Nome, " &
 						"Password, EMail, idCategoria, Utenti.idTipologia As idTipologia, Utenti.idSquadra, Descrizione As Squadra, PasswordScaduta, Telefono, " &
-						"Squadre.Eliminata, Squadre.idTipologia As idTipo2, Squadre.idLicenza, Utenti.idSquadra " &
+						"Squadre.Eliminata, Squadre.idTipologia As idTipo2, Squadre.idLicenza, Utenti.idSquadra, Utenti.AmmOriginale " &
 						"FROM Utenti Left Join Squadre On Utenti.idSquadra = Squadre.idSquadra " &
 						"Where Upper(Utente)='" & Utente.ToUpper.Replace("'", "''") & "' And Utenti.Eliminato = 'N' " &
 						"Order By Utenti.idTipologia"
@@ -332,6 +332,7 @@ Public Class wsUtentiLocali
 														Rec("Telefono").Value & ";" &
 														Rec("idTipo2").Value & ";" &
 														Rec("idLicenza").Value & ";" &
+														Rec("AmmOriginale").Value & ";" &
 														"§"
 
 										Squadra = "" & Rec("Squadra").Value

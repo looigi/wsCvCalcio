@@ -97,6 +97,7 @@
     <Content Include="wsGenitori.asmx" />
     <Content Include="wsGiocatoriSezione.asmx" />
     <Content Include="wsKit.asmx" />
+    <Content Include="wsMail.asmx" />
     <Content Include="wsMetodiPagamento.asmx" />
     <Content Include="wsPermessiUtente.asmx" />
     <Content Include="wsQuote.asmx" />
@@ -157,6 +158,10 @@
     </Compile>
     <Compile Include="wsKit.asmx.vb">
       <DependentUpon>wsKit.asmx</DependentUpon>
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="wsMail.asmx.vb">
+      <DependentUpon>wsMail.asmx</DependentUpon>
       <SubType>Component</SubType>
     </Compile>
     <Compile Include="wsMetodiPagamento.asmx.vb">

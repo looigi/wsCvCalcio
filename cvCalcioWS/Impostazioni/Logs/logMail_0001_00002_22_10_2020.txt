@@ -1,0 +1,114 @@
+22/10/2020 20:34:04 - Timer avviato. Mail da scodare: 1
+22/10/2020 20:34:09 - Scodo Mail: 0001_00002/looigiSS@gmail.com/W Pippetto/looigi2@gmail.com
+22/10/2020 20:34:10 - Inizio
+22/10/2020 20:34:10 - Inizio 1
+22/10/2020 20:34:10 - Inizio 2
+22/10/2020 20:34:10 - Inizio 2-1
+22/10/2020 20:34:10 - Inizio 3
+22/10/2020 20:34:10 - Invio in corso
+22/10/2020 20:34:10 - Errore nell'invio: Riferimento a un oggetto non impostato su un'istanza di oggetto.
+22/10/2020 20:34:10-----------------------------------------------------------------
+22/10/2020 20:34:10
+22/10/2020 20:36:23 - Timer avviato. Mail da scodare: 1
+22/10/2020 20:36:28 - Scodo Mail: 0001_00002/looigiSS@gmail.com/W Pippetto/looigi2@gmail.com
+22/10/2020 20:36:43 - Inizio
+22/10/2020 20:36:43 - Inizio 1
+22/10/2020 20:36:43 - Inizio 2
+22/10/2020 20:36:43 - Inizio 2-1
+22/10/2020 20:36:43 - Inizio 3
+22/10/2020 20:36:43 - Invio in corso
+22/10/2020 20:36:43 - Errore nell'invio: Riferimento a un oggetto non impostato su un'istanza di oggetto.
+22/10/2020 20:36:43-----------------------------------------------------------------
+22/10/2020 20:36:43
+22/10/2020 20:37:21 - Timer avviato. Mail da scodare: 1
+22/10/2020 20:37:31 - Scodo Mail: 0001_00002/looigiSS@gmail.com/W Pippetto/looigi2@gmail.com
+22/10/2020 20:37:35 - Inizio
+22/10/2020 20:37:35 - Inizio 1
+22/10/2020 20:37:35 - Inizio 2
+22/10/2020 20:37:35 - Inizio 2-1
+22/10/2020 20:37:35 - Inizio 3
+22/10/2020 20:37:35 - Invio in corso
+22/10/2020 20:37:35 - Errore nell'invio: Riferimento a un oggetto non impostato su un'istanza di oggetto.
+22/10/2020 20:37:35-----------------------------------------------------------------
+22/10/2020 20:37:35
+22/10/2020 20:38:33 - Timer avviato. Mail da scodare: 1
+22/10/2020 20:38:45 - Scodo Mail: 0001_00002/looigiSS@gmail.com/W Pippetto/looigi2@gmail.com
+22/10/2020 20:38:47 - Inizio
+22/10/2020 20:38:47 - Inizio 1
+22/10/2020 20:38:47 - Inizio 2
+22/10/2020 20:38:47 - Inizio 2-1
+22/10/2020 20:38:47 - Inizio 3
+22/10/2020 20:38:47 - Invio in corso
+22/10/2020 20:38:47 - Invio effettuato
+22/10/2020 20:38:47-----------------------------------------------------------------
+22/10/2020 20:38:47
+22/10/2020 20:39:36 - Timer avviato. Mail da scodare: 1
+22/10/2020 20:39:41 - Scodo Mail: 0001_00002/looigiSS@gmail.com/W Pippetto/looigi2@gmail.com
+22/10/2020 20:39:45 - Inizio
+22/10/2020 20:39:45 - Inizio 1
+22/10/2020 20:39:45 - Inizio 2
+22/10/2020 20:39:45 - Inizio 2-1
+22/10/2020 20:39:45 - Inizio 3
+22/10/2020 20:39:45 - Invio in corso
+22/10/2020 20:39:45 - Invio effettuato
+22/10/2020 20:39:45-----------------------------------------------------------------
+22/10/2020 20:39:45
+22/10/2020 20:40:35 - Timer avviato. Mail da scodare: 1
+22/10/2020 20:40:40 - Scodo Mail: 0001_00002/looigiSS@gmail.com/W Pippetto/looigi2@gmail.com
+22/10/2020 20:40:40 - Inizio
+22/10/2020 20:40:40 - Inizio 1
+22/10/2020 20:40:40 - Inizio 2
+22/10/2020 20:40:40 - Inizio 2-1
+22/10/2020 20:40:40 - Inizio 3
+22/10/2020 20:40:40 - Invio in corso
+22/10/2020 20:40:40 - Invio effettuato
+22/10/2020 20:40:40-----------------------------------------------------------------
+22/10/2020 20:40:40
+22/10/2020 20:41:16 - Scodo Mail: 0001_00002/looigiSS@gmail.com/W Pippetto/looigi5@gmail.com
+22/10/2020 20:41:16 - Inizio
+22/10/2020 20:41:16 - Inizio 1
+22/10/2020 20:41:16 - Inizio 2
+22/10/2020 20:41:16 - Inizio 2-1
+22/10/2020 20:41:16 - Inizio 3
+22/10/2020 20:41:16 - Invio in corso
+22/10/2020 20:41:16 - Invio effettuato
+22/10/2020 20:41:16-----------------------------------------------------------------
+22/10/2020 20:41:16
+22/10/2020 20:41:21 - Scodo Mail: 0001_00002/looigiSS@gmail.com/W Pippetto/fesso2@fesso2.fe
+22/10/2020 20:41:21 - Inizio
+22/10/2020 20:41:21 - Inizio 1
+22/10/2020 20:41:21 - Inizio 2
+22/10/2020 20:41:21 - Inizio 2-1
+22/10/2020 20:41:21 - Inizio 3
+22/10/2020 20:41:21 - Errore nell'invio: Cassetta postale non disponibile. Risposta del server: 5.1.1 VfWbk3djZ5c8RVfWbkY0Qs fesso2.fe dominio non valido / invalid destination domain
+22/10/2020 20:41:21-----------------------------------------------------------------
+22/10/2020 20:41:21
+22/10/2020 20:41:27 - Scodo Mail: 0001_00002/looigiSS@gmail.com/W Pippetto/nd@gmail.com
+22/10/2020 20:41:27 - Inizio
+22/10/2020 20:41:27 - Inizio 1
+22/10/2020 20:41:27 - Inizio 2
+22/10/2020 20:41:27 - Inizio 2-1
+22/10/2020 20:41:27 - Inizio 3
+22/10/2020 20:41:27 - Invio in corso
+22/10/2020 20:41:27 - Invio effettuato
+22/10/2020 20:41:27-----------------------------------------------------------------
+22/10/2020 20:41:27
+22/10/2020 20:41:33 - Scodo Mail: 0001_00002/looigiSS@gmail.com/W Pippetto/looigi@gmail.com
+22/10/2020 20:41:33 - Inizio
+22/10/2020 20:41:33 - Inizio 1
+22/10/2020 20:41:33 - Inizio 2
+22/10/2020 20:41:33 - Inizio 2-1
+22/10/2020 20:41:33 - Inizio 3
+22/10/2020 20:41:33 - Invio in corso
+22/10/2020 20:41:33 - Invio effettuato
+22/10/2020 20:41:33-----------------------------------------------------------------
+22/10/2020 20:41:33
+22/10/2020 20:41:38 - Scodo Mail: 0001_00002/looigiSS@gmail.com/W Pippetto/lll@ll.ll
+22/10/2020 20:41:38 - Inizio
+22/10/2020 20:41:38 - Inizio 1
+22/10/2020 20:41:38 - Inizio 2
+22/10/2020 20:41:38 - Inizio 2-1
+22/10/2020 20:41:38 - Inizio 3
+22/10/2020 20:41:38 - Errore nell'invio: Cassetta postale non disponibile. Risposta del server: 5.1.1 VfWrk3dzf5c8RVfWskY0Vt ll.ll dominio non valido / invalid destination domain
+22/10/2020 20:41:38-----------------------------------------------------------------
+22/10/2020 20:41:38
