@@ -13,7 +13,7 @@
     <OutputType>Library</OutputType>
     <RootNamespace>cvCalcioWS</RootNamespace>
     <AssemblyName>cvCalcioWS</AssemblyName>
-    <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
     <MyType>Custom</MyType>
     <UseIISExpress>true</UseIISExpress>
     <IISExpressSSLPort />
@@ -32,6 +32,7 @@
     <OutputPath>bin\</OutputPath>
     <DocumentationFile>cvCalcioWS.xml</DocumentationFile>
     <NoWarn>42016,41999,42017,42018,42019,42032,42036,42020,42021,42022</NoWarn>
+    <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
@@ -41,20 +42,28 @@
     <OutputPath>bin\</OutputPath>
     <DocumentationFile>cvCalcioWS.xml</DocumentationFile>
     <NoWarn>42016,41999,42017,42018,42019,42032,42036,42020,42021,42022</NoWarn>
+    <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="HtmlRenderer, Version=1.5.0.5, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\HtmlRenderer.Core.1.5.0.5\lib\net35-client\HtmlRenderer.dll</HintPath>
+    <Reference Include="HtmlRenderer, Version=1.5.0.6, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\HtmlRenderer.Core.1.5.0.6\lib\net45\HtmlRenderer.dll</HintPath>
     </Reference>
-    <Reference Include="Select.HtmlToPdf, Version=20.1.0.0, Culture=neutral, PublicKeyToken=e0ae9f6e27a97018, processorArchitecture=MSIL">
-      <HintPath>..\packages\Select.HtmlToPdf.20.1.0\lib\net20\Select.HtmlToPdf.dll</HintPath>
+    <Reference Include="OpaqueMail, Version=2.4.3.0, Culture=neutral, PublicKeyToken=455c946c2e2ca7ef, processorArchitecture=MSIL">
+      <HintPath>..\packages\OpaqueMail.2.4.3\lib\OpaqueMail.dll</HintPath>
+    </Reference>
+    <Reference Include="Select.HtmlToPdf, Version=20.2.0.0, Culture=neutral, PublicKeyToken=e0ae9f6e27a97018, processorArchitecture=MSIL">
+      <HintPath>..\packages\Select.HtmlToPdf.20.2.0\lib\net40\Select.HtmlToPdf.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Data" />
     <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="System.Drawing" />
     <Reference Include="System.Management" />
+    <Reference Include="System.Security" />
     <Reference Include="System.Web" />
+    <Reference Include="System.Web.ApplicationServices" />
+    <Reference Include="System.Web.DynamicData" />
+    <Reference Include="System.Web.Entity" />
     <Reference Include="System.Web.Extensions" />
     <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Xml" />
@@ -99,6 +108,7 @@
     <Content Include="wsKit.asmx" />
     <Content Include="wsMail.asmx" />
     <Content Include="wsMetodiPagamento.asmx" />
+    <Content Include="wsNFC.asmx" />
     <Content Include="wsPermessiUtente.asmx" />
     <Content Include="wsQuote.asmx" />
     <Content Include="wsReports.asmx" />
@@ -130,6 +140,7 @@
     <Compile Include="GestioneFilesDirectory.vb" />
     <Compile Include="Globale.vb" />
     <Compile Include="mail.vb" />
+    <Compile Include="mailImap.vb" />
     <Compile Include="mdlTrasfSMS.vb" />
     <Compile Include="pdf.asmx.vb">
       <DependentUpon>pdf.asmx</DependentUpon>
@@ -166,6 +177,10 @@
     </Compile>
     <Compile Include="wsMetodiPagamento.asmx.vb">
       <DependentUpon>wsMetodiPagamento.asmx</DependentUpon>
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="wsNFC.asmx.vb">
+      <DependentUpon>wsNFC.asmx</DependentUpon>
       <SubType>Component</SubType>
     </Compile>
     <Compile Include="wsPermessiUtente.asmx.vb">

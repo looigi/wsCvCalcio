@@ -1,0 +1,197 @@
+﻿<html xmlns="http://www.w3.org/1999/xhtml">
+<head runat="server">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+    <title>Convocazioni Partita ***PARTITA***</title>
+
+	<style type="text/css">
+		.titolo1 {
+			font-family: Verdana; 
+			font-size: 24px;
+		}
+
+		.titolo2 {
+			font-family: Arial; 
+			font-size: 21px;
+		}
+
+		.titolo3 {
+			font-family: Arial; 
+			font-size: 19px;
+		}
+		
+		.bordato {
+			border: 1px solid #000;
+		}
+		
+		.centrato {
+			text-align: center;
+		}
+		
+		.sottolineato {
+			border-bottom: 1px solid #000;
+		}
+		
+		.flottante {
+			float: left;
+		}
+		
+		.adestra {
+			text-align: right;
+		}
+
+		.clear { 
+			height: 0px; 
+			overflow: hidden; 
+		}
+		
+		.clearALL { 
+			clear: both; 
+		}
+		
+		.spaziaturaRighe {
+			height: 20px;
+		}
+		
+		.grassetto {
+		    font-weight: bold;
+		}
+		
+		.italico {
+			font-style: italic;
+		}
+	</style>
+</head>
+<body>
+	<form id="form1" runat="server">
+		<div style="width: 90%; margin-left: 5%;">
+			<table width="100%" cellspacing="0px" cellpadding="0px">
+				<tr>
+					<td colspan="1" class="bordato centrato" style="height: 100px;">
+						<img src="***URL LOGO***" style="width: 98px; height: 98px; border: 0px;"/>
+					</td>
+					<td colspan="9" class="bordato">
+						<span class="titolo1 grassetto italico" style="margin-left: 10px;">***NOME POLISPORTIVA***</span>
+					</td>
+				</tr>
+				<tr>
+					<td colspan="10" class="centrato bordato" style="background-color: azure;">
+						<span class="titolo2 grassetto">CONVOCAZIONE ***SQUADRA***</span>
+					</td>
+				</tr>
+				<tr class="spaziaturaRighe"> </tr>
+			</table>
+			
+			<table width="100%" cellspacing="0px" cellpadding="0px" style="margin-top: 10px;">
+				<tr>
+					<td colspan="1">
+						<span class="titolo3">GARA</span>
+					</td>
+					<td colspan="8" class="sottolineato">
+						<span class="titolo3">***GARA***</span>
+					</td>
+					<td colspan="1" class="sottolineato adestra" style="background-color: yellow;">
+						<span class="titolo3 grassetto">***DATA***</span>
+					</td>
+				</tr>
+				<tr class="spaziaturaRighe"> </tr>
+				<tr>
+					<td colspan="1">
+						<span class="titolo3">CAMPO DI GIOCO:</span>
+					</td>
+					<td colspan="9" class="sottolineato">
+						<span class="titolo3 grassetto">***CAMPO***</span>
+					</td>
+				</tr>
+				<tr class="spaziaturaRighe"> </tr>
+				<tr>
+					<td colspan="1">
+						<span class="titolo3">INDIRIZZO:</span>
+					</td>
+					<td colspan="9" class="sottolineato">
+						<span class="titolo3 grassetto">***INDIRIZZO***</span>
+					</td>
+				</tr>
+				<tr class="spaziaturaRighe"> </tr>
+				<tr>
+					<td colspan="2">
+						<span class="titolo3">ORARIO APPUNTAMENTO</span>
+					</td>
+					<td colspan="3" class="centrato">
+						<span class="titolo3 grassetto">***ORARIO1***</span>
+					</td>
+					<td colspan="2">
+						<span class="titolo3">INIZIO GARA</span>
+					</td>
+					<td colspan="3" class="centrato">
+						<span class="titolo3 grassetto">***ORARIO2***</span>
+					</td>
+				</tr>
+				<tr class="spaziaturaRighe"> </tr>
+				<tr>
+					<td colspan="10" class="centrato bordato">
+						<span class="titolo2">CONVOCATI</span>
+					</td>
+				</tr>
+				<tr class="spaziaturaRighe"> </tr>
+			</table>
+			***CONVOCATI***
+			<br /><br />
+			***DIRIGENTI***
+			<table width="100% cellspacing="0px" cellpadding="0px">
+				<tr class="spaziaturaRighe"> </tr>
+				<tr>
+					<td colspan="1">
+						<span class="titolo2">AVVISO:</span>
+					</td>
+					<td colspan="9"></td>
+				</tr>
+				<tr>
+					<td colspan="1"></td>
+					<td colspan="9" class="sottolineato">
+						<span class="titolo2 grassetto">TUTTI IN TUTA DI RAPPRESENTANZA</span>
+					</td>
+				</tr>
+				<tr>
+					<td colspan="1"></td>
+					<td colspan="9" class="sottolineato">
+						<span class="titolo2">Si richiede la massima puntualità</span>
+					</td>
+				</tr>
+				<tr>
+					<td colspan="1"></td>
+					<td colspan="9" class="sottolineato">
+						<span class="titolo2">In caso di assenza informare il mister</span>
+					</td>
+				</tr>
+				<tr class="spaziaturaRighe"> </tr>
+				<tr>
+					<td colspan="1"></td>
+					<td colspan="9">
+						<span class="titolo2">SI RICORDA DI MANTENERE SEMPRE UN CORRETTO COMPORTAMENTO</span>
+					</td>
+				</tr>
+				<tr class="spaziaturaRighe"> </tr>
+				<tr>
+					<td colspan="4"></td>
+					<td colspan="1" class="adestra">
+						<span class="titolo2">Mister</span>
+					</td>
+					<td colspan="1">&nbsp;</td>
+					<td colspan="4" class="sottolineato">
+						<span class="titolo2">***MISTER***</span>
+					</td>
+				</tr>
+				<tr>
+					<td colspan="4"></td>
+					<td colspan="1" class="adestra">
+						<span class="titolo2">Cell.</span>
+					</td>
+					<td colspan="1">&nbsp;</td>
+					<td colspan="4" class="sottolineato adestra">
+						<span class="titolo2">***CELL***</span>
+					</td>
+				</tr>
+			</table>
+		</div>
+	</form>
+</body>

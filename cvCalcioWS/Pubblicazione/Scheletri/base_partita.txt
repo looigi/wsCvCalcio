@@ -49,7 +49,7 @@
          <table style="width: 100%;" cellspacing="10px">
             <tr >
                 <td class="area" style="width: 22%; max-width: 22%; text-align: center;">
-                    <img src="***IMMAGINE SQ1***" style="width: 100px; height: 100px;" onerror=""this.src='http://looigi.no-ip.biz:12345/CVCalcio/App_Themes/Standard/Images/Sconosciuto.png'""  />
+                    <img src="***IMMAGINE SQ1***" style="width: 100px; height: 100px;" onerror=""this.src='http://loppa.duckdns.org:90/MultiMedia/Sconosciuto.png'""  />
                     <br />
                     <span class="testo blu" style="font-size: 20px;">***SQUADRA 1***</span>
                 </td>
@@ -62,7 +62,7 @@
                     <br />
                     <span class="testo nero" style="font-size: 14px;">***INDIRIZZO***</span>
                     <br />
-                    <img src="***IMMAGINE ARB***" style="width: 40px; height: 40px;" onerror=""this.src='http://looigi.no-ip.biz:12345/CVCalcio/App_Themes/Standard/Images/Sconosciuto.png'"" />
+                    <img src="***IMMAGINE ARB***" style="width: 40px; height: 40px;" onerror=""this.src='http://loppa.duckdns.org:90/MultiMedia/Sconosciuto.png'"" />
                     <span class="testo nero" style="font-size: 15px;">Arbitro: ***ARBITRO***</span>
                     <hr />
                     <table style="width: 99%; text-align: center;">
@@ -84,7 +84,7 @@
                     <span class="testo nero" style="font-size: 14px;">***METEO***</span>
                 </td>
                 <td class="area" style="width: 22%; max-width: 22%; text-align: center;">
-                    <img src="***IMMAGINE SQ2***" style="width: 100px; height: 100px;" onerror=""this.src='http://looigi.no-ip.biz:12345/CVCalcio/App_Themes/Standard/Images/Sconosciuto.png'"" />
+                    <img src="***IMMAGINE SQ2***" style="width: 100px; height: 100px;" onerror=""this.src='http://loppa.duckdns.org:90/MultiMedia/Sconosciuto.png'"" />
                     <br />
                     <span class="testo blu" style="font-size: 20px;">***SQUADRA 2***</span>
                 </td>
@@ -94,7 +94,7 @@
         <table class="area" style="width: 99%;">
              <tr>
                 <td style="width: 50%; text-align: center; vertical-align: middle;">
-                    <img src="***IMMAGINE ALL***" style="width: 60px; height: 60px;" onerror=""this.src='http://looigi.no-ip.biz:12345/CVCalcio/App_Themes/Standard/Images/Sconosciuto.png'"" />
+                    <img src="***IMMAGINE ALL***" style="width: 60px; height: 60px;" onerror=""this.src='http://loppa.duckdns.org:90/MultiMedia/Sconosciuto.png'"" />
                     <br />
                     <span class="testo verde" style="font-size: 15px;">Allenatore: ***ALLENATORE***</span>
                 </td>

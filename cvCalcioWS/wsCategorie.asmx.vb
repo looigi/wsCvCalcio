@@ -64,9 +64,34 @@ Public Class wsCategorie
 				Sql = "Begin transaction"
 				Ritorno = EsegueSql(Conn, Sql, Connessione)
 
+				Dim TipoUtente As String = ""
+				Dim NomeTabella As String = ""
+
 				If Not Ritorno.Contains(StringaErrore) Then
 					Try
-						Sql = "Delete From UtentiCategorie Where Idutente = " & IDutente
+						Sql = "Select * From [Generale].[dbo].[Utenti] Where idUtente=" & IDutente
+						Rec = LeggeQuery(Conn, Sql, Connessione)
+						If TypeOf (Rec) Is String Then
+							Ritorno = Rec
+						Else
+							If Rec.Eof Then
+								Ritorno = StringaErrore & " Nessun utente rilevato"
+							Else
+								TipoUtente = Rec("idTipologia").Value
+							End If
+							Rec.Close()
+						End If
+
+						Select Case TipoUtente
+							Case "5", "7"
+								NomeTabella = "AllenatoriCategorie"
+							Case "4", "8"
+								NomeTabella = "DirigentiCategorie"
+							Case Else
+								NomeTabella = "UtentiCategorie"
+						End Select
+
+						Sql = "Delete From " & NomeTabella & " Where Idutente = " & IDutente
 						Ritorno = EsegueSql(Conn, Sql, Connessione)
 						If Ritorno.Contains(StringaErrore) Then
 							Ok = False
@@ -86,7 +111,7 @@ Public Class wsCategorie
 									Progressivo += 1
 
 									Try
-										Sql = "Insert Into UtentiCategorie Values (" &
+										Sql = "Insert Into " & NomeTabella & " Values (" &
 											" " & IDutente & ", " &
 											" " & Progressivo & ", " &
 											" " & p & " " &
@@ -164,11 +189,16 @@ Public Class wsCategorie
 
 					If Ritorno = "" Then
 						Try
-							If TipoUtente = "2" Then
-								Sql = "SELECT * From UtentiCategorie Where idUtente=" & idUtente
-							Else
-								Sql = "SELECT * From Categorie Where idAnno=" & idAnno
-							End If
+							Select Case TipoUtente
+								Case "2"
+									Sql = "SELECT * From UtentiCategorie Where idUtente=" & idUtente
+								Case "5", "7"
+									Sql = "SELECT * From AllenatoriCategorie Where idUtente=" & idUtente
+								Case "4", "8"
+									Sql = "SELECT * From DirigentiCategorie Where idUtente=" & idUtente
+								Case Else
+									Sql = "SELECT * From Categorie Where idAnno=" & idAnno
+							End Select
 							Rec = LeggeQuery(Conn, Sql, Connessione)
 							If TypeOf (Rec) Is String Then
 								Ritorno = Rec

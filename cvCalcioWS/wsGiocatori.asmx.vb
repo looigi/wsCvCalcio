@@ -2524,6 +2524,78 @@ Public Class wsGiocatori
 	End Function
 
 	<WebMethod()>
+	Public Function TornaDatiGiocatore(Squadra As String, idGiocatore As String) As String
+		Dim Ritorno As String = ""
+		Dim Connessione As String = LeggeImpostazioniDiBase(Server.MapPath("."), Squadra)
+
+		If Connessione = "" Then
+			Ritorno = ErroreConnessioneNonValida
+		Else
+			Dim Conn As Object = ApreDB(Connessione)
+
+			If TypeOf (Conn) Is String Then
+				Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
+			Else
+				Dim Rec As Object = Server.CreateObject("ADODB.Recordset")
+				Dim Sql As String = "Select * From Giocatori Where idGiocatore=" & idGiocatore
+
+				Rec = LeggeQuery(Conn, Sql, Connessione)
+				If TypeOf (Rec) Is String Then
+					Ritorno = Rec
+				Else
+					If Rec.Eof Then
+						Ritorno = "ERROR: Nessun giocatore rilevato"
+					Else
+						Ritorno = Rec("Cognome").Value & ";"
+						Ritorno &= Rec("Nome").Value & ";"
+						Ritorno &= Rec("CodFiscale").Value & ";"
+						Dim Campi() As String = Rec("Categorie").value.split("-")
+						Rec.Close()
+
+						Dim Categorie As String = ""
+
+						For Each c As String In Campi
+							If c <> "" Then
+								Sql = "Select * From Categorie Where idCategoria=" & c
+								Rec = LeggeQuery(Conn, Sql, Connessione)
+								If TypeOf (Rec) Is String Then
+								Else
+									If Not Rec.Eof Then
+										If Not Categorie.Contains(Rec("Descrizione").Value) Then
+											Categorie &= Rec("Descrizione").Value & "*"
+										End If
+									End If
+								End If
+							End If
+						Next
+
+						Ritorno &= Categorie & ";"
+
+						Sql = "Select Sum(Importo) From [Generale].[dbo].[TessereNFC] Where CodSquadra='" & Squadra & "' And idGiocatore=" & idGiocatore
+						Rec = LeggeQuery(Conn, Sql, Connessione)
+						If TypeOf (Rec) Is String Then
+							Ritorno = Rec
+						Else
+							Dim Saldo As String = ""
+
+							If Rec(0).Value Is DBNull.Value Then
+								Saldo = "€ 0"
+							Else
+								Saldo = "€ " & Rec(0).Value
+							End If
+
+							Ritorno &= Saldo
+							Rec.Close()
+						End If
+					End If
+				End If
+			End If
+		End If
+
+		Return Ritorno
+	End Function
+
+	<WebMethod()>
 	Public Function TornaDettaglioGiocatore(Squadra As String, idAnno As String, idGiocatore As String) As String
 		Dim Ritorno As String = ""
 		Dim Connessione As String = LeggeImpostazioniDiBase(Server.MapPath("."), Squadra)

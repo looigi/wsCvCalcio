@@ -12,7 +12,7 @@ Public Class wsMail
 	Inherits System.Web.Services.WebService
 
 	<WebMethod()>
-	Public Function RitornaMails(Squadra As String, idUtente As String, Folder As String, Filter As String, Label As String, SoloNuove As String) As String
+	Public Function RitornaMails(Squadra As String, idAnno As String, idUtente As String, Folder As String, Filter As String, Label As String, SoloNuove As String) As String
 		Dim Ritorno As String = ""
 		Dim Connessione As String = LeggeImpostazioniDiBase(Server.MapPath("."), Squadra)
 
@@ -24,15 +24,20 @@ Public Class wsMail
 			If TypeOf (Conn) Is String Then
 				Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
 			Else
+				'If SoloNuove = "S" Then
+				'	Dim m As New mailImap
+				'	Dim Ritorno2 As String = m.RitornaMessaggi(Squadra, idAnno, idUtente, Folder)
+				'End If
+
 				Dim Rec As Object = Server.CreateObject("ADODB.Recordset")
 				Dim Rec2 As Object = Server.CreateObject("ADODB.Recordset")
 				Dim Sql As String = ""
 				Dim Altro As String = ""
 				Dim Cosa As String = "*"
 
-				If Folder <> "" Then
-					Altro &= " And Folder='" & Folder.Replace("'", "''") & "'"
-				End If
+				'If Folder <> "" Then
+				'	Altro &= " And Folder='" & Folder.Replace("'", "''") & "'"
+				'End If
 				If Filter <> "" Then
 					If Filter = "Preferiti" Then
 						Altro &= " And starred = 'S'"
@@ -43,9 +48,11 @@ Public Class wsMail
 				If Label <> "" Then
 					Altro &= " And Label Like '%" & Label.Replace("'", "''") & "%'"
 				End If
-				If SoloNuove <> "" Then
+				If SoloNuove = "S" Then
 					Altro = " And letto = 'N' And folder = 'Inbox'"
 					Cosa = "Count(*)"
+				Else
+					Altro &= " Order By cast(substring(time,7,4) + substring(time,4,2) + substring(time,1,2) + substring(time,12,2) + substring(time,15,2) + substring(time,18,2) as numeric(15)) Desc"
 				End If
 
 				Sql = "SELECT " & Cosa & " From Mails " &
@@ -57,7 +64,7 @@ Public Class wsMail
 					If Rec.Eof Then
 						Ritorno = StringaErrore & " Nessuna mail ritornata"
 					Else
-						If SoloNuove = "" Then
+						If SoloNuove = "" Or SoloNuove = "N" Then
 							Do Until Rec.Eof
 								Dim idMail As Integer = Rec("idMail").Value
 								Dim Destinatari As String = ""
@@ -67,7 +74,7 @@ Public Class wsMail
 								Sql = "Select * From MailsTo Where idMail=" & idMail & " Order By progressivo"
 								Rec2 = LeggeQuery(Conn, Sql, Connessione)
 								Do Until Rec2.Eof
-									Destinatari &= Rec2("idUtente").Value & "^" & Rec2("name").Value & "^" & Rec2("email").value & "°"
+									Destinatari &= Rec2("idUtente").Value & "^" & Rec2("name").value & "^" & Rec2("email").value & "°"
 
 									Rec2.MoveNext
 								Loop
@@ -103,6 +110,8 @@ Public Class wsMail
 								Ritorno &= Destinatari & ";"
 								Ritorno &= AttachMents & ";"
 								Ritorno &= Labels & ";"
+								Ritorno &= Rec("Mittente").Value & ";"
+								Ritorno &= Rec("NomeMittente").Value & ";"
 								Ritorno &= "§"
 
 								Rec.MoveNext
@@ -136,6 +145,21 @@ Public Class wsMail
 			Ritorno = ErroreConnessioneNonValida
 		Else
 			Dim Conn As Object = ApreDB(Connessione)
+			Dim ma As New mail
+			Dim Mittente As String = ""
+			Dim mailMittente As String = ""
+			Dim gf As New GestioneFilesDirectory
+			Dim righe As String = gf.LeggeFileIntero(Server.MapPath(".") & "\Impostazioni\PathAllegati.txt")
+			Dim c() As String = righe.Split(";")
+			Dim pathFisico As String = c(0).Trim.Replace(vbCrLf, "")
+			If pathFisico.EndsWith("\") Then
+				pathFisico = Mid(pathFisico, 1, pathFisico.Length - 1)
+			End If
+			Dim urlFisico As String = c(2).Trim.Replace(vbCrLf, "")
+			If urlFisico.EndsWith("/") Then
+				urlFisico = Mid(urlFisico, 1, urlFisico.Length - 1)
+			End If
+			urlFisico = urlFisico.Replace("Multimedia", "Allegati")
 
 			If TypeOf (Conn) Is String Then
 				Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
@@ -144,6 +168,7 @@ Public Class wsMail
 				Dim Sql As String = ""
 				Dim idMail As Integer = -1
 				Dim Ok As Boolean = True
+				Dim Destinatari As String = ""
 
 				Sql = "Begin transaction"
 				Ritorno = EsegueSql(Conn, Sql, Connessione)
@@ -157,211 +182,145 @@ Public Class wsMail
 				End If
 				Rec.Close
 
-				Dim sTo() As String = mailsTo.Split("§")
-				Dim ma As New mail
-
-				' Scrive i dati della mail propria mail nella casella Inviate
-				Sql = "Insert Into Mails Values (" &
-							" " & idMail & ", " &
-							" " & idUtente & ", " &
-							"'" & subject.Replace("'", "''") & "', " &
-							"'" & message.Replace("'", "''") & "', " &
-							"'" & time & "', " &
-							"'" & letto & "', " &
-							"'" & starred & "', " &
-							"'" & important & "', " &
-							"'" & hasAttachments & "', " &
-							"'Inviate', " &
-							"'N'" &
-							")"
-				Ritorno = EsegueSql(Conn, Sql, Connessione)
-				If Ritorno.Contains(StringaErrore) Then
+				Sql = "Select * From [Generale].[dbo].[Utenti] Where idUtente=" & idUtente
+				Rec = LeggeQuery(Conn, Sql, Connessione)
+				If Rec.Eof Then
+					Ritorno = StringaErrore & " Nessun utente rilevato"
 					Ok = False
+				Else
+					Mittente = Rec("Cognome").Value & " " & Rec("Nome").Value
+					mailMittente = Rec("EMail").Value
 				End If
+				Rec.Close
 
 				If Ok Then
-					Dim Progressivo As Integer = 0
+					Dim sTo() As String = mailsTo.Split("§")
 
-					For Each t2 As String In sTo
-						If t2 <> "" Then
-							Dim c2() As String = t2.Split(";")
+					' Scrive i dati della mail propria mail nella casella Inviate
+					Sql = "Insert Into Mails Values (" &
+						" " & idMail & ", " &
+						" " & idUtente & ", " &
+						"'" & subject.Replace("'", "''") & "', " &
+						"'" & message.Replace("'", "''") & "', " &
+						"'" & time & "', " &
+						"'" & letto & "', " &
+						"'" & starred & "', " &
+						"'" & important & "', " &
+						"'" & hasAttachments & "', " &
+						"'Inviate', " &
+						"'N', " &
+						"-1, " &
+						"'" & Mittente.Replace("'", "''") & "'," &
+						"'" & mailMittente.Replace("'", "''") & "'" &
+						")"
+					Ritorno = EsegueSql(Conn, Sql, Connessione)
+					If Ritorno.Contains(StringaErrore) Then
+						Ok = False
+					End If
 
-							Progressivo += 1
-							Sql = "Insert Into MailsTo Values (" &
-								" " & idMail & ", " &
-								" " & Progressivo & ", " &
-								" " & c2(0) & ", " &
-								"'" & c2(1).Replace("'", "''") & "', " &
-								"'" & c2(2).Replace("'", "''") & "' " &
-								")"
-							Ritorno = EsegueSql(Conn, Sql, Connessione)
-							If Ritorno.Contains(StringaErrore) Then
-								Ok = False
-								Exit For
+					If Ok Then
+						'Ritorno = ma.SendEmail(Squadra, from, subject, message, from, {""})
+						'If Ritorno <> "*" Then
+						'	Ok = False
+						'End If
+
+						Dim Progressivo As Integer = 0
+
+						For Each t2 As String In sTo
+							If t2 <> "" Then
+								Dim c2() As String = t2.Split(";")
+
+								Progressivo += 1
+								Sql = "Insert Into MailsTo Values (" &
+									" " & idMail & ", " &
+									" " & Progressivo & ", " &
+									" " & c2(0) & ", " &
+									"'" & c2(1).Replace("'", "''") & "', " &
+									"'" & c2(2).Replace("'", "''") & "' " &
+									")"
+								Ritorno = EsegueSql(Conn, Sql, Connessione)
+								If Ritorno.Contains(StringaErrore) Then
+									Ok = False
+									Exit For
+								Else
+									Destinatari &= c2(2) & ";"
+								End If
 							End If
-						End If
-					Next
-				End If
+						Next
+					End If
 
-				If Ok Then
-					Dim sAt() As String = attachments.Split("§")
-					Dim Progressivo As Integer = 0
+					If Ok Then
+						Dim sAt() As String = attachments.Split("§")
+						Dim Progressivo As Integer = 0
 
-					For Each t2 As String In sAt
-						If t2 <> "" Then
-							Dim c2() As String = t2.Split(";")
+						For Each t2 As String In sAt
+							If t2 <> "" Then
+								Dim c2() As String = t2.Split(";")
+								Dim Type As String = gf.TornaEstensioneFileDaPath(c2(0))
+								Dim Size As String = c2(1)
 
-							Progressivo += 1
-							Sql = "Insert Into MailsAttachment Values (" &
-								" " & idMail & ", " &
-								" " & Progressivo & ", " &
-								"'" & c2(0).Replace("'", "''") & "', " &
-								"'" & c2(1).Replace("'", "''") & "', " &
-								"'" & c2(2).Replace("'", "''") & "', " &
-								"'" & c2(3).Replace("'", "''") & "', " &
-								" " & c2(4) & " " &
-								")"
-							Ritorno = EsegueSql(Conn, Sql, Connessione)
-							If Ritorno.Contains(StringaErrore) Then
-								Ok = False
-								Exit For
-							End If
-						End If
-					Next
-				End If
-
-				If Ok Then
-					Dim sLab() As String = labels.Split("§")
-					Dim Progressivo As Integer = 0
-
-					For Each t2 As String In sLab
-						If t2 <> "" Then
-							Progressivo += 1
-							Sql = "Insert Into MailsLabels Values (" &
-								" " & idMail & ", " &
-								" " & Progressivo & ", " &
-								"'" & t2.Replace("'", "''") & "' " &
-								")"
-							Ritorno = EsegueSql(Conn, Sql, Connessione)
-							If Ritorno.Contains(StringaErrore) Then
-								Ok = False
-								Exit For
-							End If
-						End If
-					Next
-				End If
-				idMail += 1
-				' Scrive i dati della mail propria mail nella casella Inviate
-
-				' Scrive i dati delle mails dei destinatari
-				If Ok Then
-					For Each t As String In sTo
-						If t <> "" Then
-							Dim c() As String = t.Split(";")
-
-							Sql = "Insert Into Mails Values (" &
-								" " & idMail & ", " &
-								" " & c(0) & ", " &
-								"'" & subject.Replace("'", "''") & "', " &
-								"'" & message.Replace("'", "''") & "', " &
-								"'" & time & "', " &
-								"'" & letto & "', " &
-								"'" & starred & "', " &
-								"'" & important & "', " &
-								"'" & hasAttachments & "', " &
-								"'" & folder.Replace("'", "''") & "', " &
-								"'N'" &
-								")"
-							Ritorno = EsegueSql(Conn, Sql, Connessione)
-							If Ritorno.Contains(StringaErrore) Then
-								Ok = False
-								Exit For
-							Else
-								Ritorno = ma.SendEmail(Squadra, from, subject, message, c(2), {""})
-								If Ritorno <> "*" Then
+								Progressivo += 1
+								Sql = "Insert Into MailsAttachment Values (" &
+									" " & idMail & ", " &
+									" " & Progressivo & ", " &
+									"'" & Type & "', " &
+									"'" & (pathFisico & "\" & c2(0)).Replace("'", "''") & "', " &
+									"'" & "', " &
+									"'" & (urlFisico & "/" & c2(0).Replace("\", "/")).Replace("'", "''") & "', " &
+									" " & Size & " " &
+									")"
+								Ritorno = EsegueSql(Conn, Sql, Connessione)
+								If Ritorno.Contains(StringaErrore) Then
 									Ok = False
 									Exit For
 								End If
 							End If
+						Next
+					End If
 
-							If Ok Then
-								Dim Progressivo As Integer = 0
+					If Ok Then
+						Dim sLab() As String = labels.Split("§")
+						Dim Progressivo As Integer = 0
 
-								For Each t2 As String In sTo
-									If t2 <> "" Then
-										Dim c2() As String = t2.Split(";")
-
-										Progressivo += 1
-										Sql = "Insert Into MailsTo Values (" &
-											" " & idMail & ", " &
-											" " & Progressivo & ", " &
-											" " & c2(0) & ", " &
-											"'" & c2(1).Replace("'", "''") & "', " &
-											"'" & c2(2).Replace("'", "''") & "' " &
-											")"
-										Ritorno = EsegueSql(Conn, Sql, Connessione)
-										If Ritorno.Contains(StringaErrore) Then
-											Ok = False
-											Exit For
-										End If
-									End If
-								Next
+						For Each t2 As String In sLab
+							If t2 <> "" Then
+								Progressivo += 1
+								Sql = "Insert Into MailsLabels Values (" &
+									" " & idMail & ", " &
+									" " & Progressivo & ", " &
+									"'" & t2.Replace("'", "''") & "' " &
+									")"
+								Ritorno = EsegueSql(Conn, Sql, Connessione)
+								If Ritorno.Contains(StringaErrore) Then
+									Ok = False
+									Exit For
+								End If
 							End If
+						Next
+					End If
+				End If
 
-							If Ok Then
-								Dim sAt() As String = attachments.Split("§")
-								Dim Progressivo As Integer = 0
+				If Ok Then
+					Dim Dests() As String = Destinatari.Split(";")
+					Dim attach() As String = attachments.Split("§")
+					Dim aa As String = ""
 
-								For Each t2 As String In sAt
-									If t2 <> "" Then
-										Dim c2() As String = t2.Split(";")
-
-										Progressivo += 1
-										Sql = "Insert Into MailsAttachment Values (" &
-											" " & idMail & ", " &
-											" " & Progressivo & ", " &
-											"'" & c2(0).Replace("'", "''") & "', " &
-											"'" & c2(1).Replace("'", "''") & "', " &
-											"'" & c2(2).Replace("'", "''") & "', " &
-											"'" & c2(3).Replace("'", "''") & "', " &
-											" " & c2(4) & " " &
-											")"
-										Ritorno = EsegueSql(Conn, Sql, Connessione)
-										If Ritorno.Contains(StringaErrore) Then
-											Ok = False
-											Exit For
-										End If
-									End If
-								Next
-							End If
-
-							If Ok Then
-								Dim sLab() As String = labels.Split("§")
-								Dim Progressivo As Integer = 0
-
-								For Each t2 As String In sLab
-									If t2 <> "" Then
-										Progressivo += 1
-										Sql = "Insert Into MailsLabels Values (" &
-											" " & idMail & ", " &
-											" " & Progressivo & ", " &
-											"'" & t2.Replace("'", "''") & "' " &
-											")"
-										Ritorno = EsegueSql(Conn, Sql, Connessione)
-										If Ritorno.Contains(StringaErrore) Then
-											Ok = False
-											Exit For
-										End If
-									End If
-								Next
-							Else
-								Exit For
-							End If
+					For Each a As String In attach
+						If a <> "" Then
+							Dim aaa() As String = a.Split(";")
+							aa &= pathFisico & "\" & a(0) & ";"
 						End If
-						idMail += 1
+					Next
+
+					Dim attachs() As String = aa.Split(";")
+					For Each d As String In Dests
+						Ritorno = ma.SendEmail(Squadra, from, subject, message, d, attachs)
+						If Ritorno <> "*" Then
+							Ok = False
+							Exit For
+						End If
 					Next
 				End If
-				' Scrive i dati delle mails dei destinatari
 
 				If Ok Then
 					Sql = "commit"

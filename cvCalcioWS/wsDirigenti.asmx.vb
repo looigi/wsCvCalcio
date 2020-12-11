@@ -112,16 +112,16 @@ Public Class wsDirigenti
 						If Ritorno.Contains(StringaErrore) Then
 							Ok = False
 						Else
-							If TipologiaOperazione = "INSERIMENTO" Then
-								If Not Ritorno.Contains(StringaErrore) Then
-									Sql = "Delete From UtentiCategorie Where idUtente = " & idDir
-									Ritorno = EsegueSql(Conn, Sql, Connessione)
-								End If
-								If Not Ritorno.Contains(StringaErrore) Then
-									Sql = "Insert Into UtentiCategorie Values (" & idDir & ", 1, " & idCategoria & ")"
-									Ritorno = EsegueSql(Conn, Sql, Connessione)
-								End If
+							If Not Ritorno.Contains(StringaErrore) Then
+								Sql = "Delete From DirigentiCategorie Where idUtente = " & idDir
+								Ritorno = EsegueSql(Conn, Sql, Connessione)
+							End If
+							If Not Ritorno.Contains(StringaErrore) Then
+								Sql = "Insert Into DirigentiCategorie Values (" & idDir & ", 1, " & idCategoria & ")"
+								Ritorno = EsegueSql(Conn, Sql, Connessione)
+							End If
 
+							If TipologiaOperazione = "INSERIMENTO" Then
 								' Aggiunge Utente
 								Dim idGenitore As Integer = -1
 
@@ -230,14 +230,14 @@ Public Class wsDirigenti
 		Dim Rec As Object = Server.CreateObject("ADODB.Recordset")
 
 		If Tendina = "S" Then
-			Sql = "Delete From UtentiCategorie Where idUtente=" & idGenitore
+			Sql = "Delete From DirigentiCategorie Where idUtente=" & idGenitore
 			Ritorno = EsegueSql(Conn, Sql, Connessione)
 
 			Sql = "Delete From PermessiUtente Where idUtente=" & idGenitore
 			Ritorno = EsegueSql(Conn, Sql, Connessione)
 		End If
 
-		Sql = "Insert Into UtentiCategorie Values (" &
+		Sql = "Insert Into DirigentiCategorie Values (" &
 				" " & idGenitore & ", " &
 				"1, " &
 				" " & idCategoria & " " &
@@ -300,13 +300,18 @@ Public Class wsDirigenti
 				Dim Altro As String = ""
 
 				If idCategoria <> "-1" Then
-					Altro = "And A.idCategoria=" & idCategoria
+					Altro = "And B.idCategoria=" & idCategoria
 				End If
 				Try
 					' Sql = "SELECT * FROM Dirigenti Where idAnno=" & idAnno & " " & Altro & " And Eliminato='N' Order By Cognome, Nome"
-					Sql = "SELECT A.*, B.Descrizione FROM Dirigenti A " &
-						"Left Join Categorie B On A.idAnno = B.idAnno And A.idCategoria = B.idCategoria " &
-						"Where A.idAnno=" & idAnno & " " & Altro & " And A.Eliminato='N' Order By Cognome, Nome"
+					'Sql = "SELECT A.*, B.Descrizione FROM Dirigenti A " &
+					'	"Left Join Categorie B On A.idAnno = B.idAnno And A.idCategoria = B.idCategoria " &
+					'	"Where A.idAnno=" & idAnno & " " & Altro & " And A.Eliminato='N' Order By Cognome, Nome"
+
+					Sql = "Select * From DirigentiCategorie A " &
+						"Join Dirigenti B On A.idUtente = B.idDirigente " &
+						"Left Join Categorie C On A.idCategoria = C.idCategoria " &
+						"WHere B.idAnno=" & idAnno & " " & Altro & " And B.Eliminato = 'N' Order By Cognome, Nome"
 					Rec = LeggeQuery(Conn, Sql, Connessione)
 					If TypeOf (Rec) Is String Then
 						Ritorno = Rec

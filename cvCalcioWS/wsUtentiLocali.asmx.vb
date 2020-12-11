@@ -262,12 +262,13 @@ Public Class wsUtentiLocali
 				' Pulisce Cartella temporanea
 
 				Try
-					Sql = "SELECT Utenti.idAnno, idUtente, Utente, Cognome, Nome, " &
-						"Password, EMail, idCategoria, Utenti.idTipologia As idTipologia, Utenti.idSquadra, Descrizione As Squadra, PasswordScaduta, Telefono, " &
-						"Squadre.Eliminata, Squadre.idTipologia As idTipo2, Squadre.idLicenza, Utenti.idSquadra, Utenti.AmmOriginale " &
-						"FROM Utenti Left Join Squadre On Utenti.idSquadra = Squadre.idSquadra " &
-						"Where Upper(Utente)='" & Utente.ToUpper.Replace("'", "''") & "' And Utenti.Eliminato = 'N' " &
-						"Order By Utenti.idTipologia"
+					Sql = "SELECT A.idAnno, A.idUtente, Utente, Cognome, Nome, " &
+						"Password, EMail, idCategoria, A.idTipologia As idTipologia, A.idSquadra, Descrizione As Squadra, PasswordScaduta, Telefono, " &
+						"B.Eliminata, B.idTipologia As idTipo2, B.idLicenza, A.idSquadra, A.AmmOriginale, C.Mail, C.PwdMail " &
+						"FROM Utenti A Left Join Squadre B On A.idSquadra = B.idSquadra " &
+						"Left Join UtentiMails C On A.idUtente = C.idUtente " &
+						"Where Upper(Utente)='" & Utente.ToUpper.Replace("'", "''") & "' And A.Eliminato = 'N' " &
+						"Order By A.idTipologia"
 					Rec = LeggeQuery(Conn, Sql, Connessione)
 					If TypeOf (Rec) Is String Then
 						Ritorno = Rec
@@ -333,6 +334,8 @@ Public Class wsUtentiLocali
 														Rec("idTipo2").Value & ";" &
 														Rec("idLicenza").Value & ";" &
 														Rec("AmmOriginale").Value & ";" &
+														Rec("Mail").Value & ";" &
+														Rec("PwdMail").Value & ";" &
 														"§"
 
 										Squadra = "" & Rec("Squadra").Value
@@ -443,10 +446,54 @@ Public Class wsUtentiLocali
 		Return Ritorno
 	End Function
 
+	Private Function PrendeMailPWD(idAnno As String, idSquadra As String, idUtente As String) As String
+		Dim Ritorno As String = ""
+		Dim Anno As String = idAnno.Trim
+		For i As Integer = Anno.Length To 3
+			Anno = "0" & Anno
+		Next
+		Dim Squadra As String = idSquadra.Trim
+		For i As Integer = Squadra.Length To 4
+			Squadra = "0" & Squadra
+		Next
+		Dim sSquadra As String = Anno & "_" & Squadra
+		Dim Connessione As String = LeggeImpostazioniDiBase(Server.MapPath("."), sSquadra)
+
+		If Connessione = "" Then
+			Ritorno = ErroreConnessioneNonValida
+		Else
+			Dim Conn As Object = ApreDB(Connessione)
+
+			If TypeOf (Conn) Is String Then
+				Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
+			Else
+				Dim Rec As Object = Server.CreateObject("ADODB.Recordset")
+				Dim Rec2 As Object = Server.CreateObject("ADODB.Recordset")
+				Dim Sql As String = "Select * From UtentiMails Where idUtente = " & idUtente
+
+				Rec = LeggeQuery(Conn, Sql, Connessione)
+				If TypeOf (Rec) Is String Then
+					Ritorno = Rec
+				Else
+					If Rec.Eof Then
+						Ritorno = ";"
+					Else
+						Ritorno = Rec("Mail").Value & ";" & Rec("PwdMail").Value
+					End If
+
+					Rec.Close
+				End If
+			End If
+		End If
+
+		Return Ritorno
+	End Function
+
+
 	<WebMethod()>
 	Public Function RitornaUtentePerLogin(Squadra As String, ByVal idAnno As String, Utente As String, Password As String) As String
 		Dim Ritorno As String = ""
-		Dim Connessione As String = LeggeImpostazioniDiBase(Server.MapPath("."), Squadra)
+		Dim Connessione As String = LeggeImpostazioniDiBase(Server.MapPath("."), "")
 
 		If Connessione = "" Then
 			Ritorno = ErroreConnessioneNonValida
@@ -711,9 +758,9 @@ Public Class wsUtentiLocali
 
 	<WebMethod()>
 	Public Function SalvaUtente(Squadra As String, ByVal idAnno As String, idUtente As String, Utente As String, Cognome As String, Nome As String, EMail As String,
-								Password As String, idCategoria As String, idTipologia As String, Telefono As String, AmmOriginale As String) As String
+								Password As String, idCategoria As String, idTipologia As String, Telefono As String, AmmOriginale As String, Mail As String, PWD As String) As String
 		Dim Ritorno As String = ""
-		Dim Connessione As String = LeggeImpostazioniDiBase(Server.MapPath("."), "")
+		Dim Connessione As String = LeggeImpostazioniDiBase(Server.MapPath("."), Squadra)
 
 		If Connessione = "" Then
 			Ritorno = ErroreConnessioneNonValida
@@ -737,6 +784,7 @@ Public Class wsUtentiLocali
 							If idUtente <> "" Then
 								Dim sq() As String = Squadra.Split("_")
 								Dim idSquadra As Integer = sq(1)
+								Dim Ok As Boolean = True
 
 								'Sql = "Select idSquadra From Squadre Where Descrizione='" & Squadra.Replace("_", " ").Replace("'", "''") & "'"
 								'Rec = LeggeQuery(Conn, Sql, Connessione)
@@ -749,7 +797,7 @@ Public Class wsUtentiLocali
 								'		idSquadra = Rec(0).Value
 								'		Rec.Close()
 
-								Sql = "Insert Into Utenti Values (" &
+								Sql = "Insert Into [Generale].[dbo].[Utenti] Values (" &
 										" " & idAnno & ", " &
 										" " & idUtente & ", " &
 										"'" & Utente.Replace("'", "''") & "', " &
@@ -768,6 +816,30 @@ Public Class wsUtentiLocali
 										"'" & stringaWidgets & "' " &
 										")"
 								Ritorno = EsegueSql(Conn, Sql, Connessione)
+								If Ritorno.Contains(StringaErrore) Then
+									Ok = False
+								End If
+
+								If Ok Then
+									Sql = "Insert Into UtentiMail Values (" &
+										" " & idUtente & ", " &
+										"'" & Mail.Replace("'", "''") & "', " &
+										"'" & PWD.Replace("'", "''") & "', " &
+										"''" &
+										")"
+									Ritorno = EsegueSql(Conn, Sql, Connessione)
+									If Ritorno.Contains(StringaErrore) Then
+										Ok = False
+									End If
+								End If
+
+								If Ok = False Then
+									Sql = "Delete From [Generale].[dbo].[Utenti] Where idUtente=" & idUtente
+									Ritorno = EsegueSql(Conn, Sql, Connessione)
+
+									Sql = "Delete From UtentiMails Where idUtente=" & idUtente
+									Ritorno = EsegueSql(Conn, Sql, Connessione)
+								End If
 								'End If
 								'End If
 
@@ -849,9 +921,10 @@ Public Class wsUtentiLocali
 
 	<WebMethod()>
 	Public Function ModificaUtente(Squadra As String, ByVal idAnno As String, Utente As String, Cognome As String, Nome As String, EMail As String,
-								Password As String, idCategoria As String, idTipologia As String, idUtente As String, Telefono As String, AmmOriginale As String) As String
+								Password As String, idCategoria As String, idTipologia As String, idUtente As String, Telefono As String, AmmOriginale As String,
+								   Mail As String, PWD As String) As String
 		Dim Ritorno As String = ""
-		Dim Connessione As String = LeggeImpostazioniDiBase(Server.MapPath("."), "")
+		Dim Connessione As String = LeggeImpostazioniDiBase(Server.MapPath("."), Squadra)
 
 		If Connessione = "" Then
 			Ritorno = ErroreConnessioneNonValida
@@ -880,7 +953,7 @@ Public Class wsUtentiLocali
 
 					Try
 						' "idSquadra=" & Val(sq(1)).ToString & ", " &
-						Sql = "Update Utenti Set " &
+						Sql = "Update [Generale].[dbo].[Utenti] Set " &
 							"idAnno=" & idAnno & ", " &
 							"Utente='" & Utente.Replace("'", "''") & "', " &
 							"Cognome='" & Cognome.Replace("'", "''") & "', " &
@@ -898,7 +971,26 @@ Public Class wsUtentiLocali
 						If Ritorno.Contains(StringaErrore) Then
 							Ok = False
 						Else
-							Ritorno = idUtente
+							Sql = "Select * From [Generale].[dbo].[UtentiMails] Where idUtente = " & idUtente
+							Rec = LeggeQuery(Conn, Sql, Connessione)
+							If TypeOf (Rec) Is String Then
+								Ritorno = Rec
+								Ok = False
+							Else
+								If Rec.Eof Then
+									Sql = "Insert Into [Generale].[dbo].[UtentiMails] Values(" & idAnno & ", " & idUtente & ", '" & Mail.Replace("'", "''") & "', '" & PWD.Replace("'", "''") & "', '')"
+								Else
+									Sql = "Update [Generale].[dbo].[UtentiMails] Set Mail='" & Mail.Replace("'", "''") & "', PwdMail='" & PWD.Replace("'", "''") & "' Where idAnno=" & idAnno & " And idUtente=" & idUtente
+								End If
+								Rec.Close()
+
+								Ritorno = EsegueSql(Conn, Sql, Connessione)
+								If Ritorno.Contains(StringaErrore) Then
+									Ok = False
+								Else
+									Ritorno = idUtente
+								End If
+							End If
 						End If
 					Catch ex As Exception
 						Ritorno = StringaErrore & " " & ex.Message

@@ -69,7 +69,7 @@ Public Class mail
 		If effettuaLogMail Then
 			Dim Datella As String = Format(Now.Day, "00") & "/" & Format(Now.Month, "00") & "/" & Now.Year & " " & Format(Now.Hour, "00") & ":" & Format(Now.Minute, "00") & ":" & Format(Now.Second, "00")
 
-			gf.ApreFileDiTestoPerScrittura(nomeFileLogMail)
+			gf.ApreFileDiTestoPerScrittura(nomeFileLogmail)
 			gf.ScriveTestoSuFileAperto(Datella & " - Scodo Mail: " & mail.Squadra & "/" & mail.Mittente & "/" & mail.Oggetto & "/" & mail.Ricevente)
 			gf.ChiudeFileDiTestoDopoScrittura()
 		End If
@@ -281,4 +281,5 @@ Public Class mail
 			Return StringaErrore & ex.Message
 		End Try
 	End Function
+
 End Class

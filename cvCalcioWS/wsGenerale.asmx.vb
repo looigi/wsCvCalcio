@@ -5,12 +5,21 @@ Imports System.IO
 Imports System.Windows.Forms
 Imports Microsoft.Win32
 Imports System.Drawing
+Imports System.Threading.Tasks
 
 <System.Web.Services.WebService(Namespace:="http://cvcalcio.org/")>
 <System.Web.Services.WebServiceBinding(ConformsTo:=WsiProfiles.BasicProfile1_1)>
 <ToolboxItem(False)>
 Public Class wsGenerale
 	Inherits System.Web.Services.WebService
+
+	<WebMethod()>
+	Public Function LeggeMailbox() As String
+		Dim m As New mailImap
+		Dim ritorno As string = m.RitornaMessaggi("0001_00002", "1", "1", "Inbox")
+
+		Return ritorno
+	End Function
 
 	<WebMethod()>
 	Public Function AggiungeCFaCSV(NomeFile As String) As String
