@@ -129,6 +129,7 @@
     <Content Include="wsStatistiche.asmx" />
     <Content Include="wsSuperUser.asmx" />
     <Content Include="wsTaglie.asmx" />
+    <Content Include="wsTags.asmx" />
     <Content Include="wsTemplates.asmx" />
     <Content Include="wsUtentiLocali.asmx" />
     <Content Include="wsUtenti.asmx" />
@@ -138,6 +139,7 @@
     <Compile Include="CriptaFiles.vb" />
     <Compile Include="CryptEncrypt.vb" />
     <Compile Include="GestioneFilesDirectory.vb" />
+    <Compile Include="GestioneTags.vb" />
     <Compile Include="Globale.vb" />
     <Compile Include="mail.vb" />
     <Compile Include="mailImap.vb" />
@@ -281,6 +283,10 @@
     </Compile>
     <Compile Include="wsTaglie.asmx.vb">
       <DependentUpon>wsTaglie.asmx</DependentUpon>
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="wsTags.asmx.vb">
+      <DependentUpon>wsTags.asmx</DependentUpon>
       <SubType>Component</SubType>
     </Compile>
     <Compile Include="wsTemplates.asmx.vb">

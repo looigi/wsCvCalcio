@@ -713,50 +713,54 @@ Public Class wsGiocatori
 														P(0) = Mid(P(0), 1, P(0).Length - 1)
 													End If
 
+													Dim gT As New GestioneTags
+
 													If Genitore = 4 Then
 														' Gestione firma associato
 														Dim m As New mail
 														Dim Oggetto As String = "Richiesta Firma inCalcio"
-														Dim Body As String = ""
-														Dim fileFirma As String = P(0) & "\" & Squadra & "\Scheletri\mail_associato.txt"
-														If Not File.Exists(fileFirma) Then
-															fileFirma = Server.MapPath(".") & "\Scheletri\mail_associato.txt"
-														End If
-														Body = gf.LeggeFileIntero(fileFirma)
+														Dim Body As String = gT.EsegueMailAssociato(codSquadra, NomeSquadra, idGiocatore, Anno, Genitore, Privacy)
+														'Dim fileFirma As String = P(0) & "\" & Squadra & "\Scheletri\mail_associato.txt"
+														'If Not File.Exists(fileFirma) Then
+														'	fileFirma = Server.MapPath(".") & "\Scheletri\mail_associato.txt"
+														'End If
+														'Body = gf.LeggeFileIntero(fileFirma)
 
-														Dim link As String = "<a href= """ & Percorso & "?firma=true&codSquadra=" & Squadra & "&id=" & idGiocatore & "&squadra=" & NomeSquadra.Replace(" ", "_") & "&anno=" & Anno & "&genitore=" & Genitore & "&privacy=" & Privacy & "&tipoUtente=1"">"
-														link &= "Click per firmare"
-														link &= "</a>"
+														'Dim link As String = ""
+														'link &= "<a href= """ & Percorso & "?firma=true&codSquadra=" & Squadra & "&id=" & idGiocatore & "&squadra=" & NomeSquadra.Replace(" ", "_") & "&anno=" & Anno & "&genitore=" & Genitore & "&privacy=" & Privacy & "&tipoUtente=1"">"
+														'link &= "Click per firmare"
+														'link &= "</a>"
 
-														Body = Body.Replace("***Nominativo Padre***", nomeGenitore)
-														Body = Body.Replace("***Nome societa menu settaggi***", NomeSquadra)
-														Body = Body.Replace("***nome societ&agrave; menu settaggi***", NomeSquadra)
-														Body = Body.Replace("***anno menu settaggi***", Descrizione)
-														Body = Body.Replace("*** nome link****", link)
+														'Body = Body.Replace("***Nominativo Padre***", nomeGenitore)
+														'Body = Body.Replace("***Nome societa menu settaggi***", NomeSquadra)
+														'Body = Body.Replace("***nome societ&agrave; menu settaggi***", NomeSquadra)
+														'Body = Body.Replace("***anno menu settaggi***", Descrizione)
+														'Body = Body.Replace("***NOME_LINK_ASSOCIATO****", link)
 
 														Ritorno = m.SendEmail(Squadra, Mittente, Oggetto, Body, EMail, {})
 													Else
 														Dim m As New mail
 														Dim Oggetto As String = "Richiesta Firma inCalcio"
-														Dim Body As String = ""
-														Dim fileFirma As String = P(0) & "\" & Squadra & "\Scheletri\base_firma.txt"
-														If Not File.Exists(fileFirma) Then
-															fileFirma = Server.MapPath(".") & "\Scheletri\base_firma.txt"
-														End If
-														Body = gf.LeggeFileIntero(fileFirma)
+														Dim Body As String = gT.EsegueFirma(codSquadra, NomeSquadra, idGiocatore, Anno, Genitore, Privacy)
+														'Dim fileFirma As String = P(0) & "\" & Squadra & "\Scheletri\base_firma.txt"
+														'If Not File.Exists(fileFirma) Then
+														'	fileFirma = Server.MapPath(".") & "\Scheletri\base_firma.txt"
+														'End If
+														'Body = gf.LeggeFileIntero(fileFirma)
 
-														Body = Body.Replace("***Nominativo Padre***", nomeGenitore)
-														Body = Body.Replace("***Nome societa menu settaggi***", NomeSquadra)
-														Body = Body.Replace("***anno menu settaggi***", Descrizione)
-														Body = Body.Replace("***cognome menu anagrafica3***", Nominativo)
-														Body = Body.Replace("***Nome menu anagrafica3***", "")
+														'Body = Body.Replace("***Nominativo Padre***", nomeGenitore)
+														'Body = Body.Replace("***Nome societa menu settaggi***", NomeSquadra)
+														'Body = Body.Replace("***anno menu settaggi***", Descrizione)
+														'Body = Body.Replace("***cognome menu anagrafica3***", Nominativo)
+														'Body = Body.Replace("***Nome menu anagrafica3***", "")
 
-														Dim link As String = "<a href= """ & Percorso & "?firma=true&codSquadra=" & Squadra & "&id=" & idGiocatore & "&squadra=" & NomeSquadra.Replace(" ", "_") & "&anno=" & Anno & "&genitore=" & Genitore & "&privacy=" & Privacy & "&tipoUtente=1"">"
-														link &= "Click per firmare"
-														link &= "</a>"
+														'Dim link As String = ""
+														'link &= "<a href= """ & Percorso & "?firma=true&codSquadra=" & Squadra & "&id=" & idGiocatore & "&squadra=" & NomeSquadra.Replace(" ", "_") & "&anno=" & Anno & "&genitore=" & Genitore & "&privacy=" & Privacy & "&tipoUtente=1"">"
+														'link &= "Click per firmare"
+														'link &= "</a>"
 
-														Body = Body.Replace("*** nome link****", link)
-														Body = Body.Replace("***nome societ&agrave; menu settaggi***", NomeSquadra)
+														'Body = Body.Replace("***NOME_LINK_MAIL****", link)
+														'Body = Body.Replace("***nome societ&agrave; menu settaggi***", NomeSquadra)
 														'End If
 
 														' Dim ChiScrive As String = "notifiche@incalcio.cloud"
@@ -769,100 +773,102 @@ Public Class wsGiocatori
 														Dim fileDaCopiarePrivacy As String = P(0) & "\" & Squadra & "\Firme\privacy_" & Anno & "_" & idGiocatore & ".html"
 														Dim fileDaCopiarePrivacyPDF As String = P(0) & "\" & Squadra & "\Firme\privacy_" & Anno & "_" & idGiocatore & ".pdf"
 
-														Dim fileScheletro As String = P(0) & Squadra & "\Scheletri\base_iscrizione_.txt"
-														If Not File.Exists(fileScheletro) Then
-															fileScheletro = Server.MapPath(".") & "\Scheletri\base_iscrizione_.txt"
-														End If
+														'Dim fileScheletro As String = P(0) & Squadra & "\Scheletri\base_iscrizione_.txt"
+														'If Not File.Exists(fileScheletro) Then
+														'	fileScheletro = Server.MapPath(".") & "\Scheletri\base_iscrizione_.txt"
+														'End If
 
-														Dim fileScheletroPrivacy As String = P(0) & Squadra & "\Scheletri\base_privacy.txt"
-														If Not File.Exists(fileScheletroPrivacy) Then
-															fileScheletroPrivacy = Server.MapPath(".") & "\Scheletri\base_privacy.txt"
-														End If
+														'Dim fileScheletroPrivacy As String = P(0) & Squadra & "\Scheletri\base_privacy.txt"
+														'If Not File.Exists(fileScheletroPrivacy) Then
+														'	fileScheletroPrivacy = Server.MapPath(".") & "\Scheletri\base_privacy.txt"
+														'End If
 
-														If File.Exists(fileScheletro) And File.Exists(fileScheletroPrivacy) Then
-															Try
-																Dim fileFirme As String = gf.LeggeFileIntero(fileScheletro)
-																fileFirme = RiempieFileFirme(fileFirme, Anno, idGiocatore, Rec, Conn, Connessione, NomeSquadra, P, Descrizione)
+														' If File.Exists(fileScheletro) And File.Exists(fileScheletroPrivacy) Then
+														Dim fileFirme As String = gT.EsegueFileFirme(codSquadra, NomeSquadra, idGiocatore, Anno, Genitore, Privacy)
 
-																If Maggiorenne = "S" Then
-																	fileFirme = fileFirme.Replace("***VIS PADRE***", "none")
+														Try
+															'Dim fileFirme As String = gf.LeggeFileIntero(fileScheletro)
+															'fileFirme = RiempieFileFirme(fileFirme, Anno, idGiocatore, Rec, Conn, Connessione, NomeSquadra, P, Descrizione)
+															If Maggiorenne = "S" Then
+																fileFirme = fileFirme.Replace("***VIS_PADRE***", "none")
 
-																	fileFirme = fileFirme.Replace("***VIS MADRE***", "none")
-																Else
-																	If GenitoriSeparati = "S" Then
-																		If AffidamentoCongiunto = "S" Then
-																			If iscrFirmaEntrambi = "S" Then
-																				fileFirme = fileFirme.Replace("***VIS PADRE***", "block")
+																fileFirme = fileFirme.Replace("***VIS_MADRE***", "none")
+															Else
+																If GenitoriSeparati = "S" Then
+																	If AffidamentoCongiunto = "S" Then
+																		If iscrFirmaEntrambi = "S" Then
+																			fileFirme = fileFirme.Replace("***VIS_PADRE***", "block")
 
-																				fileFirme = fileFirme.Replace("***VIS MADRE***", "block")
-																			Else
-																				If ceGenitore1 = "S" Then
-																					fileFirme = fileFirme.Replace("***VIS PADRE***", "block")
-
-																					fileFirme = fileFirme.Replace("***VIS MADRE***", "none")
-																				Else
-																					fileFirme = fileFirme.Replace("***VIS PADRE***", "none")
-
-																					fileFirme = fileFirme.Replace("***VIS MADRE***", "block")
-																				End If
-																			End If
+																			fileFirme = fileFirme.Replace("***VIS_MADRE***", "block")
 																		Else
-																			If idTutore = "1" Then
-																				fileFirme = fileFirme.Replace("***VIS MADRE***", "none")
+																			If ceGenitore1 = "S" Then
+																				fileFirme = fileFirme.Replace("***VIS_PADRE***", "block")
+
+																				fileFirme = fileFirme.Replace("***VIS_MADRE***", "none")
 																			Else
-																				fileFirme = fileFirme.Replace("***VIS PADRE***", "none")
+																				fileFirme = fileFirme.Replace("***VIS_PADRE***", "none")
+
+																				fileFirme = fileFirme.Replace("***VIS_MADRE***", "block")
 																			End If
 																		End If
 																	Else
-																		If iscrFirmaEntrambi = "S" Then
-																			fileFirme = fileFirme.Replace("***VIS PADRE***", "block")
-
-																			fileFirme = fileFirme.Replace("***VIS MADRE***", "block")
+																		If idTutore = "1" Then
+																			fileFirme = fileFirme.Replace("***VIS_MADRE***", "none")
 																		Else
-																			If ceGenitore1 = "S" Then
-																				fileFirme = fileFirme.Replace("***VIS PADRE***", "block")
+																			fileFirme = fileFirme.Replace("***VIS_PADRE***", "none")
+																		End If
+																	End If
+																Else
+																	If iscrFirmaEntrambi = "S" Then
+																		fileFirme = fileFirme.Replace("***VIS_PADRE***", "block")
 
-																				fileFirme = fileFirme.Replace("***VIS MADRE***", "none")
-																			Else
-																				fileFirme = fileFirme.Replace("***VIS PADRE***", "none")
+																		fileFirme = fileFirme.Replace("***VIS_MADRE***", "block")
+																	Else
+																		If ceGenitore1 = "S" Then
+																			fileFirme = fileFirme.Replace("***VIS_PADRE***", "block")
 
-																				fileFirme = fileFirme.Replace("***VIS MADRE***", "block")
-																			End If
+																			fileFirme = fileFirme.Replace("***VIS_MADRE***", "none")
+																		Else
+																			fileFirme = fileFirme.Replace("***VIS_PADRE***", "none")
+
+																			fileFirme = fileFirme.Replace("***VIS_MADRE***", "block")
 																		End If
 																	End If
 																End If
+															End If
 
+															gf.EliminaFileFisico(fileDaCopiare)
+															gf.ApreFileDiTestoPerScrittura(fileDaCopiare)
+															gf.ScriveTestoSuFileAperto(fileFirme)
+															gf.ChiudeFileDiTestoDopoScrittura()
+
+															'Dim filePrivacy As String = gf.LeggeFileIntero(fileScheletroPrivacy)
+															'filePrivacy = RiempieFilePrivacy(filePrivacy, Anno, idGiocatore, Rec, Conn, Connessione, NomeSquadra, P, Descrizione)
+															Dim filePrivacy As String = gT.EsegueFilePrivacy(codSquadra, NomeSquadra, idGiocatore, Anno, Genitore, Privacy)
+
+															gf.EliminaFileFisico(fileDaCopiarePrivacy)
+															gf.ApreFileDiTestoPerScrittura(fileDaCopiarePrivacy)
+															gf.ScriveTestoSuFileAperto(filePrivacy)
+															gf.ChiudeFileDiTestoDopoScrittura()
+
+															'File.Copy(fileDaCopiare, fileDaCopiare2)
+															Dim pp As New pdfGest
+															Ritorno = pp.ConverteHTMLInPDF(fileDaCopiare, fileDaCopiarePDF, fileLog)
+															Ritorno = pp.ConverteHTMLInPDF(fileDaCopiarePrivacy, fileDaCopiarePrivacyPDF, fileLog)
+
+															If Ritorno = "*" Then
+																Dim filesDaAllegare() As String = {fileDaCopiarePDF, fileDaCopiarePrivacyPDF}
 																gf.EliminaFileFisico(fileDaCopiare)
-																gf.ApreFileDiTestoPerScrittura(fileDaCopiare)
-																gf.ScriveTestoSuFileAperto(fileFirme)
-																gf.ChiudeFileDiTestoDopoScrittura()
+																Ritorno = m.SendEmail(Squadra, Mittente, Oggetto, Body, EMail, filesDaAllegare)
+															End If
 
-																Dim filePrivacy As String = gf.LeggeFileIntero(fileScheletroPrivacy)
-																filePrivacy = RiempieFilePrivacy(filePrivacy, Anno, idGiocatore, Rec, Conn, Connessione, NomeSquadra, P, Descrizione)
-
-																gf.EliminaFileFisico(fileDaCopiarePrivacy)
-																gf.ApreFileDiTestoPerScrittura(fileDaCopiarePrivacy)
-																gf.ScriveTestoSuFileAperto(filePrivacy)
-																gf.ChiudeFileDiTestoDopoScrittura()
-
-																'File.Copy(fileDaCopiare, fileDaCopiare2)
-																Dim pp As New pdfGest
-																Ritorno = pp.ConverteHTMLInPDF(fileDaCopiare, fileDaCopiarePDF, fileLog)
-																Ritorno = pp.ConverteHTMLInPDF(fileDaCopiarePrivacy, fileDaCopiarePrivacyPDF, fileLog)
-
-																If Ritorno = "*" Then
-																	Dim filesDaAllegare() As String = {fileDaCopiarePDF, fileDaCopiarePrivacyPDF}
-																	gf.EliminaFileFisico(fileDaCopiare)
-																	Ritorno = m.SendEmail(Squadra, Mittente, Oggetto, Body, EMail, filesDaAllegare)
-																End If
-
-																gf = Nothing
-															Catch ex As Exception
-																Ritorno = StringaErrore & " " & ex.Message
-															End Try
-														Else
-															Ritorno = StringaErrore & " Scheletro iscrizione oppure privacy non trovato"
-														End If
+															gf = Nothing
+														Catch ex As Exception
+															Ritorno = StringaErrore & " " & ex.Message
+														End Try
+														'Else
+														'	Ritorno = StringaErrore & " Scheletro iscrizione oppure privacy non trovato"
+														'	End If
 														gf = Nothing
 														'Ritorno = "*"
 													End If
@@ -891,383 +897,383 @@ Public Class wsGiocatori
 		Return Ritorno
 	End Function
 
-	Private Function RiempieFilePrivacy(Contenuto As String, Anno As String, idGiocatore As String, Rec As Object, Conn As Object, Connessione As String, Squadra As String, p() As String, DescAnno As String) As String
-		Dim c As New CriptaFiles
-		p(2) = p(2).Replace(vbCrLf, "")
-		If (Strings.Right(p(2), 1) <> "/") Then
-			p(2) = p(2) & "/"
-		End If
+	'Private Function RiempieFilePrivacy(Contenuto As String, Anno As String, idGiocatore As String, Rec As Object, Conn As Object, Connessione As String, Squadra As String, p() As String, DescAnno As String) As String
+	'	Dim c As New CriptaFiles
+	'	p(2) = p(2).Replace(vbCrLf, "")
+	'	If (Strings.Right(p(2), 1) <> "/") Then
+	'		p(2) = p(2) & "/"
+	'	End If
 
-		Dim Sql As String = "Select * From Anni Where idAnno=" & Anno
-		Rec = LeggeQuery(Conn, Sql, Connessione)
-		If TypeOf (Rec) Is String Then
-			Contenuto = Rec
-		Else
-			If Not Rec.Eof Then
-				Dim NomePolisportiva As String = "" & Rec("NomePolisportiva").value
-				Dim Mail As String = "" & Rec("Mail").value
-				Dim Telefono As String = "" & Rec("Telefono").value
-				Dim Indirizzo As String = "" & Rec("Indirizzo").Value
-				Dim CodiceFiscale As String = "" & Rec("CodiceFiscale").Value
+	'	Dim Sql As String = "Select * From Anni Where idAnno=" & Anno
+	'	Rec = LeggeQuery(Conn, Sql, Connessione)
+	'	If TypeOf (Rec) Is String Then
+	'		Contenuto = Rec
+	'	Else
+	'		If Not Rec.Eof Then
+	'			Dim NomePolisportiva As String = "" & Rec("NomePolisportiva").value
+	'			Dim Mail As String = "" & Rec("Mail").value
+	'			Dim Telefono As String = "" & Rec("Telefono").value
+	'			Dim Indirizzo As String = "" & Rec("Indirizzo").Value
+	'			Dim CodiceFiscale As String = "" & Rec("CodiceFiscale").Value
 
-				Contenuto = Contenuto.Replace("***Nome Societ&agrave;***", NomePolisportiva)
-				Contenuto = Contenuto.Replace("***indirizzo***", Indirizzo)
-				Contenuto = Contenuto.Replace("***Mail***", Mail)
-				Contenuto = Contenuto.Replace("***Cofice Fiscale***", CodiceFiscale)
-			Else
-				Contenuto = Contenuto.Replace("***Nome Societ&agrave;***", "")
-				Contenuto = Contenuto.Replace("***indirizzo***", "")
-				Contenuto = Contenuto.Replace("***Mail***", "")
-				Contenuto = Contenuto.Replace("***Cofice Fiscale***", "")
-			End If
-		End If
+	'			Contenuto = Contenuto.Replace("***Nome Societ&agrave;***", NomePolisportiva)
+	'			Contenuto = Contenuto.Replace("***indirizzo***", Indirizzo)
+	'			Contenuto = Contenuto.Replace("***Mail***", Mail)
+	'			Contenuto = Contenuto.Replace("***Cofice Fiscale***", CodiceFiscale)
+	'		Else
+	'			Contenuto = Contenuto.Replace("***Nome Societ&agrave;***", "")
+	'			Contenuto = Contenuto.Replace("***indirizzo***", "")
+	'			Contenuto = Contenuto.Replace("***Mail***", "")
+	'			Contenuto = Contenuto.Replace("***Cofice Fiscale***", "")
+	'		End If
+	'	End If
 
-		Return Contenuto
-	End Function
+	'	Return Contenuto
+	'End Function
 
-	Private Function RiempieFileFirme(Contenuto As String, Anno As String, idGiocatore As String, Rec As Object, Conn As Object, Connessione As String, Squadra As String, p() As String, DescAnno As String) As String
-		Dim c As New CriptaFiles
+	'Private Function RiempieFileFirme(Contenuto As String, Anno As String, idGiocatore As String, Rec As Object, Conn As Object, Connessione As String, Squadra As String, p() As String, DescAnno As String) As String
+	'	Dim c As New CriptaFiles
 
-		'Dim gf As New GestioneFilesDirectory
-		'Dim paths As String = gf.LeggeFileIntero(Server.MapPath(".") & "\Impostazioni\PathAllegati.txt")
-		'Dim p() As String = paths.Split(";")
-		p(2) = p(2).Replace(vbCrLf, "")
-		If (Strings.Right(p(2), 1) <> "/") Then
-			p(2) = p(2) & "/"
-		End If
+	'	'Dim gf As New GestioneFilesDirectory
+	'	'Dim paths As String = gf.LeggeFileIntero(Server.MapPath(".") & "\Impostazioni\PathAllegati.txt")
+	'	'Dim p() As String = paths.Split(";")
+	'	p(2) = p(2).Replace(vbCrLf, "")
+	'	If (Strings.Right(p(2), 1) <> "/") Then
+	'		p(2) = p(2) & "/"
+	'	End If
 
-		Dim Sql As String = "Select * From Anni Where idAnno=" & Anno
-		Dim NomeSquadra As String = ""
+	'	Dim Sql As String = "Select * From Anni Where idAnno=" & Anno
+	'	Dim NomeSquadra As String = ""
 
-		Rec = LeggeQuery(Conn, Sql, Connessione)
-		If TypeOf (Rec) Is String Then
-			Contenuto = Rec
-		Else
-			If Not Rec.Eof Then
-				NomeSquadra = "" & Rec("NomeSquadra").Value
-				Dim NomePolisportiva As String = "" & Rec("NomePolisportiva").value
-				Dim NomeCampo As String = "" & Rec("CampoSquadra").value
-				Dim Mail As String = "" & Rec("Mail").value
-				Dim Telefono As String = "" & Rec("Telefono").value
-				Dim SitoWeb As String = "" & Rec("SitoWeb").value
-				Dim Indirizzo As String = "" & Rec("Indirizzo").Value
-				Dim CodiceFiscale As String = "" & Rec("CodiceFiscale").Value
-				Dim PIva As String = "" & Rec("PIva").Value
+	'	Rec = LeggeQuery(Conn, Sql, Connessione)
+	'	If TypeOf (Rec) Is String Then
+	'		Contenuto = Rec
+	'	Else
+	'		If Not Rec.Eof Then
+	'			NomeSquadra = "" & Rec("NomeSquadra").Value
+	'			Dim NomePolisportiva As String = "" & Rec("NomePolisportiva").value
+	'			Dim NomeCampo As String = "" & Rec("CampoSquadra").value
+	'			Dim Mail As String = "" & Rec("Mail").value
+	'			Dim Telefono As String = "" & Rec("Telefono").value
+	'			Dim SitoWeb As String = "" & Rec("SitoWeb").value
+	'			Dim Indirizzo As String = "" & Rec("Indirizzo").Value
+	'			Dim CodiceFiscale As String = "" & Rec("CodiceFiscale").Value
+	'			Dim PIva As String = "" & Rec("PIva").Value
 
-				Contenuto = Contenuto.Replace("***Anno menu settaggi***", DescAnno)
-				Contenuto = Contenuto.Replace("***nome societa menu settaggi***", NomePolisportiva)
-				Contenuto = Contenuto.Replace("***nome Campo menu settaggi***", NomeCampo)
-				Contenuto = Contenuto.Replace("***Telefono - mail - sito web menu settaggi***", Mail & ", " & Telefono & ", " & SitoWeb)
-				Contenuto = Contenuto.Replace("***indirizzo menu settaggi tab Dati Generali***", Indirizzo)
-				Contenuto = Contenuto.Replace("***codice fiscale menu settaggi***", CodiceFiscale)
-				Contenuto = Contenuto.Replace("***partita iva menu settaggi***", PIva)
-			Else
-				Contenuto = Contenuto.Replace("***Anno menu settaggi***", Anno)
-				Contenuto = Contenuto.Replace("***nome societa menu settaggi***", "")
-				Contenuto = Contenuto.Replace("***nome Campo menu settaggi***", "")
-				Contenuto = Contenuto.Replace("***Telefono - mail - sito web menu settaggi***", "")
-				Contenuto = Contenuto.Replace("***indirizzo menu settaggi tab Dati Generali***", "")
-				Contenuto = Contenuto.Replace("***codice fiscale menu settaggi***", "")
-				Contenuto = Contenuto.Replace("***partita iva menu settaggi***", "")
-			End If
+	'			Contenuto = Contenuto.Replace("***Anno menu settaggi***", DescAnno)
+	'			Contenuto = Contenuto.Replace("***nome societa menu settaggi***", NomePolisportiva)
+	'			Contenuto = Contenuto.Replace("***nome Campo menu settaggi***", NomeCampo)
+	'			Contenuto = Contenuto.Replace("***Telefono - mail - sito web menu settaggi***", Mail & ", " & Telefono & ", " & SitoWeb)
+	'			Contenuto = Contenuto.Replace("***indirizzo menu settaggi tab Dati Generali***", Indirizzo)
+	'			Contenuto = Contenuto.Replace("***codice fiscale menu settaggi***", CodiceFiscale)
+	'			Contenuto = Contenuto.Replace("***partita iva menu settaggi***", PIva)
+	'		Else
+	'			Contenuto = Contenuto.Replace("***Anno menu settaggi***", Anno)
+	'			Contenuto = Contenuto.Replace("***nome societa menu settaggi***", "")
+	'			Contenuto = Contenuto.Replace("***nome Campo menu settaggi***", "")
+	'			Contenuto = Contenuto.Replace("***Telefono - mail - sito web menu settaggi***", "")
+	'			Contenuto = Contenuto.Replace("***indirizzo menu settaggi tab Dati Generali***", "")
+	'			Contenuto = Contenuto.Replace("***codice fiscale menu settaggi***", "")
+	'			Contenuto = Contenuto.Replace("***partita iva menu settaggi***", "")
+	'		End If
 
-			Sql = "Select * From Giocatori Where idGiocatore=" & idGiocatore
-			Rec = LeggeQuery(Conn, Sql, Connessione)
-			If TypeOf (Rec) Is String Then
-				Contenuto = Rec
-			Else
-				If Not Rec.Eof Then
-					Dim Cognome As String = "" & Rec("Cognome").value
-					Dim Nome As String = "" & Rec("Nome").value
-					Dim ddn As String = "" & Rec("DataDiNascita").value
-					If ddn <> "" Then
-						Dim d() As String = ddn.Split("-")
-						ddn = d(2) & "/" & d(1) & "/" & d(0)
-					End If
-					Dim DataDiNascita As String = ddn
-					Dim CodFisc As String = "" & Rec("CodFiscale").value
-					Dim Maschio As String = "" & Rec("Maschio").value
-					Dim Indirizzo As String = "" & Rec("Indirizzo").value
-					Dim Citta As String = "" & Rec("Citta").value
-					Dim EMail As String = "" & Rec("EMail").value
-					Dim TelefonoGioc As String = "" & Rec("Telefono").value
-					Dim Cap As String = "" & Rec("Cap").value
-					Dim CittaNascita As String = "" & Rec("CittaNascita").value
+	'		Sql = "Select * From Giocatori Where idGiocatore=" & idGiocatore
+	'		Rec = LeggeQuery(Conn, Sql, Connessione)
+	'		If TypeOf (Rec) Is String Then
+	'			Contenuto = Rec
+	'		Else
+	'			If Not Rec.Eof Then
+	'				Dim Cognome As String = "" & Rec("Cognome").value
+	'				Dim Nome As String = "" & Rec("Nome").value
+	'				Dim ddn As String = "" & Rec("DataDiNascita").value
+	'				If ddn <> "" Then
+	'					Dim d() As String = ddn.Split("-")
+	'					ddn = d(2) & "/" & d(1) & "/" & d(0)
+	'				End If
+	'				Dim DataDiNascita As String = ddn
+	'				Dim CodFisc As String = "" & Rec("CodFiscale").value
+	'				Dim Maschio As String = "" & Rec("Maschio").value
+	'				Dim Indirizzo As String = "" & Rec("Indirizzo").value
+	'				Dim Citta As String = "" & Rec("Citta").value
+	'				Dim EMail As String = "" & Rec("EMail").value
+	'				Dim TelefonoGioc As String = "" & Rec("Telefono").value
+	'				Dim Cap As String = "" & Rec("Cap").value
+	'				Dim CittaNascita As String = "" & Rec("CittaNascita").value
 
-					If Maschio = "M" Then
-						Maschio = "Maschile"
-					Else
-						Maschio = "Femminile"
-					End If
+	'				If Maschio = "M" Then
+	'					Maschio = "Maschile"
+	'				Else
+	'					Maschio = "Femminile"
+	'				End If
 
-					Contenuto = Contenuto.Replace("****cognome menu anagrafica3***", Cognome)
-					Contenuto = Contenuto.Replace("***Nome menu anagrafica3***", Nome)
-					Contenuto = Contenuto.Replace("***Data di nascita menu anagrafica3***", DataDiNascita)
-					Contenuto = Contenuto.Replace("***non c'&egrave;***", "")
-					Contenuto = Contenuto.Replace("***codice fiscale menu anagrafica3***", CodFisc)
-					Contenuto = Contenuto.Replace("***sesso menu anagrafica***", Maschio)
-					Contenuto = Contenuto.Replace("****indirizzo menu anagrafica3***", Indirizzo)
-					Contenuto = Contenuto.Replace("***citta3***", Citta)
-					Contenuto = Contenuto.Replace("***?***", "")
-					Contenuto = Contenuto.Replace("*** mail menu anagrafica3***", EMail)
-					Contenuto = Contenuto.Replace("***telefono menu anagrafica3***", TelefonoGioc)
-					Contenuto = Contenuto.Replace("***?Cap3***", Cap)
-					Contenuto = Contenuto.Replace("***Citta di nascita3***", CittaNascita)
-				Else
-					Contenuto = Contenuto.Replace("****cognome menu anagrafica3***", "")
-					Contenuto = Contenuto.Replace("***Nome menu anagrafica3***", "")
-					Contenuto = Contenuto.Replace("***Data di nascita menu anagrafica3***", "")
-					Contenuto = Contenuto.Replace("***non c'&egrave;***", "")
-					Contenuto = Contenuto.Replace("***codice fiscale menu anagrafica3***", "")
-					Contenuto = Contenuto.Replace("***sesso menu anagrafica***", "")
-					Contenuto = Contenuto.Replace("****indirizzo menu anagrafica3***", "")
-					Contenuto = Contenuto.Replace("***citta3***", "")
-					Contenuto = Contenuto.Replace("***?***", "")
-					Contenuto = Contenuto.Replace("*** mail menu anagrafica3***", "")
-					Contenuto = Contenuto.Replace("***telefono menu anagrafica3***", "")
-					Contenuto = Contenuto.Replace("***?Cap3***", "")
-					Contenuto = Contenuto.Replace("***Citta di nascita3***", "")
-				End If
-			End If
+	'				Contenuto = Contenuto.Replace("****cognome menu anagrafica3***", Cognome)
+	'				Contenuto = Contenuto.Replace("***Nome menu anagrafica3***", Nome)
+	'				Contenuto = Contenuto.Replace("***Data di nascita menu anagrafica3***", DataDiNascita)
+	'				Contenuto = Contenuto.Replace("***non c'&egrave;***", "")
+	'				Contenuto = Contenuto.Replace("***codice fiscale menu anagrafica3***", CodFisc)
+	'				Contenuto = Contenuto.Replace("***sesso menu anagrafica***", Maschio)
+	'				Contenuto = Contenuto.Replace("****indirizzo menu anagrafica3***", Indirizzo)
+	'				Contenuto = Contenuto.Replace("***citta3***", Citta)
+	'				Contenuto = Contenuto.Replace("***?***", "")
+	'				Contenuto = Contenuto.Replace("*** mail menu anagrafica3***", EMail)
+	'				Contenuto = Contenuto.Replace("***telefono menu anagrafica3***", TelefonoGioc)
+	'				Contenuto = Contenuto.Replace("***?Cap3***", Cap)
+	'				Contenuto = Contenuto.Replace("***Citta di nascita3***", CittaNascita)
+	'			Else
+	'				Contenuto = Contenuto.Replace("****cognome menu anagrafica3***", "")
+	'				Contenuto = Contenuto.Replace("***Nome menu anagrafica3***", "")
+	'				Contenuto = Contenuto.Replace("***Data di nascita menu anagrafica3***", "")
+	'				Contenuto = Contenuto.Replace("***non c'&egrave;***", "")
+	'				Contenuto = Contenuto.Replace("***codice fiscale menu anagrafica3***", "")
+	'				Contenuto = Contenuto.Replace("***sesso menu anagrafica***", "")
+	'				Contenuto = Contenuto.Replace("****indirizzo menu anagrafica3***", "")
+	'				Contenuto = Contenuto.Replace("***citta3***", "")
+	'				Contenuto = Contenuto.Replace("***?***", "")
+	'				Contenuto = Contenuto.Replace("*** mail menu anagrafica3***", "")
+	'				Contenuto = Contenuto.Replace("***telefono menu anagrafica3***", "")
+	'				Contenuto = Contenuto.Replace("***?Cap3***", "")
+	'				Contenuto = Contenuto.Replace("***Citta di nascita3***", "")
+	'			End If
+	'		End If
 
-			Sql = "Select * From GiocatoriDettaglio Where idGiocatore=" & idGiocatore
-			Rec = LeggeQuery(Conn, Sql, Connessione)
-			If TypeOf (Rec) Is String Then
-				Contenuto = Rec
-			Else
-				If Not Rec.Eof Then
-					Dim Genitore1 As String = "" & Rec("Genitore1").value
-					Dim Mail1 As String = "" & Rec("MailGenitore1").value
-					Dim Telefono1 As String = "" & Rec("TelefonoGenitore1").value
-					Dim Gen1() As String = Genitore1.Split(" ")
-					If Gen1.Length = 1 Then
-						ReDim Preserve Gen1(2)
-					End If
-					Dim ddn As String = "" & Rec("DataDiNascita1").Value
-					If ddn <> "" Then
-						Dim d() As String = ddn.Split("-")
-						ddn = d(2) & "/" & d(1) & "/" & d(0)
-					End If
-					Dim DataDiNascita1 As String = ddn
-					Dim CittaNascita1 As String = "" & Rec("CittaNascita1").Value
-					Dim CodFiscale1 As String = "" & Rec("CodFiscale1").Value
-					Dim Citta1 As String = "" & Rec("Citta1").Value
-					Dim Cap1 As String = "" & Rec("Cap1").Value
-					Dim Indirizzo1 As String = "" & Rec("Indirizzo1").Value
+	'		Sql = "Select * From GiocatoriDettaglio Where idGiocatore=" & idGiocatore
+	'		Rec = LeggeQuery(Conn, Sql, Connessione)
+	'		If TypeOf (Rec) Is String Then
+	'			Contenuto = Rec
+	'		Else
+	'			If Not Rec.Eof Then
+	'				Dim Genitore1 As String = "" & Rec("Genitore1").value
+	'				Dim Mail1 As String = "" & Rec("MailGenitore1").value
+	'				Dim Telefono1 As String = "" & Rec("TelefonoGenitore1").value
+	'				Dim Gen1() As String = Genitore1.Split(" ")
+	'				If Gen1.Length = 1 Then
+	'					ReDim Preserve Gen1(2)
+	'				End If
+	'				Dim ddn As String = "" & Rec("DataDiNascita1").Value
+	'				If ddn <> "" Then
+	'					Dim d() As String = ddn.Split("-")
+	'					ddn = d(2) & "/" & d(1) & "/" & d(0)
+	'				End If
+	'				Dim DataDiNascita1 As String = ddn
+	'				Dim CittaNascita1 As String = "" & Rec("CittaNascita1").Value
+	'				Dim CodFiscale1 As String = "" & Rec("CodFiscale1").Value
+	'				Dim Citta1 As String = "" & Rec("Citta1").Value
+	'				Dim Cap1 As String = "" & Rec("Cap1").Value
+	'				Dim Indirizzo1 As String = "" & Rec("Indirizzo1").Value
 
-					Dim Genitore2 As String = "" & Rec("Genitore2").value
-					Dim Mail2 As String = "" & Rec("MailGenitore2").value
-					Dim Telefono2 As String = "" & Rec("TelefonoGenitore2").value
-					Dim Gen2() As String = Genitore2.Split(" ")
-					If Gen2.Length = 1 Then
-						ReDim Preserve Gen2(2)
-					End If
-					ddn = "" & Rec("DataDiNascita2").Value
-					If ddn <> "" Then
-						Dim d() As String = ddn.Split("-")
-						ddn = d(2) & "/" & d(1) & "/" & d(0)
-					End If
-					Dim DataDiNascita2 As String = ddn
-					Dim CittaNascita2 As String = "" & Rec("CittaNascita2").Value
-					Dim CodFiscale2 As String = "" & Rec("CodFiscale2").Value
-					Dim Citta2 As String = "" & Rec("Citta2").Value
-					Dim Cap2 As String = "" & Rec("Cap2").Value
-					Dim Indirizzo2 As String = "" & Rec("Indirizzo2").Value
+	'				Dim Genitore2 As String = "" & Rec("Genitore2").value
+	'				Dim Mail2 As String = "" & Rec("MailGenitore2").value
+	'				Dim Telefono2 As String = "" & Rec("TelefonoGenitore2").value
+	'				Dim Gen2() As String = Genitore2.Split(" ")
+	'				If Gen2.Length = 1 Then
+	'					ReDim Preserve Gen2(2)
+	'				End If
+	'				ddn = "" & Rec("DataDiNascita2").Value
+	'				If ddn <> "" Then
+	'					Dim d() As String = ddn.Split("-")
+	'					ddn = d(2) & "/" & d(1) & "/" & d(0)
+	'				End If
+	'				Dim DataDiNascita2 As String = ddn
+	'				Dim CittaNascita2 As String = "" & Rec("CittaNascita2").Value
+	'				Dim CodFiscale2 As String = "" & Rec("CodFiscale2").Value
+	'				Dim Citta2 As String = "" & Rec("Citta2").Value
+	'				Dim Cap2 As String = "" & Rec("Cap2").Value
+	'				Dim Indirizzo2 As String = "" & Rec("Indirizzo2").Value
 
-					Contenuto = Contenuto.Replace("****cognome menu anagrafica1***", Gen1(1))
-					Contenuto = Contenuto.Replace("***Nome menu anagrafica1***", Gen1(0))
-					Contenuto = Contenuto.Replace("***Data di nascita menu anagrafica1***", DataDiNascita1)
-					Contenuto = Contenuto.Replace("***Citta di nascita1***", CittaNascita1)
-					Contenuto = Contenuto.Replace("***codice fiscale menu anagrafica1***", CodFiscale1)
-					Contenuto = Contenuto.Replace("****indirizzo menu anagrafica1***", Indirizzo1)
-					Contenuto = Contenuto.Replace("***citta1***", Citta1)
-					Contenuto = Contenuto.Replace("***Cap1***", Cap1)
-					Contenuto = Contenuto.Replace("*** mail menu anagrafica1***", Mail1)
-					Contenuto = Contenuto.Replace("***telefono menu anagrafica1***", Indirizzo1)
+	'				Contenuto = Contenuto.Replace("****cognome menu anagrafica1***", Gen1(1))
+	'				Contenuto = Contenuto.Replace("***Nome menu anagrafica1***", Gen1(0))
+	'				Contenuto = Contenuto.Replace("***Data di nascita menu anagrafica1***", DataDiNascita1)
+	'				Contenuto = Contenuto.Replace("***Citta di nascita1***", CittaNascita1)
+	'				Contenuto = Contenuto.Replace("***codice fiscale menu anagrafica1***", CodFiscale1)
+	'				Contenuto = Contenuto.Replace("****indirizzo menu anagrafica1***", Indirizzo1)
+	'				Contenuto = Contenuto.Replace("***citta1***", Citta1)
+	'				Contenuto = Contenuto.Replace("***Cap1***", Cap1)
+	'				Contenuto = Contenuto.Replace("*** mail menu anagrafica1***", Mail1)
+	'				Contenuto = Contenuto.Replace("***telefono menu anagrafica1***", Indirizzo1)
 
-					Contenuto = Contenuto.Replace("****cognome menu anagrafica2***", Gen2(1))
-					Contenuto = Contenuto.Replace("***Nome menu anagrafica2***", Gen2(0))
-					Contenuto = Contenuto.Replace("***Data di nascita menu anagrafica2***", DataDiNascita2)
-					Contenuto = Contenuto.Replace("***Citta di nascita2***", CittaNascita2)
-					Contenuto = Contenuto.Replace("***codice fiscale menu anagrafica2***", CodFiscale2)
-					Contenuto = Contenuto.Replace("****indirizzo menu anagrafica2***", Indirizzo2)
-					Contenuto = Contenuto.Replace("***citta2***", Citta2)
-					Contenuto = Contenuto.Replace("***Cap2***", Cap2)
-					Contenuto = Contenuto.Replace("*** mail menu anagrafica2***", Mail2)
-					Contenuto = Contenuto.Replace("***telefono menu anagrafica2***", Indirizzo2)
-				Else
-					Contenuto = Contenuto.Replace("****cognome menu anagrafica1***", "")
-					Contenuto = Contenuto.Replace("***Nome menu anagrafica1***", "")
-					Contenuto = Contenuto.Replace("***Data di nascita menu anagrafica1***", "")
-					Contenuto = Contenuto.Replace("***Citta Nascita 1***", "")
-					Contenuto = Contenuto.Replace("***codice fiscale menu anagrafica1***", "")
-					Contenuto = Contenuto.Replace("****indirizzo menu anagrafica1***", "")
-					Contenuto = Contenuto.Replace("***citta1***", "")
-					Contenuto = Contenuto.Replace("***Cap1***", "")
-					Contenuto = Contenuto.Replace("*** mail menu anagrafica1***", "")
-					Contenuto = Contenuto.Replace("***telefono menu anagrafica1***", "")
+	'				Contenuto = Contenuto.Replace("****cognome menu anagrafica2***", Gen2(1))
+	'				Contenuto = Contenuto.Replace("***Nome menu anagrafica2***", Gen2(0))
+	'				Contenuto = Contenuto.Replace("***Data di nascita menu anagrafica2***", DataDiNascita2)
+	'				Contenuto = Contenuto.Replace("***Citta di nascita2***", CittaNascita2)
+	'				Contenuto = Contenuto.Replace("***codice fiscale menu anagrafica2***", CodFiscale2)
+	'				Contenuto = Contenuto.Replace("****indirizzo menu anagrafica2***", Indirizzo2)
+	'				Contenuto = Contenuto.Replace("***citta2***", Citta2)
+	'				Contenuto = Contenuto.Replace("***Cap2***", Cap2)
+	'				Contenuto = Contenuto.Replace("*** mail menu anagrafica2***", Mail2)
+	'				Contenuto = Contenuto.Replace("***telefono menu anagrafica2***", Indirizzo2)
+	'			Else
+	'				Contenuto = Contenuto.Replace("****cognome menu anagrafica1***", "")
+	'				Contenuto = Contenuto.Replace("***Nome menu anagrafica1***", "")
+	'				Contenuto = Contenuto.Replace("***Data di nascita menu anagrafica1***", "")
+	'				Contenuto = Contenuto.Replace("***Citta Nascita 1***", "")
+	'				Contenuto = Contenuto.Replace("***codice fiscale menu anagrafica1***", "")
+	'				Contenuto = Contenuto.Replace("****indirizzo menu anagrafica1***", "")
+	'				Contenuto = Contenuto.Replace("***citta1***", "")
+	'				Contenuto = Contenuto.Replace("***Cap1***", "")
+	'				Contenuto = Contenuto.Replace("*** mail menu anagrafica1***", "")
+	'				Contenuto = Contenuto.Replace("***telefono menu anagrafica1***", "")
 
-					Contenuto = Contenuto.Replace("****cognome menu anagrafica2***", "")
-					Contenuto = Contenuto.Replace("***Nome menu anagrafica2***", "")
-					Contenuto = Contenuto.Replace("***Data di nascita menu anagrafica2***", "")
-					Contenuto = Contenuto.Replace("***Citta di nascita2***", "")
-					Contenuto = Contenuto.Replace("***codice fiscale menu anagrafica2***", "")
-					Contenuto = Contenuto.Replace("****indirizzo menu anagrafica2***", "")
-					Contenuto = Contenuto.Replace("***citta2***", "")
-					Contenuto = Contenuto.Replace("***Cap2***", "")
-					Contenuto = Contenuto.Replace("*** mail menu anagrafica2***", "")
-					Contenuto = Contenuto.Replace("***telefono menu anagrafica2***", "")
-				End If
-			End If
+	'				Contenuto = Contenuto.Replace("****cognome menu anagrafica2***", "")
+	'				Contenuto = Contenuto.Replace("***Nome menu anagrafica2***", "")
+	'				Contenuto = Contenuto.Replace("***Data di nascita menu anagrafica2***", "")
+	'				Contenuto = Contenuto.Replace("***Citta di nascita2***", "")
+	'				Contenuto = Contenuto.Replace("***codice fiscale menu anagrafica2***", "")
+	'				Contenuto = Contenuto.Replace("****indirizzo menu anagrafica2***", "")
+	'				Contenuto = Contenuto.Replace("***citta2***", "")
+	'				Contenuto = Contenuto.Replace("***Cap2***", "")
+	'				Contenuto = Contenuto.Replace("*** mail menu anagrafica2***", "")
+	'				Contenuto = Contenuto.Replace("***telefono menu anagrafica2***", "")
+	'			End If
+	'		End If
 
-			'Sql = "Select * From GiocatoriFirme Where idGiocatore=" & idGiocatore
-			'Rec = LeggeQuery(Conn, Sql, Connessione)
-			'If TypeOf (Rec) Is String Then
-			'	Contenuto = Rec
-			'Else
-			'	Do Until Rec.Eof
-			'		Select Case Rec("idGenitore").value
-			'			Case 1
-			'				Contenuto = Contenuto.Replace("***data firma1***", Rec("DataFirma").value)
-			'			Case 2
-			'				Contenuto = Contenuto.Replace("***data firma2***", Rec("DataFirma").value)
-			'			Case 3
-			'				Contenuto = Contenuto.Replace("***data firma3***", Rec("DataFirma").value)
-			'		End Select
+	'		'Sql = "Select * From GiocatoriFirme Where idGiocatore=" & idGiocatore
+	'		'Rec = LeggeQuery(Conn, Sql, Connessione)
+	'		'If TypeOf (Rec) Is String Then
+	'		'	Contenuto = Rec
+	'		'Else
+	'		'	Do Until Rec.Eof
+	'		'		Select Case Rec("idGenitore").value
+	'		'			Case 1
+	'		'				Contenuto = Contenuto.Replace("***data firma1***", Rec("DataFirma").value)
+	'		'			Case 2
+	'		'				Contenuto = Contenuto.Replace("***data firma2***", Rec("DataFirma").value)
+	'		'			Case 3
+	'		'				Contenuto = Contenuto.Replace("***data firma3***", Rec("DataFirma").value)
+	'		'		End Select
 
-			'		Rec.movenext
-			'	Loop
-			'	Contenuto = Contenuto.Replace("***data firma1***", "")
-			'	Contenuto = Contenuto.Replace("***data firma2***", "")
-			'	Contenuto = Contenuto.Replace("***data firma3***", "")
-			'End If
+	'		'		Rec.movenext
+	'		'	Loop
+	'		'	Contenuto = Contenuto.Replace("***data firma1***", "")
+	'		'	Contenuto = Contenuto.Replace("***data firma2***", "")
+	'		'	Contenuto = Contenuto.Replace("***data firma3***", "")
+	'		'End If
 
-			Dim Datella As String = "* " & Format(Now.Day, "00") & "/" & Format(Now.Month, "00") & "/" & Now.Year & " " & Format(Now.Hour, "00") & ":" & Format(Now.Minute, "00") & ":" & Format(Now.Second, "00")
+	'		Dim Datella As String = "* " & Format(Now.Day, "00") & "/" & Format(Now.Month, "00") & "/" & Now.Year & " " & Format(Now.Hour, "00") & ":" & Format(Now.Minute, "00") & ":" & Format(Now.Second, "00")
 
-			Sql = "Select * From GiocatoriFirme Where idGiocatore=" & idGiocatore & " And idGenitore=1"
-			Rec = LeggeQuery(Conn, Sql, Connessione)
-			If TypeOf (Rec) Is String Then
-				Contenuto = Rec
-			Else
-				If Not Rec.Eof Then
-					Datella = "" & Rec("DataFirma").Value
-					If Datella.Contains(" ") Then
-						Datella = Mid(Datella, 1, Datella.IndexOf(" "))
-					End If
-				End If
-				Rec.Close
-			End If
-			Contenuto = Contenuto.Replace("***data firma2***", Datella)
+	'		Sql = "Select * From GiocatoriFirme Where idGiocatore=" & idGiocatore & " And idGenitore=1"
+	'		Rec = LeggeQuery(Conn, Sql, Connessione)
+	'		If TypeOf (Rec) Is String Then
+	'			Contenuto = Rec
+	'		Else
+	'			If Not Rec.Eof Then
+	'				Datella = "" & Rec("DataFirma").Value
+	'				If Datella.Contains(" ") Then
+	'					Datella = Mid(Datella, 1, Datella.IndexOf(" "))
+	'				End If
+	'			End If
+	'			Rec.Close
+	'		End If
+	'		Contenuto = Contenuto.Replace("***data firma2***", Datella)
 
-			Sql = "Select * From GiocatoriFirme Where idGiocatore=" & idGiocatore & " And idGenitore=2"
-			Rec = LeggeQuery(Conn, Sql, Connessione)
-			If TypeOf (Rec) Is String Then
-				Contenuto = Rec
-			Else
-				If Not Rec.Eof Then
-					Datella = "" & Rec("DataFirma").Value
-					If Datella.Contains(" ") Then
-						Datella = Mid(Datella, 1, Datella.IndexOf(" "))
-					End If
-				End If
-				Rec.Close
-			End If
-			Contenuto = Contenuto.Replace("***data firma3***", Datella)
+	'		Sql = "Select * From GiocatoriFirme Where idGiocatore=" & idGiocatore & " And idGenitore=2"
+	'		Rec = LeggeQuery(Conn, Sql, Connessione)
+	'		If TypeOf (Rec) Is String Then
+	'			Contenuto = Rec
+	'		Else
+	'			If Not Rec.Eof Then
+	'				Datella = "" & Rec("DataFirma").Value
+	'				If Datella.Contains(" ") Then
+	'					Datella = Mid(Datella, 1, Datella.IndexOf(" "))
+	'				End If
+	'			End If
+	'			Rec.Close
+	'		End If
+	'		Contenuto = Contenuto.Replace("***data firma3***", Datella)
 
-			Dim gf As New GestioneFilesDirectory
-			Dim pp As String = gf.LeggeFileIntero(Server.MapPath(".") & "\Impostazioni\Paths.txt")
-			pp = pp.Trim()
-			If Strings.Right(pp, 1) = "\" Then
-				pp = Mid(pp, 1, pp.Length - 1)
-			End If
-			Dim Esten As String = Format(Now.Second, "00") & "_" & Now.Millisecond & RitornaValoreRandom(55)
+	'		Dim gf As New GestioneFilesDirectory
+	'		Dim pp As String = gf.LeggeFileIntero(Server.MapPath(".") & "\Impostazioni\Paths.txt")
+	'		pp = pp.Trim()
+	'		If Strings.Right(pp, 1) = "\" Then
+	'			pp = Mid(pp, 1, pp.Length - 1)
+	'		End If
+	'		Dim Esten As String = Format(Now.Second, "00") & "_" & Now.Millisecond & RitornaValoreRandom(55)
 
-			Dim pathFirma1 As String = p(2) & Squadra.Replace(" ", "_") & "/Firme/" & Anno & "_" & idGiocatore & "_1.kgb"
-			Dim urlFirma1 As String = pp & "\" & Squadra.Replace(" ", "_") & "\Firme\" & Anno & "_" & idGiocatore & "_1.kgb"
-			Dim pathFirmaConv1 As String = p(2) & "/Appoggio/Firma_" & idGiocatore & "_1_" & Esten & ".png"
-			Dim urlFirmaConv1 As String = pp & "\Appoggio\Firma_" & idGiocatore & "_1_" & Esten & ".png"
+	'		Dim pathFirma1 As String = p(2) & Squadra.Replace(" ", "_") & "/Firme/" & Anno & "_" & idGiocatore & "_1.kgb"
+	'		Dim urlFirma1 As String = pp & "\" & Squadra.Replace(" ", "_") & "\Firme\" & Anno & "_" & idGiocatore & "_1.kgb"
+	'		Dim pathFirmaConv1 As String = p(2) & "/Appoggio/Firma_" & idGiocatore & "_1_" & Esten & ".png"
+	'		Dim urlFirmaConv1 As String = pp & "\Appoggio\Firma_" & idGiocatore & "_1_" & Esten & ".png"
 
-			Dim pathFirma2 As String = p(2) & Squadra.Replace(" ", "_") & "/Firme/" & Anno & "_" & idGiocatore & "_2.kgb"
-			Dim urlFirma2 As String = pp & "\" & Squadra.Replace(" ", "_") & "\Firme\" & Anno & "_" & idGiocatore & "_2.kgb"
-			Dim pathFirmaConv2 As String = p(2) & "/Appoggio/Firma_" & idGiocatore & "_2_" & Esten & ".png"
-			Dim urlFirmaConv2 As String = pp & "\Appoggio\Firma_" & idGiocatore & "_2_" & Esten & ".png"
+	'		Dim pathFirma2 As String = p(2) & Squadra.Replace(" ", "_") & "/Firme/" & Anno & "_" & idGiocatore & "_2.kgb"
+	'		Dim urlFirma2 As String = pp & "\" & Squadra.Replace(" ", "_") & "\Firme\" & Anno & "_" & idGiocatore & "_2.kgb"
+	'		Dim pathFirmaConv2 As String = p(2) & "/Appoggio/Firma_" & idGiocatore & "_2_" & Esten & ".png"
+	'		Dim urlFirmaConv2 As String = pp & "\Appoggio\Firma_" & idGiocatore & "_2_" & Esten & ".png"
 
-			Dim pathFirma3 As String = p(2) & Squadra.Replace(" ", "_") & "/Firme/" & Anno & "_" & idGiocatore & "_3.kgb"
-			Dim urlFirma3 As String = pp & "\" & Squadra.Replace(" ", "_") & "\Firme\" & Anno & "_" & idGiocatore & "_3.kgb"
-			Dim pathFirmaConv3 As String = p(2) & "/Appoggio/Firma_" & idGiocatore & "_3_" & Esten & ".png"
-			Dim urlFirmaConv3 As String = pp & "\Appoggio\Firma_" & idGiocatore & "_3_" & Esten & ".png"
+	'		Dim pathFirma3 As String = p(2) & Squadra.Replace(" ", "_") & "/Firme/" & Anno & "_" & idGiocatore & "_3.kgb"
+	'		Dim urlFirma3 As String = pp & "\" & Squadra.Replace(" ", "_") & "\Firme\" & Anno & "_" & idGiocatore & "_3.kgb"
+	'		Dim pathFirmaConv3 As String = p(2) & "/Appoggio/Firma_" & idGiocatore & "_3_" & Esten & ".png"
+	'		Dim urlFirmaConv3 As String = pp & "\Appoggio\Firma_" & idGiocatore & "_3_" & Esten & ".png"
 
-			Dim nomeImm As String = p(2) & Squadra.Replace(" ", "_") & "/Societa/" & Anno & "_1.kgb"
-			Dim pathImm As String = pp & "\" & Squadra.Replace(" ", "_") & "\Societa\" & Anno & "_1.kgb"
-			If File.Exists(pathImm) Then
-				Dim nomeImmConv As String = p(2) & "/" & NomeSquadra.Replace(" ", "_") & "/Societa/Societa_1.png"
-				Dim pathImmConv As String = pp & "\" & NomeSquadra.Replace(" ", "_") & "\Societa\Societa_1.png"
-				c.DecryptFile(CryptPasswordString, pathImm, pathImmConv)
+	'		Dim nomeImm As String = p(2) & Squadra.Replace(" ", "_") & "/Societa/" & Anno & "_1.kgb"
+	'		Dim pathImm As String = pp & "\" & Squadra.Replace(" ", "_") & "\Societa\" & Anno & "_1.kgb"
+	'		If File.Exists(pathImm) Then
+	'			Dim nomeImmConv As String = p(2) & "/" & NomeSquadra.Replace(" ", "_") & "/Societa/Societa_1.png"
+	'			Dim pathImmConv As String = pp & "\" & NomeSquadra.Replace(" ", "_") & "\Societa\Societa_1.png"
+	'			c.DecryptFile(CryptPasswordString, pathImm, pathImmConv)
 
-				Contenuto = Contenuto.Replace("***immagine logo menu settaggi***", "<img src=""" & nomeImmConv & """ style=""width: 100px; height: 100px;"" />")
-			Else
-				Contenuto = Contenuto.Replace("***immagine logo menu settaggi***", "")
-			End If
+	'			Contenuto = Contenuto.Replace("***immagine logo menu settaggi***", "<img src=""" & nomeImmConv & """ style=""width: 100px; height: 100px;"" />")
+	'		Else
+	'			Contenuto = Contenuto.Replace("***immagine logo menu settaggi***", "")
+	'		End If
 
-			nomeImm = p(2) & Squadra.Replace(" ", "_") & "/Societa/" & Anno & "_2.kgb"
-			pathImm = pp & "\" & Squadra.Replace(" ", "_") & "\Societa\" & Anno & "_2.kgb"
-			If File.Exists(pathImm) Then
-				Dim nomeImmConv As String = p(2) & "/" & NomeSquadra.Replace(" ", "_") & "/Societa/Societa_2.png"
-				Dim pathImmConv As String = pp & "\" & NomeSquadra.Replace(" ", "_") & "\Societa\Societa_2.png"
-				c.DecryptFile(CryptPasswordString, pathImm, pathImmConv)
+	'		nomeImm = p(2) & Squadra.Replace(" ", "_") & "/Societa/" & Anno & "_2.kgb"
+	'		pathImm = pp & "\" & Squadra.Replace(" ", "_") & "\Societa\" & Anno & "_2.kgb"
+	'		If File.Exists(pathImm) Then
+	'			Dim nomeImmConv As String = p(2) & "/" & NomeSquadra.Replace(" ", "_") & "/Societa/Societa_2.png"
+	'			Dim pathImmConv As String = pp & "\" & NomeSquadra.Replace(" ", "_") & "\Societa\Societa_2.png"
+	'			c.DecryptFile(CryptPasswordString, pathImm, pathImmConv)
 
-				Contenuto = Contenuto.Replace("***immagine logo affiliazione menu settaggi***", "<img src=""" & nomeImmConv & """ style=""width: 100px; height: 100px;"" />")
-			Else
-				Contenuto = Contenuto.Replace("***immagine logo affiliazione menu settaggi***", "")
-			End If
+	'			Contenuto = Contenuto.Replace("***immagine logo affiliazione menu settaggi***", "<img src=""" & nomeImmConv & """ style=""width: 100px; height: 100px;"" />")
+	'		Else
+	'			Contenuto = Contenuto.Replace("***immagine logo affiliazione menu settaggi***", "")
+	'		End If
 
-			If File.Exists(urlFirma1) Then
-				c.DecryptFile(CryptPasswordString, urlFirma1, urlFirmaConv1)
-				Contenuto = Contenuto.Replace("***firma padre***", "FIRMA: <img src=""" & pathFirmaConv1 & """ style=""width: 300px; height: 100px; border-bottom: 1px solid #black;"" />")
-			Else
-				Contenuto = Contenuto.Replace("***firma padre***", "FIRMA: " & "")
-			End If
-			If File.Exists(urlFirma2) Then
-				c.DecryptFile(CryptPasswordString, urlFirma2, urlFirmaConv2)
-				Contenuto = Contenuto.Replace("***firma madre***", "FIRMA: <img src=""" & pathFirmaConv2 & """ style=""width: 300px; height: 100px; border-bottom: 1px solid #black;"" />")
-			Else
-				Contenuto = Contenuto.Replace("***firma madre***", "FIRMA: " & "")
-			End If
-			If File.Exists(urlFirma3) Then
-				c.DecryptFile(CryptPasswordString, urlFirma3, urlFirmaConv3)
-				Contenuto = Contenuto.Replace("***firma giocatore***", "FIRMA: <img src=""" & pathFirmaConv3 & """ style=""width: 300px; height: 100px; border-bottom: 1px solid #black;"" />")
-			Else
-				Contenuto = Contenuto.Replace("***firma giocatore***", "FIRMA: " & "")
-			End If
+	'		If File.Exists(urlFirma1) Then
+	'			c.DecryptFile(CryptPasswordString, urlFirma1, urlFirmaConv1)
+	'			Contenuto = Contenuto.Replace("***firma padre***", "FIRMA: <img src=""" & pathFirmaConv1 & """ style=""width: 300px; height: 100px; border-bottom: 1px solid #black;"" />")
+	'		Else
+	'			Contenuto = Contenuto.Replace("***firma padre***", "FIRMA: " & "")
+	'		End If
+	'		If File.Exists(urlFirma2) Then
+	'			c.DecryptFile(CryptPasswordString, urlFirma2, urlFirmaConv2)
+	'			Contenuto = Contenuto.Replace("***firma madre***", "FIRMA: <img src=""" & pathFirmaConv2 & """ style=""width: 300px; height: 100px; border-bottom: 1px solid #black;"" />")
+	'		Else
+	'			Contenuto = Contenuto.Replace("***firma madre***", "FIRMA: " & "")
+	'		End If
+	'		If File.Exists(urlFirma3) Then
+	'			c.DecryptFile(CryptPasswordString, urlFirma3, urlFirmaConv3)
+	'			Contenuto = Contenuto.Replace("***firma giocatore***", "FIRMA: <img src=""" & pathFirmaConv3 & """ style=""width: 300px; height: 100px; border-bottom: 1px solid #black;"" />")
+	'		Else
+	'			Contenuto = Contenuto.Replace("***firma giocatore***", "FIRMA: " & "")
+	'		End If
 
-			Dim pathFirmaPrivacy1 As String = p(2) & Squadra.Replace(" ", "_") & "/Firme/" & Anno & "_" & idGiocatore & "_1_P.kgb"
-			Dim urlFirmaPrivacy1 As String = pp & "\" & Squadra.Replace(" ", "_") & "\Firme\" & Anno & "_" & idGiocatore & "_1_P.kgb"
-			Dim pathFirmaConvPrivacy1 As String = p(2) & "/Appoggio/Firma_" & idGiocatore & "_1_" & Esten & "_P.png"
-			Dim urlFirmaConvPrivacy1 As String = pp & "\Appoggio\Firma_" & idGiocatore & "_1_" & Esten & "_P.png"
-			If File.Exists(urlFirmaPrivacy1) Then
-				c.DecryptFile(CryptPasswordString, urlFirmaPrivacy1, urlFirmaConvPrivacy1)
-				Contenuto = Contenuto.Replace("***firma privacy padre***", "FIRMA: <img src=""" & pathFirmaConvPrivacy1 & """ style=""width: 300px; height: 100px; border-bottom: 1px solid #black;"" />")
-			Else
-				Contenuto = Contenuto.Replace("***firma privacy padre***", "FIRMA: " & "")
-			End If
+	'		Dim pathFirmaPrivacy1 As String = p(2) & Squadra.Replace(" ", "_") & "/Firme/" & Anno & "_" & idGiocatore & "_1_P.kgb"
+	'		Dim urlFirmaPrivacy1 As String = pp & "\" & Squadra.Replace(" ", "_") & "\Firme\" & Anno & "_" & idGiocatore & "_1_P.kgb"
+	'		Dim pathFirmaConvPrivacy1 As String = p(2) & "/Appoggio/Firma_" & idGiocatore & "_1_" & Esten & "_P.png"
+	'		Dim urlFirmaConvPrivacy1 As String = pp & "\Appoggio\Firma_" & idGiocatore & "_1_" & Esten & "_P.png"
+	'		If File.Exists(urlFirmaPrivacy1) Then
+	'			c.DecryptFile(CryptPasswordString, urlFirmaPrivacy1, urlFirmaConvPrivacy1)
+	'			Contenuto = Contenuto.Replace("***firma privacy padre***", "FIRMA: <img src=""" & pathFirmaConvPrivacy1 & """ style=""width: 300px; height: 100px; border-bottom: 1px solid #black;"" />")
+	'		Else
+	'			Contenuto = Contenuto.Replace("***firma privacy padre***", "FIRMA: " & "")
+	'		End If
 
-			Dim pathFirmaPrivacy2 As String = p(2) & Squadra.Replace(" ", "_") & "/Firme/" & Anno & "_" & idGiocatore & "_2_P.kgb"
-			Dim urlFirmaPrivacy2 As String = pp & "\" & Squadra.Replace(" ", "_") & "\Firme\" & Anno & "_" & idGiocatore & "_2_P.kgb"
-			Dim pathFirmaConvPrivacy2 As String = p(2) & "/Appoggio/Firma_" & idGiocatore & "_2_" & Esten & "_P.png"
-			Dim urlFirmaConvPrivacy2 As String = pp & "\Appoggio\Firma_" & idGiocatore & "_2_" & Esten & "_P.png"
-			If File.Exists(urlFirmaPrivacy2) Then
-				c.DecryptFile(CryptPasswordString, urlFirmaPrivacy2, urlFirmaConvPrivacy2)
-				Contenuto = Contenuto.Replace("***firma privacy madre***", "FIRMA: <img src=""" & pathFirmaConvPrivacy2 & """ style=""width: 300px; height: 100px; border-bottom: 1px solid #black;"" />")
-			Else
-				Contenuto = Contenuto.Replace("***firma privacy madre***", "FIRMA: " & "")
-			End If
+	'		Dim pathFirmaPrivacy2 As String = p(2) & Squadra.Replace(" ", "_") & "/Firme/" & Anno & "_" & idGiocatore & "_2_P.kgb"
+	'		Dim urlFirmaPrivacy2 As String = pp & "\" & Squadra.Replace(" ", "_") & "\Firme\" & Anno & "_" & idGiocatore & "_2_P.kgb"
+	'		Dim pathFirmaConvPrivacy2 As String = p(2) & "/Appoggio/Firma_" & idGiocatore & "_2_" & Esten & "_P.png"
+	'		Dim urlFirmaConvPrivacy2 As String = pp & "\Appoggio\Firma_" & idGiocatore & "_2_" & Esten & "_P.png"
+	'		If File.Exists(urlFirmaPrivacy2) Then
+	'			c.DecryptFile(CryptPasswordString, urlFirmaPrivacy2, urlFirmaConvPrivacy2)
+	'			Contenuto = Contenuto.Replace("***firma privacy madre***", "FIRMA: <img src=""" & pathFirmaConvPrivacy2 & """ style=""width: 300px; height: 100px; border-bottom: 1px solid #black;"" />")
+	'		Else
+	'			Contenuto = Contenuto.Replace("***firma privacy madre***", "FIRMA: " & "")
+	'		End If
 
-		End If
+	'	End If
 
-		'Contenuto &= "<hr />Stampato tramite InCalcio, software per la gestione delle società di calcio - www.incalcio.it - info@incalcio.it"
+	'	'Contenuto &= "<hr />Stampato tramite InCalcio, software per la gestione delle società di calcio - www.incalcio.it - info@incalcio.it"
 
-		Return Contenuto
-	End Function
+	'	Return Contenuto
+	'End Function
 
 	<WebMethod()>
 	Public Function SalvaGiocatoriNote(Squadra As String, ByVal idGiocatore As String, Notelle As String) As String
@@ -4204,106 +4210,108 @@ Public Class wsGiocatori
 								gf.CreaDirectoryDaPercorso(fileDaCopiare)
 								' Dim fileScheletro As String = Server.MapPath(".") & "\Scheletri\base_iscrizione_.txt"
 
-								Dim fileScheletro As String = P(0) & "\" & Squadra & "\Scheletri\base_iscrizione_.txt"
-								If Not File.Exists(fileScheletro) Then
-									fileScheletro = HttpContext.Current.Server.MapPath(".") & "\Scheletri\base_iscrizione_.txt"
-								End If
+								'Dim fileScheletro As String = P(0) & "\" & Squadra & "\Scheletri\base_iscrizione_.txt"
+								'If Not File.Exists(fileScheletro) Then
+								'	fileScheletro = HttpContext.Current.Server.MapPath(".") & "\Scheletri\base_iscrizione_.txt"
+								'End If
 
-								If File.Exists(fileScheletro) Then
-									Try
-										Dim fileFirme As String = gf.LeggeFileIntero(fileScheletro)
-										fileFirme = RiempieFileFirme(fileFirme, Anno, idGiocatore, Rec, Conn, Connessione, NomeSquadra, P, Descrizione)
+								'If File.Exists(fileScheletro) Then
+								Try
+									'Dim fileFirme As String = gf.LeggeFileIntero(fileScheletro)
+									'fileFirme = RiempieFileFirme(fileFirme, Anno, idGiocatore, Rec, Conn, Connessione, NomeSquadra, P, Descrizione)
+									Dim gt As New GestioneTags
+									Dim fileFirme As String = gt.EsegueFileFirme(Squadra, NomeSquadra, idGiocatore, Anno, "", "")
 
-										If Maggiorenne = "S" Then
-											fileFirme = fileFirme.Replace("***HEIGHT PADRE***", "0px")
-											fileFirme = fileFirme.Replace("***VIS PADRE***", "hidden")
+									If Maggiorenne = "S" Then
+										fileFirme = fileFirme.Replace("***HEIGHT_PADRE***", "0px")
+										fileFirme = fileFirme.Replace("***VIS_PADRE***", "hidden")
 
-											fileFirme = fileFirme.Replace("***HEIGHT MADRE***", "0px")
-											fileFirme = fileFirme.Replace("***VIS MADRE***", "hidden")
+										fileFirme = fileFirme.Replace("***HEIGHT_MADRE***", "0px")
+										fileFirme = fileFirme.Replace("***VIS_MADRE***", "hidden")
 
-											fileFirme = fileFirme.Replace("***HEIGHT GIOCATORE***", "auto")
-											fileFirme = fileFirme.Replace("***VIS GIOCATORE***", "visible")
-										Else
-											fileFirme = fileFirme.Replace("***HEIGHT GIOCATORE***", "0px")
-											fileFirme = fileFirme.Replace("***VIS GIOCATORE***", "hidden")
+										fileFirme = fileFirme.Replace("***HEIGHT_GIOCATORE***", "auto")
+										fileFirme = fileFirme.Replace("***VIS GIOCATORE***", "visible")
+									Else
+										fileFirme = fileFirme.Replace("***HEIGHT_GIOCATORE***", "0px")
+										fileFirme = fileFirme.Replace("***VIS GIOCATORE***", "hidden")
 
-											If GenitoriSeparati = "S" Then
-												If AffidamentoCongiunto = "S" Then
-													If iscrFirmaEntrambi = "S" Then
-														fileFirme = fileFirme.Replace("***HEIGHT PADRE***", "auto")
-														fileFirme = fileFirme.Replace("***VIS PADRE***", "visible")
+										If GenitoriSeparati = "S" Then
+											If AffidamentoCongiunto = "S" Then
+												If iscrFirmaEntrambi = "S" Then
+													fileFirme = fileFirme.Replace("***HEIGHT_PADRE***", "auto")
+													fileFirme = fileFirme.Replace("***VIS_PADRE***", "visible")
 
-														fileFirme = fileFirme.Replace("***HEIGHT MADRE***", "auto")
-														fileFirme = fileFirme.Replace("***VIS MADRE***", "visible")
-													Else
-														If ceGenitore1 <> "" Then
-															fileFirme = fileFirme.Replace("***HEIGHT PADRE***", "auto")
-															fileFirme = fileFirme.Replace("***VIS PADRE***", "visible")
-
-															fileFirme = fileFirme.Replace("***HEIGHT MADRE***", "0px")
-															fileFirme = fileFirme.Replace("***VIS MADRE***", "hidden")
-														Else
-															fileFirme = fileFirme.Replace("***HEIGHT PADRE***", "0px")
-															fileFirme = fileFirme.Replace("***VIS PADRE***", "hidden")
-
-															fileFirme = fileFirme.Replace("***HEIGHT MADRE***", "auto")
-															fileFirme = fileFirme.Replace("***VIS MADRE***", "visible")
-														End If
-													End If
+													fileFirme = fileFirme.Replace("***HEIGHT_MADRE***", "auto")
+													fileFirme = fileFirme.Replace("***VIS_MADRE***", "visible")
 												Else
-													If idTutore = "1" Then
-														fileFirme = fileFirme.Replace("***HEIGHT MADRE***", "0px")
-														fileFirme = fileFirme.Replace("***VIS MADRE***", "hidden")
+													If ceGenitore1 <> "" Then
+														fileFirme = fileFirme.Replace("***HEIGHT_PADRE***", "auto")
+														fileFirme = fileFirme.Replace("***VIS_PADRE***", "visible")
+
+														fileFirme = fileFirme.Replace("***HEIGHT_MADRE***", "0px")
+														fileFirme = fileFirme.Replace("***VIS_MADRE***", "hidden")
 													Else
-														fileFirme = fileFirme.Replace("***HEIGHT PADRE***", "0px")
-														fileFirme = fileFirme.Replace("***VIS PADRE***", "hidden")
+														fileFirme = fileFirme.Replace("***HEIGHT_PADRE***", "0px")
+														fileFirme = fileFirme.Replace("***VIS_PADRE***", "hidden")
+
+														fileFirme = fileFirme.Replace("***HEIGHT_MADRE***", "auto")
+														fileFirme = fileFirme.Replace("***VIS_MADRE***", "visible")
 													End If
 												End If
 											Else
-												If iscrFirmaEntrambi = "S" Then
-													fileFirme = fileFirme.Replace("***HEIGHT PADRE***", "auto")
-													fileFirme = fileFirme.Replace("***VIS PADRE***", "visible")
-
-													fileFirme = fileFirme.Replace("***HEIGHT MADRE***", "auto")
-													fileFirme = fileFirme.Replace("***VIS MADRE***", "visible")
+												If idTutore = "1" Then
+													fileFirme = fileFirme.Replace("***HEIGHT_MADRE***", "0px")
+													fileFirme = fileFirme.Replace("***VIS_MADRE***", "hidden")
 												Else
-													If ceGenitore1 <> "" Then
-														fileFirme = fileFirme.Replace("***HEIGHT PADRE***", "auto")
-														fileFirme = fileFirme.Replace("***VIS PADRE***", "visible")
+													fileFirme = fileFirme.Replace("***HEIGHT_PADRE***", "0px")
+													fileFirme = fileFirme.Replace("***VIS_PADRE***", "hidden")
+												End If
+											End If
+										Else
+											If iscrFirmaEntrambi = "S" Then
+												fileFirme = fileFirme.Replace("***HEIGHT_PADRE***", "auto")
+												fileFirme = fileFirme.Replace("***VIS_PADRE***", "visible")
 
-														fileFirme = fileFirme.Replace("***HEIGHT MADRE***", "0px")
-														fileFirme = fileFirme.Replace("***VIS MADRE***", "hidden")
-													Else
-														fileFirme = fileFirme.Replace("***HEIGHT PADRE***", "0px")
-														fileFirme = fileFirme.Replace("***VIS PADRE***", "hidden")
+												fileFirme = fileFirme.Replace("***HEIGHT_MADRE***", "auto")
+												fileFirme = fileFirme.Replace("***VIS_MADRE***", "visible")
+											Else
+												If ceGenitore1 <> "" Then
+													fileFirme = fileFirme.Replace("***HEIGHT_PADRE***", "auto")
+													fileFirme = fileFirme.Replace("***VIS_PADRE***", "visible")
 
-														fileFirme = fileFirme.Replace("***HEIGHT MADRE***", "auto")
-														fileFirme = fileFirme.Replace("***VIS MADRE***", "visible")
-													End If
+													fileFirme = fileFirme.Replace("***HEIGHT_MADRE***", "0px")
+													fileFirme = fileFirme.Replace("***VIS_MADRE***", "hidden")
+												Else
+													fileFirme = fileFirme.Replace("***HEIGHT_PADRE***", "0px")
+													fileFirme = fileFirme.Replace("***VIS_PADRE***", "hidden")
+
+													fileFirme = fileFirme.Replace("***HEIGHT_MADRE***", "auto")
+													fileFirme = fileFirme.Replace("***VIS_MADRE***", "visible")
 												End If
 											End If
 										End If
+									End If
 
+									gf.EliminaFileFisico(fileDaCopiare)
+									gf.ApreFileDiTestoPerScrittura(fileDaCopiare)
+									gf.ScriveTestoSuFileAperto(fileFirme)
+									gf.ChiudeFileDiTestoDopoScrittura()
+
+									'File.Copy(fileDaCopiare, fileDaCopiare2)
+									Dim pp As New pdfGest
+									Ritorno = pp.ConverteHTMLInPDF(fileDaCopiare, fileDaCopiarePDF, fileLog)
+
+									If Ritorno = "*" Then
 										gf.EliminaFileFisico(fileDaCopiare)
-										gf.ApreFileDiTestoPerScrittura(fileDaCopiare)
-										gf.ScriveTestoSuFileAperto(fileFirme)
-										gf.ChiudeFileDiTestoDopoScrittura()
+									End If
 
-										'File.Copy(fileDaCopiare, fileDaCopiare2)
-										Dim pp As New pdfGest
-										Ritorno = pp.ConverteHTMLInPDF(fileDaCopiare, fileDaCopiarePDF, fileLog)
-
-										If Ritorno = "*" Then
-											gf.EliminaFileFisico(fileDaCopiare)
-										End If
-
-										gf = Nothing
-									Catch ex As Exception
-										Ritorno = StringaErrore & " " & ex.Message
-									End Try
-								Else
-									Ritorno = StringaErrore & " Scheletro iscrizione non trovato"
-								End If
+									gf = Nothing
+								Catch ex As Exception
+									Ritorno = StringaErrore & " " & ex.Message
+								End Try
+								'Else
+								'	Ritorno = StringaErrore & " Scheletro iscrizione non trovato"
+								'End If
 								gf = Nothing
 							End If
 						End If
