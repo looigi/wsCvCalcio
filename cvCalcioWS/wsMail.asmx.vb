@@ -356,6 +356,7 @@ Public Class wsMail
 				Dim c() As String = Squadra.Split("_")
 				Dim Anno As String = Str(Val(c(0))).Trim
 				Dim codSquadra As String = Str(Val(c(1))).Trim
+				Dim Progressivo As Integer = 0
 
 				Sql = "Select * From Utenti Where idSquadra=" & c(1) & " And Eliminato='N' Order By Cognome, Nome"
 				Rec = LeggeQuery(Conn, Sql, Connessione)
@@ -363,14 +364,71 @@ Public Class wsMail
 					Ritorno = Rec
 				Else
 					Do Until Rec.Eof
-						Ritorno &= Rec("idUtente").Value & ";" & Rec("Cognome").Value & ";" & Rec("Nome").Value & ";" & Rec("EMail").Value & ";" & Rec("idTipologia").Value & "§"
+						Progressivo += 1
+						Ritorno &= Progressivo & ";" & Rec("Cognome").Value & ";" & Rec("Nome").Value & ";" & Rec("EMail").Value & ";" & Rec("idTipologia").Value & ";-1§"
 
 						Rec.MoveNext
 					Loop
 					Rec.Close
 				End If
 
+				Sql = "Select idGiocatore, Cognome, Nome, EMail, Categorie From [" & Squadra & "].[dbo].Giocatori" ' Where CHARINDEX('" & Rec("idCategoria").Value & "-', Categorie) > 0"
+				Rec = LeggeQuery(Conn, Sql, Connessione)
+				Do Until Rec.Eof
+					' Dim codGiocatore As String = "GIOC_" & Rec2("idGiocatore").Value & "%" & Rec2("EMail").Value
+					Progressivo += 1
+					Ritorno &= Progressivo & ";" & Rec("Cognome").Value & ";" & Rec("Nome").Value & ";" & Rec("EMail").Value & ";6;" & Rec("Categorie").Value & "§"
+
+					Rec.MoveNext
+				Loop
+				Rec.Close
+
+				Sql = "Select * From [" & Squadra & "].[dbo].GiocatoriDettaglio A " &
+					"Left Join [" & Squadra & "].[dbo].Giocatori B On A.idGiocatore = B.idGiocatore " &
+					"Where MailGenitore1 <> '' Or MailGenitore2 <> '' Or MailGenitore3 <> ''" ' idGiocatore In " &
+				'"(Select idGiocatore From [" & Squadra & "].[dbo].Giocatori Where CHARINDEX('" & Rec("idCategoria").Value & "-', Categorie) > 0) " &
+				'"And (MailGenitore1 <> '' Or MailGenitore2 <> '' Or MailGenitore3 <> '')"
+				Rec = LeggeQuery(Conn, Sql, Connessione)
+				Do Until Rec.Eof
+					If "" & Rec("MailGenitore1").Value <> "" Then
+						If "" & Rec("Genitore1").Value <> "" Then
+							If "" & Rec("Genitore1").Value.contains(" ") Then
+								Dim n() As String = Rec("Genitore1").Value.split(" ")
+
+								Progressivo += 1
+								Ritorno &= Progressivo & ";" & n(0) & ";" & n(1) & ";" & Rec("MailGenitore1").Value & ";3;" & Rec("Categorie").Value & "§"
+							Else
+								Progressivo += 1
+								Ritorno &= Progressivo & ";" & Rec("Genitore1").Value & ";;" & Rec("MailGenitore1").Value & ";3;" & Rec("Categorie").Value & "§"
+							End If
+						End If
+					End If
+
+					If "" & Rec("MailGenitore2").Value <> "" Then
+						If "" & Rec("Genitore2").Value <> "" Then
+							If "" & Rec("Genitore2").Value.contains(" ") Then
+								Dim n() As String = Rec("Genitore2").Value.split(" ")
+
+								Progressivo += 1
+								Ritorno &= Progressivo & ";" & n(0) & ";" & n(1) & ";" & Rec("MailGenitore2").Value & ";3;" & Rec("Categorie").Value & "§"
+							Else
+								Progressivo += 1
+								Ritorno &= Progressivo & ";" & Rec("Genitore2").Value & ";;" & Rec("MailGenitore2").Value & ";3;" & Rec("Categorie").Value & "§"
+							End If
+						End If
+					End If
+
+					If "" & Rec("MailGenitore3").Value <> "" Then
+						Progressivo += 1
+						Ritorno &= Progressivo & ";" & Rec("Cognome").Value & ";" & Rec("Nome").Value & ";" & Rec("MailGenitore3").Value & ";6;" & Rec("Categorie").Value & "§"
+					End If
+
+					Rec.MoveNext
+				Loop
+				Rec.Close
+
 				Ritorno &= "|"
+
 				Sql = "Select * From [" & Squadra & "].[dbo].[Categorie] Where Eliminato='N' Order By Descrizione"
 				Rec = LeggeQuery(Conn, Sql, Connessione)
 				If TypeOf (Rec) Is String Then
@@ -382,16 +440,41 @@ Public Class wsMail
 						Sql = "Select * From [" & Squadra & "].[dbo].[UtentiCategorie] Where idCategoria=" & Rec("idCategoria").Value
 						Rec2 = LeggeQuery(Conn, Sql, Connessione)
 						Do Until Rec2.Eof
-							Partecipanti &= Rec2("idUtente").Value & "^"
+							If Not Partecipanti.Contains(Rec2("idUtente").Value & "^") Then
+								Partecipanti &= Rec2("idUtente").Value & "^"
+							End If
 
 							Rec2.MoveNext
 						Loop
 						Rec2.Close
+
+						Sql = "Select * From [" & Squadra & "].[dbo].[AllenatoriCategorie] Where idCategoria=" & Rec("idCategoria").Value
+						Rec2 = LeggeQuery(Conn, Sql, Connessione)
+						Do Until Rec2.Eof
+							If Not Partecipanti.Contains(Rec2("idUtente").Value & "^") Then
+								Partecipanti &= Rec2("idUtente").Value & "^"
+							End If
+
+							Rec2.MoveNext
+						Loop
+						Rec2.Close
+
+						Sql = "Select * From [" & Squadra & "].[dbo].[DirigentiCategorie] Where idCategoria=" & Rec("idCategoria").Value
+						Rec2 = LeggeQuery(Conn, Sql, Connessione)
+						Do Until Rec2.Eof
+							If Not Partecipanti.Contains(Rec2("idUtente").Value & "^") Then
+								Partecipanti &= Rec2("idUtente").Value & "^"
+							End If
+
+							Rec2.MoveNext
+						Loop
+						Rec2.Close
+
 						If Partecipanti <> "" Then
 							Partecipanti = Mid(Partecipanti, 1, Partecipanti.Length - 1)
 						End If
 
-						Ritorno &= Rec("idCategoria").Value & ";" & Rec("Descrizione").Value & ";" & Partecipanti & "§"
+						Ritorno &= Rec("idCategoria").Value & ";" & Rec("Descrizione").Value & ";" & Partecipanti & ";" & Rec("AnnoCategoria").Value & "§"
 
 						Rec.MoveNext
 					Loop

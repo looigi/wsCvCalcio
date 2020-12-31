@@ -182,15 +182,15 @@ Public Class wsAvversari
 
 					If Ok Then
 						Sql = "Insert Into SquadreAvversarie Values (" &
-						" " & idCam & ", " &
-						" " & idAvv & ", " &
-						"'" & Avversario.Replace("'", "''") & "', " &
-						"'N', " &
-						"'" & Telefono.Replace("'", "''") & "', " &
-						"'" & Referente.Replace("'", "''") & "', " &
-						"'" & EMail.Replace("'", "''") & "', " &
-						"'" & Fax.Replace("'", "''") & "' " &
-						")"
+							" " & idCam & ", " &
+							" " & idAvv & ", " &
+							"'" & Avversario.Replace("'", "''") & "', " &
+							"'N', " &
+							"'" & Telefono.Replace("'", "''") & "', " &
+							"'" & Referente.Replace("'", "''") & "', " &
+							"'" & EMail.Replace("'", "''") & "', " &
+							"'" & Fax.Replace("'", "''") & "' " &
+							")"
 						Ritorno = EsegueSql(Conn, Sql, Connessione)
 						If Ritorno.Contains(StringaErrore) Then
 							Ok = False
@@ -199,11 +199,11 @@ Public Class wsAvversari
 
 					If Ok Then
 						Sql = "Insert Into CampiAvversari Values (" &
-						" " & idCam & ", " &
-						"'" & Campo.Replace("'", "''") & "', " &
-						"'" & Indirizzo.Replace("'", "''") & "', " &
-						"'N' " &
-						")"
+							" " & idCam & ", " &
+							"'" & Campo.Replace("'", "''") & "', " &
+							"'" & Indirizzo.Replace("'", "''") & "', " &
+							"'N' " &
+							")"
 						Ritorno = EsegueSql(Conn, Sql, Connessione)
 						If Ritorno.Contains(StringaErrore) Then
 							Ok = False

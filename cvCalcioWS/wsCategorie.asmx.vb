@@ -258,25 +258,56 @@ Public Class wsCategorie
 							Dim idTipologia As String = Rec("idTipologia").Value
 							Dim idCategoria As String = Rec("idCategoria").Value
 
-							If idTipologia = "1" Or idTipologia = "0" Then
-								Sql = "SELECT idCategoria, Descrizione, AnticipoConvocazione, RisultatoATempi, " &
-									"GiornoAllenamento1, OraInizio1, OraFine1, " &
-									"GiornoAllenamento2, OraInizio2, OraFine2, " &
-									"GiornoAllenamento3, OraInizio3, OraFine3, " &
-									"GiornoAllenamento4, OraInizio4, OraFine4, " &
-									"AnnoCategoria, ShootOut, Tempi " &
-									"FROM Categorie Where idAnno=" & idAnno & " And Eliminato='N' Order By Descrizione"
-							Else
-								Sql = "Select A.idCategoria, B.Descrizione, AnticipoConvocazione, B.RisultatoATempi, " &
-									"B.GiornoAllenamento1, B.OraInizio1, B.OraFine1, " &
-									"B.GiornoAllenamento2, B.OraInizio2, B.OraFine2, " &
-									"B.GiornoAllenamento3, B.OraInizio3, B.OraFine3, " &
-									"B.GiornoAllenamento4, B.OraInizio4, B.OraFine4, " &
-									"AnnoCategoria, ShootOut, Tempi " &
-									"From UtentiCategorie A " &
-									"Left Join Categorie B On A.idCategoria = B.idCategoria " &
-									"Where B.idAnno = " & idAnno & " And A.idUtente = " & idUtente & " And Eliminato='N' Order By Descrizione"
-							End If
+							'{ id 1, Descrizione: 'Amministratore' }, 
+							'{ id 2, Descrizione: 'Utente' }, 
+							'{ id 3, Descrizione: 'Genitore'}, 
+							'{ id 4, Descrizione: 'Dirigente Genitore'}, 
+							'{ id 5, Descrizione: 'Allenatore Genitore'},
+							'{ id 6, Descrizione: 'Giocatore'},
+							'{ id 7, Descrizione: 'Allenatore'},
+							'{ id 8, Descrizione 'Dirigente'},
+
+							Select Case idTipologia
+								Case "0", "1"
+									Sql = "SELECT idCategoria, Descrizione, AnticipoConvocazione, RisultatoATempi, " &
+										"GiornoAllenamento1, OraInizio1, OraFine1, " &
+										"GiornoAllenamento2, OraInizio2, OraFine2, " &
+										"GiornoAllenamento3, OraInizio3, OraFine3, " &
+										"GiornoAllenamento4, OraInizio4, OraFine4, " &
+										"AnnoCategoria, ShootOut, Tempi " &
+										"FROM Categorie Where idAnno=" & idAnno & " And Eliminato='N' Order By Descrizione"
+								Case "5", "7"
+									Sql = "Select A.idCategoria, B.Descrizione, AnticipoConvocazione, B.RisultatoATempi, " &
+										"B.GiornoAllenamento1, B.OraInizio1, B.OraFine1, " &
+										"B.GiornoAllenamento2, B.OraInizio2, B.OraFine2, " &
+										"B.GiornoAllenamento3, B.OraInizio3, B.OraFine3, " &
+										"B.GiornoAllenamento4, B.OraInizio4, B.OraFine4, " &
+										"AnnoCategoria, ShootOut, Tempi " &
+										"From AllenatoriCategorie A " &
+										"Left Join Categorie B On A.idCategoria = B.idCategoria " &
+										"Where B.idAnno = " & idAnno & " And A.idUtente = " & idUtente & " And Eliminato='N' Order By Descrizione"
+								Case "4", "8"
+									Sql = "Select A.idCategoria, B.Descrizione, AnticipoConvocazione, B.RisultatoATempi, " &
+										"B.GiornoAllenamento1, B.OraInizio1, B.OraFine1, " &
+										"B.GiornoAllenamento2, B.OraInizio2, B.OraFine2, " &
+										"B.GiornoAllenamento3, B.OraInizio3, B.OraFine3, " &
+										"B.GiornoAllenamento4, B.OraInizio4, B.OraFine4, " &
+										"AnnoCategoria, ShootOut, Tempi " &
+										"From DirigentiCategorie A " &
+										"Left Join Categorie B On A.idCategoria = B.idCategoria " &
+										"Where B.idAnno = " & idAnno & " And A.idUtente = " & idUtente & " And Eliminato='N' Order By Descrizione"
+								Case Else
+									Sql = "Select A.idCategoria, B.Descrizione, AnticipoConvocazione, B.RisultatoATempi, " &
+										"B.GiornoAllenamento1, B.OraInizio1, B.OraFine1, " &
+										"B.GiornoAllenamento2, B.OraInizio2, B.OraFine2, " &
+										"B.GiornoAllenamento3, B.OraInizio3, B.OraFine3, " &
+										"B.GiornoAllenamento4, B.OraInizio4, B.OraFine4, " &
+										"AnnoCategoria, ShootOut, Tempi " &
+										"From UtentiCategorie A " &
+										"Left Join Categorie B On A.idCategoria = B.idCategoria " &
+										"Where B.idAnno = " & idAnno & " And A.idUtente = " & idUtente & " And Eliminato='N' Order By Descrizione"
+							End Select
+
 							Rec = LeggeQuery(Conn, Sql, Connessione)
 							If TypeOf (Rec) Is String Then
 								Ritorno = Rec
@@ -343,7 +374,7 @@ Public Class wsCategorie
 						Else
 							Ritorno = ""
 							Do Until Rec.Eof
-								Ritorno &= Rec("idCategoria").Value.ToString & ";" & Rec("Descrizione").Value.ToString & ";" & Rec("AnticipoConvocazione").Value & ";" & Rec("RisultatoATempi").Value & "§"
+								Ritorno &= Rec("idCategoria").Value.ToString & ";" & Rec("Descrizione").Value.ToString & ";" & Rec("AnticipoConvocazione").Value & ";" & Rec("RisultatoATempi").Value & ";" & Rec("AnnoCategoria").Value & "§"
 
 								Rec.MoveNext()
 							Loop

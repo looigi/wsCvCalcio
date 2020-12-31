@@ -774,7 +774,7 @@ Public Class wsUtentiLocali
 				Dim Sql As String = ""
 				'Dim idUtente As String = ""
 
-				Sql = "SELECT * FROM Utenti Where Upper(Utente)='" & Utente.Trim.ToUpper & "' And Eliminato='N'"
+				Sql = "SELECT * FROM [Generale].[dbo].Utenti Where Upper(Utente)='" & Utente.Trim.ToUpper & "' And Eliminato='N'"
 				Rec = LeggeQuery(Conn, Sql, Connessione)
 				If TypeOf (Rec) Is String Then
 					Ritorno = Rec
@@ -821,7 +821,7 @@ Public Class wsUtentiLocali
 								End If
 
 								If Ok Then
-									Sql = "Insert Into UtentiMail Values (" &
+									Sql = "Insert Into [Generale].[dbo].UtentiMails Values (" &
 										" " & idUtente & ", " &
 										"'" & Mail.Replace("'", "''") & "', " &
 										"'" & PWD.Replace("'", "''") & "', " &
@@ -835,10 +835,10 @@ Public Class wsUtentiLocali
 
 								If Ok = False Then
 									Sql = "Delete From [Generale].[dbo].[Utenti] Where idUtente=" & idUtente
-									Ritorno = EsegueSql(Conn, Sql, Connessione)
+									Dim Ritorno2 As String = EsegueSql(Conn, Sql, Connessione)
 
-									Sql = "Delete From UtentiMails Where idUtente=" & idUtente
-									Ritorno = EsegueSql(Conn, Sql, Connessione)
+									Sql = "Delete From [Generale].[dbo].UtentiMails Where idUtente=" & idUtente
+									Ritorno2 = EsegueSql(Conn, Sql, Connessione)
 								End If
 								'End If
 								'End If

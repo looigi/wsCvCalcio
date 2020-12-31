@@ -2361,7 +2361,7 @@ Public Class wsGiocatori
 											GenitoriSeparati As String, AffidamentoCongiunto As String, AbilitaFirmaGenitore1 As String, AbilitaFirmaGenitore2 As String,
 											AbilitaFirmaGenitore3 As String, FirmaAnalogicaGenitore1 As String, FirmaAnalogicaGenitore2 As String, FirmaAnalogicaGenitore3 As String,
 											idTutore As String, idQuota As String, FirmaGenitore4 As String, AbilitaFirmaGenitore4 As String, FirmaAnalogicaGenitore4 As String,
-											NoteKit As String) As String
+											NoteKit As String, Sconto As String) As String
 		Dim Ritorno As String = ""
 		Dim Connessione As String = LeggeImpostazioniDiBase(Server.MapPath("."), Squadra)
 
@@ -2420,6 +2420,7 @@ Public Class wsGiocatori
 							"FirmaAnalogicaGenitore3='" & FirmaAnalogicaGenitore3 & "', " &
 							"FirmaAnalogicaGenitore4='" & FirmaAnalogicaGenitore4 & "', " &
 							"idTutore='" & idTutore & "', " &
+							"Sconto=" & Sconto & ", " &
 							"idQuota='" & idQuota & "' " &
 							"Where idAnno=" & idAnno & " And idGiocatore=" & idGiocatore
 						Ritorno = EsegueSql(Conn, Sql, Connessione)
@@ -2533,6 +2534,9 @@ Public Class wsGiocatori
 	Public Function TornaDatiGiocatore(Squadra As String, idGiocatore As String) As String
 		Dim Ritorno As String = ""
 		Dim Connessione As String = LeggeImpostazioniDiBase(Server.MapPath("."), Squadra)
+		Dim c2() As String = Squadra.Split("_")
+		Dim Anno As String = Str(Val(c2(0))).Trim
+		Dim codSquadra As String = c2(1)
 
 		If Connessione = "" Then
 			Ritorno = ErroreConnessioneNonValida
@@ -2558,40 +2562,57 @@ Public Class wsGiocatori
 						Dim Campi() As String = Rec("Categorie").value.split("-")
 						Rec.Close()
 
-						Dim Categorie As String = ""
-
-						For Each c As String In Campi
-							If c <> "" Then
-								Sql = "Select * From Categorie Where idCategoria=" & c
-								Rec = LeggeQuery(Conn, Sql, Connessione)
-								If TypeOf (Rec) Is String Then
-								Else
-									If Not Rec.Eof Then
-										If Not Categorie.Contains(Rec("Descrizione").Value) Then
-											Categorie &= Rec("Descrizione").Value & "*"
-										End If
-									End If
-								End If
-							End If
-						Next
-
-						Ritorno &= Categorie & ";"
-
-						Sql = "Select Sum(Importo) From [Generale].[dbo].[TessereNFC] Where CodSquadra='" & Squadra & "' And idGiocatore=" & idGiocatore
+						Sql = "Select * From Anni Where idAnno=" & Anno
 						Rec = LeggeQuery(Conn, Sql, Connessione)
 						If TypeOf (Rec) Is String Then
 							Ritorno = Rec
 						Else
-							Dim Saldo As String = ""
-
-							If Rec(0).Value Is DBNull.Value Then
-								Saldo = "€ 0"
+							If Rec.Eof Then
+								Ritorno = "ERROR: Nessun giocatore rilevato"
 							Else
-								Saldo = "€ " & Rec(0).Value
-							End If
+								Dim Percentuale As String = Rec("PercCashBack").Value
+								Rec.Close
 
-							Ritorno &= Saldo
-							Rec.Close()
+								Dim Categorie As String = ""
+
+								For Each c As String In Campi
+									If c <> "" Then
+										Sql = "Select * From Categorie Where idCategoria=" & c
+										Rec = LeggeQuery(Conn, Sql, Connessione)
+										If TypeOf (Rec) Is String Then
+										Else
+											If Not Rec.Eof Then
+												If Not Categorie.Contains(Rec("Descrizione").Value) Then
+													Categorie &= Rec("Descrizione").Value & "*"
+												End If
+											End If
+										End If
+									End If
+								Next
+
+								Ritorno &= Categorie & ";"
+
+								Sql = "Select Sum(Importo) From [Generale].[dbo].[TessereNFC] Where CodSquadra='" & Squadra & "' And idGiocatore=" & idGiocatore
+								Rec = LeggeQuery(Conn, Sql, Connessione)
+								If TypeOf (Rec) Is String Then
+									Ritorno = Rec
+								Else
+									Dim Saldo As String = ""
+
+									If Rec(0).Value Is DBNull.Value Then
+										Saldo = "€ 0"
+									Else
+										Saldo = "€ " & Rec(0).Value
+									End If
+
+									Ritorno &= Saldo & ";"
+
+									Ritorno &= Percentuale & ";"
+									Ritorno &= Saldo * Percentuale / 100
+
+									Rec.Close()
+								End If
+							End If
 						End If
 					End If
 				End If
@@ -2636,8 +2657,8 @@ Public Class wsGiocatori
 						Dim ratePagate As String = ":"
 
 						Sql = "Select Distinct B.idRata From GiocatoriDettaglio A " &
-											"Left Join GiocatoriPagamenti B On A.idGiocatore = B.idGiocatore " &
-											"Where A.idGiocatore = " & idGiocatore & " " ' And Validato = 'S'"
+							"Left Join GiocatoriPagamenti B On A.idGiocatore = B.idGiocatore " &
+							"Where A.idGiocatore = " & idGiocatore & " " ' And Validato = 'S'"
 						Rec = LeggeQuery(Conn, Sql, Connessione)
 						If TypeOf (Rec) Is String Then
 							Ritorno = Rec
@@ -2654,6 +2675,23 @@ Public Class wsGiocatori
 								Else
 									ratePagate &= Rec("idRata").Value & ":"
 								End If
+
+								Rec.MoveNext()
+							Loop
+							Rec.Close()
+						End If
+
+						Dim importiManuali As String = ":"
+
+						Sql = "Select B.Progressivo, B.ImportoManuale, B.DescrizioneManuale, B.DataManuale From GiocatoriDettaglio A " &
+							"Left Join GiocatoriPagamenti B On A.idGiocatore = B.idGiocatore " &
+							"Where A.idGiocatore = " & idGiocatore & " And CHARINDEX('27;', B.idRata) > 0"
+						Rec = LeggeQuery(Conn, Sql, Connessione)
+						If TypeOf (Rec) Is String Then
+							Ritorno = Rec
+						Else
+							Do Until Rec.Eof
+								importiManuali &= Rec("Progressivo").Value & "%" & Rec("ImportoManuale").Value & "%" & ("" & Rec("DescrizioneManuale").Value).replace(";", "***PV***").replace(":", "***2P***").replace("%", "***PE***") & "%" & Rec("DataManuale").Value & ":"
 
 								Rec.MoveNext()
 							Loop
@@ -2728,12 +2766,13 @@ Public Class wsGiocatori
 									"-1, " &
 									"'', " &
 									"'S', " &
-									"'N' " &
+									"'N', " &
+									"0" &
 									")"
 								'idAnno  idGiocatore	Genitore1	Genitore2	FirmaGenitore1	FirmaGenitore2	CertificatoMedico	TotalePagamento	TelefonoGenitore1	TelefonoGenitore2	ScadenzaCertificatoMedico	MailGenitore1	
 								'MailGenitore2   FirmaGenitore3	MailGenitore3	DataDiNascita1	CittaNascita1	CodFiscale1	Citta1	Cap1	Indirizzo1	DataDiNascita2	CittaNascita2	CodFiscale2	Citta2	Cap2	Indirizzo2	
 								'Maggiorenne GenitoriSeparati	AffidamentoCongiunto	AbilitaFirmaGenitore1	AbilitaFirmaGenitore2	AbilitaFirmaGenitore3	FirmaAnalogicaGenitore1	FirmaAnalogicaGenitore2	FirmaAnalogicaGenitore3	
-								'idTutore    idQuota	FirmaGenitore4	AbilitaFirmaGenitore4	FirmaAnalogicaGenitore4
+								'idTutore    idQuota	FirmaGenitore4	AbilitaFirmaGenitore4	FirmaAnalogicaGenitore4 Sconto
 
 								Ritorno = EsegueSql(Conn, Sql, Connessione)
 								If Not Ritorno.Contains(StringaErrore) Then
@@ -2785,6 +2824,30 @@ Public Class wsGiocatori
 											Ritorno &= ratePagate & ";"
 											Dim n As String = "" & Rec("Note").Value
 											Ritorno &= n.Replace(";", "***PV***") & ";"
+											Ritorno &= Rec("Sconto").Value & ";"
+
+											Sql = "Select * From Quote Where idQuota=" & Rec("idQuota").Value
+											Rec2 = LeggeQuery(Conn, Sql, Connessione)
+											If Rec2.Eof Then
+												Ritorno &= "Quota non impostata;"
+												Ritorno &= "0;"
+											Else
+												Ritorno &= Rec2("Descrizione").Value.replace(";", "***PV***").replace(":", "***2P***").replace("%", "***PE***") & ";"
+												Ritorno &= Rec2("Importo").Value & ";"
+											End If
+											Rec2.Close
+
+											Ritorno &= importiManuali & ";"
+
+											Sql = "Select Max(Progressivo) From QuoteRate Where Attiva='S' And Importo > 0 And idQuota = " & Rec("idQuota").Value
+											Rec2 = LeggeQuery(Conn, Sql, Connessione)
+											If Rec2(0).Value Is DBNull.Value Then
+												Ritorno &= "-1;"
+											Else
+												Ritorno &= Rec2(0).Value & ";"
+											End If
+											Rec2.Close
+
 										End If
 										Rec.Close
 									End If
@@ -2912,6 +2975,35 @@ Public Class wsGiocatori
 								Ritorno &= firma4 & ";"
 								Dim n As String = "" & Rec("Note").Value
 								Ritorno &= n.Replace(";", "***PV***") & ";"
+								Ritorno &= Rec("Sconto").Value & ";"
+
+								Sql = "Select * From Quote Where idQuota=" & Rec("idQuota").Value
+								Rec2 = LeggeQuery(Conn, Sql, Connessione)
+								If TypeOf (Rec2) Is String Then
+									Ritorno = Rec2
+								Else
+									If Rec2.Eof Then
+										Ritorno &= "Quota non impostata;"
+										Ritorno &= "0;"
+									Else
+										Ritorno &= Rec2("Descrizione").Value.replace(";", "***PV***").replace(":", "***2P***").replace("%", "***PE***") & ";"
+										Ritorno &= Rec2("Importo").Value & ";"
+									End If
+								End If
+								Rec2.Close
+
+								Ritorno &= importiManuali & ";"
+
+								Sql = "Select Max(Progressivo) From QuoteRate Where Attiva='S' And Importo > 0 And idQuota = " & Rec("idQuota").Value
+								Rec2 = LeggeQuery(Conn, Sql, Connessione)
+								If Rec2(0).Value Is DBNull.Value Then
+									Ritorno &= "-1;"
+								Else
+									Ritorno &= Rec2(0).Value & ";"
+								End If
+								Rec2.Close
+
+								Rec.Close()
 							End If
 						End If
 					End If
@@ -3397,7 +3489,7 @@ Public Class wsGiocatori
 	Public Function SalvaPagamento(Squadra As String, idAnno As String, idGiocatore As String, Pagamento As String, Commento As String,
 								   idPagatore As String, idRegistratore As String, Note As String, Validato As String, idTipoPagamento As String,
 								   idRata As String, idQuota As String, Suffisso As String, sNumeroRicevuta As String, DataRicevuta As String, idUtente As String,
-								   idModalitaPagamento As String) As String
+								   idModalitaPagamento As String, ImportoManuale As String, DescrizioneManuale As String, DataManuale As String) As String
 		Dim Ritorno As String = ""
 		Dim Connessione As String = LeggeImpostazioniDiBase(Server.MapPath("."), Squadra)
 
@@ -3569,7 +3661,10 @@ Public Class wsGiocatori
 										"'" & idRata & "', " &
 										" " & idQuota & ", " &
 										"'" & NumeroRicevuta & "', " &
-										" " & idModalitaPagamento & " " &
+										" " & idModalitaPagamento & ", " &
+										" " & ImportoManuale & ", " &
+										"'" & DescrizioneManuale.Replace("'", "''") & "', " &
+										"'" & DataManuale & "' " &
 										")"
 									Ritorno = EsegueSql(Conn, Sql, Connessione)
 									If Ritorno.Contains(StringaErrore) Then
@@ -3783,7 +3878,7 @@ Public Class wsGiocatori
 	Public Function ModificaPagamento(Squadra As String, idPagamento As String, idAnno As String, idGiocatore As String, Pagamento As String, Commento As String,
 								   idPagatore As String, idRegistratore As String, Note As String, Validato As String, idTipoPagamento As String,
 								   idRata As String, idQuota As String, Suffisso As String, NumeroRicevuta As String, DataRicevuta As String, idUtente As String,
-								   idModalitaPagamento As String, Stato As String, Modifica As String) As String
+								   idModalitaPagamento As String, Stato As String, Modifica As String, ImportoManuale As String, DescrizioneManuale As String, DataManuale As String) As String
 		Dim Ritorno As String = ""
 		Dim Connessione As String = LeggeImpostazioniDiBase(Server.MapPath("."), Squadra)
 
@@ -3973,7 +4068,10 @@ Public Class wsGiocatori
 										"idTipoPagamento=" & idTipoPagamento & ", " &
 										"idRata='" & idRata & "', " &
 										"idQuota=" & idQuota & ", " &
-										"MetodoPagamento=" & idModalitaPagamento & " " &
+										"MetodoPagamento=" & idModalitaPagamento & ", " &
+										"ImportoManuale=" & ImportoManuale & ", " &
+										"DescrizioneManuale='" & DescrizioneManuale.Replace("'", "''") & "', " &
+										"DataManuale='" & DataManuale & "' " &
 										Altro &
 										"Where idGiocatore = " & idGiocatore & " And Progressivo = " & idPagamento
 									Ritorno = EsegueSql(Conn, Sql, Connessione)
@@ -4044,7 +4142,7 @@ Public Class wsGiocatori
 				If Not Ritorno.Contains(StringaErrore) Then
 					Try
 						Sql = "Update GiocatoriPagamenti Set " &
-							"Eliminato='S', Quota = -1 " &
+							"Eliminato='S', idQuota = -1, idRata = '' " &
 							"Where idAnno=" & idAnno & " And idGiocatore=" & idGiocatore & " And Progressivo=" & Progressivo
 						Ritorno = EsegueSql(Conn, Sql, Connessione)
 						If Ritorno.Contains(StringaErrore) Then
@@ -4124,7 +4222,7 @@ Public Class wsGiocatori
 							'Ritorno = "Totale a pagare;" & Format(TotPag, "#0.#0") & ";;§"
 							Dim Ritorno2 As String = ""
 							Do Until Rec.Eof
-								Ritorno2 &= Rec("Progressivo").Value & ";" & Rec("Pagamento").Value & ";" & Rec("DataPagamento").Value & ";" & Rec("Commento").Value & ";§"
+								Ritorno2 &= Rec("Progressivo").Value & ";" & Rec("Pagamento").Value & ";" & Rec("DataPagamento").Value & ";" & Rec("Commento").Value & ";" & Rec("ImportoManuale").Value & "§"
 								Totale += (Rec("Pagamento").Value)
 
 								Rec.MoveNext
