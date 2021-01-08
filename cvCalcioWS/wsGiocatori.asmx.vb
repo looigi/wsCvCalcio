@@ -2848,6 +2848,16 @@ Public Class wsGiocatori
 											End If
 											Rec2.Close
 
+											Sql = "Select ISNULL(Sum(Pagamento),0) From GiocatoriPagamenti " &
+												"Where idGiocatore = " & Rec("idGiocatore").Value & " And Eliminato = 'N' And Validato = 'S' And idTipoPagamento = 1"
+											Rec2 = LeggeQuery(Conn, Sql, Connessione)
+											If Rec2(0).Value Is DBNull.Value Then
+												Ritorno &= "0;"
+											Else
+												Ritorno &= Rec2(0).Value & ";"
+											End If
+											Rec2.Close
+
 										End If
 										Rec.Close
 									End If
@@ -2998,6 +3008,16 @@ Public Class wsGiocatori
 								Rec2 = LeggeQuery(Conn, Sql, Connessione)
 								If Rec2(0).Value Is DBNull.Value Then
 									Ritorno &= "-1;"
+								Else
+									Ritorno &= Rec2(0).Value & ";"
+								End If
+								Rec2.Close
+
+								Sql = "Select ISNULL(Sum(Pagamento),0) From GiocatoriPagamenti " &
+												"Where idGiocatore = " & idGiocatore & " And Eliminato = 'N' And Validato = 'S' And idTipoPagamento = 1"
+								Rec2 = LeggeQuery(Conn, Sql, Connessione)
+								If Rec2(0).Value Is DBNull.Value Then
+									Ritorno &= "0;"
 								Else
 									Ritorno &= Rec2(0).Value & ";"
 								End If
@@ -3909,7 +3929,7 @@ Public Class wsGiocatori
 				Dim Telefono As String = ""
 				Dim eMail As String = ""
 				Dim indirizzoPagatore As String = ""
-
+				Dim nuovoIdPagamento As Integer
 
 				Sql = "Begin transaction"
 				Ritorno = EsegueSql(Conn, Sql, Connessione)
@@ -4057,7 +4077,17 @@ Public Class wsGiocatori
 									'		" " & idModalitaPagamento & " " &
 									'		")"
 
+									Sql = "SELECT Max(Progressivo) + 1 FROM GiocatoriPagamenti Where idGiocatore=" & idGiocatore
+									Rec = LeggeQuery(Conn, Sql, Connessione)
+									If Rec(0).Value Is DBNull.Value Then
+										nuovoIdPagamento = 1
+									Else
+										nuovoIdPagamento = Rec(0).Value
+									End If
+									Rec.Close()
+
 									Sql = "Update GiocatoriPagamenti Set " &
+										"Progressivo=" & nuovoIdPagamento & ", " &
 										"Pagamento=" & Pagamento & ", " &
 										"DataPagamento='" & DataRicevuta & "', " &
 										"Commento='" & Commento.Replace("'", "''") & "', " &
@@ -4092,7 +4122,10 @@ Public Class wsGiocatori
 						Dim Ritorno2 As String = EsegueSql(Conn, Sql, Connessione)
 
 						If NumeroRicevuta <> "Bozza" Then
-							Ritorno = GeneraRicevutaEScontrino(Squadra, NomeSquadra, idAnno, idGiocatore, idPagamento, idUtente)
+							Ritorno = GeneraRicevutaEScontrino(Squadra, NomeSquadra, idAnno, idGiocatore, nuovoIdPagamento, idUtente, idPagamento)
+							If Ritorno = "*" Then
+								Ritorno = nuovoIdPagamento
+							End If
 						End If
 					End If
 				End If
@@ -4114,7 +4147,7 @@ Public Class wsGiocatori
 	Public Function RistampaRicevutaScontrino(Squadra As String, NomeSquadra As String, idAnno As String, idGiocatore As String, idPagamento As String, idUtente As String) As String
 		Dim Ritorno As String = ""
 
-		Ritorno = GeneraRicevutaEScontrino(Squadra, NomeSquadra, idAnno, idGiocatore, idPagamento, idUtente)
+		Ritorno = GeneraRicevutaEScontrino(Squadra, NomeSquadra, idAnno, idGiocatore, idPagamento, idUtente, "-1")
 
 		Return Ritorno
 	End Function
@@ -4222,7 +4255,12 @@ Public Class wsGiocatori
 							'Ritorno = "Totale a pagare;" & Format(TotPag, "#0.#0") & ";;§"
 							Dim Ritorno2 As String = ""
 							Do Until Rec.Eof
-								Ritorno2 &= Rec("Progressivo").Value & ";" & Rec("Pagamento").Value & ";" & Rec("DataPagamento").Value & ";" & Rec("Commento").Value & ";" & Rec("ImportoManuale").Value & "§"
+								Dim desc As String = "Rata Quota"
+								If Rec("idTipoPagamento").Value = 2 Then
+									desc = "Altro"
+								End If
+
+								Ritorno2 &= Rec("Progressivo").Value & ";" & Rec("Pagamento").Value & ";" & Rec("DataPagamento").Value & ";" & Rec("Commento").Value & ";" & Rec("ImportoManuale").Value & ";" & Rec("idTipoPagamento").Value & ";" & desc & "§"
 								Totale += (Rec("Pagamento").Value)
 
 								Rec.MoveNext

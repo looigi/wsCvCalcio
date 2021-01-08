@@ -372,7 +372,7 @@ Public Class wsMail
 					Rec.Close
 				End If
 
-				Sql = "Select idGiocatore, Cognome, Nome, EMail, Categorie From [" & Squadra & "].[dbo].Giocatori" ' Where CHARINDEX('" & Rec("idCategoria").Value & "-', Categorie) > 0"
+				Sql = "Select idGiocatore, Cognome, Nome, EMail, Categorie From [" & Squadra & "].[dbo].Giocatori Where Eliminato = 'N'" ' Where CHARINDEX('" & Rec("idCategoria").Value & "-', Categorie) > 0"
 				Rec = LeggeQuery(Conn, Sql, Connessione)
 				Do Until Rec.Eof
 					' Dim codGiocatore As String = "GIOC_" & Rec2("idGiocatore").Value & "%" & Rec2("EMail").Value
@@ -385,7 +385,7 @@ Public Class wsMail
 
 				Sql = "Select * From [" & Squadra & "].[dbo].GiocatoriDettaglio A " &
 					"Left Join [" & Squadra & "].[dbo].Giocatori B On A.idGiocatore = B.idGiocatore " &
-					"Where MailGenitore1 <> '' Or MailGenitore2 <> '' Or MailGenitore3 <> ''" ' idGiocatore In " &
+					"Where (MailGenitore1 <> '' Or MailGenitore2 <> '' Or MailGenitore3 <> '') And B.Eliminato = 'N' " ' idGiocatore In " &
 				'"(Select idGiocatore From [" & Squadra & "].[dbo].Giocatori Where CHARINDEX('" & Rec("idCategoria").Value & "-', Categorie) > 0) " &
 				'"And (MailGenitore1 <> '' Or MailGenitore2 <> '' Or MailGenitore3 <> '')"
 				Rec = LeggeQuery(Conn, Sql, Connessione)

@@ -1522,7 +1522,7 @@ Module Globale
 		Return Ritorno
 	End Function
 
-	Public Function GeneraRicevutaEScontrino(Squadra As String, NomeSquadra As String, idAnno As String, idGiocatore As String, idPagamento As String, idUtente As String) As String
+	Public Function GeneraRicevutaEScontrino(Squadra As String, NomeSquadra As String, idAnno As String, idGiocatore As String, idPagamento As String, idUtente As String, vecchioID As String) As String
 		Dim Ritorno As String = ""
 		Dim Ok As Boolean = True
 
@@ -1702,6 +1702,21 @@ Module Globale
 							Dim fileFinale As String = path & "Ricevuta_" & idPagamento & ".pdf"
 							Dim fileAppoggio As String = path & "Ricevuta_" & idPagamento & ".html"
 
+							If vecchioID <> "-1" Then
+								Dim fileFinaleVecchio As String = path & "Ricevuta_" & vecchioID & ".pdf"
+								Dim fileAppoggioVecchio As String = path & "Ricevuta_" & vecchioID & ".html"
+								Try
+									File.Delete(fileFinaleVecchio)
+								Catch ex As Exception
+
+								End Try
+								Try
+									File.Delete(fileAppoggioVecchio)
+								Catch ex As Exception
+
+								End Try
+							End If
+
 							Dim Intero As String
 							Dim Virgola As String
 
@@ -1812,6 +1827,22 @@ Module Globale
 							gf.CreaDirectoryDaPercorso(pathScontrino)
 							Dim fileFinaleScontrino As String = path & "Scontrino_" & idPagamento & ".pdf"
 							Dim fileAppoggioScontrino As String = path & "Scontrino_" & idPagamento & ".html"
+
+							If vecchioID <> "-1" Then
+								Dim fileFinaleScontrinoVecchio As String = path & "Scontrino_" & vecchioID & ".pdf"
+								Dim fileAppoggioScontrinoVecchio As String = path & "Scontrino_" & vecchioID & ".html"
+								Try
+									File.Delete(fileFinaleScontrinoVecchio)
+								Catch ex As Exception
+
+								End Try
+								Try
+									File.Delete(fileAppoggioScontrinoVecchio)
+								Catch ex As Exception
+
+								End Try
+							End If
+
 							BodyScontrino = BodyScontrino.Replace("***NOME POLISPORTIVA***", NomePolisportiva)
 							BodyScontrino = BodyScontrino.Replace("***INDIRIZZO***", Indirizzo)
 							BodyScontrino = BodyScontrino.Replace("***DATI***", Dati)

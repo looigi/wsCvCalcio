@@ -43,7 +43,7 @@ Public Class wsUtentiLocali
 
 					If idEve > 3 Then
 						' Troppi errori. Faccio scadere la login
-						Sql = "SELECT * FROM Utente Where idUtente=" & idUtente
+						Sql = "SELECT * FROM Utenti Where idUtente=" & idUtente
 						Rec = LeggeQuery(Conn, Sql, Connessione)
 						If TypeOf (Rec) Is String Then
 							Ritorno = Rec
@@ -198,7 +198,7 @@ Public Class wsUtentiLocali
 				Sql = "SELECT Utenti.idAnno, idUtente, Utente, Cognome, Nome, " &
 						"Password, EMail, idCategoria, Utenti.idTipologia, Utenti.idSquadra, Descrizione As Squadra " &
 						"FROM Utenti Left Join Squadre On Utenti.idSquadra = Squadre.idSquadra " &
-						"Where Upper(Utente)='" & Utente.ToUpper.Replace("'", "''") & "'" ' And idAnno=" & idAnno
+						"Where Upper(Utente)='" & Utente.ToUpper.Replace("'", "''") & "' And Eliminato = 'N'" ' And idAnno=" & idAnno
 				Rec = LeggeQuery(Conn, Sql, Connessione)
 				If TypeOf (Rec) Is String Then
 					Ritorno = Rec

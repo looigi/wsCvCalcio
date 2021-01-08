@@ -147,13 +147,13 @@ Public Class wsQuote
 						If Strings.Right(filePaths, 1) <> "\" Then
 							filePaths &= "\"
 						End If
-						Dim pathLogo As String = filePaths & NomeSquadra.Replace(" ", "_") & "\Societa\1_1.kgb"
+						Dim pathLogo As String = filePaths & NomeSquadra.Replace(" ", "_") & "\Societa_1.png"
 						Dim Esten As String = Format(Now.Second, "00") & "_" & Now.Millisecond & RitornaValoreRandom(55)
-						Dim pathLogoConv As String = filePaths & "Appoggio\" & Esten & ".jpg"
-						Dim c As New CriptaFiles
-						c.DecryptFile(CryptPasswordString, pathLogo, pathLogoConv)
+						'Dim pathLogoConv As String = filePaths & "Appoggio\" & Esten & ".jpg"
+						'Dim c As New CriptaFiles
+						'c.DecryptFile(CryptPasswordString, pathLogo, pathLogoConv)
 
-						Dim urlLogo As String = mmPaths(2) & "Appoggio/" & Esten & ".jpg"
+						Dim urlLogo As String = pathLogo ' mmPaths(2) & "Appoggio/" & Esten & ".jpg"
 						filetto = filetto.Replace("***LOGO SOCIETA***", urlLogo)
 
 						Dim nomeFileHtml As String = filePaths & "Appoggio\" & Esten & ".html"

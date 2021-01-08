@@ -156,7 +156,7 @@ Public Class wsAllenamenti
 						Ritorno = Rec
 					Else
 						If Rec.Eof Then
-							Ritorno = StringaErrore & " Nessun allenamento rilevato"
+							Ritorno = "" ' StringaErrore & " Nessun allenamento rilevato"
 						Else
 							Ritorno = ""
 							Do Until Rec.Eof
@@ -257,7 +257,7 @@ Public Class wsAllenamenti
 								Ritorno = Rec
 							Else
 								If Rec.Eof Then
-									Ritorno = StringaErrore & " Nessun allenamento rilevato"
+									Ritorno = "" ' StringaErrore & " Nessun allenamento rilevato"
 								Else
 									If Stampa = "N" Then
 										Ritorno = ""
@@ -428,7 +428,7 @@ Public Class wsAllenamenti
 					Ok = False
 				Else
 					If Rec.Eof Then
-						Ritorno = StringaErrore & " Nessun allenamento rilevato"
+						Ritorno = "" ' StringaErrore & " Nessun allenamento rilevato"
 						Ok = False
 					Else
 						Ritorno = ""
