@@ -513,11 +513,11 @@ Public Class wsMail
 						Dim statoAttuale As String = "" & Rec("folder").Value
 						Rec.Close
 
-						If statoAttuale = "Eliminate" Then
-							Sql = "Update Mails Set Eliminata='S' Where idMail=" & idMail & " And idUtente=" & idUtente
-						Else
-							Sql = "Update Mails Set folder = 'Eliminate' Where idMail=" & idMail & " And idUtente=" & idUtente
-						End If
+						'If statoAttuale = "Eliminate" Then
+						Sql = "Update Mails Set Eliminata='S', folder = 'Eliminate' Where idMail=" & idMail & " And idUtente=" & idUtente
+						'Else
+						'Sql = "Update Mails Set folder = 'Eliminate' Where idMail=" & idMail & " And idUtente=" & idUtente
+						'End If
 
 						Ritorno = EsegueSql(Conn, Sql, Connessione)
 					End If
