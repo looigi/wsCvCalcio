@@ -2987,31 +2987,49 @@ Public Class wsGiocatori
 								Ritorno &= n.Replace(";", "***PV***") & ";"
 								Ritorno &= Rec("Sconto").Value & ";"
 
-								Sql = "Select * From Quote Where idQuota=" & Rec("idQuota").Value
-								Rec2 = LeggeQuery(Conn, Sql, Connessione)
-								If TypeOf (Rec2) Is String Then
-									Ritorno = Rec2
+								If Rec("idQuota").Value Is DBNull.Value Then
+									Ritorno &= "Quota non impostata;"
+									Ritorno &= "0;"
 								Else
-									If Rec2.Eof Then
+									If "" & Rec("idQuota").Value = "" Then
 										Ritorno &= "Quota non impostata;"
 										Ritorno &= "0;"
 									Else
-										Ritorno &= Rec2("Descrizione").Value.replace(";", "***PV***").replace(":", "***2P***").replace("%", "***PE***") & ";"
-										Ritorno &= Rec2("Importo").Value & ";"
+										Sql = "Select * From Quote Where idQuota=" & Rec("idQuota").Value
+										Rec2 = LeggeQuery(Conn, Sql, Connessione)
+										If TypeOf (Rec2) Is String Then
+											Ritorno = Rec2
+										Else
+											If Rec2.Eof Then
+												Ritorno &= "Quota non impostata;"
+												Ritorno &= "0;"
+											Else
+												Ritorno &= Rec2("Descrizione").Value.replace(";", "***PV***").replace(":", "***2P***").replace("%", "***PE***") & ";"
+												Ritorno &= Rec2("Importo").Value & ";"
+											End If
+										End If
+										Rec2.Close
 									End If
 								End If
-								Rec2.Close
 
 								Ritorno &= importiManuali & ";"
 
-								Sql = "Select Max(Progressivo) From QuoteRate Where Attiva='S' And Importo > 0 And idQuota = " & Rec("idQuota").Value
-								Rec2 = LeggeQuery(Conn, Sql, Connessione)
-								If Rec2(0).Value Is DBNull.Value Then
+								If Rec("idQuota").Value Is DBNull.Value Then
 									Ritorno &= "-1;"
 								Else
-									Ritorno &= Rec2(0).Value & ";"
+									If "" & Rec("idQuota").Value = "" Then
+										Ritorno &= "-1;"
+									Else
+										Sql = "Select Max(Progressivo) From QuoteRate Where Attiva='S' And Importo > 0 And idQuota = " & Rec("idQuota").Value
+										Rec2 = LeggeQuery(Conn, Sql, Connessione)
+										If Rec2(0).Value Is DBNull.Value Then
+											Ritorno &= "-1;"
+										Else
+											Ritorno &= Rec2(0).Value & ";"
+										End If
+										Rec2.Close
+									End If
 								End If
-								Rec2.Close
 
 								Sql = "Select ISNULL(Sum(Pagamento),0) From GiocatoriPagamenti " &
 												"Where idGiocatore = " & idGiocatore & " And Eliminato = 'N' And Validato = 'S' And idTipoPagamento = 1"
