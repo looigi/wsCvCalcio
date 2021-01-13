@@ -825,7 +825,8 @@ Public Class wsUtentiLocali
 										" " & idUtente & ", " &
 										"'" & Mail.Replace("'", "''") & "', " &
 										"'" & PWD.Replace("'", "''") & "', " &
-										"''" &
+										"'', " &
+										"'' " &
 										")"
 									Ritorno = EsegueSql(Conn, Sql, Connessione)
 									If Ritorno.Contains(StringaErrore) Then

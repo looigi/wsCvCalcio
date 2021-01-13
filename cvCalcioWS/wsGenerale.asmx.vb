@@ -1887,11 +1887,11 @@ Public Class wsGenerale
 	Public Function ControllaVersioneCashBack(Versione As String) As String
 		Dim Ritorno As String = ""
 		Dim gf As New GestioneFilesDirectory
-		gf.CreaDirectoryDaPercorso(HttpContext.Current.Server.MapPath(".") & "\VersioniChashBack\")
-		If Not File.Exists(HttpContext.Current.Server.MapPath(".") & "\VersioniChashBack\Versione.txt") Then
-			gf.CreaAggiornaFile(HttpContext.Current.Server.MapPath(".") & "\VersioniChashBack\Versione.txt", "1.0.0.0")
+		gf.CreaDirectoryDaPercorso(HttpContext.Current.Server.MapPath(".") & "\VersioniCashBack\")
+		If Not File.Exists(HttpContext.Current.Server.MapPath(".") & "\VersioniCashBack\Versione.txt") Then
+			gf.CreaAggiornaFile(HttpContext.Current.Server.MapPath(".") & "\VersioniCashBack\Versione.txt", "1.0.0.0")
 		End If
-		Dim ultimaVersione As String = gf.LeggeFileIntero(HttpContext.Current.Server.MapPath(".") & "\VersioniChashBack\Versione.txt")
+		Dim ultimaVersione As String = gf.LeggeFileIntero(HttpContext.Current.Server.MapPath(".") & "\VersioniCashBack\Versione.txt")
 		ultimaVersione = ultimaVersione.Replace(vbCrLf, "").Replace(Chr(0), "")
 		If Versione <> ultimaVersione Then
 			Ritorno = ultimaVersione
