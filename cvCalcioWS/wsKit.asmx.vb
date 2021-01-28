@@ -271,7 +271,7 @@ Public Class wsKit
 	End Function
 
 	<WebMethod()>
-	Public Function EliminaTipologiaKit(Squadra As String, ByVal idElemento As String) As String
+	Public Function EliminaTipologiaKit(Squadra As String, idTipoKit As String) As String
 		Dim Ritorno As String = ""
 		Dim Connessione As String = LeggeImpostazioniDiBase(Server.MapPath("."), Squadra)
 		Dim Giocata As String = ""
@@ -292,13 +292,13 @@ Public Class wsKit
 				Ritorno = EsegueSql(Conn, Sql, Connessione)
 
 				If Not Ritorno.Contains(StringaErrore) Then
-					Sql = "Select * From KitGiocatori Where idElemento=" & idElemento
+					Sql = "Select * From KitGiocatori Where idTipoKit = " & idTipoKit
 					Rec = LeggeQuery(Conn, Sql, Connessione)
 					If TypeOf (Rec) Is String Then
 						Ritorno = Rec
 					Else
 						If Not Rec.Eof Then
-							Ritorno = StringaErrore & " L'elemento è utilizzato"
+							Ritorno = StringaErrore & " Il Kit è utilizzato"
 							Ok = False
 						End If
 						Rec.Close()
@@ -307,7 +307,7 @@ Public Class wsKit
 					If Ok Then
 						Try
 							Sql = "Update KitTipologie Set Eliminato='S' " &
-								"Where idTipoKit=" & idElemento
+								"Where idTipoKit=" & idTipoKit
 							Ritorno = EsegueSql(Conn, Sql, Connessione)
 							If Ritorno.Contains(StringaErrore) Then
 								Ok = False

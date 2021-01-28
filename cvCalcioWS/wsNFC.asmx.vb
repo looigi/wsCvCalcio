@@ -165,28 +165,47 @@ Public Class wsNFC
 	End Function
 
 	<WebMethod()>
-	Public Function WatchdogLettoreNFC(Squadra As String, idLettore As String) As String
+	Public Function WatchdogLettoreNFC(Squadra As String, NomeLettore As String) As String
 		Dim Ritorno As String = ""
 		Dim Connessione As String = LeggeImpostazioniDiBase(Server.MapPath("."), Squadra)
 
 		If Connessione = "" Then
-			Ritorno = ErroreConnessioneNonValida
+			Ritorno = "01" ' ErroreConnessioneNonValida
 		Else
 			Dim Conn As Object = ApreDB(Connessione)
 
 			If TypeOf (Conn) Is String Then
-				Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
+				Ritorno = "01" ' ErroreConnessioneDBNonValida & ":" & Conn
 			Else
 				Dim Sql As String = ""
-				Dim Ora As String = Now.Year & "-" & Format(Now.Month, "00") & "-" & Format(Now.Day, "00") & " " & Format(Now.Hour, "00") & ":" & Format(Now.Minute, "00") & ":" & Format(Now.Second, "00")
-				Sql = "Update LettoriNFC Set " &
-					"DataUltimaLettura = '" & Ora & "' " &
-					"Where idLettore = " & idLettore
-				Ritorno = EsegueSql(Conn, Sql, Connessione)
-				If Not Ritorno.Contains(StringaErrore) Then
-					Ritorno = "*"
+				Dim Rec As Object = Server.CreateObject("ADODB.Recordset")
+
+				Sql = "Select * From LettoriNFC Where Descrizione='" & NomeLettore & "'"
+				Rec = LeggeQuery(Conn, Sql, Connessione)
+				If TypeOf (Rec) Is String Then
+					Ritorno = "02" ' Rec
+				Else
+					If Rec.Eof Then
+						Ritorno = "03" ' "ERROR: Lettore NFC non rilevato"
+					Else
+						Dim Ora As String = Now.Year & "-" & Format(Now.Month, "00") & "-" & Format(Now.Day, "00") & " " & Format(Now.Hour, "00") & ":" & Format(Now.Minute, "00") & ":" & Format(Now.Second, "00")
+
+						Sql = "Update LettoriNFC Set " &
+							"DataUltimaLettura = '" & Ora & "' " &
+							"Where Descrizione = " & NomeLettore
+						Ritorno = EsegueSql(Conn, Sql, Connessione)
+						If Not Ritorno.Contains(StringaErrore) Then
+							Ritorno = "*"
+						Else
+							Ritorno = "13" ' Errore nell'update
+						End If
+					End If
 				End If
 			End If
+		End If
+
+		If Ritorno = "*" Then
+			Ritorno = "00"
 		End If
 
 		Return Ritorno

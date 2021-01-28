@@ -55,140 +55,228 @@ Public Class wsAllenamenti
 	End Function
 
 	<WebMethod()>
-	Public Function InseriscePresenzaAllenamenti(Squadra As String, idGiocatore As String, NomeLettore As String) As String
+	Public Function InseriscePresenzaAllenamenti(Squadra As String, idGiocatore As String, NomeLettore As String, DataOra As String) As String
 		Dim Ritorno As String = ""
 		Dim Connessione As String = LeggeImpostazioniDiBase(Server.MapPath("."), Squadra)
 
-		If Connessione = "" Then
-			Ritorno = ErroreConnessioneNonValida
+		Dim Anno As String = ""
+		Dim Mese As String = ""
+		Dim Giorno As String = ""
+		Dim Ora As String = ""
+		Dim Minuti As String = ""
+		Dim Secondi As String = ""
+
+		If DataOra = "" Then
+			Ritorno = "04" ' "ERROR: Data ora non presente"
 		Else
-			Dim Conn As Object = ApreDB(Connessione)
-
-			If TypeOf (Conn) Is String Then
-				Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
+			If DataOra.Length <> 14 Then
+				Ritorno = "05" ' "ERROR: Data ora non valida"
 			Else
-				Dim Rec As Object = Server.CreateObject("ADODB.Recordset")
-				Dim Sql As String = ""
-				Dim Ok As Boolean = True
+				Dim dataValida As Boolean = True
 
-				Sql = "Begin transaction"
-				Ritorno = EsegueSql(Conn, Sql, Connessione)
+				Try
+					Anno = DataOra.Substring(0, 4)
+					Mese = DataOra.Substring(4, 2)
+					Giorno = DataOra.Substring(6, 2)
+					Ora = DataOra.Substring(8, 2)
+					Minuti = DataOra.Substring(10, 2)
+					Secondi = DataOra.Substring(2, 2)
 
-				If Not Ritorno.Contains(StringaErrore) Then
-					Sql = "Select idAnno, Categorie From Giocatori Where idGiocatore = " & idGiocatore
-					Rec = LeggeQuery(Conn, Sql, Connessione)
-					If TypeOf (Rec) Is String Then
-						Ritorno = Rec
+					If Val(Anno) < 2020 Or Val(Anno) > 2999 Then
+						dataValida = False
 					Else
-						If Rec.Eof Then
-							Ritorno = StringaErrore & " Nessun giocatore rilevato"
+						If Val(Mese) < 1 Or Val(Mese) > 12 Then
+							dataValida = False
 						Else
-							Dim idAnno As String = Rec("idAnno").Value
-							Dim Categorie As String = Rec("Categorie").Value
-							Dim sCat() As String = {}
-							If Categorie <> "" And Categorie.Contains("-") Then
-								sCat = Categorie.Split("-")
-							End If
-							Rec.Close
-
-							Sql = "Select * From LettoriNFC Where Descrizione = '" & NomeLettore & "' And Eliminato='N'"
-							Rec = LeggeQuery(Conn, Sql, Connessione)
-							If TypeOf (Rec) Is String Then
-								Ritorno = Rec
-							Else
-								If Rec.Eof Then
-									Ritorno = StringaErrore & " Nessun lettore NFC rilevato"
+							Dim maxGiorni As Integer = 31
+							If Val(Mese) = 2 Then
+								If Val(Anno) / 4 = Int(Val(Anno) / 4) Then
+									maxGiorni = 29
 								Else
-									Dim idLettore As String = Rec("idLettore").Value
-									Rec.Close
+									maxGiorni = 28
+								End If
+							Else
+								If maxGiorni = 4 Or Mese = 6 Or Mese = 9 Or Mese = 11 Then
+									maxGiorni = 30
+								End If
+							End If
+							If Val(Giorno) < 1 Or Val(Giorno) > maxGiorni Then
+								dataValida = False
+							Else
+								If Val(Ora) < 0 Or Val(Ora) > 23 Then
+									dataValida = False
+								Else
+									If Val(Minuti) < 0 Or Val(Minuti) > 59 Then
+										dataValida = False
+									Else
+										If Val(Secondi) < 0 Or Val(Secondi) > 59 Then
+											dataValida = False
+										End If
+									End If
+								End If
+							End If
+						End If
+					End If
+				Catch ex As Exception
+					dataValida = False
+				End Try
 
-									For Each idCategoria As String In sCat
-										Dim Progressivo As Integer = 0
-										Dim GiornoAttuale As String = Now.DayOfWeek
+				If dataValida = False Then
+					Ritorno = "05" ' "ERROR: Data ora non valida. Inserirla nel formato yyyyMMddHHmmss"
+				Else
+					Dim iString As String = Anno & "-" & Mese & "-" & Giorno & " " & Ora & ":" & Minuti & ":" & Secondi
+					Dim DataAttuale As DateTime = Nothing
+					Dim conv As Boolean = True
 
-										Sql = "Select * From Categorie Where idCategoria = " & idCategoria & " " &
-											"And (GiornoAllenamento1=" & GiornoAttuale & " Or GiornoAllenamento2=" & GiornoAttuale & " Or GiornoAllenamento3=" & GiornoAttuale & ")"
-										Rec = LeggeQuery(Conn, Sql, Connessione)
-										If TypeOf (Rec) Is String Then
-											Ritorno = Rec
+					Try
+						DataAttuale = DateTime.ParseExact(iString, "yyyy-MM-dd HH:mm:ss", Nothing)
+					Catch ex As Exception
+						conv = False
+					End Try
+
+					If conv = False Then
+						Ritorno = "06" ' "ERROR: Conversione data non riuscita: " & iString
+					Else
+						If Connessione = "" Then
+							Ritorno = ErroreConnessioneNonValida
+						Else
+							Dim Conn As Object = ApreDB(Connessione)
+
+						If TypeOf (Conn) Is String Then
+								Ritorno = "01" ' ErroreConnessioneDBNonValida & ":" & Conn
+							Else
+							Dim Rec As Object = Server.CreateObject("ADODB.Recordset")
+							Dim Sql As String = ""
+							Dim Ok As Boolean = True
+
+							Sql = "Begin transaction"
+							Ritorno = EsegueSql(Conn, Sql, Connessione)
+
+							If Not Ritorno.Contains(StringaErrore) Then
+								Sql = "Select idAnno, Categorie From Giocatori Where idGiocatore = " & idGiocatore
+								Rec = LeggeQuery(Conn, Sql, Connessione)
+								If TypeOf (Rec) Is String Then
+										Ritorno = "02" ' Rec
+									Else
+									If Rec.Eof Then
+											Ritorno = "07" ' StringaErrore & " Nessun giocatore rilevato"
 										Else
-											If Rec.Eof Then
-												Ritorno = StringaErrore & " Nessuna allenamento rilevato per la categoria e il giorno attuale"
+										Dim idAnno As String = Rec("idAnno").Value
+										Dim Categorie As String = Rec("Categorie").Value
+										Dim sCat() As String = {}
+										If Categorie <> "" And Categorie.Contains("-") Then
+											sCat = Categorie.Split("-")
+										End If
+										Rec.Close
+
+										Sql = "Select * From LettoriNFC Where Descrizione = '" & NomeLettore & "' And Eliminato='N'"
+										Rec = LeggeQuery(Conn, Sql, Connessione)
+											If TypeOf (Rec) Is String Then
+												Ritorno = Rec
 											Else
-												Dim DataAllenamentiGiorno As String = Format(Now.Date, "00") & "/" & Format(Now.Month, "00") & "/" & Now.Year
-												Dim OraAllenamentiGiorno As String = ""
-												Dim OraAllenamentiFine As String = ""
-
-												If GiornoAttuale = Rec("GiornoAllenamento1").Value Then
-													OraAllenamentiGiorno = Rec("OraInizio1").Value
-													OraAllenamentiFine = Rec("OraFine1").Value
+												If Rec.Eof Then
+													Ritorno = "03" ' StringaErrore & " Nessun lettore NFC rilevato"
 												Else
-													If GiornoAttuale = Rec("GiornoAllenamento2").Value Then
-														OraAllenamentiGiorno = Rec("OraInizio2").Value
-														OraAllenamentiFine = Rec("OraFine2").Value
-													Else
-														If GiornoAttuale = Rec("GiornoAllenamento3").Value Then
-															OraAllenamentiGiorno = Rec("OraInizio3").Value
-															OraAllenamentiFine = Rec("OraFine3").Value
-														End If
-													End If
-												End If
-												Rec.Close
+													Dim idLettore As String = Rec("idLettore").Value
+													Rec.Close
 
-												If OraAllenamentiGiorno = "" Or OraAllenamentiFine = "" Then
-													Ritorno = StringaErrore & " Nessun orario rilevato per gli allenamenti della categoria e il giorno attuale"
-												Else
-													If Not OraAllenamentiGiorno.Contains(":") Or Not OraAllenamentiFine.Contains(":") Then
-														Ritorno = StringaErrore & " Orario non valido rilevato per gli allenamenti della categoria e il giorno attuale"
-													Else
-														Dim sInizio() As String = OraAllenamentiGiorno.Split(":")
-														Dim sFine() As String = OraAllenamentiFine.Split(":")
+													For Each idCategoria As String In sCat
+														Dim Progressivo As Integer = 0
+														Dim GiornoAttuale As String = DataAttuale.DayOfWeek
 
-														Dim minutiDiAnticipoRitardo As Integer = 30
-														Dim RangeInizioOra As Integer = (Val(sInizio(0)) * 60 + Val(sInizio(1))) - minutiDiAnticipoRitardo
-														Dim RangeFineOra As Integer = (Val(sFine(0)) * 60 + Val(sFine(1))) + minutiDiAnticipoRitardo
-
-														Dim RangeAttualeOra As Integer = ((Now.Hour) * 60 + Now.Minute)
-
-														If RangeAttualeOra >= RangeInizioOra And RangeAttualeOra <= RangeFineOra Then
-															Sql = "Select Max(Progressivo)+1 From Allenamenti Where idAnno=" & idAnno & " And idGiocatore=" & idGiocatore & " " &
-															"And Datella=" & DataAllenamentiGiorno & " And Orella=" & OraAllenamentiGiorno
-															Rec = LeggeQuery(Conn, Sql, Connessione)
-															If Rec(0).Value Is DBNull.Value Then
-																Progressivo = 1
-															Else
-																Progressivo = Rec(0)
-															End If
-
-															Sql = "Insert Into Allenamenti Values (" &
-																" " & idAnno & ", " &
-																" " & idCategoria & ", " &
-																"'" & DataAllenamentiGiorno & "', " &
-																"'" & OraAllenamentiGiorno & "', " &
-																" " & Progressivo & ", " &
-																" " & idGiocatore & ", " &
-																"'" & OraAllenamentiFine & "', " &
-																" " & idLettore & " " &
-																")"
-															Ritorno = EsegueSql(Conn, Sql, Connessione)
-															If Ritorno.Contains(StringaErrore) Then
-																Sql = "rollback"
-																Dim Ritorno3 As String = EsegueSql(Conn, Sql, Connessione)
-															End If
+														Sql = "Select * From Categorie Where idCategoria = " & idCategoria & " " &
+															"And (GiornoAllenamento1=" & GiornoAttuale & " Or GiornoAllenamento2=" & GiornoAttuale & " Or GiornoAllenamento3=" & GiornoAttuale & ")"
+														Rec = LeggeQuery(Conn, Sql, Connessione)
+														If TypeOf (Rec) Is String Then
+															Ritorno = Rec
 														Else
-															Ritorno = StringaErrore & " Orario attuale non in fascia con la categoria del giocatore"
+															If Rec.Eof Then
+																Ritorno = "08" ' StringaErrore & " Nessun allenamento rilevato per la categoria e il giorno attuale"
+															Else
+																' Dim DataAllenamentiGiorno As String = Format(Now.Date, "00") & "/" & Format(Now.Month, "00") & "/" & Now.Year
+																Dim DataAllenamentiGiorno As String = Giorno & "/" & Mese & "/" & Anno
+																Dim OraAllenamentiGiorno As String = ""
+																Dim OraAllenamentiFine As String = ""
+
+																If GiornoAttuale = Rec("GiornoAllenamento1").Value Then
+																	OraAllenamentiGiorno = Rec("OraInizio1").Value
+																	OraAllenamentiFine = Rec("OraFine1").Value
+																Else
+																	If GiornoAttuale = Rec("GiornoAllenamento2").Value Then
+																		OraAllenamentiGiorno = Rec("OraInizio2").Value
+																		OraAllenamentiFine = Rec("OraFine2").Value
+																	Else
+																		If GiornoAttuale = Rec("GiornoAllenamento3").Value Then
+																			OraAllenamentiGiorno = Rec("OraInizio3").Value
+																			OraAllenamentiFine = Rec("OraFine3").Value
+																		End If
+																	End If
+																End If
+																Rec.Close
+
+																If OraAllenamentiGiorno = "" Or OraAllenamentiFine = "" Then
+																	Ritorno = "09" ' StringaErrore & " Nessun orario rilevato per gli allenamenti della categoria e il giorno attuale"
+																Else
+																	If Not OraAllenamentiGiorno.Contains(":") Or Not OraAllenamentiFine.Contains(":") Then
+																		Ritorno = "10" ' StringaErrore & " Orario non valido rilevato per gli allenamenti della categoria e il giorno attuale"
+																	Else
+																		Dim sInizio() As String = OraAllenamentiGiorno.Split(":")
+																		Dim sFine() As String = OraAllenamentiFine.Split(":")
+
+																		Dim minutiDiAnticipoRitardo As Integer = 30
+																		Dim RangeInizioOra As Integer = (Val(sInizio(0)) * 60 + Val(sInizio(1))) - minutiDiAnticipoRitardo
+																		Dim RangeFineOra As Integer = (Val(sFine(0)) * 60 + Val(sFine(1))) + minutiDiAnticipoRitardo
+
+																		Dim RangeAttualeOra As Integer = ((DataAttuale.Hour) * 60 + DataAttuale.Minute)
+
+																		If RangeAttualeOra >= RangeInizioOra And RangeAttualeOra <= RangeFineOra Then
+																			Sql = "Select Max(Progressivo)+1 From Allenamenti Where idAnno=" & idAnno & " And idGiocatore=" & idGiocatore & " " &
+																				"And Datella=" & DataAllenamentiGiorno & " And Orella=" & OraAllenamentiGiorno
+																			Rec = LeggeQuery(Conn, Sql, Connessione)
+																			If Rec(0).Value Is DBNull.Value Then
+																				Progressivo = 1
+																			Else
+																				Progressivo = Rec(0)
+																			End If
+
+																			Sql = "Insert Into Allenamenti Values (" &
+																				" " & idAnno & ", " &
+																				" " & idCategoria & ", " &
+																				"'" & DataAllenamentiGiorno & "', " &
+																				"'" & OraAllenamentiGiorno & "', " &
+																				" " & Progressivo & ", " &
+																				" " & idGiocatore & ", " &
+																				"'" & OraAllenamentiFine & "', " &
+																				" " & idLettore & " " &
+																				")"
+																			Ritorno = EsegueSql(Conn, Sql, Connessione)
+																			If Ritorno.Contains(StringaErrore) Then
+																				Ritorno = "12" ' "Errore nella insert"
+																				Sql = "rollback"
+																				Dim Ritorno3 As String = EsegueSql(Conn, Sql, Connessione)
+																			End If
+																		Else
+																			Ritorno = "11" ' StringaErrore & " Orario attuale non in fascia con la categoria del giocatore"
+																		End If
+																	End If
+																End If
+															End If
 														End If
-													End If
+													Next
 												End If
 											End If
 										End If
-									Next
+									End If
 								End If
 							End If
 						End If
 					End If
 				End If
 			End If
+		End If
+
+		If Ritorno = "*" Then
+			Ritorno = "00"
 		End If
 
 		Return Ritorno
