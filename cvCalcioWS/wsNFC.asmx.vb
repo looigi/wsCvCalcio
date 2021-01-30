@@ -11,7 +11,7 @@ Public Class wsNFC
 	Inherits System.Web.Services.WebService
 
 	<WebMethod()>
-	Public Function ScriveDatiTessera(Squadra As String, NumeroTessera As String, idGiocatore As String, Descrizione As String, Importo As String) As String
+	Public Function ScriveDatiTessera(NumeroTessera As String, Descrizione As String, Importo As String) As String
 		Dim Ritorno As String = ""
 		Dim Connessione As String = LeggeImpostazioniDiBase(Server.MapPath("."), "")
 
@@ -24,7 +24,7 @@ Public Class wsNFC
 				Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
 			Else
 				Dim Rec As Object = Server.CreateObject("ADODB.Recordset")
-				Dim Sql As String = "Select Max(Progressivo)+1 From TessereNFC Where NumeroTessera='" & NumeroTessera & "' And idGiocatore=" & idGiocatore
+				Dim Sql As String = "Select Max(Progressivo)+1 From TessereNFC Where NumeroTessera='" & NumeroTessera & "'" '  And idGiocatore=" & idGiocatore
 				Dim Progressivo As Integer = 0
 
 				Rec = LeggeQuery(Conn, Sql, Connessione)
@@ -43,11 +43,12 @@ Public Class wsNFC
 
 				Dim DataOra As String = Now.Year & Format(Now.Month, "00") & Format(Now.Day, "00") & " " & Format(Now.Hour, "00") & ":" & Format(Now.Minute, "00") & ":" & Format(Now.Second, "00")
 
+				'"'" & Squadra & "', " &
+				'" " & idGiocatore & ", " &
+
 				Sql = "Insert Into TessereNFC Values (" &
 					"'" & NumeroTessera & "', " &
-					"'" & Squadra & "', " &
 					" " & Progressivo & ", " &
-					" " & idGiocatore & ", " &
 					"'" & Descrizione.Replace("'", "''") & "', " &
 					" " & sImporto & ", " &
 					"'" & DataOra & "' " &
@@ -100,6 +101,36 @@ Public Class wsNFC
 				Ritorno = EsegueSql(Conn, Sql, Connessione)
 				If Not Ritorno.Contains(StringaErrore) Then
 					Ritorno = "*"
+				End If
+			End If
+		End If
+
+		Return Ritorno
+	End Function
+
+	<WebMethod()>
+	Public Function RitornaDatiDaTessera(CodiceTessera As String) As String
+		Dim Ritorno As String = ""
+		Dim Connessione As String = LeggeImpostazioniDiBase(Server.MapPath("."), "")
+
+		If Connessione = "" Then
+			Ritorno = ErroreConnessioneNonValida
+		Else
+			Dim Conn As Object = ApreDB(Connessione)
+
+			If TypeOf (Conn) Is String Then
+				Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
+			Else
+				Dim Rec As Object = Server.CreateObject("ADODB.Recordset")
+				Dim Sql As String = "Select * From GiocatoriTessereNFC Where CodiceTessera='" & CodiceTessera & "'"
+				Dim Progressivo As Integer = 0
+
+				Rec = LeggeQuery(Conn, Sql, Connessione)
+				If TypeOf (Rec) Is String Then
+					Ritorno = Rec
+				Else
+					Ritorno = Rec("CodSquadra").Value & ";" & Rec("idGiocatore").Value & ";"
+					Rec.Close
 				End If
 			End If
 		End If

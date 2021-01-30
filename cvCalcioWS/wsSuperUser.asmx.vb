@@ -231,26 +231,28 @@ Public Class wsSuperUser
 
 											If Ok = True Then
 												Sql = "Insert Into [" & nomeDb & "].[dbo].[Anni] Values (" &
-													"1, " &
-													"'" & Anno & "', " &
-													"'" & Squadra.Replace("'", "''") & "', " &
-													"null, " &
-													"null, " &
-													"null, " &
-													"null, " &
-													"null, " &
-													"null, " &
-													"null, " &
-													"null, " &
-													"null, " &
-													"null, " &
-													"null, " &
-													"null, " &
-													"null, " &
-													"null, " &
-													"null, " &
-													"null, " &
-													"null " &
+													"1, " & ' idAnno
+													"'" & Anno & "', " & ' Descrizione
+													"'" & Squadra.Replace("'", "''") & "', " & ' NomeSquadra
+													"null, " & ' Lat
+													"null, " & ' Lon
+													"null, " & ' Indirizzo
+													"null, " & ' CampoSquadra
+													"null, " & ' NomePolisportiva
+													"null, " & ' Mail
+													"null, " & ' PEC
+													"null, " & ' Telefono
+													"null, " & ' PIva
+													"null, " & ' CodiceFiscale
+													"null, " & ' CodiceUnivoco
+													"null, " & ' SitoWeb
+													"null, " & ' MittenteMail
+													"null, " & ' GestionePagamenti
+													"null, " & ' CostoScuolaCalcio
+													"null, " & ' Suffisso
+													"null, " & ' iscrFirmaEntrambi
+													"null, " & ' Modulo Associato
+													"10 " & ' PercCashBack
 													")"
 												Ritorno = EsegueSql(ConnDbVuoto, Sql, ConnessioneDBVuoto)
 												If Ritorno.Contains(StringaErrore) Then

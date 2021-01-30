@@ -1361,13 +1361,14 @@ Public Class wsGiocatori
 					Sql = "SELECT Giocatori.idGiocatore, Ruoli.idRuolo As idR, Cognome, Nome, Ruoli.Descrizione, EMail, Telefono, Soprannome, DataDiNascita, Indirizzo, " &
 						"CodFiscale, Maschio, Citta, Matricola, NumeroMaglia, Giocatori.idCategoria, idCategoria2, Categorie.Descrizione As Categoria2, idCategoria3, Cat3.Descrizione As Categoria3, Cat1.Descrizione As Categoria1, " &
 						"Giocatori.Categorie, Giocatori.RapportoCompleto, Giocatori.Cap, Giocatori.CittaNascita, Giocatori.Maggiorenne, " &
-						"Cat4.ScadenzaCertificatoMedico, Cat4.CertificatoMedico " &
+						"Cat4.ScadenzaCertificatoMedico, Cat4.CertificatoMedico, CodiceTessera " &
 						"FROM Giocatori " &
 						"Left Join [Generale].[dbo].[Ruoli] On Giocatori.idRuolo=Ruoli.idRuolo " &
 						"Left Join Categorie On Categorie.idCategoria=Giocatori.idCategoria2 And Categorie.idAnno=Giocatori.idAnno " &
 						"Left Join Categorie As Cat3 On Cat3.idCategoria=Giocatori.idCategoria3 And Cat3.idAnno=Giocatori.idAnno " &
 						"Left Join GiocatoriDettaglio As Cat4 On Cat4.idGiocatore=Giocatori.idGiocatore " &
 						"Left Join Categorie As Cat1 On Cat1.idCategoria=Giocatori.idCategoria And Cat1.idAnno=Giocatori.idAnno " &
+						"Left Join [Generale].[dbo].[GiocatoriTessereNFC] As NFC On NFC.idGiocatore=Giocatori.idGiocatore " &
 						"Where Giocatori.Eliminato='N' And Giocatori.idAnno=" & idAnno & " " & Altro & " " &
 						"And RapportoCompleto = 'S' " &
 						"Order By Cognome, Nome"
@@ -1420,6 +1421,7 @@ Public Class wsGiocatori
 									Rec("Maggiorenne").Value & ";" &
 									Rec("CertificatoMedico").Value & ";" &
 									Scaduto & ";" &
+									Rec("CodiceTessera").Value & ";" &
 									"§"
 
 								Rec.MoveNext()
@@ -1457,10 +1459,11 @@ Public Class wsGiocatori
 				Try
 					Sql = "SELECT idGiocatore, Ruoli.idRuolo As idR, Cognome, Nome, Ruoli.Descrizione, EMail, Telefono, Soprannome, DataDiNascita, Indirizzo, " &
 						"CodFiscale, Maschio, Citta, Matricola, NumeroMaglia, Giocatori.idCategoria, -1 As idCategoria2, '' As Categoria2, -1 As idCategoria3, '' As Categoria3, Categorie.Descrizione As Categoria1, " &
-						"Giocatori.Categorie, Giocatori.RapportoCompleto, Giocatori.Cap, Giocatori.CittaNascita, Giocatori.Maggiorenne " &
+						"Giocatori.Categorie, Giocatori.RapportoCompleto, Giocatori.Cap, Giocatori.CittaNascita, Giocatori.Maggiorenne, CodiceTesseraNFC " &
 						"FROM Giocatori " &
 						"Left Join [Generale].[dbo].[Ruoli] On Giocatori.idRuolo=Ruoli.idRuolo " &
 						"Left Join Categorie On Categorie.idCategoria=Giocatori.idCategoria And Categorie.idAnno=Giocatori.idAnno " &
+						"Left Join [Generale].[dbo].[GiocatoriTessereNFC] As NFC On NFC.idGiocatore=Giocatori.idGiocatore " &
 						"Where Giocatori.Eliminato='N' And Giocatori.idAnno=" & idAnno & " And Giocatori.idCategoria=" & idCategoria & " " &
 						"And RapportoCompleto = 'S' " &
 						"Order By Ruoli.idRuolo, Cognome, Nome"
@@ -1499,6 +1502,7 @@ Public Class wsGiocatori
 									Rec("Cap").Value.ToString & ";" &
 									Rec("CittaNascita").Value.ToString & ";" &
 									Rec("Maggiorenne").Value.ToString & ";" &
+									Rec("CodiceTessera").Value.ToString & ";" &
 									"§"
 
 								Rec.MoveNext()
@@ -1536,10 +1540,11 @@ Public Class wsGiocatori
 				Try
 					Sql = "SELECT idGiocatore, Ruoli.idRuolo As idR, Cognome, Nome, Ruoli.Descrizione, EMail, Telefono, Soprannome, DataDiNascita, Indirizzo, " &
 						"CodFiscale, Maschio, Citta, Matricola, NumeroMaglia, Giocatori.idCategoria, -1 As idCategoria2, '' As Categoria2, -1 As idCategoria3, '' As Categoria3, Categorie.Descrizione As Categoria1, " &
-						"Giocatori.Categorie, Giocatori.RapportoCompleto, Giocatori.Cap, Giocatori.CittaNascita, Giocatori.Maggiorenne " &
+						"Giocatori.Categorie, Giocatori.RapportoCompleto, Giocatori.Cap, Giocatori.CittaNascita, Giocatori.Maggiorenne, CodiceTessera " &
 						"FROM Giocatori " &
 						"Left Join [Generale].[dbo].[Ruoli] On Giocatori.idRuolo=Ruoli.idRuolo " &
 						"Left Join Categorie On Categorie.idCategoria=Giocatori.idCategoria And Categorie.idAnno=Giocatori.idAnno " &
+						"Left Join [Generale].[dbo].[GiocatoriTessereNFC] As NFC On NFC.idGiocatore=Giocatori.idGiocatore " &
 						"Where Giocatori.Eliminato='N' And Giocatori.idAnno=" & idAnno & " And CharIndex('" & idCategoria & "-', Categorie) = 0 " &
 						"And Giocatori.RapportoCompleto = 'S' " &
 						"Order By Ruoli.idRuolo, Cognome, Nome"
@@ -1579,6 +1584,7 @@ Public Class wsGiocatori
 									Rec("Cap").Value.ToString & ";" &
 									Rec("CittaNascita").Value.ToString & ";" &
 									Rec("Maggiorenne").Value.ToString & ";" &
+									Rec("CodiceTessera").Value.ToString & ";" &
 									"§"
 
 								Rec.MoveNext()
@@ -1628,7 +1634,7 @@ Public Class wsGiocatori
 							"Giocatori.idCategoria3 As idCategoria3, Categorie3.Descrizione As Categoria3, Categorie.Descrizione As Categoria1, Giocatori.Categorie, " &
 							"Giocatori.RapportoCompleto, Giocatori.idTaglia, Min(KitGiocatori.idTipoKit) As idTipologiaKit, Giocatori.Cap, Giocatori.CittaNascita, Giocatori.Maggiorenne, " &
 							"GiocatoriSemafori.Semaforo1, GiocatoriSemafori.Titolo1, GiocatoriSemafori.Semaforo2, GiocatoriSemafori.Titolo2, GiocatoriSemafori.Smeaforo3, GiocatoriSemafori.Titolo3, " &
-							"GiocatoriSemafori.Semaforo4, GiocatoriSemafori.Titolo4, GiocatoriSemafori.Semaforo5, GiocatoriSemafori.Titolo5 " &
+							"GiocatoriSemafori.Semaforo4, GiocatoriSemafori.Titolo4, GiocatoriSemafori.Semaforo5, GiocatoriSemafori.Titolo5, CodiceTessera " &
 							"FROM Giocatori " &
 							"Left Join KitGiocatori On Giocatori.idGiocatore=KitGiocatori.idGiocatore " &
 							"Left Join [Generale].[dbo].[Ruoli] On Giocatori.idRuolo=Ruoli.idRuolo " &
@@ -1636,12 +1642,13 @@ Public Class wsGiocatori
 							"Left Join Categorie As Categorie2 On Categorie2.idCategoria=Giocatori.idCategoria2 And Categorie2.idAnno=Giocatori.idAnno " &
 							"Left Join Categorie As Categorie3 On Categorie3.idCategoria=Giocatori.idCategoria3 And Categorie3.idAnno=Giocatori.idAnno " &
 							"Left Join GiocatoriSemafori On Giocatori.idGiocatore = GiocatoriSemafori.idGiocatore " &
+							"Left Join [Generale].[dbo].[GiocatoriTessereNFC] As NFC On NFC.idGiocatore=Giocatori.idGiocatore " &
 							"Where Giocatori.Eliminato='N' And Giocatori.idAnno=" & idAnno & " " &
 							"Group By Giocatori.idGiocatore, Ruoli.idRuolo, Cognome, Nome, Ruoli.Descrizione, EMail, Telefono, Soprannome, DataDiNascita, Indirizzo, CodFiscale, Maschio, " &
 							"Citta, Matricola, NumeroMaglia, Giocatori.idCategoria, Giocatori.idCategoria2, Categorie2.Descrizione, Giocatori.idCategoria3, Categorie3.Descrizione, Categorie.Descrizione, " &
 							"Giocatori.Categorie, Giocatori.RapportoCompleto, Giocatori.idTaglia, Giocatori.Cap, Giocatori.CittaNascita, Giocatori.Maggiorenne, " &
 							"GiocatoriSemafori.Semaforo1, GiocatoriSemafori.Titolo1, GiocatoriSemafori.Semaforo2, GiocatoriSemafori.Titolo2, GiocatoriSemafori.Smeaforo3, GiocatoriSemafori.Titolo3, " &
-							"GiocatoriSemafori.Semaforo4, GiocatoriSemafori.Titolo4, GiocatoriSemafori.Semaforo5, GiocatoriSemafori.Titolo5 " &
+							"GiocatoriSemafori.Semaforo4, GiocatoriSemafori.Titolo4, GiocatoriSemafori.Semaforo5, GiocatoriSemafori.Titolo5, CodiceTessera " &
 							"Order By Giocatori.Cognome, Giocatori.Nome"
 						Rec = LeggeQuery(Conn, Sql, Connessione)
 						If TypeOf (Rec) Is String Then
@@ -1718,6 +1725,7 @@ Public Class wsGiocatori
 									Ritorno &= Rec("Cap").Value.ToString & ";"
 									Ritorno &= Rec("CittaNascita").Value.ToString & ";"
 									Ritorno &= Rec("Maggiorenne").Value.ToString & ";"
+									Ritorno &= Rec("CodiceTessera").Value.ToString & ";"
 									Ritorno &= "§"
 
 									Rec.MoveNext()
@@ -2531,7 +2539,7 @@ Public Class wsGiocatori
 	End Function
 
 	<WebMethod()>
-	Public Function TornaDatiGiocatore(Squadra As String, idGiocatore As String) As String
+	Public Function TornaDatiGiocatore(NumeroTessera As String, Squadra As String, idGiocatore As String) As String
 		Dim Ritorno As String = ""
 		Dim Connessione As String = LeggeImpostazioniDiBase(Server.MapPath("."), Squadra)
 		Dim c2() As String = Squadra.Split("_")
@@ -2592,7 +2600,7 @@ Public Class wsGiocatori
 
 								Ritorno &= Categorie & ";"
 
-								Sql = "Select Sum(Importo) From [Generale].[dbo].[TessereNFC] Where CodSquadra='" & Squadra & "' And idGiocatore=" & idGiocatore
+								Sql = "Select Sum(Importo) From [Generale].[dbo].[TessereNFC] Where NumeroTessera='" & NumeroTessera & "'" ' CodSquadra='" & Squadra & "' And idGiocatore=" & idGiocatore
 								Rec = LeggeQuery(Conn, Sql, Connessione)
 								If TypeOf (Rec) Is String Then
 									Ritorno = Rec
@@ -3286,7 +3294,7 @@ Public Class wsGiocatori
 							Else
 								Sql = "Insert Into Giocatori Values (" &
 									" " & idAnno & ", " &
-									" " & idGioc & ", " &
+									" " & idGiocatore & ", " &
 									" " & idCategoria & ", " &
 									" " & idRuolo & ", " &
 									"'" & Cognome.Replace("'", "''") & "', " &
@@ -3332,6 +3340,8 @@ Public Class wsGiocatori
 				If Ok Then
 					Sql = "commit"
 					Dim Ritorno2 As String = EsegueSql(Conn, Sql, Connessione)
+
+					Dim ct As String = CreaNumeroTesseraNFC(Conn, Connessione, Squadra, idGiocatore)
 				Else
 					Sql = "rollback"
 					Dim Ritorno2 As String = EsegueSql(Conn, Sql, Connessione)
@@ -3342,6 +3352,48 @@ Public Class wsGiocatori
 		End If
 
 		Return Ritorno
+	End Function
+
+	<WebMethod()>
+	Public Function CreaNumeroTesseraNFCDaFuori(Squadra As String, idGiocatore As String) As String
+		Dim Ritorno As String = ""
+		Dim Connessione As String = LeggeImpostazioniDiBase(Server.MapPath("."), Squadra)
+
+		If Connessione = "" Then
+			Ritorno = ErroreConnessioneNonValida & ":" & Connessione
+		Else
+			Dim Conn As Object = ApreDB(Connessione)
+
+			If TypeOf (Conn) Is String Then
+				Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
+			Else
+				Ritorno = CreaNumeroTesseraNFC(Conn, Connessione, Squadra, idGiocatore)
+			End If
+		End If
+
+		Return Ritorno
+	End Function
+
+	Private Function CreaNumeroTesseraNFC(Conn As Object, Connessione As String, Squadra As String, idGiocatore As String) As String
+		Dim CodiceTessera As String = ""
+		Dim Rec As Object = Server.CreateObject("ADODB.Recordset")
+		Dim Sql As String = "Select * From [Generale].[dbo].[GiocatoriTessereNFC] Where idGiocatore=" & idGiocatore & " And CodSquadra='" & Squadra & "'"
+		Rec = LeggeQuery(Conn, Sql, Connessione)
+		If Rec.Eof Then
+			CodiceTessera = DateTime.Now.Year & Strings.Format(DateTime.Now.Month, "00") & Strings.Format(DateTime.Now.Day, "00") & Strings.Format(DateTime.Now.Hour, "00") & Strings.Format(DateTime.Now.Minute, "00") + Strings.Format(DateTime.Now.Second, "00")
+			Dim stringaRandom As String = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"
+			Dim r As String = ""
+			For i As Integer = 1 To 6
+				Dim p As String = RitornaValoreRandom(stringaRandom.Length - 1) + 1
+				r &= Mid(stringaRandom, p, 1)
+			Next
+			CodiceTessera &= r
+			Sql = "Insert Into [Generale].[dbo].[GiocatoriTessereNFC] Values (" & idGiocatore & ", '" & Squadra & "', '" & CodiceTessera & "')"
+			Dim Ritorno As String = EsegueSql(Conn, Sql, Connessione)
+		End If
+		Rec.Close
+
+		Return CodiceTessera
 	End Function
 
 	<WebMethod()>
