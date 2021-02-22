@@ -48,6 +48,214 @@ Public Class wsReports
 	End Function
 
 	<WebMethod()>
+	Public Function StampaPagamenti(Squadra As String, Modalita As String) As String
+		Dim Ritorno As String = ""
+		Dim Connessione As String = LeggeImpostazioniDiBase(Server.MapPath("."), Squadra)
+
+		If Connessione = "" Then
+			Ritorno = ErroreConnessioneNonValida
+		Else
+			Dim Conn As Object = ApreDB(Connessione)
+			Dim Rec As Object = Server.CreateObject("ADODB.Recordset")
+			Dim Rec2 As Object = Server.CreateObject("ADODB.Recordset")
+
+			If TypeOf (Conn) Is String Then
+				Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
+			Else
+				Dim Sql As String = ""
+				Dim Ok As Boolean = True
+
+				Sql = "Select idGiocatore, Nome, Cognome, Descrizione, Importo, ImportoQuota, ImportoManuale, PagamentoTotale, (Importo - ImportoQuota + ImportoManuale) As Differenza From ( " &
+					"Select A.idGiocatore, B.Nome, B.Cognome, C.Descrizione, C.Importo, IsNull(Sum(A.Pagamento),0) - IsNull(Sum(A.ImportoManuale),0) As ImportoQuota, IsNull(Sum(A.ImportoManuale),0) As ImportoManuale, " &
+					"IsNull(Sum(A.Pagamento), 0) - IsNull(Sum(A.ImportoManuale),0) + IsNull(Sum(A.ImportoManuale),0) As PagamentoTotale, " &
+					"IsNull(Sum(A.ImportoManuale),0) - (IsNull(Sum(A.Pagamento), 0) - IsNull(Sum(A.ImportoManuale),0) + IsNull(Sum(A.ImportoManuale),0)) As DIfferenza " &
+					"From GiocatoriPagamenti A " &
+					"Left Join Giocatori B On A.idGiocatore = B.idGiocatore " &
+					"Left Join Quote C On A.idQuota = C.idQuota " &
+					"Where A.Eliminato = 'N' And B.Eliminato = 'N' And C.Eliminato = 'N' And A.idTipoPagamento = 1 " &
+					"Group By A.idGiocatore, B.Nome, B.Cognome, C.Descrizione, C.Importo) A " &
+					"Order By Cognome, Nome"
+				Rec = LeggeQuery(Conn, Sql, Connessione)
+				If TypeOf (Rec) Is String Then
+					Ritorno = Rec
+					Ok = False
+				Else
+					Dim Output As New StringBuilder
+					Dim gf As New GestioneFilesDirectory
+					Dim pp As String = gf.LeggeFileIntero(Server.MapPath(".") & "\Impostazioni\Paths.txt")
+					pp = pp.Replace(vbCrLf, "")
+					pp = pp.Trim()
+					If Strings.Right(pp, 1) = "\" Then
+						pp = Mid(pp, 1, pp.Length - 1)
+					End If
+					Dim PathAllegati As String = gf.LeggeFileIntero(Server.MapPath(".") & "\Impostazioni\PathAllegati.txt")
+					Dim P() As String = PathAllegati.Split(";")
+					P(2) = P(2).Replace(vbCrLf, "").Trim
+					If Strings.Right(P(2), 1) = "\" Then
+						P(2) = Mid(P(2), 1, P(2).Length - 1)
+					End If
+
+					Dim CodSquadra() As String = Squadra.Split("_")
+					Dim idSquadra As Integer = Val(CodSquadra(1))
+					Dim idAnno As String = Val(CodSquadra(0)).ToString.Trim
+					Dim AnnoAttivazione As String = ""
+					Dim NomeSquadra As String = ""
+					Dim c As New CriptaFiles
+
+					Dim totQuota As Single = 0
+					Dim totPagatoQuota As Single = 0
+					Dim totPagatoManuale As Single = 0
+					Dim totDifferenza As Single = 0
+
+					If Modalita = "PDF" Then
+						Output.Append("<table style=""width: 100%;"" cellapadding=""0"" cellspacing=""0"">")
+						Output.Append("<tr>")
+						Output.Append("<th></th>")
+						Output.Append("<th style = ""text-align: left;"">Cognome</th>")
+						Output.Append("<th style=""text-align: left;"">Nome</th>")
+						Output.Append("<th style = ""text-align: left;"">Quota</th>")
+						Output.Append("<th style = ""text-align: right;"">Totale Quota</th>")
+						Output.Append("<th style = ""text-align: right;"">Pag. Quota</th>")
+						Output.Append("<th style = ""text-align: right;"">Pag. Manuale</th>")
+						Output.Append("<th style = ""text-align: right;"">Differenza</th>")
+						Output.Append("</tr>")
+					Else
+						Output.Append("Cognome;Nome;Quota;Totale Quota;Pag. Quota;Pag. Manuale;Differenza")
+						Output.Append(vbCrLf)
+					End If
+
+					Do Until Rec.Eof
+						If Modalita = "PDF" Then
+							Dim Immagine As String = ""
+							Dim Esten2 As String = Format(Now.Second, "00") & "_" & Now.Millisecond & RitornaValoreRandom(55)
+							Dim urlImmagine As String = P(2) & "/" & NomeSquadra.Replace(" ", "_") & "/Giocatori/" & idAnno & "_" & Rec("idGiocatore").Value & ".kgb"
+							Dim pathImmagine As String = pp & "\" & NomeSquadra.Replace(" ", "_") & "\Giocatori\" & idAnno & "_" & Rec("idGiocatore").Value & ".kgb"
+							Dim urlImmagineConvertita As String = P(2) & "/Appoggio/" & Rec("idGiocatore").Value & "_" & Esten2 & ".png"
+							Dim pathImmagineConvertita As String = pp & "\Appoggio\" & Rec("idGiocatore").Value & "_" & Esten2 & ".png"
+							If File.Exists(pathImmagine) Then
+								c.DecryptFile(CryptPasswordString, pathImmagine, pathImmagineConvertita)
+
+								Immagine = "<img src=""" & urlImmagineConvertita & """ style=""width: 50px; height: 50px;"" />"
+							Else
+								urlImmagineConvertita = P(2) & "/Sconosciuto.png"
+								Immagine = "<img src=""" & urlImmagineConvertita & """ style=""width: 50px; height: 50px;"" />"
+							End If
+
+							Output.Append("<tr>")
+							Output.Append("<td>" & Immagine & "</td>")
+							Output.Append("<td>" & Rec("Cognome").Value & "</td>")
+							Output.Append("<td>" & Rec("Nome").Value & "</td>")
+							Output.Append("<td>" & Rec("Descrizione").Value & "</td>")
+							Output.Append("<td style = ""text-align: right;"">" & Rec("Importo").Value & "</td>")
+							Output.Append("<td style = ""text-align: right;"">" & Rec("ImportoQuota").Value & "</td>")
+							Output.Append("<td style = ""text-align: right;"">" & Rec("ImportoManuale").Value & "</td>")
+							Output.Append("<td style = ""text-align: right;"">" & Rec("Differenza").Value & "</td>")
+							Output.Append("</tr>")
+						Else
+							Output.Append(Rec("Cognome").Value & ";")
+							Output.Append(Rec("Nome").Value & ";")
+							Output.Append(Rec("Descrizione").Value & ";")
+							Output.Append(Rec("Importo").Value & ";")
+							Output.Append(Rec("ImportoQuota").Value & ";")
+							Output.Append(Rec("ImportoManuale").Value & ";")
+							Output.Append(Rec("Differenza").Value & ";")
+							Output.Append(vbCrLf)
+						End If
+
+						totQuota += (Rec("Importo").Value).ToString.Replace(",", ".")
+						totPagatoQuota += (Rec("ImportoQuota").Value).ToString.Replace(",", ".")
+						totPagatoManuale += (Rec("ImportoManuale").Value).ToString.Replace(",", ".")
+						totDifferenza += (Rec("Differenza").Value).ToString.Replace(",", ".")
+
+						Rec.MoveNext
+					Loop
+					Rec.Close
+
+					Dim filePaths As String = gf.LeggeFileIntero(HttpContext.Current.Server.MapPath(".") & "\Impostazioni\Paths.txt")
+					filePaths = filePaths.Replace(vbCrLf, "")
+					If Strings.Right(filePaths, 1) <> "\" Then
+						filePaths &= "\"
+					End If
+					Dim Esten As String = Format(Now.Second, "00") & "_" & Now.Millisecond & RitornaValoreRandom(55)
+
+					If Modalita = "PDF" Then
+						Output.Append("<tr>")
+						Output.Append("<td colspan=""8""><hr />")
+						Output.Append("</td>")
+						Output.Append("</tr>")
+
+						Output.Append("<tr>")
+						Output.Append("<td></td>")
+						Output.Append("<td></td>")
+						Output.Append("<td></td>")
+						Output.Append("<td></td>")
+						Output.Append("<td style = ""font-weight: bold; text-align: right;"">" & totQuota & "</td>")
+						Output.Append("<td style = ""font-weight: bold; text-align: right;"">" & totPagatoQuota & "</td>")
+						Output.Append("<td style = ""font-weight: bold; text-align: right;"">" & totPagatoManuale & "</td>")
+						Output.Append("<td style = ""font-weight: bold; text-align: right;"">" & totDifferenza & "</td>")
+						Output.Append("</tr>")
+
+						Output.Append("</table>")
+
+						Dim filetto As String = gf.LeggeFileIntero(HttpContext.Current.Server.MapPath(".") & "\Scheletri\base_report.txt")
+
+						filetto = filetto.Replace("***TITOLO***", "Lista Pagamenti")
+						filetto = filetto.Replace("***DATI***", Output.ToString)
+						filetto = filetto.Replace("***NOME SQUADRA***", "<br /><br />" & NomeSquadra)
+
+						Dim multimediaPaths As String = gf.LeggeFileIntero(HttpContext.Current.Server.MapPath(".") & "\Impostazioni\PathAllegati.txt")
+						Dim mmPaths() As String = multimediaPaths.Split(";")
+						mmPaths(2) = mmPaths(2).Replace(vbCrLf, "")
+						If Strings.Right(mmPaths(2), 1) <> "/" Then
+							mmPaths(2) &= "/"
+						End If
+
+						Dim pathLogo As String = filePaths & NomeSquadra.Replace(" ", "_") & "\Societa\1_1.kgb"
+						If File.Exists(pathLogo) Then
+							Dim pathLogoConv As String = filePaths & "Appoggio\" & Esten & ".jpg"
+							c.DecryptFile(CryptPasswordString, pathLogo, pathLogoConv)
+
+							Dim urlLogo As String = mmPaths(2) & "Appoggio/" & Esten & ".jpg"
+							filetto = filetto.Replace("***LOGO SOCIETA***", urlLogo)
+						Else
+							filetto = filetto.Replace("***LOGO SOCIETA***", "")
+						End If
+
+						' filetto &= "<hr />Stampato tramite InCalcio, software per la gestione delle società di calcio - www.incalcio.it - info@incalcio.it"
+
+						Dim nomeFileHtml As String = filePaths & "Appoggio\" & Esten & ".html"
+						Dim nomeFilePDF As String = filePaths & "Appoggio\" & Esten & ".pdf"
+
+						gf.CreaAggiornaFile(nomeFileHtml, filetto)
+
+						Dim pp2 As New pdfGest
+						Ritorno = pp2.ConverteHTMLInPDF(nomeFileHtml, nomeFilePDF, "")
+						If Ritorno = "*" Then
+							Ritorno = "Appoggio/" & Esten & ".pdf"
+						End If
+					Else
+						Output.Append("TOTALI;")
+						Output.Append(";")
+						Output.Append(";")
+						Output.Append(totQuota & ";")
+						Output.Append(totPagatoQuota & ";")
+						Output.Append(totPagatoManuale & ";")
+						Output.Append(totDifferenza & ";")
+						Output.Append(vbCrLf)
+
+						Dim nomeFileCSV As String = filePaths & "Appoggio\" & Esten & ".csv"
+						gf.CreaAggiornaFile(nomeFileCSV, Output.ToString)
+
+						Ritorno = "Appoggio/" & Esten & ".csv"
+					End If
+				End If
+			End If
+		End If
+
+		Return Ritorno
+	End Function
+
+	<WebMethod()>
 	Public Function StampaAnagrafica(Squadra As String, Tipologia As String, Dato As String, Certificato As String, FirmePresenti As String, KitConsegnato As String) As String
 		Dim Ritorno As String = ""
 		Dim Connessione As String = LeggeImpostazioniDiBase(Server.MapPath("."), Squadra)

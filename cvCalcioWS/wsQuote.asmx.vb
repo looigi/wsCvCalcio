@@ -348,6 +348,7 @@ Public Class wsQuote
 								Ritorno &= Rec("Descrizione").Value.ToString & ";"
 								Ritorno &= Rec("Importo").Value & ";"
 								Ritorno &= Rec("Deducibilita").Value & ";"
+								Ritorno &= Rec("QuotaManuale").Value & ";"
 
 								Sql = "Select * From QuoteRate Where idQuota=" & Rec("idQuota").Value & " And Eliminato='N' Order By Progressivo"
 								Rec2 = LeggeQuery(Conn, Sql, Connessione)
@@ -475,7 +476,7 @@ Public Class wsQuote
 								   AttivaR3 As String, DescRataR3 As String, DataScadenzaR3 As String, ImportoR3 As String,
 								   AttivaR4 As String, DescRataR4 As String, DataScadenzaR4 As String, ImportoR4 As String,
 								   AttivaR5 As String, DescRataR5 As String, DataScadenzaR5 As String, ImportoR5 As String,
-								   Deducibilita As String) As String
+								   Deducibilita As String, QuotaManuale As String) As String
 		Dim Ritorno As String = ""
 		Dim Connessione As String = LeggeImpostazioniDiBase(Server.MapPath("."), Squadra)
 		Dim Giocata As String = ""
@@ -500,7 +501,8 @@ Public Class wsQuote
 						Sql = "Update Quote Set " &
 							"Descrizione='" & Descrizione.Replace("'", "''") & "', " &
 							"Importo=" & Importo & ", " &
-							"Deducibilita='" & Deducibilita & "' " &
+							"Deducibilita='" & Deducibilita & "', " &
+							"QuotaManuale='" & QuotaManuale & "' " &
 							"Where idQuota=" & idQuota
 						Ritorno = EsegueSql(Conn, Sql, Connessione)
 						If Ritorno.Contains(StringaErrore) Then
@@ -589,7 +591,7 @@ Public Class wsQuote
 								   AttivaR3 As String, DescRataR3 As String, DataScadenzaR3 As String, ImportoR3 As String,
 								   AttivaR4 As String, DescRataR4 As String, DataScadenzaR4 As String, ImportoR4 As String,
 								   AttivaR5 As String, DescRataR5 As String, DataScadenzaR5 As String, ImportoR5 As String,
-								   Deducibilita As String) As String
+								   Deducibilita As String, QuotaManuale As String) As String
 		Dim Ritorno As String = ""
 		Dim Connessione As String = LeggeImpostazioniDiBase(Server.MapPath("."), Squadra)
 		Dim Giocata As String = ""
@@ -632,7 +634,7 @@ Public Class wsQuote
 
 					If Ok Then
 						Try
-							Sql = "Insert Into Quote Values (" & idQuota & ", '" & Descrizione.Replace("'", "''") & "', " & Importo & ", 'N', '" & Deducibilita & "')"
+							Sql = "Insert Into Quote Values (" & idQuota & ", '" & Descrizione.Replace("'", "''") & "', " & Importo & ", 'N', '" & Deducibilita & "', '" & QuotaManuale & "')"
 							Ritorno = EsegueSql(Conn, Sql, Connessione)
 							If Ritorno.Contains(StringaErrore) Then
 								Ok = False

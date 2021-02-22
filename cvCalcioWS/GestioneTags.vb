@@ -86,13 +86,33 @@ Public Class GestioneTags
 		End If
 		ScriveLog(" - File Scheletro: " & fileScheletro)
 
+		'abc***123***def
+		'6
+		'123*** def
+		'4
+		'***123***
 		Dim Body As String = gf.LeggeFileIntero(fileScheletro)
 		While Body.Contains("***")
-			Dim Parte1 As String = Body.IndexOf("***") + 3
+			ScriveLog("----------------------------------------------------------------------------")
+			Dim Inizio As Integer = Body.IndexOf("***") + 4
+			'ScriveLog("Tag da ricercare 1:" & Inizio)
+			Dim Parte1 As String = Mid(Body, Inizio, 75)
+			'ScriveLog("Tag da ricercare 2:" & Parte1)
 			Dim Altro As Integer = Parte1.IndexOf("***")
+			'ScriveLog("Tag da ricercare 3:" & Altro)
 
-			Parte1 = "***" & Mid(Parte1, 1, Altro) & "***"
-			Body = Body.Replace(Parte1, EsegueQuery(Parte1, CodSquadra, NomeSquadra, Anno, idGiocatore, Genitore, Privacy))
+			'If Parte1 > 0 And Altro > 0 Then
+			Dim Parte2 As String = "***" & Mid(Body, Inizio, Altro) & "***"
+			'ScriveLog("Tag da ricercare:" & Inizio & "-" & Altro & "-" & (Inizio + Altro) & ": " & Parte2)
+
+			Body = Body.Replace(Parte2, EsegueQuery(Parte2, CodSquadra, NomeSquadra, Anno, idGiocatore, Genitore, Privacy))
+			'Else
+			'If Parte1 > 0 Then
+
+			'Else
+			'Exit While
+			'End If
+			'End If
 		End While
 
 		Return Body
@@ -101,9 +121,8 @@ Public Class GestioneTags
 	Public Function EsegueQuery(Tag As String, CodSquadra As String, NomeSquadra As String, Anno As String, idGiocatore As String, Genitore As String, Privacy As String) As String
 		Dim Ritorno As String = ""
 		Dim Rec As Object = HttpContext.Current.Server.CreateObject("ADODB.Recordset")
-		Dim Sql As String = "Select * From Tags Where Tag='" & Tag & "'"
+		Dim Sql As String = "Select * From Tags Where Valore='" & Tag & "'"
 
-		ScriveLog("----------------------------------------------------------------------------")
 		ScriveLog(" - Tag: " & Tag & " / CodSquadra:" & CodSquadra & " / Squadra: " & NomeSquadra & " / Anno: " & Anno & " / Parametro: " & idGiocatore)
 
 		Rec = LeggeQuery(Conn, Sql, Connessione)

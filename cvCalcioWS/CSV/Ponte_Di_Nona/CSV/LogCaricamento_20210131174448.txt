@@ -1,0 +1,15 @@
+Codice squadra: 0001_00002
+Begin trans
+Intestazione 1
+Intestazione 2
+idGiocatore di partenza: 556
+Righe: 12
+Maggiorenne:N
+EMail:cognome001.nome001@gmail.com
+Insert Into Giocatori (idAnno, idGiocatore, idCategoria, Cognome, Nome, EMail, Telefono, DataDiNascita, Indirizzo, CodFiscale, Maschio, Citta, Cap, Eliminato, RapportoCompleto, idRuolo, Maggiorenne, idTaglia, Categorie, idCategoria2, idCategoria3 ) Values (1, 556, -1, 'Cognome001', 'Nome001', 'cognome001.nome001@gmail.com', 3355754500, '2010-1-1', 'via non lo so 11', 'CNMNMO10H501A', 'M', 'Roma', '00101', 'N', 'N', 0, 'N', -1, '', -1, -1 )
+Insert into GiocatoriDettaglio (idAnno, idGiocatore) Values (1, 557)
+Insert into GiocatoriMails Values (557, 3, 'cognome001.nome001@gmail.com', 'S')
+Insert into GiocatoriMails Values (557, 1, '', 'S')
+Insert into GiocatoriMails Values (557, 2, '', 'S')
+Creazione tessera NFC per il giocatore
+Impossibile trovare il membro pubblico 'Eof' nel tipo 'String'.

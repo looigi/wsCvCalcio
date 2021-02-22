@@ -1901,4 +1901,38 @@ Public Class wsGenerale
 
 		Return Ritorno
 	End Function
+
+	<WebMethod()>
+	Public Function RitornaCitta() As String
+		Dim Ritorno As String = ""
+		Dim Connessione As String = LeggeImpostazioniDiBase(Server.MapPath("."), "")
+
+		If Connessione = "" Then
+			Ritorno = ErroreConnessioneNonValida & ":" & Connessione
+		Else
+			Dim Conn As Object = ApreDB(Connessione)
+
+			If TypeOf (Conn) Is String Then
+				Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
+			Else
+				Dim Sql As String = "Select CodiceCatastale, Comune From ComuniItaliani Order By Comune"
+				Dim Rec As Object = Server.CreateObject("ADODB.Recordset")
+
+				Rec = LeggeQuery(Conn, Sql, Connessione)
+				If TypeOf (Rec) Is String Then
+					Ritorno = Rec
+				Else
+					Do Until Rec.Eof
+						Ritorno &= Rec("CodiceCatastale").Value & ";" & Rec("Comune").Value & "§"
+
+						Rec.MoveNext
+					Loop
+					Rec.Close
+				End If
+			End If
+		End If
+
+		Return Ritorno
+	End Function
+
 End Class

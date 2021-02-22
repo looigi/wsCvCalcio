@@ -15,7 +15,7 @@ Public Class wsSuperUser
 
 	<WebMethod()>
 	Public Function CreaDB(Squadra As String, DataScadenza As String, MailAdmin As String, NomeAdmin As String, CognomeAdmin As String, Anno As String, idTipologia As String,
-						   idLicenza As String, Mittente As String) As String
+						   idLicenza As String, Mittente As String, Telefono As String, CAP As String, Citta As String, Indirizzo As String, Stima As String, PIVA As String, CF As String) As String
 		Dim Ritorno As String = ""
 		Dim ConnessioneGenerale As String = LeggeImpostazioniDiBase(Server.MapPath("."), "")
 		Dim ConnessioneDBVuoto As String = LeggeImpostazioniDiBase(Server.MapPath("."), "DBVUOTO")
@@ -51,6 +51,19 @@ Public Class wsSuperUser
 				gf.ScriveTestoSuFileAperto("idLicenza: " & idLicenza)
 				gf.ScriveTestoSuFileAperto("Mittente: " & Mittente)
 				gf.ScriveTestoSuFileAperto("-------------------------------------------")
+
+				Sql = "Select * From DettaglioSocieta Where EMailAmministratore='" & MailAdmin.Replace("'", "''") & "'"
+				Rec = LeggeQuery(ConnGen, Sql, ConnessioneGenerale)
+				If TypeOf (Rec) Is String Then
+					Ritorno = Rec
+					Ok = False
+				Else
+					If Not Rec.Eof Then
+						gf.ScriveTestoSuFileAperto("MAil Admin già presente in archivio: " & MailAdmin)
+						Return StringaErrore & " Mail Admin già presente in archivio"
+					End If
+					Rec.Close
+				End If
 
 				Sql = "Select Max(idSquadra)+1 From Squadre"
 				Rec = LeggeQuery(ConnGen, Sql, ConnessioneGenerale)
@@ -236,14 +249,14 @@ Public Class wsSuperUser
 													"'" & Squadra.Replace("'", "''") & "', " & ' NomeSquadra
 													"null, " & ' Lat
 													"null, " & ' Lon
-													"null, " & ' Indirizzo
+													"'" & Indirizzo.Replace("'", "''") & "', " &
 													"null, " & ' CampoSquadra
 													"null, " & ' NomePolisportiva
-													"null, " & ' Mail
+													"'" & MailAdmin.Replace("'", "''") & "', " &
 													"null, " & ' PEC
-													"null, " & ' Telefono
-													"null, " & ' PIva
-													"null, " & ' CodiceFiscale
+													"'" & Telefono.Replace("'", "''") & "', " &
+													"'" & PIVA.Replace("'", "''") & "', " &
+													"'" & CF.Replace("'", "''") & "', " &
 													"null, " & ' CodiceUnivoco
 													"null, " & ' SitoWeb
 													"null, " & ' MittenteMail
@@ -272,52 +285,84 @@ Public Class wsSuperUser
 														gf.ScriveTestoSuFileAperto(Ritorno & " -> " & Sql)
 													Else
 														gf.ScriveTestoSuFileAperto("Dati inseriti in tabella SquadraAnni")
-														Try
-															Dim Tipologia As String = ""
-															Dim Licenza As String = ""
 
-															Select Case idTipologia
-																Case 1
-																	Tipologia = "Produzione"
-																Case 2
-																	Tipologia = "Prova"
-															End Select
+														'Crea riga su dettaglio società
+														Sql = "Insert Into [Generale].[dbo].[DettaglioSocieta] Values (" &
+															"'" & nomeDb & "', " &
+															"'" & Squadra.Replace("'", "''") & "', " &
+															"'" & MailAdmin.Replace("'", "''") & "', " &
+															"'" & NomeAdmin.Replace("'", "''") & "', " &
+															"'" & CognomeAdmin.Replace("'", "''") & "', " &
+															"'" & Telefono.Replace("'", "''") & "', " &
+															"'" & CAP.Replace("'", "''") & "', " &
+															"'" & Citta.Replace("'", "''") & "', " &
+															"'" & Indirizzo.Replace("'", "''") & "', " &
+															" " & Stima & ", " &
+															"'" & PIVA.Replace("'", "''") & "', " &
+															"'" & CF.Replace("'", "''") & "', " &
+															" " & idLicenza & ", " &
+															" " & idTipologia & " " &
+															")"
+														'Crea riga su dettaglio società
+														Ritorno = EsegueSql(ConnDbVuoto, Sql, ConnessioneDBVuoto)
+														If Ritorno.Contains(StringaErrore) Then
+															Ok = False
+															gf.ScriveTestoSuFileAperto("Creazione voce su Dettaglio Società: " & Ritorno & vbCrLf & Sql)
+														Else
+															gf.ScriveTestoSuFileAperto("Dati inseriti in tabella Dettaglio società: " & "[" & nomeDb & "].[dbo].[Anni]")
 
-															Select Case idLicenza
-																Case 1
-																	Licenza = "Base"
-																Case 2
-																	Licenza = "Standard"
-																Case 3
-																	Licenza = "Premium"
-															End Select
+															Try
+																Dim Tipologia As String = ""
+																Dim Licenza As String = ""
 
-															Dim m As New mail
-															Dim Oggetto As String = "Creazione nuova società"
-															Dim Body As String = ""
+																Select Case idTipologia
+																	Case 1
+																		Tipologia = "Produzione"
+																	Case 2
+																		Tipologia = "Prova"
+																End Select
 
-															Body &= "E' stata creata la nuova società '" & Squadra & "'. <br /><br />"
-															Body &= "Amministratore: " & CognomeAdmin & " " & NomeAdmin & "<br />"
-															Body &= "Scadenza licenza: " & DataScadenza & "<br />"
-															Body &= "Anno: " & Anno & "<br />"
-															Body &= "Tipologia: " & Tipologia & "<br />"
-															Body &= "Licenza: " & Licenza & "<br /><br />"
-															Body &= "Per accedere, l'amministratore potrà utilizzare la password " & nuovaPass(0) & " che dovrà essere modificata al primo ingresso."
+																Select Case idLicenza
+																	Case 1
+																		Licenza = "Base"
+																	Case 2
+																		Licenza = "Standard"
+																	Case 3
+																		Licenza = "Premium"
+																End Select
 
-															Dim ChiScrive As String = "servizioclienti@incalcio.cloud"
+																Dim m As New mail
+																Dim Oggetto As String = "Creazione nuova società"
+																Dim Body As String = ""
 
-															gf.ScriveTestoSuFileAperto("Invio Mail")
+																Body &= "E' stata creata la nuova società '" & Squadra & "'. <br /><br />"
+																Body &= "Amministratore: " & CognomeAdmin & " " & NomeAdmin & "<br />"
+																Body &= "Scadenza licenza: " & DataScadenza & "<br />"
+																Body &= "Anno: " & Anno & "<br />"
+																Body &= "Tipologia: " & Tipologia & "<br />"
+																Body &= "Licenza: " & Licenza & "<br /><br />"
+																Body &= "Per accedere, l'amministratore potrà utilizzare la password " & nuovaPass(0) & " che dovrà essere modificata al primo ingresso."
 
-															Ritorno = m.SendEmail(Squadra, Mittente, Oggetto, Body, MailAdmin, {""})
-															If Ritorno.Contains(StringaErrore) Then
-																gf.ScriveTestoSuFileAperto("Ritorno invio mail: " & Ritorno)
-															Else
-																Ritorno = Societa
-															End If
-														Catch ex As Exception
-															Ritorno = StringaErrore & " " & ex.Message
-															gf.ScriveTestoSuFileAperto("Errore invio mail: " & Ritorno)
-														End Try
+																Dim ChiScrive As String = "servizioclienti@incalcio.cloud"
+
+																gf.ScriveTestoSuFileAperto("Invio Mail")
+
+																Ritorno = m.SendEmail(Squadra, Mittente, Oggetto, Body, MailAdmin, {""})
+																If Ritorno.Contains(StringaErrore) Then
+																	gf.ScriveTestoSuFileAperto("Ritorno invio mail destinario " & MailAdmin & ": " & Ritorno)
+																Else
+																	Ritorno = m.SendEmail(Squadra, Mittente, Oggetto, Body, Mittente, {""})
+																	If Ritorno.Contains(StringaErrore) Then
+																		gf.ScriveTestoSuFileAperto("Ritorno invio mail destinario " & Mittente & ": " & Ritorno)
+																	Else
+																		Ritorno = Societa
+																	End If
+																End If
+															Catch ex As Exception
+																Ritorno = StringaErrore & " " & ex.Message
+																gf.ScriveTestoSuFileAperto("Errore invio mail: " & Ritorno)
+															End Try
+														End If
 													End If
 												End If
 											End If
@@ -338,12 +383,13 @@ Public Class wsSuperUser
 					Dim Ritorno2 As String = EsegueSql(ConnGen, Sql, ConnessioneGenerale)
 					gf.ScriveTestoSuFileAperto("Rollback: " & Ritorno2)
 
-					ConnGen.Close
 					ConnDbVuoto.close
 
 					Sql = "Drop Database [" & nomeDb & "]"
-					Ritorno2 = EsegueSql(ConnDbVuoto, Sql, ConnessioneDBVuoto)
+					Ritorno2 = EsegueSql(ConnGen, Sql, ConnGen)
 					gf.ScriveTestoSuFileAperto("Drop Database: " & Ritorno2)
+
+					ConnGen.Close
 				End If
 
 				gf.ChiudeFileDiTestoDopoScrittura()
@@ -762,7 +808,7 @@ Public Class wsSuperUser
 			If Righe.Count = 0 Then
 				Ritorno = StringaErrore & " File vuoto"
 			Else
-				Dim Campi() As String = Righe(0).Split(";")
+				Dim Campi() As String = (Righe(0).Replace(Chr(34), "").Replace("'", "").Replace(vbCrLf, "")).Split(";")
 
 				If Campi.Count = 0 Then
 					Ritorno = StringaErrore & " Intestazione vuota"
@@ -773,8 +819,8 @@ Public Class wsSuperUser
 						Dim q As Integer = 0
 
 						For Each c In CampiCSV
-							If c.Trim.ToUpper <> Campi(q).Trim.ToUpper Then
-								Ritorno = StringaErrore & " Intestazione non valida: " & CampiCSV.ToString & " -> " & Campi.ToString
+							If c.Trim.ToUpper.Replace(Chr(34), "").Replace("'", "").Replace(vbCrLf, "") <> Campi(q).Trim.ToUpper.Replace(Chr(34), "").Replace("'", "").Replace(vbCrLf, "") Then
+								Ritorno = StringaErrore & " Intestazione non valida: " & c.ToString & " -> " & Campi(q).ToString
 								Exit For
 							End If
 							q += 1
@@ -811,7 +857,7 @@ Public Class wsSuperUser
 											gf.ScriveTestoSuFileAperto("Intestazione 1")
 
 											For i As Integer = 0 To CampiCSV.Count - 1
-												IntestCampi &= CampiCSV(i) & ", "
+												IntestCampi &= CampiCSV(i).Replace(Chr(34), "").Replace("'", "").Replace(vbCrLf, "") & ", "
 											Next
 											IntestCampi = "(idAnno, idGiocatore, idCategoria, " & Mid(IntestCampi, 1, IntestCampi.Length - 2) & ", Eliminato, RapportoCompleto, " &
 												"idRuolo, Maggiorenne, idTaglia, Categorie, idCategoria2, idCategoria3 )"
@@ -842,7 +888,7 @@ Public Class wsSuperUser
 											For i As Integer = 1 To Righe.Count - 1
 												If Righe(i).Trim <> "" Then
 													Dim Scrive As Boolean = True
-													Dim Campi2() As String = Righe(i).Split(";")
+													Dim Campi2() As String = (Righe(i).Replace(Chr(34), "").Replace("'", "").Replace(vbCrLf, "")).Split(";")
 													Sql = "Insert Into Giocatori " & IntestCampi & " Values ("
 
 													Sql &= idAnno & ", " & idGiocatore & ", -1, "
@@ -854,10 +900,10 @@ Public Class wsSuperUser
 													Dim Maggiorenne As String = ""
 
 													For k As Integer = 0 To Campi2.Count - 1
-														Dim c As String = IIf(Campi2(k) = "", "null", Campi2(k))
+														Dim c As String = IIf(Campi2(k).Replace(Chr(34), "").Replace("'", "").Replace(vbCrLf, "") = "", "null", Campi2(k))
 
-														If CampiCSV(k).ToUpper.Contains("CODFISCALE") Then
-															Dim Sql1 As String = "Select * From Giocatori Where Upper(Ltrim(Rtrim(CodFiscale)))='" & Campi2(k).Trim.ToUpper & "'"
+														If CampiCSV(k).Replace(Chr(34), "").Replace("'", "").Replace(vbCrLf, "").ToUpper.Contains("CODFISCALE") Then
+															Dim Sql1 As String = "Select * From Giocatori Where Upper(Ltrim(Rtrim(CodFiscale)))='" & Campi2(k).Replace(Chr(34), "").Replace("'", "").Replace(vbCrLf, "").Trim.ToUpper & "'"
 															Rec2 = LeggeQuery(ConnGen, Sql1, ConnessioneGenerale)
 															If TypeOf (Rec2) Is String Then
 																Ritorno = Rec2
@@ -871,11 +917,11 @@ Public Class wsSuperUser
 															End If
 														End If
 
-														If CampiCSV(k).ToUpper.Contains("MAIL") Then
+														If CampiCSV(k).Replace(Chr(34), "").Replace("'", "").Replace(vbCrLf, "").ToUpper.Contains("MAIL") Then
 															eMail = Campi2(k)
 														End If
 
-														If CampiCSV(k).ToUpper.Contains("MASCHIO") Then
+														If CampiCSV(k).Replace(Chr(34), "").Replace("'", "").Replace(vbCrLf, "").ToUpper.Contains("MASCHIO") Then
 															If Campi2(k) = "S" Or Campi2(k) = "M" Then
 																Campi2(k) = "M"
 															Else
@@ -883,7 +929,7 @@ Public Class wsSuperUser
 															End If
 														End If
 
-														If CampiCSV(k).ToUpper.Contains("NASCITA") Then
+														If CampiCSV(k).Replace(Chr(34), "").Replace("'", "").Replace(vbCrLf, "").ToUpper.Contains("NASCITA") Then
 															Dim d() As String = Campi2(k).Split("/")
 															Campi2(k) = d(2) & "-" & d(1) & "-" & d(0)
 															Dim dd As Date = Convert.ToDateTime(Campi2(k))
@@ -954,6 +1000,10 @@ Public Class wsSuperUser
 																	"'Nessun elemento kit consegnato' " &
 																	")"
 																Ritorno = EsegueSql(ConnGen, Sql, ConnessioneGenerale)
+
+																gf.ScriveTestoSuFileAperto("Creazione tessera NFC per il giocatore")
+																Dim Ritorno2 As String = CreaNumeroTesseraNFC(ConnGen, ConnessioneGenerale, Squadra, idGiocatore)
+																gf.ScriveTestoSuFileAperto("Creazione tessera NFC per il giocatore. Numero tessera: " & Ritorno2)
 
 																gf.ScriveTestoSuFileAperto("Riga scritta")
 																gf.ScriveTestoSuFileAperto("")

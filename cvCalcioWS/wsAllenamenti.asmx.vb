@@ -55,7 +55,36 @@ Public Class wsAllenamenti
 	End Function
 
 	<WebMethod()>
-	Public Function InseriscePresenzaAllenamenti(Squadra As String, idGiocatore As String, NomeLettore As String, DataOra As String) As String
+	Public Function InseriscePresenzaAllenamenti(CodiceTessera As String, NomeLettore As String, DataOra As String) As String
+		Dim Ritorno As String = ""
+		Dim Connessione As String = LeggeImpostazioniDiBase(Server.MapPath("."), "")
+		Dim Conn As Object = ApreDB(Connessione)
+
+		If TypeOf (Conn) Is String Then
+			Ritorno = "01" ' ErroreConnessioneDBNonValida & ":" & Conn
+		Else
+			Dim Rec As Object = Server.CreateObject("ADODB.Recordset")
+			Dim Sql As String = "Select * From GiocatoriTessereNFC Where CodiceTessera = ' " & CodiceTessera & "'"
+			Rec = LeggeQuery(Conn, Sql, Connessione)
+			If TypeOf (Rec) Is String Then
+				Ritorno = "02" ' Rec
+			Else
+				If Rec.Eof Then
+					Ritorno = "13" ' StringaErrore & " Nessuna tessera rilevata"
+				Else
+					Dim idGiocatore As String = Rec("idGiocatore").Value
+					Dim CodSquadra As String = Rec("CodSquadra").Value
+					Rec.Close
+
+					Ritorno = InseriscePresenzaAllenamentiFinale(CodSquadra, idGiocatore, NomeLettore, DataOra)
+				End If
+			End If
+		End If
+
+		Return Ritorno
+	End Function
+
+	Public Function InseriscePresenzaAllenamentiFinale(Squadra As String, idGiocatore As String, NomeLettore As String, DataOra As String) As String
 		Dim Ritorno As String = ""
 		Dim Connessione As String = LeggeImpostazioniDiBase(Server.MapPath("."), Squadra)
 
@@ -142,35 +171,35 @@ Public Class wsAllenamenti
 						Else
 							Dim Conn As Object = ApreDB(Connessione)
 
-						If TypeOf (Conn) Is String Then
+							If TypeOf (Conn) Is String Then
 								Ritorno = "01" ' ErroreConnessioneDBNonValida & ":" & Conn
 							Else
-							Dim Rec As Object = Server.CreateObject("ADODB.Recordset")
-							Dim Sql As String = ""
-							Dim Ok As Boolean = True
+								Dim Rec As Object = Server.CreateObject("ADODB.Recordset")
+								Dim Sql As String = ""
+								Dim Ok As Boolean = True
 
-							Sql = "Begin transaction"
-							Ritorno = EsegueSql(Conn, Sql, Connessione)
+								Sql = "Begin transaction"
+								Ritorno = EsegueSql(Conn, Sql, Connessione)
 
-							If Not Ritorno.Contains(StringaErrore) Then
-								Sql = "Select idAnno, Categorie From Giocatori Where idGiocatore = " & idGiocatore
-								Rec = LeggeQuery(Conn, Sql, Connessione)
-								If TypeOf (Rec) Is String Then
+								If Not Ritorno.Contains(StringaErrore) Then
+									Sql = "Select idAnno, Categorie From Giocatori Where idGiocatore = " & idGiocatore
+									Rec = LeggeQuery(Conn, Sql, Connessione)
+									If TypeOf (Rec) Is String Then
 										Ritorno = "02" ' Rec
 									Else
-									If Rec.Eof Then
+										If Rec.Eof Then
 											Ritorno = "07" ' StringaErrore & " Nessun giocatore rilevato"
 										Else
-										Dim idAnno As String = Rec("idAnno").Value
-										Dim Categorie As String = Rec("Categorie").Value
-										Dim sCat() As String = {}
-										If Categorie <> "" And Categorie.Contains("-") Then
-											sCat = Categorie.Split("-")
-										End If
-										Rec.Close
+											Dim idAnno As String = Rec("idAnno").Value
+											Dim Categorie As String = Rec("Categorie").Value
+											Dim sCat() As String = {}
+											If Categorie <> "" And Categorie.Contains("-") Then
+												sCat = Categorie.Split("-")
+											End If
+											Rec.Close
 
-										Sql = "Select * From LettoriNFC Where Descrizione = '" & NomeLettore & "' And Eliminato='N'"
-										Rec = LeggeQuery(Conn, Sql, Connessione)
+											Sql = "Select * From LettoriNFC Where Descrizione = '" & NomeLettore & "' And Eliminato='N'"
+											Rec = LeggeQuery(Conn, Sql, Connessione)
 											If TypeOf (Rec) Is String Then
 												Ritorno = Rec
 											Else

@@ -1926,4 +1926,26 @@ Module Globale
 
 	'Return Immagine
 	'End Function
+
+	Public Function CreaNumeroTesseraNFC(Conn As Object, Connessione As String, Squadra As String, idGiocatore As String) As String
+		Dim CodiceTessera As String = ""
+		Dim Rec As Object = HttpContext.Current.Server.CreateObject("ADODB.Recordset")
+		Dim Sql As String = "Select * From [Generale].[dbo].[GiocatoriTessereNFC] Where idGiocatore=" & idGiocatore & " And CodSquadra='" & Squadra & "'"
+		Rec = LeggeQuery(Conn, Sql, Connessione)
+		If Rec.Eof Then
+			CodiceTessera = DateTime.Now.Year & Strings.Format(DateTime.Now.Month, "00") & Strings.Format(DateTime.Now.Day, "00") & Strings.Format(DateTime.Now.Hour, "00") & Strings.Format(DateTime.Now.Minute, "00") + Strings.Format(DateTime.Now.Second, "00")
+			Dim stringaRandom As String = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"
+			Dim r As String = ""
+			For i As Integer = 1 To 6
+				Dim p As String = RitornaValoreRandom(stringaRandom.Length - 1) + 1
+				r &= Mid(stringaRandom, p, 1)
+			Next
+			CodiceTessera &= r
+			Sql = "Insert Into [Generale].[dbo].[GiocatoriTessereNFC] Values (" & idGiocatore & ", '" & Squadra & "', '" & CodiceTessera & "')"
+			Dim Ritorno As String = EsegueSql(Conn, Sql, Connessione)
+		End If
+		Rec.Close
+
+		Return CodiceTessera
+	End Function
 End Module

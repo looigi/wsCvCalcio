@@ -1642,7 +1642,7 @@ Public Class wsGiocatori
 							"Left Join Categorie As Categorie2 On Categorie2.idCategoria=Giocatori.idCategoria2 And Categorie2.idAnno=Giocatori.idAnno " &
 							"Left Join Categorie As Categorie3 On Categorie3.idCategoria=Giocatori.idCategoria3 And Categorie3.idAnno=Giocatori.idAnno " &
 							"Left Join GiocatoriSemafori On Giocatori.idGiocatore = GiocatoriSemafori.idGiocatore " &
-							"Left Join [Generale].[dbo].[GiocatoriTessereNFC] As NFC On NFC.idGiocatore=Giocatori.idGiocatore " &
+							"Left Join [Generale].[dbo].[GiocatoriTessereNFC] As NFC On NFC.idGiocatore=Giocatori.idGiocatore And NFC.CodSquadra = '" & Squadra & "' " &
 							"Where Giocatori.Eliminato='N' And Giocatori.idAnno=" & idAnno & " " &
 							"Group By Giocatori.idGiocatore, Ruoli.idRuolo, Cognome, Nome, Ruoli.Descrizione, EMail, Telefono, Soprannome, DataDiNascita, Indirizzo, CodFiscale, Maschio, " &
 							"Citta, Matricola, NumeroMaglia, Giocatori.idCategoria, Giocatori.idCategoria2, Categorie2.Descrizione, Giocatori.idCategoria3, Categorie3.Descrizione, Categorie.Descrizione, " &
@@ -3130,7 +3130,7 @@ Public Class wsGiocatori
 
 					'If idGiocatore = "-1" Then
 					If Modalita = "INSERIMENTO" Then
-						Sql = "SELECT * FROM Giocatori Where idAnno=" & idAnno & " And Upper(lTrim(rTrim(CodFiscale)))='" & CodFiscale.ToUpper.Trim & "'"
+						Sql = "SELECT * FROM Giocatori Where idAnno=" & idAnno & " And Upper(lTrim(rTrim(CodFiscale)))='" & CodFiscale.ToUpper.Trim & "' And Eliminato='N'"
 						Rec = LeggeQuery(Conn, Sql, Connessione)
 						If Not Rec.Eof Then
 							Ritorno = StringaErrore & "Codice fiscale già presente in archivio" ' : " & CodFiscale & "--->" & Sql
@@ -3372,28 +3372,6 @@ Public Class wsGiocatori
 		End If
 
 		Return Ritorno
-	End Function
-
-	Private Function CreaNumeroTesseraNFC(Conn As Object, Connessione As String, Squadra As String, idGiocatore As String) As String
-		Dim CodiceTessera As String = ""
-		Dim Rec As Object = Server.CreateObject("ADODB.Recordset")
-		Dim Sql As String = "Select * From [Generale].[dbo].[GiocatoriTessereNFC] Where idGiocatore=" & idGiocatore & " And CodSquadra='" & Squadra & "'"
-		Rec = LeggeQuery(Conn, Sql, Connessione)
-		If Rec.Eof Then
-			CodiceTessera = DateTime.Now.Year & Strings.Format(DateTime.Now.Month, "00") & Strings.Format(DateTime.Now.Day, "00") & Strings.Format(DateTime.Now.Hour, "00") & Strings.Format(DateTime.Now.Minute, "00") + Strings.Format(DateTime.Now.Second, "00")
-			Dim stringaRandom As String = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"
-			Dim r As String = ""
-			For i As Integer = 1 To 6
-				Dim p As String = RitornaValoreRandom(stringaRandom.Length - 1) + 1
-				r &= Mid(stringaRandom, p, 1)
-			Next
-			CodiceTessera &= r
-			Sql = "Insert Into [Generale].[dbo].[GiocatoriTessereNFC] Values (" & idGiocatore & ", '" & Squadra & "', '" & CodiceTessera & "')"
-			Dim Ritorno As String = EsegueSql(Conn, Sql, Connessione)
-		End If
-		Rec.Close
-
-		Return CodiceTessera
 	End Function
 
 	<WebMethod()>
@@ -4378,8 +4356,8 @@ Public Class wsGiocatori
 					If Rec.Eof Then
 						Ritorno = StringaErrore & " Nessuna squadra rilevata"
 					Else
-						Dim NomeSquadra As String = Rec("NomeSquadra").Value
-						Dim Descrizione As String = Rec("Descrizione").Value
+						Dim NomeSquadra As String = "" & Rec("NomeSquadra").Value
+						Dim Descrizione As String = "" & Rec("Descrizione").Value
 						Dim iscrFirmaEntrambi As String = "" & Rec("iscrFirmaEntrambi").Value
 						Rec.Close
 
@@ -4412,6 +4390,7 @@ Public Class wsGiocatori
 								Dim fileDaCopiare As String = P(0) & "\" & Squadra & "\Firme\iscrizione_" & Anno & "_" & idGiocatore & ".html"
 								Dim fileDaCopiarePDF As String = P(0) & "\" & Squadra & "\Firme\iscrizione_" & Anno & "_" & idGiocatore & ".pdf"
 								Dim fileLog As String = P(0) & "\" & Squadra & "\Firme\iscrizione_" & Anno & "_" & idGiocatore & ".log"
+
 								'Dim fileDaCopiare2 As String = P(0) & "\" & Squadra & "\Firme\iscrizione_" & Anno & "_" & idGiocatore & "_send.html"
 								gf.CreaDirectoryDaPercorso(fileDaCopiare)
 								' Dim fileScheletro As String = Server.MapPath(".") & "\Scheletri\base_iscrizione_.txt"
@@ -4427,6 +4406,7 @@ Public Class wsGiocatori
 									'fileFirme = RiempieFileFirme(fileFirme, Anno, idGiocatore, Rec, Conn, Connessione, NomeSquadra, P, Descrizione)
 									Dim gt As New GestioneTags
 									Dim fileFirme As String = gt.EsegueFileFirme(Squadra, NomeSquadra, idGiocatore, Anno, "", "")
+									Return fileFirme
 
 									If Maggiorenne = "S" Then
 										fileFirme = fileFirme.Replace("***HEIGHT_PADRE***", "0px")
