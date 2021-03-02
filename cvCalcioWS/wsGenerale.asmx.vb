@@ -115,21 +115,27 @@ Public Class wsGenerale
 	<WebMethod()>
 	Public Function InviaSollecitoPagamento(Squadra As String, Destinatario As String, Dati As String, Mittente As String) As String
 		Dim m As New mail
+		Dim gT1 As New GestioneTags
 
 		Dim Oggetto As String = "Sollecito pagamento"
-		Dim d() As String = Dati.Split(";")
-		Dim gf As New GestioneFilesDirectory
-		Dim Body As String = gf.LeggeFileIntero(Server.MapPath(".") & "\Scheletri\mail_sollecito.txt")
-		Body = Body.Replace("***Data scadenza tab rate***", d(0))
-		Body = Body.Replace("***Descrizione tab rate ***", d(1))
-		Body = Body.Replace("***Importo tab rate***", d(2))
-		Body = Body.Replace("****cognome menu&nbsp; anagrafica3***", d(3))
-		Body = Body.Replace("***Nome menu anagrafica3", d(4))
-		Body = Body.Replace("***nome societ&agrave; menu settaggi***", d(5))
+		'Dim d() As String = Dati.Split(";")
+
+		Dim Body As String = gT1.EsegueMailSollecito(Squadra, Dati)
+		gT1 = Nothing
+
+		'Dim gf As New GestioneFilesDirectory
+		'Dim Body As String = gf.LeggeFileIntero(Server.MapPath(".") & "\Scheletri\mail_sollecito.txt")
+		'Body = Body.Replace("***Data scadenza tab rate***", d(0))
+		'Body = Body.Replace("***Descrizione tab rate ***", d(1))
+		'Body = Body.Replace("***Importo tab rate***", d(2))
+		'Body = Body.Replace("****cognome menu&nbsp; anagrafica3***", d(3))
+		'Body = Body.Replace("***Nome menu anagrafica3", d(4))
+		'Body = Body.Replace("***nome societ&agrave; menu settaggi***", d(5))
 
 		' Dim Body As String = "In data " & d(0) & " è scaduta la rata '" & d(1) & "' dell'importo di Euro " & d(2) & ".<br />Si prega di passare urgentemente in segreteria.<br />Grazie"
 
 		Dim Ritorno As String = m.SendEmail(Squadra, Mittente, Oggetto, Body, Destinatario, {""}, "")
+
 		Return Ritorno
 	End Function
 

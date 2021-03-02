@@ -65,10 +65,10 @@ Public Class wsReports
 				Dim Sql As String = ""
 				Dim Ok As Boolean = True
 
-				Sql = "Select idGiocatore, Nome, Cognome, Descrizione, Importo, ImportoQuota, ImportoManuale, PagamentoTotale, (Importo - ImportoQuota + ImportoManuale) As Differenza From ( " &
+				Sql = "Select idGiocatore, Nome, Cognome, Descrizione, Importo, ImportoQuota, ImportoManuale, PagamentoTotale, (Importo - ImportoQuota - ImportoManuale) As Differenza From ( " &
 					"Select A.idGiocatore, B.Nome, B.Cognome, C.Descrizione, C.Importo, IsNull(Sum(A.Pagamento),0) - IsNull(Sum(A.ImportoManuale),0) As ImportoQuota, IsNull(Sum(A.ImportoManuale),0) As ImportoManuale, " &
 					"IsNull(Sum(A.Pagamento), 0) - IsNull(Sum(A.ImportoManuale),0) + IsNull(Sum(A.ImportoManuale),0) As PagamentoTotale, " &
-					"IsNull(Sum(A.ImportoManuale),0) - (IsNull(Sum(A.Pagamento), 0) - IsNull(Sum(A.ImportoManuale),0) + IsNull(Sum(A.ImportoManuale),0)) As DIfferenza " &
+					"IsNull(Sum(A.ImportoManuale),0) - (IsNull(Sum(A.Pagamento), 0) - IsNull(Sum(A.ImportoManuale),0)) As DIfferenza " &
 					"From GiocatoriPagamenti A " &
 					"Left Join Giocatori B On A.idGiocatore = B.idGiocatore " &
 					"Left Join Quote C On A.idQuota = C.idQuota " &
@@ -162,10 +162,10 @@ Public Class wsReports
 							Output.Append(vbCrLf)
 						End If
 
-						totQuota += (Rec("Importo").Value).ToString.Replace(",", ".")
-						totPagatoQuota += (Rec("ImportoQuota").Value).ToString.Replace(",", ".")
-						totPagatoManuale += (Rec("ImportoManuale").Value).ToString.Replace(",", ".")
-						totDifferenza += (Rec("Differenza").Value).ToString.Replace(",", ".")
+						totQuota += Val((Rec("Importo").Value))
+						totPagatoQuota += Val((Rec("ImportoQuota").Value))
+						totPagatoManuale += Val((Rec("ImportoManuale").Value))
+						totDifferenza += Val((Rec("Differenza").Value))
 
 						Rec.MoveNext
 					Loop
