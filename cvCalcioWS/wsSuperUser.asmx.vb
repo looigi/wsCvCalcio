@@ -265,7 +265,8 @@ Public Class wsSuperUser
 													"null, " & ' Suffisso
 													"null, " & ' iscrFirmaEntrambi
 													"null, " & ' Modulo Associato
-													"10 " & ' PercCashBack
+													"10, " & ' PercCashBack
+													"'N' " & ' Rate Manuali
 													")"
 												Ritorno = EsegueSql(ConnDbVuoto, Sql, ConnessioneDBVuoto)
 												If Ritorno.Contains(StringaErrore) Then

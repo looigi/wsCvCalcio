@@ -73,7 +73,18 @@ Public Class wsReports
 					"Left Join Giocatori B On A.idGiocatore = B.idGiocatore " &
 					"Left Join Quote C On A.idQuota = C.idQuota " &
 					"Where A.Eliminato = 'N' And B.Eliminato = 'N' And C.Eliminato = 'N' And A.idTipoPagamento = 1 " &
-					"Group By A.idGiocatore, B.Nome, B.Cognome, C.Descrizione, C.Importo) A " &
+					"Group By A.idGiocatore, B.Nome, B.Cognome, C.Descrizione, C.Importo " &
+					"Union All " &
+					"Select A.idGiocatore, A.Nome, A.Cognome, isNull(C.Descrizione, 'Nessuna Quota Impostata') As Descrizione, IsNull(C.Importo, 0) As Importo, 0 As ImportoQuota, 0 As ImportoManuale, 0 As PagamentoTotale, 0 As Differenza " &
+					"From Giocatori A " &
+					"Left Join GiocatoriDettaglio B On A.idGiocatore = B.idGiocatore " &
+					"Left Join Quote C On B.idQuota = C.idQuota " &
+					"Where A.idGiocatore  Not In ( " &
+					"Select A.idGiocatore From GiocatoriPagamenti A  " &
+					"Left Join Giocatori B On A.idGiocatore = B.idGiocatore Left Join Quote C On A.idQuota = C.idQuota  " &
+					"Where A.Eliminato = 'N' And B.Eliminato = 'N' And C.Eliminato = 'N' And A.idTipoPagamento = 1 " &
+					") " &
+					") A " &
 					"Order By Cognome, Nome"
 				Rec = LeggeQuery(Conn, Sql, Connessione)
 				If TypeOf (Rec) Is String Then

@@ -756,7 +756,7 @@ Public Class wsGenerale
 									  Indirizzo As String, CampoSquadra As String, NomePolisportiva As String, Mail As String, PEC As String,
 									  Telefono As String, PIva As String, CodiceFiscale As String, CodiceUnivoco As String, SitoWeb As String, MittenteMail As String,
 									  GestionePagamenti As String, CostoScuolaCalcio As String, idUtente As String, Widgets As String, Suffisso As String,
-									  IscrFirmaEntrambi As String, ModuloAssociato As String, PercCashBack As String) As String
+									  IscrFirmaEntrambi As String, ModuloAssociato As String, PercCashBack As String, RateManuali As String) As String
 		Dim Ritorno As String = ""
 		Dim Connessione As String = LeggeImpostazioniDiBase(Server.MapPath("."), Cod_Squadra)
 
@@ -793,7 +793,8 @@ Public Class wsGenerale
 					"Suffisso='" & Suffisso & "', " &
 					"iscrFirmaEntrambi='" & IscrFirmaEntrambi & "', " &
 					"PercCashBack=" & PercCashBack & ", " &
-					"ModuloAssociato='" & ModuloAssociato & "' " &
+					"ModuloAssociato='" & ModuloAssociato & "', " &
+					"RateManuali='" & RateManuali & "' " &
 					"Where idAnno = " & idAnno
 				Ritorno = EsegueSql(Conn, Sql, Connessione)
 
@@ -941,6 +942,7 @@ Public Class wsGenerale
 											Rec("iscrFirmaEntrambi").Value & ";" &
 											Rec("ModuloAssociato").Value & ";" &
 											Rec("PercCashBack").Value & ";" &
+											Rec("RateManuali").Value & ";" &
 											"§"
 
 										Rec.MoveNext()
@@ -1292,7 +1294,8 @@ Public Class wsGenerale
 						"0, " &
 						"'', " &
 						"'', " &
-						"'N' " &
+						"'N', " &
+						"'N', " &
 						")"
 					Ritorno = EsegueSql(Conn, Sql, Connessione)
 
