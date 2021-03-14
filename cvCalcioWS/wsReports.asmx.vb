@@ -65,26 +65,29 @@ Public Class wsReports
 				Dim Sql As String = ""
 				Dim Ok As Boolean = True
 
-				Sql = "Select idGiocatore, Nome, Cognome, Descrizione, Importo, ImportoQuota, ImportoManuale, PagamentoTotale, (Importo - ImportoQuota - ImportoManuale) As Differenza From ( " &
-					"Select A.idGiocatore, B.Nome, B.Cognome, C.Descrizione, C.Importo, IsNull(Sum(A.Pagamento),0) - IsNull(Sum(A.ImportoManuale),0) As ImportoQuota, IsNull(Sum(A.ImportoManuale),0) As ImportoManuale, " &
-					"IsNull(Sum(A.Pagamento), 0) - IsNull(Sum(A.ImportoManuale),0) + IsNull(Sum(A.ImportoManuale),0) As PagamentoTotale, " &
-					"IsNull(Sum(A.ImportoManuale),0) - (IsNull(Sum(A.Pagamento), 0) - IsNull(Sum(A.ImportoManuale),0)) As DIfferenza " &
-					"From GiocatoriPagamenti A " &
-					"Left Join Giocatori B On A.idGiocatore = B.idGiocatore " &
-					"Left Join Quote C On A.idQuota = C.idQuota " &
-					"Where A.Eliminato = 'N' And B.Eliminato = 'N' And C.Eliminato = 'N' And A.idTipoPagamento = 1 " &
-					"Group By A.idGiocatore, B.Nome, B.Cognome, C.Descrizione, C.Importo " &
-					"Union All " &
-					"Select A.idGiocatore, A.Nome, A.Cognome, isNull(C.Descrizione, 'Nessuna Quota Impostata') As Descrizione, IsNull(C.Importo, 0) As Importo, 0 As ImportoQuota, 0 As ImportoManuale, 0 As PagamentoTotale, 0 As Differenza " &
-					"From Giocatori A " &
-					"Left Join GiocatoriDettaglio B On A.idGiocatore = B.idGiocatore " &
-					"Left Join Quote C On B.idQuota = C.idQuota " &
-					"Where A.idGiocatore  Not In ( " &
-					"Select A.idGiocatore From GiocatoriPagamenti A  " &
-					"Left Join Giocatori B On A.idGiocatore = B.idGiocatore Left Join Quote C On A.idQuota = C.idQuota  " &
-					"Where A.Eliminato = 'N' And B.Eliminato = 'N' And C.Eliminato = 'N' And A.idTipoPagamento = 1 " &
-					") " &
-					") A " &
+				Sql = "Select idGiocatore, Nome, Cognome, Descrizione, Importo, ImportoQuota, ImportoManuale, PagamentoTotale, Sconto , (Importo - ImportoQuota - ImportoManuale - Sconto) As Differenza From ( " &
+					"Select A.idGiocatore, B.Nome, B.Cognome, C.Descrizione, C.Importo, IsNull(Sum(A.Pagamento),0) - IsNull(Sum(A.ImportoManuale),0) As ImportoQuota, IsNull(Sum(A.ImportoManuale),0) As ImportoManuale,  " &
+					"IsNull(Sum(A.Pagamento), 0) - IsNull(Sum(A.ImportoManuale),0) + IsNull(Sum(A.ImportoManuale),0) As PagamentoTotale,  " &
+					"IsNull(Sum(A.ImportoManuale), 0) - (IsNull(Sum(A.Pagamento), 0) - IsNull(Sum(A.ImportoManuale),0)) As DIfferenza, IsNull(D.Sconto, 0) As Sconto " &
+					"From GiocatoriPagamenti A  " &
+					"Left Join Giocatori B On A.idGiocatore = B.idGiocatore  " &
+					"Left Join Quote C On A.idQuota = C.idQuota  " &
+					"Left Join GiocatoriDettaglio D On D.idGiocatore = A.idGiocatore  " &
+					"Where A.Eliminato = 'N' And B.Eliminato = 'N' And C.Eliminato = 'N' And A.idTipoPagamento = 1  " &
+					"Group By A.idGiocatore, B.Nome, B.Cognome, C.Descrizione, C.Importo, IsNull(D.Sconto, 0) " &
+					"Union All  " &
+					"Select A.idGiocatore, A.Nome, A.Cognome, isNull(C.Descrizione, 'Nessuna Quota Impostata') As Descrizione, IsNull(C.Importo, 0) As Importo, 0 As ImportoQuota, 0 As ImportoManuale, " &
+					"0 As PagamentoTotale, 0 As Differenza , IsNull(D.Sconto, 0) As Sconto " &
+					"From Giocatori A  " &
+					"Left Join GiocatoriDettaglio B On A.idGiocatore = B.idGiocatore  " &
+					"Left Join Quote C On B.idQuota = C.idQuota  " &
+					"Left Join GiocatoriDettaglio D On D.idGiocatore = A.idGiocatore  " &
+					"Where A.idGiocatore  Not In (  " &
+					"Select A.idGiocatore From GiocatoriPagamenti A   " &
+					"Left Join Giocatori B On A.idGiocatore = B.idGiocatore Left Join Quote C On A.idQuota = C.idQuota   " &
+					"Where A.Eliminato = 'N' And B.Eliminato = 'N' And C.Eliminato = 'N' And A.idTipoPagamento = 1  " &
+					") And A.Eliminato = 'N' " &
+					") A  " &
 					"Order By Cognome, Nome"
 				Rec = LeggeQuery(Conn, Sql, Connessione)
 				If TypeOf (Rec) Is String Then
@@ -119,7 +122,7 @@ Public Class wsReports
 					Dim totDifferenza As Single = 0
 
 					If Modalita = "PDF" Then
-						Output.Append("<table style=""width: 100%;"" cellapadding=""0"" cellspacing=""0"">")
+						Output.Append("<table style=""width:  100%;"" cellapadding=""0"" cellspacing=""0"">")
 						Output.Append("<tr>")
 						Output.Append("<th></th>")
 						Output.Append("<th style = ""text-align: left;"">Cognome</th>")
@@ -128,10 +131,11 @@ Public Class wsReports
 						Output.Append("<th style = ""text-align: right;"">Totale Quota</th>")
 						Output.Append("<th style = ""text-align: right;"">Pag. Quota</th>")
 						Output.Append("<th style = ""text-align: right;"">Pag. Manuale</th>")
+						Output.Append("<th style = ""text-align: right;"">Sconto</th>")
 						Output.Append("<th style = ""text-align: right;"">Differenza</th>")
 						Output.Append("</tr>")
 					Else
-						Output.Append("Cognome;Nome;Quota;Totale Quota;Pag. Quota;Pag. Manuale;Differenza")
+						Output.Append("Cognome;Nome;Quota;Totale Quota;Pag. Quota;Pag. Manuale;Sconto;Differenza")
 						Output.Append(vbCrLf)
 					End If
 
@@ -160,6 +164,7 @@ Public Class wsReports
 							Output.Append("<td style = ""text-align: right;"">" & Rec("Importo").Value & "</td>")
 							Output.Append("<td style = ""text-align: right;"">" & Rec("ImportoQuota").Value & "</td>")
 							Output.Append("<td style = ""text-align: right;"">" & Rec("ImportoManuale").Value & "</td>")
+							Output.Append("<td style = ""text-align: right;"">" & Rec("Sconto").Value & "</td>")
 							Output.Append("<td style = ""text-align: right;"">" & Rec("Differenza").Value & "</td>")
 							Output.Append("</tr>")
 						Else
@@ -169,6 +174,7 @@ Public Class wsReports
 							Output.Append(Rec("Importo").Value & ";")
 							Output.Append(Rec("ImportoQuota").Value & ";")
 							Output.Append(Rec("ImportoManuale").Value & ";")
+							Output.Append(Rec("Sconto").Value & ";")
 							Output.Append(Rec("Differenza").Value & ";")
 							Output.Append(vbCrLf)
 						End If
@@ -203,6 +209,7 @@ Public Class wsReports
 						Output.Append("<td style = ""font-weight: bold; text-align: right;"">" & totQuota & "</td>")
 						Output.Append("<td style = ""font-weight: bold; text-align: right;"">" & totPagatoQuota & "</td>")
 						Output.Append("<td style = ""font-weight: bold; text-align: right;"">" & totPagatoManuale & "</td>")
+						Output.Append("<td style = ""font-weight: bold; text-align: right;""></td>")
 						Output.Append("<td style = ""font-weight: bold; text-align: right;"">" & totDifferenza & "</td>")
 						Output.Append("</tr>")
 
