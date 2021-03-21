@@ -34,12 +34,12 @@ Public Class wsStatistiche
 				Sql = "Select " & Altro & " * From ( " &
 					"Select 'Cert. Scad.' As Cosa, A.idGiocatore As Id, 'Certificato medico scaduto' As PrimoCampo, A.Cognome + ' ' + A.Nome As SecondoCampo, B.ScadenzaCertificatoMedico As Data From Giocatori A " &
 					"Left Join GiocatoriDettaglio B On A.idGiocatore = B.idGiocatore " &
-					"Where B.ScadenzaCertificatoMedico Is Not Null And B.ScadenzaCertificatoMedico <> '' " &
+					"Where A.Eliminato='N' And B.ScadenzaCertificatoMedico Is Not Null And B.ScadenzaCertificatoMedico <> '' " &
 					"And Convert(DateTime, B.ScadenzaCertificatoMedico, 121) < CURRENT_TIMESTAMP " &
 					"Union All " &
 					"Select 'Cert. Med.' As Cosa, A.idGiocatore As Id, A.Cognome As PrimoCampo, A.Nome As SecondoCampo, CONVERT(date, B.ScadenzaCertificatoMedico) As Data From Giocatori A " &
 					"Left Join GiocatoriDettaglio B On A.idGiocatore = B.idGiocatore " &
-					"Where CertificatoMedico = 'S' And A.Eliminato = 'N' And Convert(DateTime, B.ScadenzaCertificatoMedico ,121) <= DateAdd(Day, 30, CURRENT_TIMESTAMP) " &
+					"Where A.Eliminato='N' And CertificatoMedico = 'S' And A.Eliminato = 'N' And Convert(DateTime, B.ScadenzaCertificatoMedico ,121) <= DateAdd(Day, 30, CURRENT_TIMESTAMP) " &
 					"Union All " &
 					"Select 'Partita' As Cosa, idPartita As Id, B.Descrizione As PrimoCampo, C.Descrizione As SecondoCampo, CONVERT(date, DataOra) As Data From Partite A " &
 					"Left Join Categorie B On A.idCategoria = B.idCategoria " &
@@ -117,7 +117,7 @@ Public Class wsStatistiche
 					Ok = False
 				Else
 					Do Until Rec.Eof
-						Sql = "Select A.idGiocatore, TotalePagamento From Giocatori A " &
+						Sql = "Select A.idGiocatore, TotalePagamento, B.Sconto From Giocatori A " &
 							"Left Join GiocatoriDettaglio B On A.idGiocatore = B.idGiocatore " &
 							"Where A.Eliminato = 'N' And YEAR(CONVERT(date, DataDiNascita)) = " & Rec("Anno").Value
 						Rec2 = LeggeQuery(Conn, Sql, Connessione)
@@ -129,10 +129,11 @@ Public Class wsStatistiche
 
 							Do Until Rec2.Eof
 								Dim s As String = ("" & Rec2("TotalePagamento").value).replace(",", ".")
-								Dim TotalePagamento As Single = Val(s)
+								Dim s2 As String = ("" & Rec2("Sconto").value).replace(",", ".")
+								Dim TotalePagamento As Single = Val(s) - Val(s2)
 								Dim Pagato As Single = 0
 
-								Sql = "Select Sum(Pagamento) From GiocatoriPagamenti Where idGiocatore=" & Rec2("idGiocatore").Value & " And Eliminato='N' And idTipoPagamento=1"
+								Sql = "Select Sum(Pagamento) From GiocatoriPagamenti Where idGiocatore=" & Rec2("idGiocatore").Value & " And Eliminato='N' And idTipoPagamento=1 And Validato='S'"
 								Rec3 = LeggeQuery(Conn, Sql, Connessione)
 								If TypeOf (Rec3) Is String Then
 									Ritorno = Rec3

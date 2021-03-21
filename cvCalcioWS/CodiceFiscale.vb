@@ -214,7 +214,7 @@
                     Ritorno = Rec
                 Else
                     If Rec.Eof Then
-                        Ritorno = "*****"
+                        Ritorno = "-----"
                     Else
                         Ritorno = Rec("CodiceCatastale").Value
                     End If

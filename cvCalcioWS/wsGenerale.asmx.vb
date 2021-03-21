@@ -904,6 +904,23 @@ Public Class wsGenerale
 								End If
 								Rec.Close()
 
+								Dim PagamentiPresenti As String = "N"
+
+								Sql = "Select Count(*) " &
+									"From [" & Codice & "].[dbo].[GiocatoriPagamenti] Where Eliminato='N'"
+								Rec = LeggeQuery(ConnGen, Sql, ConnessioneGen)
+								If TypeOf (Rec) Is String Then
+									Ritorno = Rec
+								Else
+									If Rec(0).Value Is DBNull.Value Then
+									Else
+										If Rec(0).Value > 0 Then
+											PagamentiPresenti = "S"
+										End If
+									End If
+									Rec.Close
+								End If
+
 								Sql = "Select A.*, B.idAvversario, B.idCampo " &
 									"From [" & Codice & "].[dbo].[Anni] A Left Join [" & Codice & "].[dbo].[SquadreAvversarie] B On A.NomeSquadra = B.Descrizione " &
 									"Order By idAnno Desc"
@@ -943,6 +960,7 @@ Public Class wsGenerale
 											Rec("ModuloAssociato").Value & ";" &
 											Rec("PercCashBack").Value & ";" &
 											Rec("RateManuali").Value & ";" &
+											PagamentiPresenti & ";" &
 											"§"
 
 										Rec.MoveNext()

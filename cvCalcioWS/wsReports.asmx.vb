@@ -65,30 +65,45 @@ Public Class wsReports
 				Dim Sql As String = ""
 				Dim Ok As Boolean = True
 
-				Sql = "Select idGiocatore, Nome, Cognome, Descrizione, Importo, ImportoQuota, ImportoManuale, PagamentoTotale, Sconto , (Importo - ImportoQuota - ImportoManuale - Sconto) As Differenza From ( " &
-					"Select A.idGiocatore, B.Nome, B.Cognome, C.Descrizione, C.Importo, IsNull(Sum(A.Pagamento),0) - IsNull(Sum(A.ImportoManuale),0) As ImportoQuota, IsNull(Sum(A.ImportoManuale),0) As ImportoManuale,  " &
-					"IsNull(Sum(A.Pagamento), 0) - IsNull(Sum(A.ImportoManuale),0) + IsNull(Sum(A.ImportoManuale),0) As PagamentoTotale,  " &
-					"IsNull(Sum(A.ImportoManuale), 0) - (IsNull(Sum(A.Pagamento), 0) - IsNull(Sum(A.ImportoManuale),0)) As DIfferenza, IsNull(D.Sconto, 0) As Sconto " &
-					"From GiocatoriPagamenti A  " &
-					"Left Join Giocatori B On A.idGiocatore = B.idGiocatore  " &
-					"Left Join Quote C On A.idQuota = C.idQuota  " &
-					"Left Join GiocatoriDettaglio D On D.idGiocatore = A.idGiocatore  " &
-					"Where A.Eliminato = 'N' And B.Eliminato = 'N' And C.Eliminato = 'N' And A.idTipoPagamento = 1  " &
-					"Group By A.idGiocatore, B.Nome, B.Cognome, C.Descrizione, C.Importo, IsNull(D.Sconto, 0) " &
-					"Union All  " &
-					"Select A.idGiocatore, A.Nome, A.Cognome, isNull(C.Descrizione, 'Nessuna Quota Impostata') As Descrizione, IsNull(C.Importo, 0) As Importo, 0 As ImportoQuota, 0 As ImportoManuale, " &
-					"0 As PagamentoTotale, 0 As Differenza , IsNull(D.Sconto, 0) As Sconto " &
-					"From Giocatori A  " &
-					"Left Join GiocatoriDettaglio B On A.idGiocatore = B.idGiocatore  " &
-					"Left Join Quote C On B.idQuota = C.idQuota  " &
-					"Left Join GiocatoriDettaglio D On D.idGiocatore = A.idGiocatore  " &
-					"Where A.idGiocatore  Not In (  " &
-					"Select A.idGiocatore From GiocatoriPagamenti A   " &
-					"Left Join Giocatori B On A.idGiocatore = B.idGiocatore Left Join Quote C On A.idQuota = C.idQuota   " &
-					"Where A.Eliminato = 'N' And B.Eliminato = 'N' And C.Eliminato = 'N' And A.idTipoPagamento = 1  " &
-					") And A.Eliminato = 'N' " &
-					") A  " &
-					"Order By Cognome, Nome"
+				Sql = "Select * From  ( " &
+					"Select *, TotaleDaPagare - TotalePagato As Differenza From ( " &
+					"Select 'Validato S' As Cosa, A.idGiocatore, Cognome, Nome, C.Descrizione As DescrizioneQuota, IsNull(C.Importo, 0) As Importo, IsNull(Sconto, 0) As Sconto, IsNull(C.Importo, 0) - IsNull(Sconto, 0) As TotaleDaPagare,  " &
+					"Validato, Pagamento, idTipoPagamento, " &
+					"CASE idTipoPagamento " &
+					"     WHEN 1 THEN 'Rata' " &
+					"     ELSE 'Altro' " &
+					"END As TipoPagamento , A.NumeroRicevuta,  " &
+					"(Select IsNull(Sum(Pagamento),0) From GiocatoriPagamenti Where idGiocatore=A.idGiocatore And Eliminato='N' And idTipoPagamento = 1 And Validato='S') As TotalePagato, " &
+					"A.DataPagamento, E.MetodoPagamento, A.Note " &
+					"From  " &
+					"GiocatoriPagamenti A " &
+					"Left Join Giocatori B On A.idGiocatore = B.idGiocatore " &
+					"Left Join GiocatoriDettaglio D On D.idGiocatore = A.idGiocatore   " &
+					"Left Join Quote C On A.idQuota = C.idQuota " &
+					"Left Join MetodiPagamento E On E.idMetodoPagamento = A.MetodoPagamento " &
+					"Where A.Eliminato = 'N' And Validato = 'S' " &
+					") As A  " &
+					"Union All " &
+					"Select *, TotaleDaPagare - TotalePagato As Differenza From ( " &
+					"Select 'Validato N' As Cosa, A.idGiocatore, Cognome, Nome, C.Descrizione As DescrizioneQuota, IsNull(C.Importo, 0) As Importo, IsNull(Sconto, 0) As Sconto, IsNull(C.Importo, 0) - IsNull(Sconto, 0) As TotaleDaPagare,  " &
+					"Validato, Pagamento, idTipoPagamento, " &
+					"CASE idTipoPagamento " &
+					"     WHEN 1 THEN 'Rata' " &
+					"     ELSE 'Altro' " &
+					"END As TipoPagamento , A.NumeroRicevuta,  " &
+					"(Select IsNull(Sum(Pagamento),0) From GiocatoriPagamenti Where idGiocatore=A.idGiocatore And Eliminato='N' And idTipoPagamento = 1 And Validato='S') As TotalePagato, " &
+					"A.DataPagamento, E.MetodoPagamento, A.Note " &
+					"From  " &
+					"GiocatoriPagamenti A " &
+					"Left Join Giocatori B On A.idGiocatore = B.idGiocatore " &
+					"Left Join GiocatoriDettaglio D On D.idGiocatore = A.idGiocatore   " &
+					"Left Join Quote C On A.idQuota = C.idQuota " &
+					"Left Join MetodiPagamento E On E.idMetodoPagamento = A.MetodoPagamento " &
+					"Where A.Eliminato = 'N' And Validato = 'N' " &
+					") As B " &
+					") As A  " &
+					"Order By Cognome, Nome, Validato"
+
 				Rec = LeggeQuery(Conn, Sql, Connessione)
 				If TypeOf (Rec) Is String Then
 					Ritorno = Rec
@@ -120,6 +135,7 @@ Public Class wsReports
 					Dim totPagatoQuota As Single = 0
 					Dim totPagatoManuale As Single = 0
 					Dim totDifferenza As Single = 0
+					Dim Vecchia As String = ""
 
 					If Modalita = "PDF" Then
 						Output.Append("<table style=""width:  100%;"" cellapadding=""0"" cellspacing=""0"">")
@@ -127,15 +143,24 @@ Public Class wsReports
 						Output.Append("<th></th>")
 						Output.Append("<th style = ""text-align: left;"">Cognome</th>")
 						Output.Append("<th style=""text-align: left;"">Nome</th>")
-						Output.Append("<th style = ""text-align: left;"">Quota</th>")
+						' Output.Append("<th style = ""text-align: left;"">Importo Quota</th>")
 						Output.Append("<th style = ""text-align: right;"">Totale Quota</th>")
-						Output.Append("<th style = ""text-align: right;"">Pag. Quota</th>")
-						Output.Append("<th style = ""text-align: right;"">Pag. Manuale</th>")
+						'Output.Append("<th style = ""text-align: right;"">Pag. Automatico</th>")
+						'Output.Append("<th style = ""text-align: right;"">Pag. Manuale</th>")
 						Output.Append("<th style = ""text-align: right;"">Sconto</th>")
 						Output.Append("<th style = ""text-align: right;"">Differenza</th>")
+						Output.Append("<th style = ""text-align: right;"">Quota</th>")
+						Output.Append("<th style = ""text-align: right;"">Pagamento Automatico</th>")
+						'Output.Append("<th style = ""text-align: right;"">Pagamento Manuale</th>")
+						Output.Append("<th style = ""text-align: right;"">DataPagamento</th>")
+						Output.Append("<th style = ""text-align: right;"">Validato</th>")
+						Output.Append("<th style = ""text-align: right;"">MetodoPagamento</th>")
+						Output.Append("<th style = ""text-align: right;"">NumeroRicevuta</th>")
+						Output.Append("<th style = ""text-align: right;"">Tipo Pagamento</th>")
+						Output.Append("<th style = ""text-align: right;"">Note</th>")
 						Output.Append("</tr>")
 					Else
-						Output.Append("Cognome;Nome;Quota;Totale Quota;Pag. Quota;Pag. Manuale;Sconto;Differenza")
+						Output.Append("Cognome;Nome;Totale Quota;Sconto;Differenza;Quota;Pagamento Totale;DataPagamento;Validato;MetodoPagamento;NumeroRicevuta;Tipo Pagamento;Note;")
 						Output.Append(vbCrLf)
 					End If
 
@@ -160,29 +185,64 @@ Public Class wsReports
 							Output.Append("<td>" & Immagine & "</td>")
 							Output.Append("<td>" & Rec("Cognome").Value & "</td>")
 							Output.Append("<td>" & Rec("Nome").Value & "</td>")
-							Output.Append("<td>" & Rec("Descrizione").Value & "</td>")
+							' Output.Append("<td>" & Rec("Descrizione").Value & "</td>")
 							Output.Append("<td style = ""text-align: right;"">" & Rec("Importo").Value & "</td>")
 							Output.Append("<td style = ""text-align: right;"">" & Rec("ImportoQuota").Value & "</td>")
 							Output.Append("<td style = ""text-align: right;"">" & Rec("ImportoManuale").Value & "</td>")
 							Output.Append("<td style = ""text-align: right;"">" & Rec("Sconto").Value & "</td>")
 							Output.Append("<td style = ""text-align: right;"">" & Rec("Differenza").Value & "</td>")
+							Output.Append("<td style = ""text-align: right;"">" & Rec("Quota").Value & "</td>")
+							Output.Append("<td style = ""text-align: right;"">" & Rec("Pagamento").Value & "</td>")
+							Output.Append("<td style = ""text-align: right;"">" & Rec("PagamentoManuale").Value & "</td>")
+							Output.Append("<td style = ""text-align: right;"">" & Rec("DataPagamento").Value & "</td>")
+							Output.Append("<td style = ""text-align: right;"">" & Rec("Validato").Value & "</td>")
+							Output.Append("<td style = ""text-align: right;"">" & Rec("MetodoPagamento").Value & "</td>")
+							Output.Append("<td style = ""text-align: right;"">" & Rec("NumeroRicevuta").Value & "</td>")
+							Output.Append("<td style = ""text-align: right;"">" & Rec("TipoPagamento").Value & "</td>")
+							Output.Append("<td style = ""text-align: right;"">" & Rec("Note").Value & "</td>")
 							Output.Append("</tr>")
 						Else
-							Output.Append(Rec("Cognome").Value & ";")
-							Output.Append(Rec("Nome").Value & ";")
-							Output.Append(Rec("Descrizione").Value & ";")
-							Output.Append(Rec("Importo").Value & ";")
-							Output.Append(Rec("ImportoQuota").Value & ";")
-							Output.Append(Rec("ImportoManuale").Value & ";")
-							Output.Append(Rec("Sconto").Value & ";")
-							Output.Append(Rec("Differenza").Value & ";")
+							'Dim idRate As String = "" & Rec("idRata").Value
+							'idRate = idRate.Replace(";", "-")
+							'If idRate.EndsWith("-") Then
+							'	idRate = Mid(idRate, 1, idRate.Length - 1)
+							'End If
+
+							'Cosa    idGiocatore	Cognome	Nome	DescrizioneQuota	Importo	Sconto	TotaleDaPagare	Validato	Pagamento	idTipoPagamento	TipoPagamento	NumeroRicevuta	TotalePagato	Differenza
+
+							Dim Riga As String = "" & Rec("Cognome").Value & ";" & "" & Rec("Nome").Value & ";"
+							Dim RigaDaScrivere As String = "" & Rec("Cognome").Value & ";" & "" & Rec("Nome").Value & ";" & "" & Rec("Importo").Value & ";" & "" & Rec("Sconto").Value & ";" & "" & Rec("Differenza").Value & ";" & "" & Rec("DescrizioneQuota").Value & ";"
+
+							If Riga <> vecchia Then
+								vecchia = Riga
+								'Output.Append("" & Rec("Cognome").Value & ";")
+								'Output.Append("" & Rec("Nome").Value & ";")
+								'' Output.Append(Rec("Descrizione").Value & ";")
+								'Output.Append("" & Rec("Importo").Value & ";")
+								''Output.Append("" & Rec("ImportoQuota").Value & ";")
+								''Output.Append("" & Rec("ImportoManuale").Value & ";")
+								'Output.Append("" & Rec("Sconto").Value & ";")
+								'Output.Append("" & Rec("Differenza").Value & ";")
+								'Output.Append("" & Rec("Quota").Value & ";")
+								Output.Append(RigaDaScrivere)
+							Else
+								Output.Append(";;;;;;")
+							End If
+							Output.Append("" & Rec("Pagamento").Value & ";")
+							'Output.Append("" & Rec("PagamentoManuale").Value & ";")
+							Output.Append("" & Rec("DataPagamento").Value & ";")
+							Output.Append("" & Rec("Validato").Value & ";")
+							Output.Append("" & Rec("MetodoPagamento").Value & ";")
+							Output.Append("" & Rec("NumeroRicevuta").Value & ";")
+							Output.Append("" & Rec("TipoPagamento").Value & ";")
+							Output.Append("" & Rec("Note").Value & ";")
 							Output.Append(vbCrLf)
 						End If
 
-						totQuota += Val((Rec("Importo").Value))
-						totPagatoQuota += Val((Rec("ImportoQuota").Value))
-						totPagatoManuale += Val((Rec("ImportoManuale").Value))
-						totDifferenza += Val((Rec("Differenza").Value))
+						totQuota += Val(("" & Rec("Pagamento").Value))
+						'totPagatoQuota += Val(("" & Rec("ImportoQuota").Value))
+						'totPagatoManuale += Val(("" & Rec("ImportoManuale").Value))
+						'totDifferenza += Val(("" & Rec("Differenza").Value))
 
 						Rec.MoveNext
 					Loop
@@ -202,15 +262,23 @@ Public Class wsReports
 						Output.Append("</tr>")
 
 						Output.Append("<tr>")
+						'Output.Append("<td></td>")
 						Output.Append("<td></td>")
 						Output.Append("<td></td>")
 						Output.Append("<td></td>")
 						Output.Append("<td></td>")
+						Output.Append("<td></td>")
+						Output.Append("<td></td>")
+						Output.Append("<td></td>")
+						Output.Append("<td></td>")
+						Output.Append("<td></td>")
+						Output.Append("<td></td>")
+						Output.Append("<td></td>")
+						'Output.Append("<td style = ""font-weight: bold; text-align: right;"">" & totQuota & "</td>")
+						'Output.Append("<td style = ""font-weight: bold; text-align: right;"">" & totPagatoQuota & "</td>")
+						'Output.Append("<td style = ""font-weight: bold; text-align: right;"">" & totPagatoManuale & "</td>")
+						'Output.Append("<td style = ""font-weight: bold; text-align: right;""></td>")
 						Output.Append("<td style = ""font-weight: bold; text-align: right;"">" & totQuota & "</td>")
-						Output.Append("<td style = ""font-weight: bold; text-align: right;"">" & totPagatoQuota & "</td>")
-						Output.Append("<td style = ""font-weight: bold; text-align: right;"">" & totPagatoManuale & "</td>")
-						Output.Append("<td style = ""font-weight: bold; text-align: right;""></td>")
-						Output.Append("<td style = ""font-weight: bold; text-align: right;"">" & totDifferenza & "</td>")
 						Output.Append("</tr>")
 
 						Output.Append("</table>")
@@ -255,10 +323,13 @@ Public Class wsReports
 						Output.Append("TOTALI;")
 						Output.Append(";")
 						Output.Append(";")
+						Output.Append(";")
+						Output.Append(";")
+						Output.Append(";")
 						Output.Append(totQuota & ";")
-						Output.Append(totPagatoQuota & ";")
-						Output.Append(totPagatoManuale & ";")
-						Output.Append(totDifferenza & ";")
+						'Output.Append(totPagatoQuota & ";")
+						'Output.Append(totPagatoManuale & ";")
+						'Output.Append(totDifferenza & ";")
 						Output.Append(vbCrLf)
 
 						Dim nomeFileCSV As String = filePaths & "Appoggio\" & Esten & ".csv"
@@ -361,7 +432,7 @@ Public Class wsReports
 					Select Case Certificato
 						Case "1"
 							' Scaduto
-							Sql &= " And (Convert(DateTime, B.ScadenzaCertificatoMedico ,121) <= CURRENT_TIMESTAMP And B.CertificatoMedico = 'S')" ' And (Convert(DateTime, B.ScadenzaCertificatoMedico ,121) > DateAdd(Day, -30, CURRENT_TIMESTAMP) And B.CertificatoMedico = 'S')"
+							Sql &= " And (B.ScadenzaCertificatoMedico Is Not Null And B.ScadenzaCertificatoMedico <> '' And Convert(DateTime, B.ScadenzaCertificatoMedico ,121) <= CURRENT_TIMESTAMP And B.CertificatoMedico = 'S')" ' And (Convert(DateTime, B.ScadenzaCertificatoMedico ,121) > DateAdd(Day, -30, CURRENT_TIMESTAMP) And B.CertificatoMedico = 'S')"
 							Altro &= ", certificato medico scaduto"
 						Case "2"
 							' Presente
@@ -369,11 +440,11 @@ Public Class wsReports
 							Altro &= ", certificato medico presente"
 						Case "3"
 							' Assente
-							Sql &= " And B.CertificatoMedico = 'N'"
+							Sql &= " And (B.CertificatoMedico Is Null Or B.CertificatoMedico = '' Or B.CertificatoMedico = 'N' Or (B.CertificatoMedico = 'S' And (B.ScadenzaCertificatoMedico Is Null Or B.ScadenzaCertificatoMedico = ''))) "
 							Altro &= ", certificato medico assente"
 						Case "4"
 							' In scadenza
-							Sql &= " And (Convert(DateTime, B.ScadenzaCertificatoMedico ,121) <= DateAdd(Day, 30, CURRENT_TIMESTAMP) And B.CertificatoMedico = 'S')"
+							Sql &= " And (Convert(DateTime, B.ScadenzaCertificatoMedico ,121) > CURRENT_TIMESTAMP) And (Convert(DateTime, B.ScadenzaCertificatoMedico ,121) <= DateAdd(Day, 30, CURRENT_TIMESTAMP) And B.CertificatoMedico = 'S')"
 							Altro &= ", certificato medico in scadenza"
 					End Select
 
@@ -596,7 +667,7 @@ Public Class wsReports
 										"Left Join Giocatori E On B.idGiocatore = E.idGiocatore " &
 										"Left Join Taglie F On E.idTaglia = F.idTaglia " &
 										"Left Join KitElementi G On G.idElemento = C.idElemento " &
-										"Where B.idGiocatore = " & Rec("idGiocatore").Value & " And C.Eliminato='N'"
+										"Where B.idGiocatore = " & Rec("idGiocatore").Value & " And C.Eliminato='N' And A.Eliminato='N' And D.Eliminato='N' And E.Eliminato='N' And G.Eliminato='N'"
 									Rec2 = LeggeQuery(Conn, Sql, Connessione)
 									If TypeOf (Rec2) Is String Then
 										Ritorno = Rec2
@@ -668,22 +739,22 @@ Public Class wsReports
 									ddn = d(2) & "/" & d(1) & "/" & d(0)
 								End If
 
-								Dim Immagine As String = ""
-								Dim Esten2 As String = Format(Now.Second, "00") & "_" & Now.Millisecond & RitornaValoreRandom(55)
-								Dim urlImmagine As String = P(2) & "/" & NomeSquadra.Replace(" ", "_") & "/Giocatori/" & idAnno & "_" & Rec("idGiocatore").Value & ".kgb"
-								Dim pathImmagine As String = pp & "\" & NomeSquadra.Replace(" ", "_") & "\Giocatori\" & idAnno & "_" & Rec("idGiocatore").Value & ".kgb"
-								Dim urlImmagineConvertita As String = P(2) & "/Appoggio/" & Rec("idGiocatore").Value & "_" & Esten2 & ".png"
-								Dim pathImmagineConvertita As String = pp & "\Appoggio\" & Rec("idGiocatore").Value & "_" & Esten2 & ".png"
-								If File.Exists(pathImmagine) Then
-									c.DecryptFile(CryptPasswordString, pathImmagine, pathImmagineConvertita)
+								'Dim Immagine As String = ""
+								'Dim Esten2 As String = Format(Now.Second, "00") & "_" & Now.Millisecond & RitornaValoreRandom(55)
+								'Dim urlImmagine As String = P(2) & "/" & NomeSquadra.Replace(" ", "_") & "/Giocatori/" & idAnno & "_" & Rec("idGiocatore").Value & ".kgb"
+								'Dim pathImmagine As String = pp & "\" & NomeSquadra.Replace(" ", "_") & "\Giocatori\" & idAnno & "_" & Rec("idGiocatore").Value & ".kgb"
+								'Dim urlImmagineConvertita As String = P(2) & "/Appoggio/" & Rec("idGiocatore").Value & "_" & Esten2 & ".png"
+								'Dim pathImmagineConvertita As String = pp & "\Appoggio\" & Rec("idGiocatore").Value & "_" & Esten2 & ".png"
+								'If File.Exists(pathImmagine) Then
+								'	c.DecryptFile(CryptPasswordString, pathImmagine, pathImmagineConvertita)
 
-									Immagine = "<img src=""" & urlImmagineConvertita & """ style=""width: 50px; height: 50px;"" />"
-								Else
-									urlImmagineConvertita = P(2) & "/Sconosciuto.png"
-									Immagine = "<img src=""" & urlImmagineConvertita & """ style=""width: 50px; height: 50px;"" />"
-								End If
+								'	Immagine = "<img src=""" & urlImmagineConvertita & """ style=""width: 50px; height: 50px;"" />"
+								'Else
+								'	urlImmagineConvertita = P(2) & "/Sconosciuto.png"
+								'	Immagine = "<img src=""" & urlImmagineConvertita & """ style=""width: 50px; height: 50px;"" />"
+								'End If
 
-								Output &= "<tr><td>" & Immagine & "</td><td>" & Rec("Cognome").Value & "</td><td>" & Rec("Nome").Value & "</td><td>" & ddn & "</td><td>" & Rec("NumeroMaglia").Value & "</td><td>" & Rec("Matricola").Value & "</td>"
+								Output &= "<tr><td></td><td>" & Rec("Cognome").Value & "</td><td>" & Rec("Nome").Value & "</td><td>" & ddn & "</td><td>" & Rec("NumeroMaglia").Value & "</td><td>" & Rec("Matricola").Value & "</td>"
 								If Val(Certificato) > 0 Then
 									Dim d As String = "" & Rec("ScadenzaCertificatoMedico").Value
 									Dim sData As String = ""
