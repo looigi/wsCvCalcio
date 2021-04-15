@@ -4,7 +4,8 @@ Imports System.Net.Mime
 Imports System.Timers
 
 Public Class mail
-	Public Function SendEmail(Squadra As String, Mittente As String, ByVal oggetto As String, ByVal newBody As String, ByVal ricevente As String, ByVal Allegato() As String, Optional AllegatoOMultimedia As String = "") As String
+	Public Function SendEmail(Squadra As String, Mittente As String, ByVal oggetto As String, ByVal newBody As String, ByVal ricevente As String, ByVal Allegato() As String,
+							  Optional AllegatoOMultimedia As String = "", Optional NuovaSocieta As String = "") As String
 		Dim Ritorno As String = "*"
 		Dim s As New strutturaMail
 		s.Squadra = Squadra
@@ -14,6 +15,7 @@ Public Class mail
 		s.Ricevente = ricevente
 		s.Allegato = Allegato
 		s.AllegatoOMultimedia = AllegatoOMultimedia
+		s.NuovaSocieta = NuovaSocieta
 
 		pathMail = HttpContext.Current.Server.MapPath(".")
 
@@ -74,7 +76,7 @@ Public Class mail
 			gf.ChiudeFileDiTestoDopoScrittura()
 		End If
 
-		Dim Ritorno As String = SendEmailAsincrona(mail.Squadra, mail.Mittente, mail.Oggetto, mail.newBody, mail.Ricevente, mail.Allegato, mail.AllegatoOMultimedia, gf)
+		Dim Ritorno As String = SendEmailAsincrona(mail.Squadra, mail.Mittente, mail.Oggetto, mail.newBody, mail.Ricevente, mail.Allegato, mail.AllegatoOMultimedia, mail.NuovaSocieta, gf)
 		listaMails.RemoveAt(0)
 		If listaMails.Count > 0 Then
 			timerMails.Enabled = True
@@ -85,7 +87,8 @@ Public Class mail
 	End Sub
 
 	Private Function SendEmailAsincrona(Squadra As String, Mittente As String, ByVal oggetto As String, ByVal newBody As String,
-										ByVal ricevente As String, ByVal Allegato() As String, AllegatoOMultimedia As String, gf As GestioneFilesDirectory) As String
+										ByVal ricevente As String, ByVal Allegato() As String, AllegatoOMultimedia As String, NuovaSocieta As String,
+										gf As GestioneFilesDirectory) As String
 		'Dim myStream As StreamReader = New StreamReader(Server.MapPath(ConfigurationManager.AppSettings("VirtualDir") & "mailresponsive.html"))
 		'Dim newBody As String = ""
 		'newBody = myStream.ReadToEnd()
@@ -116,6 +119,53 @@ Public Class mail
 				Mittente = Utenza
 			End If
 			'Mittente = Utenza
+
+			If NuovaSocieta <> "" Then
+				Dim urlSito As String = gf.LeggeFileIntero(pathMail & "\Impostazioni\PercorsoSito.txt")
+				If urlSito.EndsWith("/") Then
+					urlSito = Mid(urlSito, 1, urlSito.Length - 1)
+				End If
+
+				'Dim contentIDBee As String = "ImageBee"
+				'Dim inlineBee = New Attachment(urlSito & "/Scheletri/template_nuova_societa/images/bee.png")
+				'inlineBee.ContentId = contentIDBee
+				'inlineBee.ContentDisposition.Inline = True
+				'inlineBee.ContentDisposition.DispositionType = DispositionTypeNames.Inline
+
+				'mail.Attachments.Add(inlineBee)
+
+				newBody = newBody.Replace("***contentBee***", urlSito & "/Scheletri/template_nuova_societa/images/bee.png")
+
+				'Dim contentIDFB As String = "ImageFB"
+				'Dim inlineFB = New Attachment(urlSito & "/Scheletri/template_nuova_societa/images/facebook2x.png")
+				'inlineFB.ContentId = contentIDFB
+				'inlineFB.ContentDisposition.Inline = True
+				'inlineFB.ContentDisposition.DispositionType = DispositionTypeNames.Inline
+
+				'mail.Attachments.Add(inlineFB)
+
+				newBody = newBody.Replace("***contentFB***", urlSito & "/Scheletri/template_nuova_societa/images/facebook2x.png")
+
+				'Dim contentIDLogo As String = "ImageLogo"
+				'Dim inlineLogo = New Attachment(urlSito & "/Scheletri/template_nuova_societa/images/LOGOinCalcio200n.png")
+				'inlineLogo.ContentId = contentIDLogo
+				'inlineLogo.ContentDisposition.Inline = True
+				'inlineLogo.ContentDisposition.DispositionType = DispositionTypeNames.Inline
+
+				'mail.Attachments.Add(inlineLogo)
+
+				newBody = newBody.Replace("***contentLOGO***", urlSito & "/Scheletri/template_nuova_societa/images/LOGOinCalcio200n.png")
+
+				'Dim contentIDPC As String = "ImagePC"
+				'Dim inlinePC = New Attachment(urlSito & "/Scheletri/template_nuova_societa/images/Portatile_homeapp_1.png")
+				'inlinePC.ContentId = contentIDPC
+				'inlinePC.ContentDisposition.Inline = True
+				'inlinePC.ContentDisposition.DispositionType = DispositionTypeNames.Inline
+
+				'mail.Attachments.Add(inlinePC)
+
+				newBody = newBody.Replace("***contentPC***", urlSito & "/Scheletri/template_nuova_societa/images/Portatile_homeapp_1.png")
+			End If
 
 			mail.From = New MailAddress(Mittente)
 			mail.[To].Add(New MailAddress(ricevente))

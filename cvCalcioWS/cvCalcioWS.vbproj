@@ -133,6 +133,7 @@
     <Content Include="wsTemplates.asmx" />
     <Content Include="wsUtentiLocali.asmx" />
     <Content Include="wsUtenti.asmx" />
+    <Content Include="wsWidget.asmx" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="CodiceFiscale.vb" />
@@ -299,6 +300,10 @@
     </Compile>
     <Compile Include="wsUtenti.asmx.vb">
       <DependentUpon>wsUtenti.asmx</DependentUpon>
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="wsWidget.asmx.vb">
+      <DependentUpon>wsWidget.asmx</DependentUpon>
       <SubType>Component</SubType>
     </Compile>
   </ItemGroup>

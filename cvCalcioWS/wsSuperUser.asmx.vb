@@ -213,15 +213,17 @@ Public Class wsSuperUser
 															Exit For
 														Else
 															If Not Rec.Eof() Then
-																Dim Query As String = Rec(0).Value
+																Dim Query As String = "" & Rec(0).Value
 
-																Ritorno = EsegueSql(ConnNuovo, Query, ConnessioneNuovo)
-																If Ritorno.Contains(StringaErrore) Then
-																	gf.ScriveTestoSuFileAperto("Errore su creazione Chiave: " & Tabelle(i) & " -> " & Ritorno)
-																	Ok = False
-																	Exit For
-																Else
-																	gf.ScriveTestoSuFileAperto("Creata Chiave: " & Tabelle(i))
+																If Query <> "" Then
+																	Ritorno = EsegueSql(ConnNuovo, Query, ConnessioneNuovo)
+																	If Ritorno.Contains(StringaErrore) Then
+																		gf.ScriveTestoSuFileAperto("Errore su creazione Chiave: " & Tabelle(i) & " -> " & Ritorno)
+																		Ok = False
+																		Exit For
+																	Else
+																		gf.ScriveTestoSuFileAperto("Creata Chiave: " & Tabelle(i))
+																	End If
 																End If
 
 																Rec.Close()
@@ -246,12 +248,12 @@ Public Class wsSuperUser
 												Sql = "Insert Into [" & nomeDb & "].[dbo].[Anni] Values (" &
 													"1, " & ' idAnno
 													"'" & Anno & "', " & ' Descrizione
-													"'" & Squadra.Replace("'", "''") & "', " & ' NomeSquadra
+													"'', " & ' NomeSquadra
 													"null, " & ' Lat
 													"null, " & ' Lon
 													"'" & Indirizzo.Replace("'", "''") & "', " &
-													"null, " & ' CampoSquadra
-													"null, " & ' NomePolisportiva
+													"'Campo " & Squadra.Replace("'", "''") & "', " & ' CampoSquadra
+													"'" & Squadra.Replace("'", "''") & "', " & ' NomePolisportiva
 													"'" & MailAdmin.Replace("'", "''") & "', " &
 													"null, " & ' PEC
 													"'" & Telefono.Replace("'", "''") & "', " &
@@ -259,7 +261,7 @@ Public Class wsSuperUser
 													"'" & CF.Replace("'", "''") & "', " &
 													"null, " & ' CodiceUnivoco
 													"null, " & ' SitoWeb
-													"null, " & ' MittenteMail
+													"'" & MailAdmin.Replace("'", "''") & "', " & ' MittenteMail
 													"null, " & ' GestionePagamenti
 													"null, " & ' CostoScuolaCalcio
 													"null, " & ' Suffisso
@@ -334,9 +336,10 @@ Public Class wsSuperUser
 
 																Dim m As New mail
 																Dim Oggetto As String = "Creazione nuova società"
-																Dim Body As String = ""
+																Dim BodyMail As String = gf.LeggeFileIntero(Server.MapPath(".") & "\Scheletri\template_nuova_societa\template-mail-nuova-societa.html")
 
-																Body &= "E' stata creata la nuova società '" & Squadra & "'. <br /><br />"
+																Dim Body As String = ""
+																Body &= Squadra & "<br /><br />"
 																Body &= "Amministratore: " & CognomeAdmin & " " & NomeAdmin & "<br />"
 																Body &= "Scadenza licenza: " & DataScadenza & "<br />"
 																Body &= "Anno: " & Anno & "<br />"
@@ -344,11 +347,13 @@ Public Class wsSuperUser
 																Body &= "Licenza: " & Licenza & "<br /><br />"
 																Body &= "Per accedere, l'amministratore potrà utilizzare la password " & nuovaPass(0) & " che dovrà essere modificata al primo ingresso."
 
+																BodyMail = BodyMail.Replace("***TESTO MAIL***", Body)
+
 																Dim ChiScrive As String = "servizioclienti@incalcio.cloud"
 
 																gf.ScriveTestoSuFileAperto("Invio Mail")
 
-																Ritorno = m.SendEmail(Squadra, Mittente, Oggetto, Body, MailAdmin, {""})
+																Ritorno = m.SendEmail(Squadra, Mittente, Oggetto, BodyMail, MailAdmin, {""}, "NUOVA SOCIETA")
 																If Ritorno.Contains(StringaErrore) Then
 																	gf.ScriveTestoSuFileAperto("Ritorno invio mail destinario " & MailAdmin & ": " & Ritorno)
 																Else
@@ -503,6 +508,27 @@ Public Class wsSuperUser
 								Semaforo2 = "rosso" : Titolo2 = "Database fuori linea"
 							End If
 
+							Dim id As String = Rec("idSquadra").Value.ToString.Trim
+							For i As Integer = id.Length To 4
+								id = "0" & id
+							Next
+							For i As Integer = maxAnno.Length To 3
+								maxAnno = "0" & maxAnno
+							Next
+							Dim CodiceSquadra As String = maxAnno & "_" & id
+							Dim RateManuali As String = "N"
+
+							Sql = "Select RateManuali From [" & CodiceSquadra & "].[dbo].[Anni]"
+							Rec2 = LeggeQuery(ConnGen, Sql, ConnessioneGenerale)
+							If TypeOf (Rec2) Is String Then
+								Ritorno = Rec2
+							Else
+								If Not Rec2.Eof() Then
+									RateManuali = Rec2("RateManuali").Value
+								End If
+								Rec2.Close
+							End If
+
 							Ritorno &= Rec("idSquadra").Value & ";" &
 									Rec("Descrizione").Value & ";" &
 									Rec("DataScadenza").Value & ";" &
@@ -514,6 +540,7 @@ Public Class wsSuperUser
 									Anni & ";" &
 									maxAnno & ";" &
 									Semaforo2 & "*" & Titolo2 & ";" &
+									RateManuali & ";" &
 									"§"
 
 							Rec.MoveNext()
@@ -528,7 +555,7 @@ Public Class wsSuperUser
 	End Function
 
 	<WebMethod()>
-	Public Function ModificaSquadra(idSquadra As String, Squadra As String, DataScadenza As String, idTipologia As String, idLicenza As String) As String
+	Public Function ModificaSquadra(idSquadra As String, Squadra As String, DataScadenza As String, idTipologia As String, idLicenza As String, rateManuali As String) As String
 		Dim Ritorno As String = ""
 		Dim ConnessioneGenerale As String = LeggeImpostazioniDiBase(Server.MapPath("."), "")
 
@@ -553,7 +580,32 @@ Public Class wsSuperUser
 						"Where idSquadra=" & idSquadra
 					Ritorno = EsegueSql(ConnGen, Sql, ConnessioneGenerale)
 					If Not Ritorno.Contains(StringaErrore) Then
-						Ritorno = "*"
+						Dim maxAnno As String = ""
+						Sql = "Select Max(idAnno) From SquadraAnni Where idSquadra=" & idSquadra
+						Rec = LeggeQuery(ConnGen, Sql, ConnessioneGenerale)
+						If TypeOf (Rec) Is String Then
+							Ritorno = Rec
+						Else
+							If Not Rec.Eof() Then
+								maxAnno = Rec(0).Value
+							End If
+							Rec.Close
+
+							Dim id As String = idSquadra.ToString.Trim
+							For i As Integer = id.Length To 4
+								id = "0" & id
+							Next
+							For i As Integer = maxAnno.Length To 3
+								maxAnno = "0" & maxAnno
+							Next
+							Dim CodiceSquadra As String = maxAnno & "_" & id
+
+							Sql = "Update [" & CodiceSquadra & "].[dbo].[Anni] Set rateManuali = '" & rateManuali & "'"
+							Ritorno = EsegueSql(ConnGen, Sql, ConnessioneGenerale)
+							If Not Ritorno.Contains(StringaErrore) Then
+								Ritorno = "*"
+							End If
+						End If
 					End If
 				Catch ex As Exception
 					Ritorno = StringaErrore & " " & ex.Message

@@ -345,6 +345,96 @@ Public Class wsReports
 	End Function
 
 	<WebMethod()>
+	Public Function StampaQuote(Squadra As String, Anno As String, QuotaPresente As String) As String
+		Dim Ritorno As String = ""
+		Dim Connessione As String = LeggeImpostazioniDiBase(Server.MapPath("."), Squadra)
+
+		If Connessione = "" Then
+			Ritorno = ErroreConnessioneNonValida
+		Else
+			Dim Conn As Object = ApreDB(Connessione)
+			Dim Rec As Object = Server.CreateObject("ADODB.Recordset")
+			Dim Sql As String = ""
+			Dim Altro As String = ""
+
+			If Anno <> "" Then
+				Altro = "And Year(DataDiNascita)=" & Anno
+			End If
+
+			If QuotaPresente = "N" Then
+				Sql = "Select Cognome, Nome, DataDiNascita, '' AS Descrizione,  0 As DaPagare, 0 As Sconto, 0 As TotalePagato, 0 As Differenza " &
+					"From " &
+					"Giocatori A " &
+					"Left Join GiocatoriDettaglio B On A.idGiocatore = B.idGiocatore " &
+					"Left Join Quote C On B.idQuota = C.idQuota And C.Eliminato = 'N' " &
+					"Where A.Eliminato = 'N' And C.Descrizione Is Null " & Altro & " " &
+					"Order By Cognome, Nome"
+			Else
+				Sql = "Select Cognome, Nome, DataDiNascita, Descrizione, DaPagare, Sconto, TotalePagato, (DaPagare - Sconto) - TotalePagato As Differenza From ( " &
+					"Select Cognome, Nome, DataDiNascita, C.Descrizione, IsNull(C.Importo, 0) As DaPagare, IsNull(B.Sconto, 0) As Sconto, " &
+					"(Select IsNull(Sum(Pagamento),0) From GiocatoriPagamenti Where idGiocatore=A.idGiocatore And Eliminato='N' And idTipoPagamento = 1 And Validato='S') As TotalePagato " &
+					"From Giocatori A " &
+					"Left Join GiocatoriDettaglio B On A.idGiocatore = B.idGiocatore " &
+					"Left Join Quote C On B.idQuota = C.idQuota " &
+					"Where A.Eliminato='N' And C.Eliminato='N' " & Altro & " " &
+					") As A Order By Cognome, Nome"
+			End If
+			Rec = LeggeQuery(Conn, Sql, Connessione)
+			If TypeOf (Rec) Is String Then
+				Ritorno = Rec
+			Else
+				Dim Output As New StringBuilder
+				Dim gf As New GestioneFilesDirectory
+				Dim pp As String = gf.LeggeFileIntero(Server.MapPath(".") & "\Impostazioni\Paths.txt")
+				pp = pp.Replace(vbCrLf, "")
+				pp = pp.Trim()
+				If Strings.Right(pp, 1) = "\" Then
+					pp = Mid(pp, 1, pp.Length - 1)
+				End If
+				Dim PathAllegati As String = gf.LeggeFileIntero(Server.MapPath(".") & "\Impostazioni\PathAllegati.txt")
+				Dim P() As String = PathAllegati.Split(";")
+				P(2) = P(2).Replace(vbCrLf, "").Trim
+				If Strings.Right(P(2), 1) = "\" Then
+					P(2) = Mid(P(2), 1, P(2).Length - 1)
+				End If
+
+				Dim CodSquadra() As String = Squadra.Split("_")
+
+				Output.Append("Cognome;Nome;Data Di Nascita;Quota;Da Pagare;Sconto;Pagato;Differenza;")
+				Output.Append(vbCrLf)
+
+				Do Until Rec.Eof
+					Output.Append("" & Rec("Cognome").Value & ";")
+					Output.Append("" & Rec("Nome").Value & ";")
+					Output.Append("" & Rec("DataDiNascita").Value & ";")
+					Output.Append("" & Rec("Descrizione").Value & ";")
+					Output.Append("" & Rec("DaPagare").Value & ";")
+					Output.Append("" & Rec("Sconto").Value & ";")
+					Output.Append("" & Rec("TotalePagato").Value & ";")
+					Output.Append("" & Rec("Differenza").Value & ";")
+					Output.Append(vbCrLf)
+
+					Rec.MoveNext
+				Loop
+				Rec.Close
+
+				Dim filePaths As String = gf.LeggeFileIntero(HttpContext.Current.Server.MapPath(".") & "\Impostazioni\Paths.txt")
+				filePaths = filePaths.Replace(vbCrLf, "")
+				If Strings.Right(filePaths, 1) <> "\" Then
+					filePaths &= "\"
+				End If
+				Dim Esten As String = Format(Now.Second, "00") & "_" & Now.Millisecond & RitornaValoreRandom(55)
+				Dim nomeFileCSV As String = filePaths & "Appoggio\" & Esten & ".csv"
+				gf.CreaAggiornaFile(nomeFileCSV, Output.ToString)
+
+				Ritorno = "Appoggio/" & Esten & ".csv"
+			End If
+		End If
+
+		Return Ritorno
+	End Function
+
+	<WebMethod()>
 	Public Function StampaAnagrafica(Squadra As String, Tipologia As String, Dato As String, Certificato As String, FirmePresenti As String, KitConsegnato As String) As String
 		Dim Ritorno As String = ""
 		Dim Connessione As String = LeggeImpostazioniDiBase(Server.MapPath("."), Squadra)
@@ -823,15 +913,15 @@ Public Class wsReports
 						' filetto &= "<hr />Stampato tramite InCalcio, software per la gestione delle società di calcio - www.incalcio.it - info@incalcio.it"
 
 						Dim nomeFileHtml As String = filePaths & "Appoggio\" & Esten & ".html"
-						Dim nomeFilePDF As String = filePaths & "Appoggio\" & Esten & ".pdf"
+						'Dim nomeFilePDF As String = filePaths & "Appoggio\" & Esten & ".pdf"
 
 						gf.CreaAggiornaFile(nomeFileHtml, filetto)
 
-						Dim pp2 As New pdfGest
-						Ritorno = pp2.ConverteHTMLInPDF(nomeFileHtml, nomeFilePDF, "")
-						If Ritorno = "*" Then
-							Ritorno = "Appoggio/" & Esten & ".pdf"
-						End If
+						'Dim pp2 As New pdfGest
+						'Ritorno = pp2.ConverteHTMLInPDF(nomeFileHtml, nomeFilePDF, "")
+						'If Ritorno = "*" Then
+						Ritorno = "Appoggio/" & Esten & ".html"
+						'End If
 					End If
 				End If
 			End If

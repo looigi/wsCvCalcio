@@ -60,7 +60,7 @@ Module mdlTrasfSMS
         Dim Datella As String = Format(Now.Day, "00") & "/" & Format(Now.Month, "00") & "/" & Now.Year & " " & Format(Now.Hour, "00") & ":" & Format(Now.Minute, "00") & ":" & Format(Now.Second, "00")
         Dim gf As New GestioneFilesDirectory
 
-        If effettuaLog Then
+        If effettuaLog And Not HttpContext.Current Is Nothing Then
             'If nomeFileLogGenerale = "" Then
             Dim paths As String = gf.LeggeFileIntero(HttpContext.Current.Server.MapPath(".") & "\Impostazioni\PathAllegati.txt")
             Dim pp() As String = paths.Split(";")
@@ -86,7 +86,7 @@ Module mdlTrasfSMS
                 ThreadScriveLog(Datella & ": ERRORE SQL -> " & ex.Message)
             End If
         End Try
-        If effettuaLog Then
+        If effettuaLog And Not HttpContext.Current Is Nothing Then
             ThreadScriveLog(Datella & "--------------------------------------------------------------------------")
             ThreadScriveLog("")
         End If
@@ -134,7 +134,7 @@ Module mdlTrasfSMS
         Dim Datella As String = Format(Now.Day, "00") & "/" & Format(Now.Month, "00") & "/" & Now.Year & " " & Format(Now.Hour, "00") & ":" & Format(Now.Minute, "00") & ":" & Format(Now.Second, "00")
         Dim gf As New GestioneFilesDirectory
 
-        If effettuaLog Then
+        If effettuaLog And Not HttpContext.Current Is Nothing Then
             'If nomeFileLogGenerale = "" Then
             Dim paths As String = gf.LeggeFileIntero(HttpContext.Current.Server.MapPath(".") & "\Impostazioni\PathAllegati.txt")
             Dim pp() As String = paths.Split(";")
@@ -156,7 +156,7 @@ Module mdlTrasfSMS
                 ThreadScriveLog(Datella & ": ERRORE SQL -> " & ex.Message)
             End If
         End Try
-        If effettuaLog Then
+        If effettuaLog And Not HttpContext.Current Is Nothing Then
             ThreadScriveLog(Datella & "--------------------------------------------------------------------------")
             ThreadScriveLog("")
         End If

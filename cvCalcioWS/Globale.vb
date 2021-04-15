@@ -23,6 +23,7 @@ Module Globale
 		Dim Ricevente As String
 		Dim Allegato() As String
 		Dim AllegatoOMultimedia As String
+		Dim NuovaSocieta As String
 	End Structure
 	Public listaMails As New List(Of strutturaMail)
 	Public timerMails As Timers.Timer = Nothing
