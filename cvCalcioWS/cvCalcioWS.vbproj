@@ -101,7 +101,8 @@
     <Content Include="Scheletri\base_partita.txt" />
     <Content Include="Scheletri\base_statistiche.txt" />
     <Content Include="wsAllegati.asmx" />
-    <Content Include="wsEventiCalendario.asmx" />
+    <Content Include="wsEventiReminder.asmx" />
+    <Content Include="wsEventiConvocazioni.asmx" />
     <Content Include="wsFunzioni.asmx" />
     <Content Include="wsGenitori.asmx" />
     <Content Include="wsGiocatoriSezione.asmx" />
@@ -154,8 +155,12 @@
       <DependentUpon>wsAllegati.asmx</DependentUpon>
       <SubType>Component</SubType>
     </Compile>
-    <Compile Include="wsEventiCalendario.asmx.vb">
-      <DependentUpon>wsEventiCalendario.asmx</DependentUpon>
+    <Compile Include="wsEventiReminder.asmx.vb">
+      <DependentUpon>wsEventiReminder.asmx</DependentUpon>
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="wsEventiConvocazioni.asmx.vb">
+      <DependentUpon>wsEventiConvocazioni.asmx</DependentUpon>
       <SubType>Component</SubType>
     </Compile>
     <Compile Include="wsFunzioni.asmx.vb">

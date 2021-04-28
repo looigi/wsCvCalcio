@@ -216,6 +216,14 @@ Public Class wsTaglie
 							Ritorno = EsegueSql(Conn, Sql, Connessione)
 							If Ritorno.Contains(StringaErrore) Then
 								Ok = False
+							Else
+								Sql = "Select * From Taglie Where Descrizione='" & Descrizione.Replace("'", "''") & "'"
+								Rec = LeggeQuery(Conn, Sql, Connessione)
+								If TypeOf (Rec) Is String Then
+									Ritorno = Rec
+								Else
+									Ritorno = Rec("idTaglia").Value
+								End If
 							End If
 
 						Catch ex As Exception

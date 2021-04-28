@@ -15,10 +15,16 @@ Public Class wsSuperUser
 
 	<WebMethod()>
 	Public Function CreaDB(Squadra As String, DataScadenza As String, MailAdmin As String, NomeAdmin As String, CognomeAdmin As String, Anno As String, idTipologia As String,
-						   idLicenza As String, Mittente As String, Telefono As String, CAP As String, Citta As String, Indirizzo As String, Stima As String, PIVA As String, CF As String) As String
+						   idLicenza As String, Mittente As String, Telefono As String, CAP As String, Citta As String, Indirizzo As String, Stima As String, PIVA As String, CF As String, DBPrecompilato As String) As String
 		Dim Ritorno As String = ""
+		Dim NomeDBDaCopiare As String = "DBVUOTO"
+		Dim TipoDB As String = "Vuoto"
+		If DBPrecompilato = "S" Then
+			NomeDBDaCopiare = "DBPRECOMPILATO"
+			TipoDB = "Precompilato"
+		End If
 		Dim ConnessioneGenerale As String = LeggeImpostazioniDiBase(Server.MapPath("."), "")
-		Dim ConnessioneDBVuoto As String = LeggeImpostazioniDiBase(Server.MapPath("."), "DBVUOTO")
+		Dim ConnessioneDBVuoto As String = LeggeImpostazioniDiBase(Server.MapPath("."), NomeDBDaCopiare)
 		Dim nomeDb As String = ""
 
 		If ConnessioneGenerale = "" Then
@@ -50,6 +56,7 @@ Public Class wsSuperUser
 				gf.ScriveTestoSuFileAperto("idTipologia: " & idTipologia)
 				gf.ScriveTestoSuFileAperto("idLicenza: " & idLicenza)
 				gf.ScriveTestoSuFileAperto("Mittente: " & Mittente)
+				gf.ScriveTestoSuFileAperto("Tipologia DB: " & TipoDB)
 				gf.ScriveTestoSuFileAperto("-------------------------------------------")
 
 				Sql = "Select * From DettaglioSocieta Where EMailAmministratore='" & MailAdmin.Replace("'", "''") & "'"
@@ -268,7 +275,8 @@ Public Class wsSuperUser
 													"null, " & ' iscrFirmaEntrambi
 													"null, " & ' Modulo Associato
 													"10, " & ' PercCashBack
-													"'N' " & ' Rate Manuali
+													"'N', " & ' Rate Manuali
+													"'N' " & ' Cashback
 													")"
 												Ritorno = EsegueSql(ConnDbVuoto, Sql, ConnessioneDBVuoto)
 												If Ritorno.Contains(StringaErrore) Then
@@ -348,6 +356,28 @@ Public Class wsSuperUser
 																Body &= "Per accedere, l'amministratore potrà utilizzare la password " & nuovaPass(0) & " che dovrà essere modificata al primo ingresso."
 
 																BodyMail = BodyMail.Replace("***TESTO MAIL***", Body)
+
+																Dim paths As String = gf.LeggeFileIntero(Server.MapPath(".") & "\Impostazioni\PathAllegati.txt")
+																Dim p() As String = paths.Split(";")
+																If Strings.Right(p(0), 1) <> "\" Then
+																	p(0) = p(0) & "\"
+																End If
+																p(0) = p(0).Replace(vbCrLf, "")
+																If Strings.Right(p(2), 1) <> "/" Then
+																	p(2) = p(2) & "/"
+																End If
+																p(2) = p(2).Replace(vbCrLf, "")
+																p(2) = p(2).Replace("/Multimedia", "")
+
+																Dim urlIMG As String = p(2) & "Scheletri\template_nuova_societa\images\LOGOinCalcio200n.png"
+																Dim contentFB As String = p(2) & "Scheletri\template_nuova_societa\images\facebook2x.png"
+																Dim contentLogo As String = p(2) & "Scheletri\template_nuova_societa\images\LOGOinCalcio200n.png"
+																Dim pathIMG As String = p(2) & "Scheletri\template_nuova_societa\images\Portatile_homeapp_1.png"
+
+																BodyMail = BodyMail.Replace("***URL IMG***", pathIMG)
+																BodyMail = BodyMail.Replace("***contentFB***", contentFB)
+																BodyMail = BodyMail.Replace("***contentLOGO***", contentLogo)
+																BodyMail = BodyMail.Replace("***PATH_IMG***", pathIMG)
 
 																Dim ChiScrive As String = "servizioclienti@incalcio.cloud"
 
@@ -517,14 +547,16 @@ Public Class wsSuperUser
 							Next
 							Dim CodiceSquadra As String = maxAnno & "_" & id
 							Dim RateManuali As String = "N"
+							Dim Cashback As String = "N"
 
-							Sql = "Select RateManuali From [" & CodiceSquadra & "].[dbo].[Anni]"
+							Sql = "Select RateManuali, Cashback From [" & CodiceSquadra & "].[dbo].[Anni]"
 							Rec2 = LeggeQuery(ConnGen, Sql, ConnessioneGenerale)
 							If TypeOf (Rec2) Is String Then
 								Ritorno = Rec2
 							Else
 								If Not Rec2.Eof() Then
 									RateManuali = Rec2("RateManuali").Value
+									Cashback = Rec2("Cashback").Value
 								End If
 								Rec2.Close
 							End If
@@ -541,6 +573,7 @@ Public Class wsSuperUser
 									maxAnno & ";" &
 									Semaforo2 & "*" & Titolo2 & ";" &
 									RateManuali & ";" &
+									Cashback & ";" &
 									"§"
 
 							Rec.MoveNext()
@@ -555,7 +588,7 @@ Public Class wsSuperUser
 	End Function
 
 	<WebMethod()>
-	Public Function ModificaSquadra(idSquadra As String, Squadra As String, DataScadenza As String, idTipologia As String, idLicenza As String, rateManuali As String) As String
+	Public Function ModificaSquadra(idSquadra As String, Squadra As String, DataScadenza As String, idTipologia As String, idLicenza As String, rateManuali As String, Cashback As String) As String
 		Dim Ritorno As String = ""
 		Dim ConnessioneGenerale As String = LeggeImpostazioniDiBase(Server.MapPath("."), "")
 
@@ -600,7 +633,7 @@ Public Class wsSuperUser
 							Next
 							Dim CodiceSquadra As String = maxAnno & "_" & id
 
-							Sql = "Update [" & CodiceSquadra & "].[dbo].[Anni] Set rateManuali = '" & rateManuali & "'"
+							Sql = "Update [" & CodiceSquadra & "].[dbo].[Anni] Set rateManuali = '" & rateManuali & "', Cashback = '" & Cashback & "'"
 							Ritorno = EsegueSql(ConnGen, Sql, ConnessioneGenerale)
 							If Not Ritorno.Contains(StringaErrore) Then
 								Ritorno = "*"
@@ -795,18 +828,27 @@ Public Class wsSuperUser
 								" " & idAnno & ", " &
 								"'" & NuovoAnno & "', " &
 								"'" & NomeSquadra.Replace("'", "''") & "', " &
-								"null, " &
-								"null, " &
-								"null, " &
-								"null, " &
-								"null, " &
-								"null, " &
-								"null, " &
-								"null, " &
-								"null, " &
-								"null, " &
-								"null, " &
-								"null " &
+								"null, " & ' Lat
+								"null, " & ' Lon
+								"'', " &
+								"'Campo " & Squadra.Replace("'", "''") & "', " & ' CampoSquadra
+								"'" & Squadra.Replace("'", "''") & "', " & ' NomePolisportiva
+								"'', " &
+								"null, " & ' PEC
+								"'', " &
+								"'', " &
+								"'', " &
+								"null, " & ' CodiceUnivoco
+								"null, " & ' SitoWeb
+								"'', " & ' MittenteMail
+								"null, " & ' GestionePagamenti
+								"null, " & ' CostoScuolaCalcio
+								"null, " & ' Suffisso
+								"null, " & ' iscrFirmaEntrambi
+								"null, " & ' Modulo Associato
+								"10, " & ' PercCashBack
+								"'N', " & ' Rate Manuali
+								"'N' " & ' Cashback
 								")"
 							Ritorno = EsegueSql(ConnDbOrigine, Sql, ConnessioneDBOrigine)
 							If Ritorno.Contains(StringaErrore) Then

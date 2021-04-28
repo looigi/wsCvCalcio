@@ -264,9 +264,10 @@ Public Class wsUtentiLocali
 				Try
 					Sql = "SELECT A.idAnno, A.idUtente, Utente, Cognome, Nome, " &
 						"Password, EMail, idCategoria, A.idTipologia As idTipologia, A.idSquadra, Descrizione As Squadra, PasswordScaduta, Telefono, " &
-						"B.Eliminata, B.idTipologia As idTipo2, B.idLicenza, A.idSquadra, A.AmmOriginale, C.Mail, C.PwdMail " &
+						"B.Eliminata, B.idTipologia As idTipo2, B.idLicenza, A.idSquadra, A.AmmOriginale, C.Mail, C.PwdMail, IsNull(D.AggiornaWidgets, 'N') As AggiornaWidget " &
 						"FROM Utenti A Left Join Squadre B On A.idSquadra = B.idSquadra " &
 						"Left Join UtentiMails C On A.idUtente = C.idUtente " &
+						"Left Join AggiornamentoWidgets D On A.idSquadra = D.idSquadra " &
 						"Where Upper(Utente)='" & Utente.ToUpper.Replace("'", "''") & "' And A.Eliminato = 'N' " &
 						"Order By A.idTipologia"
 					Rec = LeggeQuery(Conn, Sql, Connessione)
@@ -279,8 +280,15 @@ Public Class wsUtentiLocali
 							'If Password <> DecriptaStringa(Rec("Password").Value.ToString) Then
 							'	Ritorno = StringaErrore & " Password non valida"
 							'Else
+							Dim AggiornaWidgets As Boolean = False
+							Dim idSquadra As String = ""
+							Dim idAnno As String = ""
+							Dim codSquadra As String = ""
+							Dim idLicenza As String = ""
+
 							Ritorno = ""
 							Do Until Rec.Eof
+								AggiornaWidgets = IIf(Rec("AggiornaWidget").Value = "S", True, False)
 								Dim Ok As Boolean = False
 
 								If Not Rec("Eliminata").Value Is DBNull.Value Then
@@ -293,6 +301,19 @@ Public Class wsUtentiLocali
 
 								If Ok = True Then
 									Dim ok2 As Boolean = True
+
+									idLicenza = Rec("idLicenza").Value
+									idSquadra = Rec("idSquadra").Value.ToString.Trim
+									idAnno = Rec("idAnno").Value.ToString.Trim
+									Dim app1 As String = idAnno
+									For i As Integer = app1.Length + 1 To 4
+										app1 = "0" & app1
+									Next
+									Dim app2 As String = idSquadra
+									For i As Integer = app2.Length + 1 To 5
+										app2 = "0" & app2
+									Next
+									codSquadra = app1 & "_" & app2
 
 									If Rec("idSquadra").Value <> -1 Then
 										Sql = "Select * From SquadraAnni Where idSquadra=" & Rec("idSquadra").Value & " And idAnno=" & Rec("idAnno").Value
@@ -384,6 +405,40 @@ Public Class wsUtentiLocali
 										Loop
 										Rec.Close()
 									End If
+
+									' Prende lista licenze
+									Sql = "Select A.idPermesso, Descrizione, NomePerCodice From Permessi_Composizione A " &
+										"Left Join Permessi_Lista B On A.idPermesso = B.idPermesso " &
+										"Where A.idTipologia = " & idLicenza & " And B.Eliminato = 'N'"
+									Rec = LeggeQuery(Conn, Sql, Connessione)
+									If TypeOf (Rec) Is String Then
+										Ritorno = Rec
+									Else
+										Ritorno &= "|"
+										If Rec.Eof Then
+											' Ritorno = StringaErrore & " Nessuna squadra rilevata"
+										Else
+											Do Until Rec.Eof
+												Ritorno &= Rec("idPermesso").Value & ";" & Rec("Descrizione").Value & ";" & Rec("NomePerCodice").Value & "§"
+
+												Rec.MoveNext
+											Loop
+											Rec.Close
+										End If
+									End If
+
+									'If AggiornaWidgets Then
+									'	Dim w As New wsWidget
+
+									'	w.CreaConteggi(codSquadra)
+									'	w.CreaFirmeDaValidare(codSquadra, "S")
+									'	w.CreaIndicatori(codSquadra)
+									'	w.CreaIscritti(codSquadra)
+									'	w.CreaQuoteNonSaldate(codSquadra)
+
+									'	Sql = "Update [Generale].[dbo].[AggiornamentoWidgets] Set AggiornaWidgets='N' Where idSquadra=" & idSquadra
+									'	Ritorno = EsegueSql(Conn, Sql, Connessione)
+									'End If
 								End If
 							End If
 						End If

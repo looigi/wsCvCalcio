@@ -182,6 +182,23 @@ Public Class wsTemplates
 	End Function
 
 	<WebMethod()>
+	Public Function eliminaFileScheletroTestoAggConv(Squadra As String) As String
+		Dim gf As New GestioneFilesDirectory
+		Dim filePaths As String = gf.LeggeFileIntero(HttpContext.Current.Server.MapPath(".") & "\Impostazioni\PathAllegati.txt")
+		Dim p() As String = filePaths.Split(";")
+		If Strings.Right(p(0), 1) <> "\" Then
+			p(0) &= "\"
+		End If
+		Dim pathFilePosta As String = p(0) & Squadra & "\Scheletri\testo_convocazioni.txt"
+		Dim Ritorno As String = "*"
+		If File.Exists(pathFilePosta) Then
+			File.Delete(pathFilePosta)
+		End If
+
+		Return Ritorno
+	End Function
+
+	<WebMethod()>
 	Public Function ritornaNomeFileScheletroAssociato(Squadra As String) As String
 		Dim gf As New GestioneFilesDirectory
 		Dim filePaths As String = gf.LeggeFileIntero(HttpContext.Current.Server.MapPath(".") & "\Impostazioni\PathAllegati.txt")
@@ -193,6 +210,24 @@ Public Class wsTemplates
 		Dim Ritorno As String = "MODIFICATO"
 		If Not File.Exists(pathFilePosta) Then
 			pathFilePosta = HttpContext.Current.Server.MapPath(".") & "\Scheletri\associato.txt"
+			Ritorno = "ORIGINALE"
+		End If
+
+		Return Ritorno
+	End Function
+
+	<WebMethod()>
+	Public Function ritornaNomeFileScheletroTestoAggConv(Squadra As String) As String
+		Dim gf As New GestioneFilesDirectory
+		Dim filePaths As String = gf.LeggeFileIntero(HttpContext.Current.Server.MapPath(".") & "\Impostazioni\PathAllegati.txt")
+		Dim p() As String = filePaths.Split(";")
+		If Strings.Right(p(0), 1) <> "\" Then
+			p(0) &= "\"
+		End If
+		Dim pathFilePosta As String = p(0) & Squadra & "\Scheletri\testo_convocazioni.txt"
+		Dim Ritorno As String = "MODIFICATO"
+		If Not File.Exists(pathFilePosta) Then
+			pathFilePosta = HttpContext.Current.Server.MapPath(".") & "\Scheletri\testo_convocazioni.txt"
 			Ritorno = "ORIGINALE"
 		End If
 

@@ -1215,7 +1215,7 @@ Module Globale
 					End If
 
 					If Ok Then
-						sql = "delete from EventiCalendario Where idPartita = " & idPartita
+						sql = "delete from EventiConvocazioni Where idPartita = " & idPartita
 						Ritorno = EsegueSql(Conn, sql, Connessione)
 						If Ritorno.Contains(StringaErrore) Then
 							Ok = False

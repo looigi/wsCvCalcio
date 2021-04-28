@@ -64,6 +64,18 @@ Public Class wsReports
 			Else
 				Dim Sql As String = ""
 				Dim Ok As Boolean = True
+				Dim Altro As String = ""
+
+				Select Case Modalita
+					Case "1"
+						Altro = "Where TipoPagamento = 'Rata' "
+					Case "2"
+						Altro = "Where TipoPagamento = 'Altro' "
+					Case "3"
+						Altro = ""
+					Case "4"
+						Altro = "Where Cosa = 'Validato N'"
+				End Select
 
 				Sql = "Select * From  ( " &
 					"Select *, TotaleDaPagare - TotalePagato As Differenza From ( " &
@@ -102,6 +114,7 @@ Public Class wsReports
 					"Where A.Eliminato = 'N' And Validato = 'N' " &
 					") As B " &
 					") As A  " &
+					" " & Altro & " " &
 					"Order By Cognome, Nome, Validato"
 
 				Rec = LeggeQuery(Conn, Sql, Connessione)

@@ -372,7 +372,7 @@ Public Class wsMail
 					Rec.Close
 				End If
 
-				Sql = "Select idGiocatore, Cognome, Nome, EMail, Categorie From [" & Squadra & "].[dbo].Giocatori Where Eliminato = 'N'" ' Where CHARINDEX('" & Rec("idCategoria").Value & "-', Categorie) > 0"
+				Sql = "Select idGiocatore, Cognome, Nome, EMail, Categorie From [" & Squadra & "].[dbo].Giocatori Where Eliminato = 'N' And EMail Is Not Null And Email <> ''" ' Where CHARINDEX('" & Rec("idCategoria").Value & "-', Categorie) > 0"
 				Rec = LeggeQuery(Conn, Sql, Connessione)
 				Do Until Rec.Eof
 					' Dim codGiocatore As String = "GIOC_" & Rec2("idGiocatore").Value & "%" & Rec2("EMail").Value

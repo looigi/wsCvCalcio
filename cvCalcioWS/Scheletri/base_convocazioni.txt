@@ -70,11 +70,12 @@
 						<img src="***URL LOGO***" style="width: 98px; height: 98px; border: 0px;"/>
 					</td>
 					<td colspan="9" class="bordato">
-						<span class="titolo1 grassetto italico" style="margin-left: 10px;">***NOME POLISPORTIVA***</span>
+						<span class="titolo1 grassetto italico" style="margin-left: 10px;">***NOME POLISPORTIVA***</span><br />
+						<span class="titolo3 grassetto italico" style="margin-left: 10px;">***INDIRIZZO POLISPORTIVA***</span>
 					</td>
 				</tr>
 				<tr>
-					<td colspan="10" class="centrato bordato" style="background-color: azure;">
+					<td colspan="10" class="centrato bordato">
 						<span class="titolo2 grassetto">CONVOCAZIONE ***SQUADRA***</span>
 					</td>
 				</tr>
@@ -89,7 +90,7 @@
 					<td colspan="8" class="sottolineato">
 						<span class="titolo3">***GARA***</span>
 					</td>
-					<td colspan="1" class="sottolineato adestra" style="background-color: yellow;">
+					<td colspan="1" class="sottolineato adestra">
 						<span class="titolo3 grassetto">***DATA***</span>
 					</td>
 				</tr>
@@ -135,63 +136,40 @@
 				<tr class="spaziaturaRighe"> </tr>
 			</table>
 			***CONVOCATI***
-			<br /><br />
-			***DIRIGENTI***
+			<hr /><br />
+			
 			<table width="100% cellspacing="0px" cellpadding="0px">
-				<tr class="spaziaturaRighe"> </tr>
 				<tr>
-					<td colspan="1">
-						<span class="titolo2">AVVISO:</span>
+					<td class="asinistra" style="width: 20%">
+						<span class="titolo2">Dirigenti</span>
 					</td>
-					<td colspan="9"></td>
-				</tr>
-				<tr>
-					<td colspan="1"></td>
-					<td colspan="9" class="sottolineato">
-						<span class="titolo2 grassetto">TUTTI IN TUTA DI RAPPRESENTANZA</span>
+					<td class="sottolineato" style="width: 80%">
+						<span class="titolo2">***DIRIGENTI***</span>
 					</td>
 				</tr>
+			</table>
+			
+			<table width="100% cellspacing="0px" cellpadding="0px">
 				<tr>
-					<td colspan="1"></td>
-					<td colspan="9" class="sottolineato">
-						<span class="titolo2">Si richiede la massima puntualità</span>
-					</td>
-				</tr>
-				<tr>
-					<td colspan="1"></td>
-					<td colspan="9" class="sottolineato">
-						<span class="titolo2">In caso di assenza informare il mister</span>
-					</td>
-				</tr>
-				<tr class="spaziaturaRighe"> </tr>
-				<tr>
-					<td colspan="1"></td>
-					<td colspan="9">
-						<span class="titolo2">SI RICORDA DI MANTENERE SEMPRE UN CORRETTO COMPORTAMENTO</span>
-					</td>
-				</tr>
-				<tr class="spaziaturaRighe"> </tr>
-				<tr>
-					<td colspan="4"></td>
-					<td colspan="1" class="adestra">
+					<td class="asinistra" style="width: 20%">
 						<span class="titolo2">Mister</span>
 					</td>
-					<td colspan="1">&nbsp;</td>
-					<td colspan="4" class="sottolineato">
+					<td style="width: 80%">
 						<span class="titolo2">***MISTER***</span>
 					</td>
 				</tr>
 				<tr>
-					<td colspan="4"></td>
-					<td colspan="1" class="adestra">
-						<span class="titolo2">Cell.</span>
+					<td class="asinistra" style="width: 20%">
+						<span class="titolo2">&nbsp;</span>
 					</td>
-					<td colspan="1">&nbsp;</td>
-					<td colspan="4" class="sottolineato adestra">
+					<td class="sottolineato asinistra" style="width: 80%">
 						<span class="titolo2">***CELL***</span>
 					</td>
 				</tr>
 			</table>
+			<br />
+			
+			***TESTO AGGIUNTIVO***
 		</div>
 	</form>
 </body>

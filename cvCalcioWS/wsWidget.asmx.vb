@@ -35,13 +35,103 @@ Public Class wsWidget
 	End Class
 
 	<WebMethod()>
-	Public Function CreaConteggi(Squadra As String) As String
-		Dim thread As New Thread(AddressOf RitornaConteggiThread)
-		Dim parameters As New parametriConteggi
-		parameters.Squadra = Squadra
-		thread.Start(parameters)
+	Public Function AggiornaDati(Squadra As String) As String
+		Dim Ritorno As String = ""
+		Dim Connessione As String = LeggeImpostazioniDiBase(Server.MapPath("."), "")
+		Dim s() As String = Squadra.Split("_")
+		Dim Anno As Integer = Val(s(0))
+		Dim idSquadra As Integer = Val(s(1))
 
-		Return "*"
+		If Connessione = "" Then
+			Ritorno = ErroreConnessioneNonValida
+		Else
+			Dim Conn As Object = ApreDB(Connessione)
+
+			If TypeOf (Conn) Is String Then
+				Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
+			Else
+				Dim Sql As String = ""
+				Dim Rec As Object = Server.CreateObject("ADODB.Recordset")
+
+				Sql = "Select * From AggiornamentoWidgets Where idSquadra=" & idSquadra
+				Rec = LeggeQuery(Conn, Sql, Connessione)
+				If TypeOf (Rec) Is String Then
+					Ritorno = Rec
+				Else
+					If Not Rec.Eof Then
+						CreaConteggi(Squadra)
+						CreaFirmeDaValidare(Squadra, "S")
+						CreaIndicatori(Squadra)
+						CreaIscritti(Squadra)
+						CreaQuoteNonSaldate(Squadra)
+
+						Sql = "Update [Generale].[dbo].[AggiornamentoWidgets] Set AggiornaWidgets='N' Where idSquadra=" & idSquadra
+						Ritorno = EsegueSql(Conn, Sql, Connessione)
+						If Ritorno = "OK" Then
+							Ritorno = "*"
+						End If
+					End If
+				End If
+			End If
+		End If
+
+		Return Ritorno
+	End Function
+
+	<WebMethod()>
+	Public Function PulisceDati(Squadra As String) As String
+		'Dim thread As New Thread(AddressOf RitornaFirmeDaValidareThread)
+		'Dim parameters As New parametriFirme
+		'parameters.Squadra = Squadra
+		'parameters.Tutte = Tutte
+		'thread.Start(parameters)
+		Dim s() As String = Squadra.Split("_")
+		Dim Anno As Integer = Val(s(0))
+		Dim idSquadra As Integer = Val(s(1))
+
+		Dim Ritorno As String = ""
+		Dim Connessione As String = LeggeImpostazioniDiBase(Server.MapPath("."), "")
+
+		If Connessione = "" Then
+			Ritorno = ErroreConnessioneNonValida
+		Else
+			Dim Conn As Object = ApreDB(Connessione)
+
+			If TypeOf (Conn) Is String Then
+				Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
+			Else
+				Dim Sql As String = ""
+				Dim Rec As Object = Server.CreateObject("ADODB.Recordset")
+
+				Sql = "Select * From AggiornamentoWidgets Where idSquadra=" & idSquadra
+				Rec = LeggeQuery(Conn, Sql, Connessione)
+				If TypeOf (Rec) Is String Then
+					Ritorno = Rec
+				Else
+					If Rec.Eof Then
+						Sql = "Insert Into AggiornamentoWidgets Values (" & idSquadra & ", 'S')"
+					Else
+						Sql = "Update AggiornamentoWidgets Set AggiornaWidgets='S' Where idSquadra=" & idSquadra
+					End If
+					Ritorno = EsegueSql(Conn, Sql, Connessione)
+					If Ritorno = "OK" Then
+						Ritorno = "*"
+					End If
+				End If
+			End If
+		End If
+
+		Return Ritorno
+	End Function
+
+	<WebMethod()>
+	Public Function CreaConteggi(Squadra As String) As String
+		'Dim thread As New Thread(AddressOf RitornaConteggiThread)
+		'Dim parameters As New parametriConteggi
+		'parameters.Squadra = Squadra
+		'thread.Start(parameters)
+
+		Return RitornaConteggiThread(Squadra) ' "*"
 	End Function
 
 	<WebMethod()>
@@ -84,8 +174,8 @@ Public Class wsWidget
 		Return Ritorno
 	End Function
 
-	Private Sub RitornaConteggiThread(ByVal data As Object)
-		Dim Squadra As String = data.Squadra
+	Private Function RitornaConteggiThread(ByVal data As String) As String
+		Dim Squadra As String = data ' .Squadra
 
 		Dim Ritorno As String = ""
 		Dim Connessione As String = LeggeImpostazioniDiBase(Server.MapPath("."), Squadra)
@@ -115,18 +205,18 @@ Public Class wsWidget
 			End If
 		End If
 
-		' Return Ritorno
-	End Sub
+		Return Ritorno
+	End Function
 
 	<WebMethod()>
 	Public Function CreaFirmeDaValidare(Squadra As String, Tutte As String) As String
-		Dim thread As New Thread(AddressOf RitornaFirmeDaValidareThread)
-		Dim parameters As New parametriFirme
-		parameters.Squadra = Squadra
-		parameters.Tutte = Tutte
-		thread.Start(parameters)
+		'Dim thread As New Thread(AddressOf RitornaFirmeDaValidareThread)
+		'Dim parameters As New parametriFirme
+		'parameters.Squadra = Squadra
+		'parameters.Tutte = Tutte
+		'thread.Start(parameters)
 
-		Return "*"
+		Return RitornaFirmeDaValidareThread(Squadra, Tutte) ' "*"
 	End Function
 
 	<WebMethod()>
@@ -181,9 +271,9 @@ Public Class wsWidget
 		Return Ritorno
 	End Function
 
-	Private Sub RitornaFirmeDaValidareThread(ByVal Data As Object)
-		Dim Squadra As String = Data.Squadra
-		Dim Tutte As String = Data.Tutte
+	Private Function RitornaFirmeDaValidareThread(ByVal Data As String, Data2 As String) As String
+		Dim Squadra As String = Data ' .Squadra
+		Dim Tutte As String = Data2 ' .Tutte
 
 		Dim Ritorno As String = ""
 		Dim Connessione As String = LeggeImpostazioniDiBase(Server.MapPath("."), Squadra)
@@ -220,17 +310,18 @@ Public Class wsWidget
 			End If
 		End If
 
-		' Return Ritorno
-	End Sub
+		Return Ritorno
+	End Function
 
 	<WebMethod()>
 	Public Function CreaIscritti(Squadra As String) As String
-		Dim thread As New Thread(AddressOf RitornaIscrittiThread)
-		Dim parameters As New parametriIscritti
-		parameters.Squadra = Squadra
-		thread.Start(parameters)
+		'Dim thread As New Thread(AddressOf RitornaIscrittiThread)
+		'Dim parameters As New parametriIscritti
+		'parameters.Squadra = Squadra
+		'thread.Start(parameters)
 
-		Return "*"
+
+		Return RitornaIscrittiThread(Squadra) ' "*"
 	End Function
 
 	<WebMethod()>
@@ -267,7 +358,7 @@ Public Class wsWidget
 				'	End If
 				'End If
 
-				Sql = "Select * From WidgetIscritti2"
+				Sql = "Select * From WidgetIscritti2 Order By Anno"
 				Rec = LeggeQuery(Conn, Sql, Connessione)
 				If TypeOf (Rec) Is String Then
 					Ritorno = Rec
@@ -294,8 +385,8 @@ Public Class wsWidget
 		Return Ritorno
 	End Function
 
-	Private Sub RitornaIscrittiThread(ByVal Data As Object)
-		Dim Squadra As String = Data.Squadra
+	Private Function RitornaIscrittiThread(ByVal Data As String) As String
+		Dim Squadra As String = Data '.Squadra
 
 		Dim Ritorno As String = ""
 		Dim Connessione As String = LeggeImpostazioniDiBase(Server.MapPath("."), Squadra)
@@ -336,19 +427,19 @@ Public Class wsWidget
 			'End If
 		End If
 
-		' If Ritorno = "" Then Ritorno = StringaErrore & " Nessun dato rilevato"
+		If Ritorno = "" Then Ritorno = StringaErrore & " Nessun dato rilevato"
 
-		' Return Ritorno
-	End Sub
+		Return Ritorno
+	End Function
 
 	<WebMethod()>
 	Public Function CreaQuoteNonSaldate(Squadra As String) As String
-		Dim thread As New Thread(AddressOf RitornaQuoteNonSaldateThread)
-		Dim parameters As New parametriQuote
-		parameters.Squadra = Squadra
-		thread.Start(parameters)
+		'Dim thread As New Thread(AddressOf RitornaQuoteNonSaldateThread)
+		'Dim parameters As New parametriQuote
+		'parameters.Squadra = Squadra
+		'thread.Start(parameters)
 
-		Return "*"
+		Return RitornaQuoteNonSaldateThread(Squadra) ' "*"
 	End Function
 
 	<WebMethod()>
@@ -366,7 +457,7 @@ Public Class wsWidget
 				Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
 			Else
 				Dim Rec As Object = Server.CreateObject("ADODB.Recordset")
-				Dim Sql As String = "Select * From WidgetQuoteNonSaldate"
+				Dim Sql As String = "Select * From WidgetQuoteNonSaldate Order By Anno1, Anno2"
 				Rec = LeggeQuery(Conn, Sql, Connessione)
 				If TypeOf (Rec) Is String Then
 					Ritorno = Rec
@@ -409,8 +500,8 @@ Public Class wsWidget
 		Return Ritorno
 	End Function
 
-	Private Sub RitornaQuoteNonSaldateThread(ByVal Data As Object)
-		Dim Squadra As String = Data.Squadra
+	Private Function RitornaQuoteNonSaldateThread(ByVal Data As String) As String
+		Dim Squadra As String = Data ' .Squadra
 
 		Dim Ritorno As String = ""
 		Dim Connessione As String = LeggeImpostazioniDiBase(Server.MapPath("."), Squadra)
@@ -453,35 +544,27 @@ Public Class wsWidget
 
 				Dim Totalone As String = "0"
 
-				Sql = "Select Sum(DaPagare) From ( " &
-					"Select Distinct 'Validato S' As Cosa, A.idGiocatore, Cognome, Nome, C.Descrizione As DescrizioneQuota, IsNull(C.Importo, 0) - IsNull(Sconto, 0) As DaPagare " &
-					"From  " &
-					"GiocatoriPagamenti A   " &
-					"Left Join Giocatori B On A.idGiocatore = B.idGiocatore   " &
-					"Left Join GiocatoriDettaglio D On D.idGiocatore = A.idGiocatore  " &
-					"Left Join Quote C On A.idQuota = C.idQuota  " &
-					"Left Join MetodiPagamento E On E.idMetodoPagamento = A.MetodoPagamento   " &
-					"Where A.Eliminato = 'N' And Validato = 'S'   " &
-					"Union All  " &
-					"Select Distinct 'Validato N' As Cosa, A.idGiocatore, Cognome, Nome, C.Descrizione As DescrizioneQuota, IsNull(C.Importo, 0) - IsNull(Sconto, 0) As DaPagare " &
-					"From  " &
-					"GiocatoriPagamenti A  " &
-					"Left Join Giocatori B On A.idGiocatore = B.idGiocatore  " &
-					"Left Join GiocatoriDettaglio D On D.idGiocatore = A.idGiocatore  " &
-					"Left Join Quote C On A.idQuota = C.idQuota  " &
-					"Left Join MetodiPagamento E On E.idMetodoPagamento = A.MetodoPagamento  " &
-					"Where A.Eliminato = 'N' And Validato = 'N'  " &
-					") As A"
+				Sql = "Select Sum(DaPagare) - Sum(Sconto) From ( " &
+					"Select Cognome, Nome, DataDiNascita, Descrizione, DaPagare, Sconto, TotalePagato, (DaPagare - Sconto) - TotalePagato As Differenza From (  " &
+					"Select Cognome, Nome, DataDiNascita, C.Descrizione, IsNull(C.Importo, 0) As DaPagare, IsNull(B.Sconto, 0) As Sconto, " &
+					"(Select IsNull(Sum(Pagamento),0) From GiocatoriPagamenti Where idGiocatore=A.idGiocatore And Eliminato='N' And idTipoPagamento = 1 And Validato='S') As TotalePagato " &
+					"From Giocatori A " &
+					"Left Join GiocatoriDettaglio B On A.idGiocatore = B.idGiocatore " &
+					"Left Join Quote C On B.idQuota = C.idQuota " &
+					"Where A.Eliminato='N' And C.Eliminato='N' " &
+					") As A ) as B"
 				Rec = LeggeQuery(Conn, Sql, Connessione)
 				If TypeOf (Rec) Is String Then
 					Ritorno = Rec
 					Ok = False
 				Else
-					If Not Rec.eof Then
+					If Rec(0).Value Is DBNull.Value Then
+						Totalone = 0
+					Else
 						Totalone = Rec(0).Value
 					End If
-					Rec.close
 				End If
+
 				Sql = "Insert Into WidgetTotaleQuote Values (" & Totalone.Replace(",", ".") & ")"
 				Ritorno = EsegueSql(Conn, Sql, Connessione)
 
@@ -585,8 +668,8 @@ Public Class wsWidget
 			'End If
 		End If
 
-		' Return Ritorno
-	End Sub
+		Return Ritorno
+	End Function
 
 	<WebMethod()>
 	Public Function RitornaProssimiEventi(Squadra As String, Limite As String) As String
@@ -624,7 +707,7 @@ Public Class wsWidget
 					"Left Join Categorie B On A.idCategoria = B.idCategoria " &
 					"Left Join SquadreAvversarie C On A.idAvversario = C.idAvversario " &
 					"Union All " &
-					"Select 'Evento' As Cosa, idEvento As Id, Titolo As PrimoCampo, '' As SecondoCampo, CONVERT(date, Inizio) As Data From EventiCalendario " &
+					"Select 'Evento' As Cosa, idEvento As Id, Titolo As PrimoCampo, '' As SecondoCampo, CONVERT(date, Inizio) As Data From EventiConvocazioni " &
 					"Where idTipologia = 2) A  " &
 					"Where Data > GETDATE() Or Cosa = 'Cert. Scad.' " &
 					"Order By Data"
@@ -648,16 +731,16 @@ Public Class wsWidget
 
 	<WebMethod()>
 	Public Function CreaIndicatori(Squadra As String) As String
-		Dim thread As New Thread(AddressOf RitornaIndicatoriThread)
-		Dim parameters As New parametriIndicatori
-		parameters.Squadra = Squadra
-		thread.Start(parameters)
+		'Dim thread As New Thread(AddressOf RitornaIndicatoriThread)
+		'Dim parameters As New parametriIndicatori
+		'parameters.Squadra = Squadra
+		'thread.Start(parameters)
 
-		Return "*" ' RitornaIndicatoriThread(Squadra)
+		Return RitornaIndicatoriThread(Squadra)
 	End Function
 
-	Private Function RitornaIndicatoriThread(ByVal Data As Object) As String
-		Dim Squadra As String = Data.Squadra
+	Private Function RitornaIndicatoriThread(ByVal Data As String) As String
+		Dim Squadra As String = Data ' .Squadra
 
 		Dim Ritorno As String = ""
 		Dim Connessione As String = LeggeImpostazioniDiBase(Server.MapPath("."), Squadra)

@@ -1887,7 +1887,7 @@ Public Class wsPartite
 				Sql = "SELECT Partite.Casa, Partite.idPartita, Partite.DataOra, Categorie.Descrizione As Categoria, SquadreAvversarie.Descrizione As Avversario, '' + CampiAvversari.Descrizione As Campo, " &
 					"CampiAvversari.Indirizzo, '' + CampiEsterni.Descrizione As CampoEsterno, Allenatori.Cognome + ' ' + Allenatori.Nome As Mister, Allenatori.Telefono, Partite.OraConv, " &
 					"Anni.CampoSquadra, Anni.Indirizzo As IndirizzoCasa, Categorie.AnticipoConvocazione, Partite.DataOraAppuntamento, Partite.LuogoAppuntamento, Partite.MezzoTrasporto, " &
-					"Anni.NomePolisportiva, Anni.NomeSquadra " &
+					"Anni.NomePolisportiva, Anni.NomeSquadra, Anni.Indirizzo " &
 					"FROM (((((Partite LEFT JOIN SquadreAvversarie ON Partite.idAvversario = SquadreAvversarie.idAvversario) " &
 					"LEFT JOIN CampiAvversari ON SquadreAvversarie.idCampo = CampiAvversari.idCampo) " &
 					"LEFT JOIN Categorie ON (Partite.idAnno = Categorie.idAnno) And (Partite.idCategoria = Categorie.idCategoria)) " &
@@ -1931,20 +1931,22 @@ Public Class wsPartite
 
 							Filetto = Filetto.Replace("***SQUADRA***", Rec("Categoria").Value)
 
-							Dim url As String = p(2) & Rec("NomeSquadra").Value.ToString.Replace(" ", "_") & "/Societa/" & idAnno & "_1.kgb"
-							Dim Esten As String = Format(Now.Second, "00") & "_" & Now.Millisecond & RitornaValoreRandom(55)
-							Dim urlConv As String = ""
-							Dim fileUrlOrig As String = pp & Rec("NomeSquadra").Value.ToString.Replace(" ", "_") & "\Societa\" & idAnno & "_1.kgb"
-							If File.Exists(fileUrlOrig) Then
-								Dim fileUrlConv As String = pp & "Appoggio/" & Esten & ".jpg"
-								Dim c As New CriptaFiles
-								c.DecryptFile(CryptPasswordString, fileUrlOrig, fileUrlConv)
-								urlConv = p(2) & "Appoggio/" & Esten & ".jpg"
-							End If
+							'Dim url As String = p(2) & Rec("NomeSquadra").Value.ToString.Replace(" ", "_") & "/Societa/" & idAnno & "_1.kgb"
+							'Dim Esten As String = Format(Now.Second, "00") & "_" & Now.Millisecond & RitornaValoreRandom(55)
+							'Dim urlConv As String = ""
+							' C:\IIS\GestioneCampionato\CalcioImages\Morti_De_Sonno_Fc\Societa
+							Dim fileUrlOrig As String = p(2) & Rec("NomeSquadra").Value.ToString.Replace(" ", "_") & "/Societa/Societa_1.png"
+							' If File.Exists(fileUrlOrig) Then
+							'	Dim fileUrlConv As String = pp & "Appoggio/" & Esten & ".jpg"
+							'	Dim c As New CriptaFiles
+							'	c.DecryptFile(CryptPasswordString, fileUrlOrig, fileUrlConv)
+							'urlConv = fileUrlOrig ' p(2) & "Appoggio/" & Esten & ".jpg"
+							'End If
 
-							Filetto = Filetto.Replace("***URL LOGO***", urlConv)
+							Filetto = Filetto.Replace("***URL LOGO***", fileUrlOrig)
 
 							Filetto = Filetto.Replace("***NOME POLISPORTIVA***", Rec("NomePolisportiva").Value)
+							Filetto = Filetto.Replace("***INDIRIZZO POLISPORTIVA***", Rec("Indirizzo").Value)
 
 							Filetto = Filetto.Replace("***GARA***", Rec("Categoria").Value & " - " & Rec("Avversario").Value)
 							Filetto = Filetto.Replace("***DATA***", Format(Datella.Day, "00") & "/" & Format(Datella.Month, "00") & "/" & Datella.Year)
@@ -2050,7 +2052,14 @@ Public Class wsPartite
 							End If
 							Filetto = Filetto.Replace("***CONVOCATI***", Convocati)
 
-							Dim Dirigenti As String = "<Table style=""width: 100%;"" cellpadding=""0px"" cellspacing=""0px"">"
+							Dim pathFileAgg As String = p(0) & Squadra & "\Scheletri\testo_convocazioni.txt"
+							If Not File.Exists(pathFileAgg) Then
+								pathFileAgg = Server.MapPath(".") & "\Scheletri\testo_convocazioni.txt"
+							End If
+							Dim testo As String = gf.LeggeFileIntero(pathFileAgg)
+							Filetto = Filetto.Replace("***TESTO AGGIUNTIVO***", testo)
+
+							Dim Dirigenti As String = "" ' "<Table style=""width: 100%;"" cellpadding=""0px"" cellspacing=""0px"">"
 							Sql = "Select Cognome, Nome, Telefono From DirigentiPartite A " &
 								"Left Join Dirigenti B On A.idDirigente = B.idDirigente " &
 								"Where A.idPartita = " & idPartita & " And Eliminato = 'N' " &
@@ -2059,15 +2068,15 @@ Public Class wsPartite
 							If TypeOf (Rec) Is String Then
 								Ritorno = Rec
 							Else
-								Dirigenti &= "<tr style=""border: 1px solid #999""><th><span style=""font-family: Arial; font-size: 16px;"">Dirigente</span></th><th><span style=""font-family: Arial; font-size: 16px;"">Telefono</span></th></tr>"
+								' Dirigenti &= "<tr style=""border: 1px solid #999""><th><span style=""font-family: Arial; font-size: 16px;"">Dirigente</span></th><th><span style=""font-family: Arial; font-size: 16px;"">Telefono</span></th></tr>"
 								Do Until Rec.Eof
-									Dirigenti &= "<tr><td><span style=""font-family: Arial; font-size: 14px;"">" & Rec("Cognome").Value & " " & Rec("Nome").Value & "</span></td><td style=""text-align: right;""><span style=""font-family: Arial; font-size: 14px;"">" & Rec("Telefono").Value & "</span></td></tr>"
+									Dirigenti &= Rec("Cognome").Value & " " & Rec("Nome").Value & "<br />" & Rec("Telefono").Value & "<br />"
 
 									Rec.MoveNext
 								Loop
 								Rec.Close
 							End If
-							Dirigenti &= "</table>"
+							'Dirigenti &= "</table>"
 							Filetto = Filetto.Replace("***DIRIGENTI***", Dirigenti)
 
 							gf.CreaDirectoryDaPercorso(p(0) & "\" & Squadra & "\Convocazioni\Anno" & idAnno & "\Partite\")

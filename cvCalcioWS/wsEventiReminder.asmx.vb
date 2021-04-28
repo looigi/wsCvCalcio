@@ -4,10 +4,10 @@ Imports System.ComponentModel
 
 ' Per consentire la chiamata di questo servizio Web dallo script utilizzando ASP.NET AJAX, rimuovere il commento dalla riga seguente.
 ' <System.Web.Script.Services.ScriptService()> _
-<System.Web.Services.WebService(Namespace:="http://cvcalcio_evcal.org/")>
-<System.Web.Services.WebServiceBinding(ConformsTo:=WsiProfiles.BasicProfile1_1)> _
-<ToolboxItem(False)> _
-Public Class wsEventiCalendario
+<System.Web.Services.WebService(Namespace:="http://cvcalcio_evrem.org/")>
+<System.Web.Services.WebServiceBinding(ConformsTo:=WsiProfiles.BasicProfile1_1)>
+<ToolboxItem(False)>
+Public Class wsEventiReminder
 	Inherits System.Web.Services.WebService
 
 	<WebMethod()>
@@ -28,7 +28,7 @@ Public Class wsEventiCalendario
 				Dim Sql As String = ""
 				'Dim idUtente As String = ""
 
-				Sql = "SELECT Max(idEvento)+1 FROM EventiCalendario"
+				Sql = "SELECT Max(idEvento)+1 FROM EventiReminder"
 				Rec = LeggeQuery(Conn, Sql, Connessione)
 				If TypeOf (Rec) Is String Then
 					Ritorno = Rec
@@ -64,7 +64,7 @@ Public Class wsEventiCalendario
 				Dim Sql As String = ""
 				'Dim idUtente As String = ""
 
-				Sql = "SELECT * From EventiCalendario"
+				Sql = "SELECT * From EventiReminder Union All SELECT * From EventiConvocazioni"
 				Rec = LeggeQuery(Conn, Sql, Connessione)
 				If TypeOf (Rec) Is String Then
 					Ritorno = Rec
@@ -85,8 +85,8 @@ Public Class wsEventiCalendario
 
 						Rec.MoveNext
 					Loop
+					Rec.Close()
 				End If
-				Rec.Close()
 			End If
 		End If
 
@@ -110,7 +110,7 @@ Public Class wsEventiCalendario
 			Else
 				Dim Sql As String = ""
 
-				Sql = "Insert Into EventiCalendario Values (" &
+				Sql = "Insert Into EventiReminder Values (" &
 					" " & idEvento & ", " &
 					" " & idTipologia & ", " &
 					"'" & Titolo.Replace("'", "''").Replace(";", ",") & "', " &
@@ -151,7 +151,7 @@ Public Class wsEventiCalendario
 				Dim Rec As Object = Server.CreateObject("ADODB.Recordset")
 				Dim ritEliminazione As String = ""
 
-				Sql = "Select * From EventiCalendario Where idEvento = " & idEvento
+				Sql = "Select * From EventiReminder Where idEvento = " & idEvento
 				Rec = LeggeQuery(Conn, Sql, Connessione)
 				If TypeOf (Rec) Is String Then
 					Ritorno = Rec
@@ -171,7 +171,7 @@ Public Class wsEventiCalendario
 				End If
 
 				If ritEliminazione = "*" Then
-					Sql = "Delete From EventiCalendario Where idEvento = " & idEvento
+					Sql = "Delete From EventiReminder Where idEvento = " & idEvento
 					Ritorno = EsegueSql(Conn, Sql, Connessione)
 				Else
 					Ritorno = ritEliminazione
@@ -199,7 +199,7 @@ Public Class wsEventiCalendario
 			Else
 				Dim Sql As String = ""
 
-				Sql = "Update EventiCalendario Set " &
+				Sql = "Update EventiReminder Set " &
 					"idTipologia = " & idTipologia & ", " &
 					"Titolo = '" & Titolo.Replace("'", "''").Replace(";", ",") & "', " &
 					"Inizio = '" & Inizio & "', " &
