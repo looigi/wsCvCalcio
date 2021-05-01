@@ -555,8 +555,8 @@ Public Class wsSuperUser
 								Ritorno = Rec2
 							Else
 								If Not Rec2.Eof() Then
-									RateManuali = Rec2("RateManuali").Value
-									Cashback = Rec2("Cashback").Value
+									RateManuali = "" & Rec2("RateManuali").Value
+									Cashback = "" & Rec2("Cashback").Value
 								End If
 								Rec2.Close
 							End If

@@ -280,7 +280,7 @@ Public Class wsUtentiLocali
 							'If Password <> DecriptaStringa(Rec("Password").Value.ToString) Then
 							'	Ritorno = StringaErrore & " Password non valida"
 							'Else
-							Dim AggiornaWidgets As Boolean = False
+							'Dim AggiornaWidgets As Boolean = False
 							Dim idSquadra As String = ""
 							Dim idAnno As String = ""
 							Dim codSquadra As String = ""
@@ -288,7 +288,7 @@ Public Class wsUtentiLocali
 
 							Ritorno = ""
 							Do Until Rec.Eof
-								AggiornaWidgets = IIf(Rec("AggiornaWidget").Value = "S", True, False)
+								'AggiornaWidgets = IIf(("" & Rec("AggiornaWidget").Value) = "S", True, False)
 								Dim Ok As Boolean = False
 
 								If Not Rec("Eliminata").Value Is DBNull.Value Then
@@ -302,9 +302,16 @@ Public Class wsUtentiLocali
 								If Ok = True Then
 									Dim ok2 As Boolean = True
 
-									idLicenza = Rec("idLicenza").Value
-									idSquadra = Rec("idSquadra").Value.ToString.Trim
-									idAnno = Rec("idAnno").Value.ToString.Trim
+									If Rec("idTipologia").Value = "0" Then
+										idLicenza = 1
+										idSquadra = 1
+										idAnno = 1
+									Else
+										idLicenza = "" & Rec("idLicenza").Value
+										idSquadra = Rec("idSquadra").Value.ToString.Trim
+										idAnno = Rec("idAnno").Value.ToString.Trim
+									End If
+
 									Dim app1 As String = idAnno
 									For i As Integer = app1.Length + 1 To 4
 										app1 = "0" & app1
@@ -419,7 +426,7 @@ Public Class wsUtentiLocali
 											' Ritorno = StringaErrore & " Nessuna squadra rilevata"
 										Else
 											Do Until Rec.Eof
-												Ritorno &= Rec("idPermesso").Value & ";" & Rec("Descrizione").Value & ";" & Rec("NomePerCodice").Value & "§"
+												Ritorno &= ("" & Rec("idPermesso").Value) & ";" & ("" & Rec("Descrizione").Value) & ";" & ("" & Rec("NomePerCodice").Value) & "§"
 
 												Rec.MoveNext
 											Loop
