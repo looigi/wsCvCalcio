@@ -1132,6 +1132,13 @@ Public Class wsSuperUser
 
 											Sql = "commit"
 											Dim Ritorno2 As String = EsegueSql(ConnGen, Sql, ConnessioneGenerale)
+
+											Dim wsWidget As New wsWidget
+											wsWidget.CreaConteggi(Squadra)
+											wsWidget.CreaFirmeDaValidare(Squadra, "S")
+											wsWidget.CreaIndicatori(Squadra)
+											wsWidget.CreaIscritti(Squadra)
+											wsWidget.CreaQuoteNonSaldate(Squadra)
 										Else
 											Sql = "rollback"
 											Dim Ritorno2 As String = EsegueSql(ConnGen, Sql, ConnessioneGenerale)
