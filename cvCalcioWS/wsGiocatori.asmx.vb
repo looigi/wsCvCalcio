@@ -384,9 +384,9 @@ Public Class wsGiocatori
 
 						If Not Datella Is DBNull.Value And Trim(Datella) <> "" Then
 							If Genitore <> 3 Then
-								Ritorno = StringaErrore & " Una firma è già stata inserita per il giocatore ed il genitore in data " & Datella
+								Ritorno = StringaErrore & " Una firma è già stata inserita per il giocatore ed il genitore in data " & Datella & ";"
 							Else
-								Ritorno = StringaErrore & " Una firma è già stata richiesta per il giocatore in data " & Datella
+								Ritorno = StringaErrore & " Una firma è già stata richiesta per il giocatore in data " & Datella & ";"
 							End If
 						Else
 							Ritorno = "*"
@@ -399,41 +399,41 @@ Public Class wsGiocatori
 					Dim Giocatore As String = ""
 					Dim sGenitore As String = ""
 
-					If Ritorno = "*" Then
-						Sql = "Select * From Giocatori Where idGiocatore=" & idGiocatore
-						Rec = LeggeQuery(Conn, Sql, Connessione)
-						If TypeOf (Rec) Is String Then
-							Ritorno = Rec
+					'If Ritorno = "*" Then
+					Sql = "Select * From Giocatori Where idGiocatore=" & idGiocatore
+					Rec = LeggeQuery(Conn, Sql, Connessione)
+					If TypeOf (Rec) Is String Then
+						Ritorno = Rec
+					Else
+						If Not Rec.Eof Then
+							Giocatore = Rec("Cognome").Value & " " & Rec("Nome").Value
 						Else
-							If Not Rec.Eof Then
-								Giocatore = Rec("Cognome").Value & " " & Rec("Nome").Value
-							Else
-								Ritorno = StringaErrore & " Giocatore non rilevato"
-							End If
-							Rec.Close
+							Ritorno = StringaErrore & " Giocatore non rilevato"
+						End If
+						Rec.Close
 
-							If Genitore <> 3 Then
-								Sql = "Select * From GiocatoriDettaglio Where idGiocatore=" & idGiocatore
-								Rec = LeggeQuery(Conn, Sql, Connessione)
-								If TypeOf (Rec) Is String Then
-									Ritorno = Rec
-								Else
-									If Not Rec.Eof Then
-										If Genitore <> 4 Then
-											sGenitore = Rec("Genitore" & Genitore).Value
-										Else
-											sGenitore = Rec("Genitore1").Value
-										End If
+						If Genitore <> 3 Then
+							Sql = "Select * From GiocatoriDettaglio Where idGiocatore=" & idGiocatore
+							Rec = LeggeQuery(Conn, Sql, Connessione)
+							If TypeOf (Rec) Is String Then
+								Ritorno = Rec
+							Else
+								If Not Rec.Eof Then
+									If Genitore <> 4 Then
+										sGenitore = Rec("Genitore" & Genitore).Value
 									Else
-										Ritorno = StringaErrore & " Genitore non rilevato"
+										sGenitore = Rec("Genitore1").Value
 									End If
+								Else
+									Ritorno = StringaErrore & " Genitore non rilevato"
 								End If
-								Rec.Close()
-
-								Ritorno = Giocatore & ";" & sGenitore & ";"
-							Else
-								Ritorno = Giocatore & ";;"
 							End If
+							Rec.Close()
+
+							Ritorno &= Giocatore & ";" & sGenitore & ";"
+						Else
+							Ritorno &= Giocatore & ";;"
+							'End If
 						End If
 					End If
 				End If
@@ -463,8 +463,8 @@ Public Class wsGiocatori
 				Dim Anno As String = Str(Val(c(0))).Trim
 				Dim codSquadra As String = c(1)
 
-				Sql = "Begin transaction"
-				Ritorno = EsegueSql(Conn, Sql, Connessione)
+				'Sql = "Begin transaction"
+				'Ritorno = EsegueSql(Conn, Sql, Connessione)
 
 				'Sql = "Delete From GiocatoriFirme Where idGiocatore=" & idGiocatore & " And idGenitore=" & Genitore
 				'Ritorno = EsegueSql(Conn, Sql, Connessione)
@@ -486,7 +486,7 @@ Public Class wsGiocatori
 					End If
 				End If
 
-				If Ritorno = "*" Then
+				If Ritorno = "*" Or Ritorno = "" Then
 					Ritorno = ""
 
 					Sql = "Select NomeSquadra, Descrizione, iscrFirmaEntrambi From Anni Where idAnno = " & Anno
@@ -537,36 +537,36 @@ Public Class wsGiocatori
 											Dim QualeGenitore As String = ""
 
 											If Genitore = "1" Then
-												EMail = Rec("MailGenitore1").Value
-												nomeGenitore = Rec("Genitore1").Value
+												EMail = "" & Rec("MailGenitore1").Value
+												nomeGenitore = "" & Rec("Genitore1").Value
 												QualeGenitore = "1"
 											Else
 												If Genitore = "2" Then
-													EMail = Rec("MailGenitore2").Value
-													nomeGenitore = Rec("Genitore2").Value
+													EMail = "" & Rec("MailGenitore2").Value
+													nomeGenitore = "" & Rec("Genitore2").Value
 													QualeGenitore = "2"
 												Else
 													If Genitore = "3" Then
-														EMail = Rec("MailGenitore3").Value
-														nomeGenitore = Rec("Genitore3").Value
+														EMail = "" & Rec("MailGenitore3").Value
+														nomeGenitore = "" & Rec("Genitore3").Value
 														QualeGenitore = "3"
 													Else
 														If Maggiorenne = "S" Then
-															EMail = Rec("MailGenitore3").Value
-															nomeGenitore = Rec("Genitore3").Value
+															EMail = "" & Rec("MailGenitore3").Value
+															nomeGenitore = "" & Rec("Genitore3").Value
 															QualeGenitore = "3"
 														Else
 															If GenitoriSeparati = "S" Then
 																If AffidamentoCongiunto = "S" Then
 																Else
 																	If idTutore = "1" Then
-																		EMail = Rec("MailGenitore1").Value
-																		nomeGenitore = Rec("Genitore1").Value
+																		EMail = "" & Rec("MailGenitore1").Value
+																		nomeGenitore = "" & Rec("Genitore1").Value
 																		QualeGenitore = "1"
 																	Else
 																		If idTutore = "2" Then
-																			EMail = Rec("MailGenitore2").Value
-																			nomeGenitore = Rec("Genitore2").Value
+																			EMail = "" & Rec("MailGenitore2").Value
+																			nomeGenitore = "" & Rec("Genitore2").Value
 																			QualeGenitore = "2"
 																		Else
 																			Ok = False
@@ -577,8 +577,8 @@ Public Class wsGiocatori
 															Else
 																If iscrFirmaEntrambi = "S" Then
 																	If ceGenitore1 <> "" And ceGenitore2 <> "" Then
-																		EMail = Rec("MailGenitore1").Value
-																		nomeGenitore = Rec("Genitore1").Value
+																		EMail = "" & Rec("MailGenitore1").Value
+																		nomeGenitore = "" & Rec("Genitore1").Value
 																		QualeGenitore = "1"
 																	Else
 																		Ok = False
@@ -586,13 +586,13 @@ Public Class wsGiocatori
 																	End If
 																Else
 																	If ceGenitore1 <> "" Then
-																		EMail = Rec("MailGenitore1").Value
-																		nomeGenitore = Rec("Genitore1").Value
+																		EMail = "" & Rec("MailGenitore1").Value
+																		nomeGenitore = "" & Rec("Genitore1").Value
 																		QualeGenitore = "1"
 																	Else
 																		If ceGenitore2 <> "" Then
-																			EMail = Rec("MailGenitore2").Value
-																			nomeGenitore = Rec("Genitore2").Value
+																			EMail = "" & Rec("MailGenitore2").Value
+																			nomeGenitore = "" & Rec("Genitore2").Value
 																			QualeGenitore = "2"
 																		Else
 																			Ok = False
@@ -783,6 +783,8 @@ Public Class wsGiocatori
 														'End If
 
 														gf = Nothing
+
+														If Ritorno = "" Then Ritorno = "*"
 														'Catch ex As Exception
 														'	Ritorno = StringaErrore & " " & ex.Message
 														'End Try
@@ -804,13 +806,13 @@ Public Class wsGiocatori
 				' End If
 				'End If
 
-				If Ritorno = "*" Then
-					Sql = "commit"
-					Dim Ritorno2 As String = EsegueSql(Conn, Sql, Connessione)
-				Else
-					Sql = "rollback"
-					Dim Ritorno2 As String = EsegueSql(Conn, Sql, Connessione)
-				End If
+				'If Ritorno = "*" Then
+				'	Sql = "commit"
+				'	Dim Ritorno2 As String = EsegueSql(Conn, Sql, Connessione)
+				'Else
+				'	Sql = "rollback"
+				'	Dim Ritorno2 As String = EsegueSql(Conn, Sql, Connessione)
+				'End If
 			End If
 		End If
 
@@ -2554,11 +2556,13 @@ Public Class wsGiocatori
 	Public Function TornaDettaglioGiocatore(Squadra As String, idAnno As String, idGiocatore As String) As String
 		Dim Ritorno As String = ""
 		Dim Connessione As String = LeggeImpostazioniDiBase(Server.MapPath("."), Squadra)
+		Dim ConnessioneGen As String = LeggeImpostazioniDiBase(Server.MapPath("."), "")
 
 		If Connessione = "" Then
 			Ritorno = ErroreConnessioneNonValida
 		Else
 			Dim Conn As Object = ApreDB(Connessione)
+			Dim ConnGen As Object = ApreDB(ConnessioneGen)
 
 			If TypeOf (Conn) Is String Then
 				Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
@@ -2575,13 +2579,33 @@ Public Class wsGiocatori
 				If TypeOf (Rec) Is String Then
 					Ritorno = Rec
 				Else
-					If Rec.Eof Then
+					Dim NomeSquadra As String = ""
+					Dim Descrizione As String = ""
+
+					If Rec.Eof Or "" & Rec("NomeSquadra").Value = "" Then
+						Descrizione = "" & Rec("Descrizione").Value
+
+						Sql = "Select * From Squadre Where idSquadra=" & Val(codSquadra)
+						Rec = LeggeQuery(ConnGen, Sql, ConnessioneGen)
+						If TypeOf (Rec) Is String Then
+							Ritorno = Rec
+						Else
+							If Not Rec.Eof() Then
+								NomeSquadra = Rec("Descrizione").Value
+
+								Sql = "Update Anni Set NomeSquadra='" & NomeSquadra & "'"
+								Ritorno = EsegueSql(Conn, Sql, Connessione)
+							End If
+						End If
+					Else
+						NomeSquadra = "" & Rec("NomeSquadra").Value
+						Descrizione = "" & Rec("Descrizione").Value
+					End If
+					Rec.Close
+
+					If NomeSquadra = "" Then
 						Ritorno = StringaErrore & " Nessuna squadra rilevata"
 					Else
-						Dim NomeSquadra As String = Rec("NomeSquadra").Value
-						Dim Descrizione As String = Rec("Descrizione").Value
-						Rec.Close
-
 						Dim ratePagate As String = ":"
 
 						Sql = "Select Distinct B.idRata From GiocatoriDettaglio A " &
@@ -2806,6 +2830,8 @@ Public Class wsGiocatori
 								Dim dataFirma2 As String = ""
 								Dim dataFirma3 As String = ""
 								Dim dataFirma4 As String = ""
+
+								'Return path1
 
 								Dim firma1 As String = "N"
 								If File.Exists(path1) Then

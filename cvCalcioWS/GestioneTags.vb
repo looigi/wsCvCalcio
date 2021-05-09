@@ -267,11 +267,19 @@ Public Class GestioneTags
 
 			' <a href="%Percorso?firma=true&codSquadra=%Squadra&id=%idGiocatore&squadra=%NomeSquadra&anno=%Anno&genitore=%Genitore&privacy=%Privacy&tipoUtente=1">
 
+			ScriveLog("Percorso: " & PathFirma)
+			ScriveLog("CodSquadra: " & CodSquadra)
+			ScriveLog("ID Gioc: " & idGiocatore)
+			ScriveLog("Squadra: " & Me.NomeSquadra)
+			ScriveLog("Anno: " & Anno)
+			ScriveLog("Genitore: " & GenitoreP)
+			ScriveLog("Privacy: " & Privacy)
+
 			Body = Body.Replace("%Percorso", PathFirma)
 			Body = Body.Replace("%Squadra", CodSquadra)
 			Body = Body.Replace("%idGiocatore", idGiocatore)
-			Body = Body.Replace("%NomeSquadra", NomeSquadra)
-			Body = Body.Replace("%Anno", idAnno)
+			Body = Body.Replace("%NomeSquadra", Me.NomeSquadra)
+			Body = Body.Replace("%Anno", Anno)
 			Body = Body.Replace("%Genitore", GenitoreP)
 			Body = Body.Replace("%Privacy", Privacy)
 		End If

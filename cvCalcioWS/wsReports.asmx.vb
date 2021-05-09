@@ -479,7 +479,7 @@ Public Class wsReports
 					Ok = False
 				Else
 					If Rec.Eof = False Then
-						IscrFirmaEntrambi = Rec("iscrFirmaEntrambi").Value
+						IscrFirmaEntrambi = "" & Rec("iscrFirmaEntrambi").Value
 					Else
 						Ritorno = StringaErrore & " Nessun dato societario rilevato"
 						Ok = False
@@ -494,8 +494,8 @@ Public Class wsReports
 						Ok = False
 					Else
 						If Rec.Eof = False Then
-							AnnoAttivazione = Rec("AnnoAttivazione").Value
-							NomeSquadra = Rec("Descrizione").Value
+							AnnoAttivazione = "" & Rec("AnnoAttivazione").Value
+							NomeSquadra = "" & Rec("Descrizione").Value
 						Else
 							Ritorno = StringaErrore & " Nessun anno di attivazione rilevato"
 							Ok = False
@@ -788,14 +788,14 @@ Public Class wsReports
 													TagliaKit = "" & Rec2("Taglia").Value
 												End If
 
-												If Val(Rec2("QuantitaConsegnata").Value) > 0 Then
-													Qualcosa = True
+												'If Val(Rec2("QuantitaConsegnata").Value) > 0 Then
+												Qualcosa = True
 													If Val(Rec2("QuantitaConsegnata").Value) < Val(Rec2("Quantita").Value) Then
 														Tutto = False
 													End If
-												Else
-													Tutto = False
-												End If
+												'Else
+												'	Tutto = False
+												'End If
 
 												'If Val(Rec2("QuantitaConsegnata").Value) > Val(Rec2("Quantita").Value) Then
 												'Else

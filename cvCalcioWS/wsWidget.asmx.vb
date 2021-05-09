@@ -780,7 +780,7 @@ Public Class wsWidget
 					If Rec(0).Value Is DBNull.Value Then
 						SenzaQuota = 0
 					Else
-						SenzaQuota = Rec(0).Value
+						SenzaQuota = "" & Rec(0).Value
 					End If
 					Rec.Close
 				End If
@@ -799,7 +799,7 @@ Public Class wsWidget
 					If Rec(0).Value Is DBNull.Value Then
 						CertificatoScadutoAssente = 0
 					Else
-						CertificatoScadutoAssente = Rec(0).Value
+						CertificatoScadutoAssente = "" & Rec(0).Value
 					End If
 					Rec.Close
 				End If
@@ -832,7 +832,7 @@ Public Class wsWidget
 					Return Ritorno
 				Else
 					If Rec.Eof = False Then
-						IscrFirmaEntrambi = Rec("iscrFirmaEntrambi").Value
+						IscrFirmaEntrambi = "" & Rec("iscrFirmaEntrambi").Value
 					End If
 				End If
 
@@ -843,7 +843,7 @@ Public Class wsWidget
 					Return Ritorno
 				Else
 					If Rec.Eof = False Then
-						NomeSquadra = Rec("Descrizione").Value
+						NomeSquadra = "" & Rec("Descrizione").Value
 					End If
 				End If
 
@@ -1002,14 +1002,14 @@ Public Class wsWidget
 										TagliaKit = "" & Rec2("Taglia").Value
 									End If
 
-									If Val(Rec2("QuantitaConsegnata").Value) > 0 Then
-										Qualcosa = True
-										If Val(Rec2("QuantitaConsegnata").Value) < Val(Rec2("Quantita").Value) Then
+									'If Val("" & Rec2("QuantitaConsegnata").Value) > 0 Then
+									Qualcosa = True
+										If Val("" & Rec2("QuantitaConsegnata").Value) < Val("" & Rec2("Quantita").Value) Then
 											Tutto = False
 										End If
-									Else
-										Tutto = False
-									End If
+									'Else
+									'	Tutto = False
+									'End If
 
 									Rec2.MoveNext()
 								Loop
