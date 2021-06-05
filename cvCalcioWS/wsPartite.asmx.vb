@@ -592,7 +592,7 @@ Public Class wsPartite
 						'Sql = "Select A.idGiocatore, Cognome, Nome, EMail From Giocatori A " &
 						'	"Left Join GiocatoriDettaglio B On A.idGiocatore = B.idGiocatore " &
 						'	"Where A.idGiocatore in (" & convString & ")"
-						Sql = "Select A.Mail, A.idGiocatore, A.Progressivo, B.Cognome + ' ' + B.Nome As Giocatore From GiocatoriMails A " &
+						Sql = "Select A.Mail, A.idGiocatore, A.Progressivo, B.Cognome, B.Nome From GiocatoriMails A " &
 							"Left Join Giocatori B On A.idGiocatore = B.idGiocatore " &
 							"Where A.idGiocatore in (" & convString & ") And Attiva = 'S' And A.Mail <> ''"
 						Rec = LeggeQuery(Conn, Sql, Connessione)
@@ -611,26 +611,26 @@ Public Class wsPartite
 									Rec2 = LeggeQuery(Conn, Sql, Connessione)
 									If Not Rec2.Eof Then
 										Dim genitore As String = ""
-										Select Case Val(Rec("Progressivo").Value)
+										Select Case Val("" & Rec("Progressivo").Value)
 											Case 1
-												genitore = Rec2("Genitore1").Value
+												genitore = "" & Rec2("Genitore1").Value
 											Case 2
-												genitore = Rec2("Genitore2").Value
+												genitore = "" & Rec2("Genitore2").Value
 											Case 3
-												genitore = Rec("Giocatore").Value
+												genitore = "" & Rec("Cognome").Value & " " & Rec("Nome").Value
 										End Select
-										Dim cognome As String = ""
-										Dim nome As String = ""
-										If genitore.Contains(" ") Then
-											Dim g() As String = genitore.Split(" ")
-											cognome = g(0)
-											nome = g(1)
-										Else
-											cognome = genitore
-											nome = ""
-										End If
+										'Dim cognome As String = ""
+										'Dim nome As String = ""
+										'If genitore.Contains(" ") Then
+										'	Dim g() As String = genitore.Split(" ")
+										'	cognome = g(0)
+										'	nome = g(1)
+										'Else
+										'	cognome = genitore
+										'	nome = ""
+										'End If
 
-										MailsConvocati.Add(cognome & ";" & nome & ";" & Rec("Mail").Value & ";C;" & Rec("idGiocatore").Value)
+										MailsConvocati.Add(Rec("Cognome").Value & ";" & Rec("Nome").Value & ";" & Rec("Mail").Value & ";C;" & Rec("idGiocatore").Value)
 									End If
 									Rec2.Close
 								End If
@@ -785,7 +785,11 @@ Public Class wsPartite
 								Body = Body.Replace("***TELEFONO***", Telefono)
 								Body = Body.Replace("***ALLENATORE***", Allenatore)
 								Body = Body.Replace("***TELALLENATORE***", TelAllenatore)
-								Body = Body.Replace("***URLMAPPA***", "https://www.google.it/maps/place/" & Lat & "," & Lon & "z")
+								If Lat <> "" And Lon <> "" Then
+									Body = Body.Replace("***URLMAPPA***", "https://www.google.it/maps/place/" & Lat & "," & Lon & "z")
+								Else
+									Body = Body.Replace("***URLMAPPA***", "")
+								End If
 								Body = Body.Replace("***URLMAPPAAPP***", "https://www.google.it/maps/place/" & LuogoAppuntamento)
 								Body = Body.Replace("***REFERENTE***", Referente)
 								Body = Body.Replace("***DOAPPUNTAMENTO***", FormatDateTime(DataOraAppuntamento, DateFormat.LongDate) & " " & FormatDateTime(DataOraAppuntamento, DateFormat.ShortTime))
@@ -833,18 +837,25 @@ Public Class wsPartite
 									Body2 = Body2.Replace("***COGNOME***", c(0))
 									Body2 = Body2.Replace("***NOME***", c(1))
 
-									Dim urlSi As String = pathSito & "wsRisposte.asmx/GeneraRisposta?Squadra=" & Squadra & "&Risposta=SI&idPartita=" & idPartita & "&idGiocatore=" & c(4) & "&Tipo=" & c(3)
-									Dim urlNo As String = pathSito & "wsRisposte.asmx/GeneraRisposta?Squadra=" & Squadra & "&Risposta=NO&idPartita=" & idPartita & "&idGiocatore=" & c(4) & "&Tipo=" & c(3)
+									If c(3) <> "A" And c(3) <> "D" Then
+										Dim urlSi As String = pathSito & "wsRisposte.asmx/GeneraRisposta?Squadra=" & Squadra & "&Risposta=SI&idPartita=" & idPartita & "&idGiocatore=" & c(4) & "&Tipo=" & c(3)
+										Dim urlNo As String = pathSito & "wsRisposte.asmx/GeneraRisposta?Squadra=" & Squadra & "&Risposta=NO&idPartita=" & idPartita & "&idGiocatore=" & c(4) & "&Tipo=" & c(3)
 
-									Body2 = Body2.Replace("***URLPARTECIPO***", urlSi)
-									Body2 = Body2.Replace("***URLNONPARTECIPO***", urlNo)
+										Body2 = Body2.Replace("***URLPARTECIPO***", urlSi)
+										Body2 = Body2.Replace("***URLNONPARTECIPO***", urlNo)
+									Else
+										Body2 = Body2.Replace("***URLPARTECIPO***", "")
+										Body2 = Body2.Replace("***URLNONPARTECIPO***", "")
+									End If
 
-									If MandaMail = "S" Then
+									If MandaMail = "S" And (c(3) = "C" Or c(3) = "A" Or c(3) = "D") Then
 										Ritorno = ma.SendEmail(Squadra, Mittente, Oggetto, Body2, c(2), {""})
 									End If
 
-									gf.CreaDirectoryDaPercorso(p(0) & "\" & Squadra & "\Convocazioni\Anno" & idAnno & "\Giocatori\")
-									gf.CreaAggiornaFile(p(0) & "\" & Squadra & "\Convocazioni\Anno" & idAnno & "\Giocatori\Convocazione_" & idPartita & "_" & c(4) & ".html", Body2)
+									If c(3) = "C" Then
+										gf.CreaDirectoryDaPercorso(p(0) & "\" & Squadra & "\Convocazioni\Anno" & idAnno & "\Giocatori\")
+										gf.CreaAggiornaFile(p(0) & "\" & Squadra & "\Convocazioni\Anno" & idAnno & "\Giocatori\Convocazione_" & idPartita & "_" & c(4) & ".html", Body2)
+									End If
 
 									q += 1
 								Next
@@ -2126,7 +2137,7 @@ Public Class wsPartite
 	End Function
 
 	<WebMethod()>
-	Public Function InviaFoglioConvocazionePDF(Squadra As String, idAnno As String, idPartita As String) As String
+	Public Function InviaFoglioConvocazionePDF(Squadra As String, idAnno As String, idPartita As String, Mittente As String) As String
 		Dim Ritorno As String = ""
 		Dim gf As New GestioneFilesDirectory
 		Dim filePaths As String = gf.LeggeFileIntero(Server.MapPath(".") & "\Impostazioni\PathAllegati.txt")
@@ -2137,6 +2148,13 @@ Public Class wsPartite
 		Dim path1 As String = p(0) & Squadra & "\Convocazioni\Anno" & idAnno & "\Partite\Partita_" & idPartita & ".html"
 		Dim pathLog As String = p(0) & Squadra & "\Convocazioni\Anno" & idAnno & "\Partite\Partita_" & idPartita & ".log"
 		Dim pathPdf As String = p(0) & Squadra & "\Convocazioni\Anno" & idAnno & "\Partite\Partita_" & idPartita & ".pdf"
+		Dim IndirizzoWS As String = p(2)
+		p(2) = p(2).Replace(vbCrLf, "")
+		p(2) = p(2).Replace("Multimedia", "")
+		If Strings.Right(IndirizzoWS, 1) <> "/" Then
+			IndirizzoWS &= "/"
+		End If
+
 		If Not File.Exists(pathPdf) Then
 			Dim pp As New pdfGest
 			Ritorno = pp.ConverteHTMLInPDF(path1, pathPdf, pathLog)
@@ -2157,49 +2175,176 @@ Public Class wsPartite
 				Else
 					Dim Ok As Boolean = True
 					Dim Rec As Object = Server.CreateObject("ADODB.Recordset")
+					Dim Rec2 As Object = Server.CreateObject("ADODB.Recordset")
 					Dim Sql As String = ""
 
-					Sql = "Select Distinct * From (" &
-						"Select EMail From Partite A " &
-						"Left Join DirigentiPartite B On A.idPartita = B.idPartita " &
+					Dim Tipologia As String = ""
+					Dim Categoria As String = ""
+					Dim Avversario As String = ""
+					Dim DataOra As String = ""
+					Dim DataOraAppuntamento As String = ""
+					Dim LuogoAppuntamento As String = ""
+					Dim Allenatore As String = ""
+					Dim Dirigenti As String = ""
+					Dim Casa As String = ""
+					Dim NomePolisportiva As String = ""
+
+					Sql = "Select isnull(B.Descrizione, '') As Tipologia, C.Descrizione As Categoria, D.Descrizione As Avversario, DataOra, DataOraAppuntamento As Appuntamento, LuogoAppuntamento, " &
+						"E.Cognome + ' ' + E.Nome As Allenatore, Casa " &
+						"From Partite A " &
+						"Left Join [Generale].[dbo].[TipologiePartite] B On A.idTipologia = B.idTipologia " &
+						"Left Join Categorie C On A.idCategoria = C.idCategoria  " &
+						"Left Join SquadreAvversarie D On A.idAvversario = D.idAvversario  " &
+						"Left Join Allenatori E On A.idAllenatore = E.idAllenatore " &
+						"Where idPartita = " & idPartita
+					Rec = LeggeQuery(Conn, Sql, Connessione)
+					If Not Rec.Eof Then
+						Casa = Rec("Casa").Value
+						Tipologia = Rec("Tipologia").Value
+						Categoria = Rec("Categoria").Value
+						Avversario = Rec("Avversario").Value
+						DataOra = Rec("DataOra").Value
+						DataOraAppuntamento = Rec("Appuntamento").Value
+						LuogoAppuntamento = Rec("LuogoAppuntamento").Value
+						Allenatore = Rec("Allenatore").Value
+					Else
+						Return "ERROR: Nessun dato trovato per la partita"
+					End If
+
+					Dim Oggetto As String = "Nuova partita (" & Tipologia & ") : "
+
+					If Casa = "S" Then
+						Oggetto &= Categoria & "-" & Avversario & " In Casa"
+					Else
+						Oggetto &= Avversario & "-" & Categoria
+						Sql = "Select B.Descrizione As Campo, C.Descrizione As CampoEsterno From Partite A " &
+							"Left Join CampiAvversari B On A.idCampo = B.idCampo " &
+							"Left Join CampiEsterni C On A.idPartita = C.idPartita " &
+							"Where A.idPartita = " & idPartita
+						Rec = LeggeQuery(Conn, Sql, Connessione)
+						If Rec.Eof Then
+							Oggetto = " Campo esterno"
+						Else
+							If Casa = "N" Then
+								Oggetto &= " " & Rec("Campo").Value
+							Else
+								Oggetto &= " " & Rec("CampoEsterno").Value
+							End If
+						End If
+					End If
+					Oggetto &= " " & FormatDateTime(DataOra, DateFormat.LongDate) & " " & FormatDateTime(DataOra, DateFormat.ShortTime)
+
+					'Sql = "Select * From DirigentiPartite A " &
+					'	"Left Join Dirigenti B On A.idDirigente = B.idDirigente " &
+					'	"Where idPartita = " & idPartita
+					'Rec = LeggeQuery(Conn, Sql, Connessione)
+					'Dirigenti = ""
+					'Do Until Rec.Eof
+					'	Dirigenti = Rec("Cognome").Value & " " & Rec("Nome").Value & ", "
+
+					'	Rec.MoveNext
+					'Loop
+					'If Dirigenti.Length > 0 Then
+					'	Dirigenti = Mid(Dirigenti, 1, Len(Dirigenti) - 2)
+					'End If
+
+					Sql = "Select * From Anni"
+					Rec = LeggeQuery(Conn, Sql, Connessione)
+					If Not Rec.Eof Then
+						NomePolisportiva = Rec("NomePolisportiva").Value
+					End If
+
+					Sql = "Select Distinct EMail, id, Tipo From ( " &
+						"Select EMail, B.idDirigente As id, 'Dirigente' As Tipo From Partite A " &
+						"Left Join DirigentiPartite B On A.idPartita = B.idPartita  " &
 						"Left Join Dirigenti C On B.idDirigente = C.idDirigente " &
 						"Where A.idPartita = " & idPartita & " " &
 						"Union All " &
-						"Select EMail From Convocati A " &
-						"Left Join Giocatori B On A.idGiocatore = B.idGiocatore " &
-						"Where idPartita = " & idPartita & " And Maggiorenne = 'S' " &
-						"Union All " &
-						"Select C.Mail From Convocati A " &
+						"Select EMail, A.idGiocatore As id, 'Giocatore Maggiorenne' As Tipo From Convocati A " &
+						"Left Join Giocatori B On A.idGiocatore = B.idGiocatore  " &
+						"Where idPartita = " & idPartita & " And Maggiorenne = 'S'  " &
+						"Union All  " &
+						"Select C.Mail As Email, A.idGiocatore As id, 'Giocatore' As Tipo From Convocati A " &
 						"Left Join Giocatori B On A.idGiocatore = B.idGiocatore " &
 						"Left Join GiocatoriMails C On A.idGiocatore = C.idGiocatore " &
 						"Where idPartita = " & idPartita & " And Maggiorenne = 'N' And Attiva = 'S' " &
 						"Union All " &
-						"Select EMail From Partite A " &
-						"Left Join Allenatori B On A.idAllenatore = B.idAllenatore " &
+						"Select EMail, A.idAllenatore As id, 'Allenatore' As Tipo From Partite A " &
+						"Left Join Allenatori B On A.idAllenatore = B.idAllenatore  " &
 						"Where idPartita = " & idPartita & " " &
-						") A"
+						") A Where EMail <> '' And EMail Is Not Null"
 					Rec = LeggeQuery(Conn, Sql, Connessione)
 					If TypeOf (Rec) Is String Then
 						Ritorno = Rec
 					Else
-						Dim Giocatori As List(Of String) = New List(Of String)
+						'Dim Giocatori As List(Of String) = New List(Of String)
+						'Dim pathTemplate As String = p(0) & Squadra & "\Scheletri\mail_convocazione.txt"
+						'If Not File.Exists(pathTemplate) Then
+						'	pathTemplate = Server.MapPath(".") & "\Scheletri\mail_convocazione.txt"
+						'End If
+						'Dim templ As String = gf.LeggeFileIntero(pathTemplate)
+						Dim ma As New mail
+						'Dim Oggetto As String = "Convocazione nuova partita: "
 
 						Do Until Rec.Eof
 							If Not Rec(0).Value Is DBNull.Value Then
-								Giocatori.Add(Rec(0).Value)
+								Dim Body2 As String = ""
+
+								'Body2 = Body2.Replace("***Tipologia Partita***", Tipologia)
+								'Body2 = Body2.Replace("***categoria***", Categoria)
+								'Body2 = Body2.Replace("***Avversario***", Avversario)
+								'Body2 = Body2.Replace("***Data Partita***", DataOra)
+								'Body2 = Body2.Replace("***Ora Partita***", "")
+								'Body2 = Body2.Replace("***Data Appuntamento***", DataOraAppuntamento)
+								'Body2 = Body2.Replace("***Ora Appuntamento***", "")
+								'Body2 = Body2.Replace("***Luogo Appuntamento***", LuogoAppuntamento)
+								'Body2 = Body2.Replace("***Allenatore***", Allenatore)
+								'Body2 = Body2.Replace("***Dirigenti***", Dirigenti)
+								'Body2 = Body2.Replace("***nome societa menu settaggi***", NomePolisportiva)
+
+								' Giocatori.Add(Rec(0).Value)
+								Select Case Rec(2).Value
+									Case "Dirigente"
+										Body2 = "Lei è convocato per la partita in oggetto.<br /><br />Saluti<br />" & NomePolisportiva
+										'Body2 = Body2.Replace("***cognome menu anagrafica3***", "***")
+										'Body2 = Body2.Replace("***Nome menu anagrafica3***", "***")
+
+										'Body2 = Body2.Replace("***Partecipo***", "<div style=""width: 100%""><div style=""background-color: green; color: white; width:50%; float: left; text-align: center;"">---</div>")
+										'Body2 = Body2.Replace("***Non Posso***", "<div style=""background-color: red; color: white; width: 50%; float: left; text-align: center;"">---</div></div>")
+
+										Ritorno = ma.SendEmail(Squadra, Mittente, Oggetto, Body2, Rec(0).Value, {pathPdf})
+									Case "Giocatore Maggiorenne", "Giocatore"
+										Sql = "Select * From Giocatori Where idGiocatore = " & Rec(1).Value
+										Rec2 = LeggeQuery(Conn, Sql, Connessione)
+										If Not Rec2.eof Then
+											Body2 = "Il giocatore " & Rec2("Cognome").Value & " " & Rec2("Nome").Value & " è convocato per la partita in oggetto.<br /><br />Saluti<br />" & NomePolisportiva
+											'Body2 = Body2.Replace("***cognome menu anagrafica3***", Rec2("Cognome").Value)
+											'Body2 = Body2.Replace("***Nome menu anagrafica3***", Rec2("Nome").Value)
+
+											'Dim IndirizzoOK As String = IndirizzoWS & "wsRisposte.asmx/GeneraRisposta?Squadra=" & Squadra & "&Risposta=SI&idPartita=" & idPartita & "&idGiocatore=" & Rec(1).Value
+											'Dim IndirizzoKO As String = IndirizzoWS & "wsRisposte.asmx/GeneraRisposta?Squadra=" & Squadra & "&Risposta=NO&idPartita=" & idPartita & "&idGiocatore=" & Rec(1).Value
+
+											'Body2 = Body2.Replace("***Partecipo***", "<div style=""width: 100%""><div style=""background-color: green; color: white; width:50%; float: left; text-align: center;""><a href=""" & IndirizzoOK & """>Partecipo</a></div>")
+											'Body2 = Body2.Replace("***Non Posso***", "<div style=""background-color: red; color: white; width: 50%; float: left; text-align: center;""><a href=""" & IndirizzoKO & """>Non Posso</a></div></div>")
+
+											Ritorno = ma.SendEmail(Squadra, Mittente, Oggetto, Body2, Rec(0).Value, {pathPdf})
+										End If
+									Case "Allenatore"
+										Body2 = "Lei è convocato per la partita in oggetto.<br /><br />Saluti<br />" & NomePolisportiva
+										'Body2 = Body2.Replace("***cognome menu anagrafica3***", "***")
+										'Body2 = Body2.Replace("***Nome menu anagrafica3***", "***")
+
+										'Body2 = Body2.Replace("***Partecipo***", "<div style=""width: 100%""><div style=""background-color: green; color: white; width:50%; float: left; text-align: center;"">---</div>")
+										'Body2 = Body2.Replace("***Non Posso***", "<div style=""background-color: red; color: white; width: 50%; float: left; text-align: center;"">---</div></div>")
+
+										Ritorno = ma.SendEmail(Squadra, Mittente, Oggetto, Body2, Rec(0).Value, {pathPdf})
+								End Select
 							End If
 
 							Rec.MoveNext
 						Loop
 						Rec.Close
 
-						Dim Oggetto As String = "Convocazione nuova partita: "
-						Dim Body2 As String = ""
-
-						Dim ma As New mail
-						For Each Destinatario As String In Giocatori
-							Ritorno = ma.SendEmail(Squadra, "", Oggetto, Body2, Destinatario, {pathPdf})
-						Next
 					End If
 				End If
 			End If

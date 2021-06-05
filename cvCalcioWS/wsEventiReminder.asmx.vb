@@ -64,7 +64,18 @@ Public Class wsEventiReminder
 				Dim Sql As String = ""
 				'Dim idUtente As String = ""
 
-				Sql = "SELECT * From EventiReminder Union All SELECT * From EventiConvocazioni"
+				Sql = "SELECT idEvento, idTipologia, Titolo collate Latin1_General_CI_AS As Titolo, Inizio collate Latin1_General_CI_AS As Inizio, " &
+					"Fine collate Latin1_General_CI_AS As Fine,  " &
+					"TuttiIGiorni collate Latin1_General_CI_AS As TuttiIGiorni, ColorePrimario collate Latin1_General_CI_AS As ColorePrimario, ColoreSecondario collate Latin1_General_CI_AS As ColoreSecondario,  " &
+					"metaLocation collate Latin1_General_CI_AS As metaLocation, metaNotes collate Latin1_General_CI_AS As metaNotes, idPartita " &
+					"FROM [dbo].[EventiReminder] " &
+					"Union All  " &
+					"SELECT idEvento, idTipologia, Titolo collate Latin1_General_CI_AS As Titolo, Inizio collate Latin1_General_CI_AS As Inizio,  " &
+					"Fine collate Latin1_General_CI_AS As Fine,  " &
+					"TuttiIGiorni collate Latin1_General_CI_AS As TuttiIGiorni, ColorePrimario collate Latin1_General_CI_AS As ColorePrimario,  " &
+					"ColoreSecondario collate Latin1_General_CI_AS As ColoreSecondario,  " &
+					"metaLocation collate Latin1_General_CI_AS As metaLocation, metaNotes collate Latin1_General_CI_AS As metaNotes, idPartita " &
+					"FROM [dbo].[EventiConvocazioni]"
 				Rec = LeggeQuery(Conn, Sql, Connessione)
 				If TypeOf (Rec) Is String Then
 					Ritorno = Rec

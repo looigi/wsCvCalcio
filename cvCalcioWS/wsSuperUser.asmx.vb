@@ -19,8 +19,8 @@ Public Class wsSuperUser
 		Dim Ritorno As String = ""
 		Dim NomeDBDaCopiare As String = "DBVUOTO"
 		Dim TipoDB As String = "Vuoto"
-		If DBPrecompilato = "S" Then
-			NomeDBDaCopiare = "DBPRECOMPILATO"
+		If DBPrecompilato = "S" Or DBPrecompilato.ToUpper.Trim = "TRUE" Then
+			NomeDBDaCopiare = "DBPieno"
 			TipoDB = "Precompilato"
 		End If
 		Dim ConnessioneGenerale As String = LeggeImpostazioniDiBase(Server.MapPath("."), "")
@@ -233,7 +233,7 @@ Public Class wsSuperUser
 																	End If
 																End If
 
-																Rec.Close()
+																'Rec.Close()
 															End If
 														End If
 													Next
@@ -392,6 +392,18 @@ Public Class wsSuperUser
 																		gf.ScriveTestoSuFileAperto("Ritorno invio mail destinario " & Mittente & ": " & Ritorno)
 																	Else
 																		Ritorno = Societa
+
+																		' Copia immagine di base
+																		Dim pathImmagini As String = gf.LeggeFileIntero(Server.MapPath(".") & "\Impostazioni\Paths.txt")
+																		pathImmagini = pathImmagini.Replace(vbCrLf, "")
+																		If Strings.Right(pathImmagini, 1) <> "\" Then
+																			pathImmagini &= "\"
+																		End If
+																		Dim Dest1 As String = p(0) & nomeDb & "\Societa\Societa_1.png"
+																		Dim Dest2 As String = p(0) & nomeDb & "\Societa\Societa_2.png"
+																		gf.CreaDirectoryDaPercorso(Dest1)
+																		File.Copy(pathImmagini & "Sconosciuto.png", Dest1)
+																		File.Copy(pathImmagini & "Sconosciuto.png", Dest2)
 																	End If
 																End If
 															Catch ex As Exception
@@ -422,7 +434,7 @@ Public Class wsSuperUser
 					ConnDbVuoto.close
 
 					Sql = "Drop Database [" & nomeDb & "]"
-					Ritorno2 = EsegueSql(ConnGen, Sql, ConnGen)
+					Ritorno2 = EsegueSql(ConnGen, Sql, ConnessioneGenerale)
 					gf.ScriveTestoSuFileAperto("Drop Database: " & Ritorno2)
 
 					ConnGen.Close

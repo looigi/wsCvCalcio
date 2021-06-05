@@ -1556,7 +1556,7 @@ Module Globale
 						Dim idQuota As String = "" & Rec("idQuota").Value
 						Dim idModalitaPagamento As String = "" & Rec("MetodoPagamento").Value
 						Dim NumeroRicevuta As String = "" & Rec("NumeroRicevuta").Value
-						Rec.Close
+						'Rec.Close
 
 						Dim nomeRate As String = ""
 						Dim rr As New List(Of String)
@@ -1575,7 +1575,7 @@ Module Globale
 								Sql = "Select * From QuoteRate Where idQuota=" & idQuota & " And Progressivo=" & r
 								Rec = LeggeQuery(Conn, Sql, Connessione)
 								If Not Rec.Eof Then
-									nomeRate &= Rec("DescRata").Value & "<br />"
+									nomeRate &= ("" & Rec("DescRata").Value) & "<br />"
 								End If
 							End If
 						Next
@@ -1602,16 +1602,16 @@ Module Globale
 							Ritorno = StringaErrore & " Nessuna squadra rilevata"
 							Ok = False
 						Else
-							NomeSquadra = Rec("NomeSquadra").Value
-							NomePolisportiva = Rec("NomePolisportiva").Value
-							Indirizzo = Rec("Indirizzo").Value
-							CodiceFiscale = Rec("CodiceFiscale").Value
-							PIva = Rec("PIva").Value
-							Telefono = Rec("Telefono").Value
-							eMail = Rec("Mail").Value
-							Suffisso = Rec("Suffisso").Value
+							NomeSquadra = "" & Rec("NomeSquadra").Value
+							NomePolisportiva = "" & Rec("NomePolisportiva").Value
+							Indirizzo = "" & Rec("Indirizzo").Value
+							CodiceFiscale = "" & Rec("CodiceFiscale").Value
+							PIva = "" & Rec("PIva").Value
+							Telefono = "" & Rec("Telefono").Value
+							eMail = "" & Rec("Mail").Value
+							Suffisso = "" & Rec("Suffisso").Value
 						End If
-						Rec.Close()
+						'Rec.Close()
 
 						If Ok Then
 							If idPagatore = 3 Then

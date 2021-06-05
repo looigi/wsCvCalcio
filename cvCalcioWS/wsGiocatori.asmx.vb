@@ -36,11 +36,11 @@ Public Class wsGiocatori
 				Dim Sql As String = ""
 				Dim Ok As Boolean = True
 
-				Sql = "Begin transaction"
-				Ritorno = EsegueSql(Conn, Sql, Connessione)
-				If Ritorno <> "*" Then
-					Ok = False
-				End If
+				'Sql = "Begin transaction"
+				'Ritorno = EsegueSql(Conn, Sql, Connessione)
+				'If Ritorno <> "*" Then
+				'	Ok = False
+				'End If
 
 				If Ok Then
 					Dim dataVal As String = Format(Now.Day, "00") & "/" & Format(Now.Month, "00") & "/" & Now.Year & " " & Format(Now.Hour, "00") & ":" & Format(Now.Minute, "00") & ":" & Format(Now.Second, "00")
@@ -51,7 +51,29 @@ Public Class wsGiocatori
 					End If
 
 					If Ok Then
-						Sql = "Select * From GiocatoriDettaglio Where idGiocatore=" & idGiocatore
+						Dim c() As String = Squadra.Split("_")
+						Dim Anno As String = Str(Val(c(0))).Trim
+						Dim idSquadra2 As String = Str(Val(c(1))).Trim
+
+						Sql = "Select * From [Generale].[dbo].[AggiornamentoWidgets] Where idSquadra=" & idSquadra2
+						Rec = LeggeQuery(Conn, Sql, Connessione)
+						If TypeOf (Rec) Is String Then
+							Ritorno = Rec
+						Else
+							If Rec.Eof Then
+								Sql = "Insert Into [Generale].[dbo].[AggiornamentoWidgets] Values (" & idSquadra2 & ", 'S')"
+							Else
+								Sql = "Update [Generale].[dbo].[AggiornamentoWidgets] Set AggiornaWidgets='S' Where idSquadra=" & idSquadra2
+							End If
+							Ritorno = EsegueSql(Conn, Sql, Connessione)
+							If Ritorno = "OK" Then
+								Ritorno = "*"
+							End If
+						End If
+
+						'Rec.Close
+
+						Sql = "Select A.Genitore" & idGenitore & ", MailGenitore" & idGenitore & ", TelefonoGenitore" & idGenitore & ", B.Maggiorenne From GiocatoriDettaglio A Left Join Giocatori B On A.idGiocatore = B.idGiocatore Where A.idGiocatore=" & idGiocatore
 						Rec = LeggeQuery(Conn, Sql, Connessione)
 						If TypeOf (Rec) Is String Then
 							Ritorno = Rec
@@ -64,141 +86,145 @@ Public Class wsGiocatori
 									Dim Genitore As String = "" & Rec("Genitore" & idGenitore).Value
 									Dim Mail As String = "" & Rec("MailGenitore" & idGenitore).Value
 									Dim Telefono As String = "" & Rec("TelefonoGenitore" & idGenitore).Value
+									Dim Maggiorenne As String = "" & Rec("Maggiorenne").Value
 
-									Rec.Close
+									Dim Attiva As String = "S"
+
+									If Maggiorenne = "N" Then
+										Attiva = "N"
+									End If
 
 									Sql = "Select * From GiocatoriMails Where idGiocatore=" & idGiocatore & " And Progressivo=" & idGenitore
 									Rec = LeggeQuery(Conn, Sql, Connessione)
-									If TypeOf (Rec) Is String Then
-										Ritorno = Rec
-										Ok = False
-									Else
-										If Rec.Eof Then
-											Sql = "Insert Into GiocatoriMails Values (" & idGiocatore & ", " & idGenitore & ", '" & Mail.Replace("'", "''") & "', 'S')"
-										Else
-											Sql = "Update GiocatoriMails Set Mail='" & Mail.Replace("'", "''") & "' Where idGiocatore=" & idGiocatore & " And Progressivo=" & idGenitore
-										End If
-									End If
-
-									If Ok Then
-										Ritorno = EsegueSql(Conn, Sql, Connessione)
-										If Ritorno.Contains(StringaErrore) Then
-											Ok = False
-										End If
-
-										Dim idGenitoreLetto As Integer = -1
-										Dim GenitoreGiaEsisteComeUtente As Boolean = False
-										Dim figliGiaPresenti As String = ""
-
-										Sql = "Select * From [Generale].[dbo].[Utenti] Where EMail='" & Mail.Replace("'", "''") & "'"
-										Rec = LeggeQuery(Conn, Sql, Connessione)
 										If TypeOf (Rec) Is String Then
 											Ritorno = Rec
 											Ok = False
 										Else
 											If Rec.Eof Then
-												GenitoreGiaEsisteComeUtente = False
+												Sql = "Insert Into GiocatoriMails Values (" & idGiocatore & ", " & idGenitore & ", '" & Mail.Replace("'", "''") & "', '" & Attiva & "')"
 											Else
-												GenitoreGiaEsisteComeUtente = True
-												idGenitoreLetto = "" & Rec("idUtente").Value
-												figliGiaPresenti = "" & Rec("idGiocatore").Value
-												If figliGiaPresenti = "-1" Then
-													figliGiaPresenti = ""
-												End If
-												If Strings.Right(figliGiaPresenti, 1) <> ";" Then
-													figliGiaPresenti = figliGiaPresenti & ";"
-												End If
+												Sql = "Update GiocatoriMails Set Mail='" & Mail.Replace("'", "''") & "' Where idGiocatore=" & idGiocatore & " And Progressivo=" & idGenitore
+											End If
+											Ritorno = EsegueSql(Conn, Sql, Connessione)
+											If Ritorno.Contains(StringaErrore) Then
+												Ok = False
 											End If
 										End If
-										Rec.Close
 
 										If Ok Then
-											If Not GenitoreGiaEsisteComeUtente Then
-												Sql = "Select Max(idUtente) + 1 From [Generale].[dbo].[Utenti] Where idAnno=" & idAnno
-												Rec = LeggeQuery(Conn, Sql, Connessione)
-												If TypeOf (Rec) Is String Then
-													Ritorno = Rec
-												Else
-													If Rec(0).Value Is DBNull.Value Then
-														idGenitoreLetto = 1
-													Else
-														idGenitoreLetto = Rec(0).Value
-													End If
-												End If
-											End If
+											Dim idGenitoreLetto As Integer = -1
+											Dim GenitoreGiaEsisteComeUtente As Boolean = False
+											Dim figliGiaPresenti As String = ""
 
-											If Not Genitore.Contains(" ") Then
-												Genitore = " " & Genitore
-											End If
-											Dim g() As String = Genitore.Split(" ")
-											Dim s() As String = Squadra.Split("_")
-											If s.Length > 0 Then
-												Dim idSquadra As Integer = s(1)
-												Dim pass As String = ""
-												Dim conta As Integer = 0
-												While Not pass.Contains(";")
-													pass = generaPassRandom()
-													conta += 1
-													If conta > 20 Then
-														Ritorno = StringaErrore & " Creazione password fallita"
-														Ok = False
-														Exit While
-													End If
-												End While
-
-												If Ok Then
-													Dim nuovaPass() = pass.Split(";")
-
-													If Not GenitoreGiaEsisteComeUtente Then
-														Sql = "Insert Into [Generale].[dbo].[Utenti] Values (" &
-															" " & idAnno & ", " &
-															" " & idGenitoreLetto & ", " &
-															"'" & Mail.Replace("'", "''") & "', " &
-															"'" & g(0).Replace("'", "''") & "', " &
-															"'" & g(1).Replace("'", "''") & "', " &
-															"'" & nuovaPass(1).Replace("'", "''") & "', " &
-															"'" & Mail.Replace("'", "''") & "', " &
-															"-1, " &
-															"3, " &
-															" " & idSquadra & ", " &
-															"1, " &
-															"'" & Telefono & "', " &
-															"'N', " &
-															"'" & idGiocatore & "', " &
-															"'N', " &
-															"'" & stringaWidgets & "' " &
-															")"
-													Else
-														figliGiaPresenti &= idGiocatore & ";"
-														Sql = "Update [Generale].[dbo].[Utenti] Set " &
-															"idGiocatore='" & figliGiaPresenti & "' " &
-															"Where idUtente=" & idGenitoreLetto
-													End If
-													' COMMENTATO DIETRO RICHIESTA DI DONATO 14/09/2020
-													'Ritorno = EsegueSql(Conn, Sql, Connessione)
-													'If Ritorno.Contains(StringaErrore) Then
-													'	Ok = False
-													'Else
-													'	Dim m As New mail
-													'	Dim Oggetto As String = "Nuovo utente inCalcio"
-													'	Dim Body As String = ""
-													'	Body &= "E' stato creato l'utente '" & Genitore.ToUpper & "'. <br />"
-													'	Body &= "Per accedere al sito sarà possibile digitare la mail rilasciata alla segreteria in fase di iscrizione: " & Mail & "<br />"
-													'	Body &= "La password valida per il solo primo accesso è: " & nuovaPass(0) & "<br /><br />"
-													'	Dim ChiScrive As String = "notifiche@incalcio.cloud"
-
-													'	Ritorno = m.SendEmail(Squadra, Mittente, Oggetto, Body, Mail, {""})
-													'End If
-													' COMMENTATO DIETRO RICHIESTA DI DONATO 14/09/2020
-												End If
-											Else
+											Sql = "Select * From [Generale].[dbo].[Utenti] Where EMail='" & Mail.Replace("'", "''") & "'"
+											Rec = LeggeQuery(Conn, Sql, Connessione)
+											If TypeOf (Rec) Is String Then
+												Ritorno = Rec
 												Ok = False
-												Ritorno = StringaErrore & " Problema nel ricavare i dati della società"
+											Else
+												If Rec.Eof Then
+													GenitoreGiaEsisteComeUtente = False
+												Else
+													GenitoreGiaEsisteComeUtente = True
+													idGenitoreLetto = "" & Rec("idUtente").Value
+													figliGiaPresenti = "" & Rec("idGiocatore").Value
+													If figliGiaPresenti = "-1" Then
+														figliGiaPresenti = ""
+													End If
+													If Strings.Right(figliGiaPresenti, 1) <> ";" Then
+														figliGiaPresenti = figliGiaPresenti & ";"
+													End If
+												End If
+											End If
+											'Rec.Close
+
+											If Ok Then
+												If Not GenitoreGiaEsisteComeUtente Then
+													Sql = "Select Max(idUtente) + 1 From [Generale].[dbo].[Utenti] Where idAnno=" & idAnno
+													Rec = LeggeQuery(Conn, Sql, Connessione)
+													If TypeOf (Rec) Is String Then
+														Ritorno = Rec
+													Else
+														If Rec(0).Value Is DBNull.Value Then
+															idGenitoreLetto = 1
+														Else
+															idGenitoreLetto = Rec(0).Value
+														End If
+													End If
+												End If
+
+												If Not Genitore.Contains(" ") Then
+													Genitore = " " & Genitore
+												End If
+												Dim g() As String = Genitore.Split(" ")
+												Dim s() As String = Squadra.Split("_")
+												If s.Length > 0 Then
+													Dim idSquadra As Integer = s(1)
+													Dim pass As String = ""
+													Dim conta As Integer = 0
+													While Not pass.Contains(";")
+														pass = generaPassRandom()
+														conta += 1
+														If conta > 20 Then
+															Ritorno = StringaErrore & " Creazione password fallita"
+															Ok = False
+															Exit While
+														End If
+													End While
+
+													If Ok Then
+														Dim nuovaPass() = pass.Split(";")
+
+														If Not GenitoreGiaEsisteComeUtente Then
+															Sql = "Insert Into [Generale].[dbo].[Utenti] Values (" &
+																" " & idAnno & ", " &
+																" " & idGenitoreLetto & ", " &
+																"'" & Mail.Replace("'", "''") & "', " &
+																"'" & g(0).Replace("'", "''") & "', " &
+																"'" & g(1).Replace("'", "''") & "', " &
+																"'" & nuovaPass(1).Replace("'", "''") & "', " &
+																"'" & Mail.Replace("'", "''") & "', " &
+																"-1, " &
+																"3, " &
+																" " & idSquadra & ", " &
+																"1, " &
+																"'" & Telefono & "', " &
+																"'N', " &
+																"'" & idGiocatore & "', " &
+																"'N', " &
+																"'" & stringaWidgets & "' " &
+																")"
+														Else
+															figliGiaPresenti &= idGiocatore & ";"
+															Sql = "Update [Generale].[dbo].[Utenti] Set " &
+																"idGiocatore='" & figliGiaPresenti & "' " &
+																"Where idUtente=" & idGenitoreLetto
+														End If
+														' COMMENTATO DIETRO RICHIESTA DI DONATO 14/09/2020
+														'Ritorno = EsegueSql(Conn, Sql, Connessione)
+														'If Ritorno.Contains(StringaErrore) Then
+														'	Ok = False
+														'Else
+														'	Dim m As New mail
+														'	Dim Oggetto As String = "Nuovo utente inCalcio"
+														'	Dim Body As String = ""
+														'	Body &= "E' stato creato l'utente '" & Genitore.ToUpper & "'. <br />"
+														'	Body &= "Per accedere al sito sarà possibile digitare la mail rilasciata alla segreteria in fase di iscrizione: " & Mail & "<br />"
+														'	Body &= "La password valida per il solo primo accesso è: " & nuovaPass(0) & "<br /><br />"
+														'	Dim ChiScrive As String = "notifiche@incalcio.cloud"
+
+														'	Ritorno = m.SendEmail(Squadra, Mittente, Oggetto, Body, Mail, {""})
+														'End If
+														' COMMENTATO DIETRO RICHIESTA DI DONATO 14/09/2020
+													End If
+												Else
+													Ok = False
+													Ritorno = StringaErrore & " Problema nel ricavare i dati della società"
+												End If
 											End If
 										End If
-									End If
-								Else
-									If idGiocatore = -1 Then
+									Else
+										If idGiocatore = -1 Then
 										Sql = "Delete From GiocatoriFirme Where idGiocatore=" & idGiocatore & " And idGenitore=-1"
 										Ritorno = EsegueSql(Conn, Sql, Connessione)
 										If Ritorno.Contains(StringaErrore) Then
@@ -211,14 +237,14 @@ Public Class wsGiocatori
 					End If
 				End If
 
-				If Ok Then
-					Ritorno = "*"
-					Sql = "Commit"
-					Dim Ritorno2 As String = EsegueSql(Conn, Sql, Connessione)
-				Else
-					Sql = "Rollback"
-					Dim Ritorno2 As String = EsegueSql(Conn, Sql, Connessione)
-				End If
+				'If Ok Then
+				'	Ritorno = "*"
+				'	Sql = "Commit"
+				'	Dim Ritorno2 As String = EsegueSql(Conn, Sql, Connessione)
+				'Else
+				'	Sql = "Rollback"
+				'	Dim Ritorno2 As String = EsegueSql(Conn, Sql, Connessione)
+				'End If
 			End If
 		End If
 
@@ -1466,7 +1492,7 @@ Public Class wsGiocatori
 						"FROM Giocatori " &
 						"Left Join [Generale].[dbo].[Ruoli] On Giocatori.idRuolo=Ruoli.idRuolo " &
 						"Left Join Categorie On Categorie.idCategoria=Giocatori.idCategoria And Categorie.idAnno=Giocatori.idAnno " &
-						"Left Join [Generale].[dbo].[GiocatoriTessereNFC] As NFC On NFC.idGiocatore=Giocatori.idGiocatore " &
+						"Left Join [Generale].[dbo].[GiocatoriTessereNFC] As NFC On NFC.idGiocatore=Giocatori.idGiocatore  And NFC.CodSquadra='" & Squadra & "' " &
 						"Where Giocatori.Eliminato='N' And Giocatori.idAnno=" & idAnno & " And CharIndex('" & idCategoria & "-', Categorie) = 0 " &
 						"And Giocatori.RapportoCompleto = 'S' " &
 						"Order By Ruoli.idRuolo, Cognome, Nome"
@@ -2378,71 +2404,72 @@ Public Class wsGiocatori
 					End If
 
 					If Ok Then
-						Sql = "Select * From GiocatoriMails Where idGiocatore=" & idGiocatore
-						Rec = LeggeQuery(Conn, Sql, Connessione)
-						If TypeOf (Rec) Is String Then
-							Ritorno = Rec
-						Else
-							If Rec.Eof Then
-								Dim Attiva As String = ""
+						Sql = "Delete From GiocatoriMails Where idGiocatore=" & idGiocatore
+						Ritorno = EsegueSql(Conn, Sql, Connessione)
+						'Rec = LeggeQuery(Conn, Sql, Connessione)
+						'If TypeOf (Rec) Is String Then
+						'	Ritorno = Rec
+						'Else
+						'	If Rec.Eof Then
+						Dim Attiva As String = ""
 
-								If MailGenitore1 <> "" Then
-									Attiva = "S"
-								Else
-									Attiva = "N"
-								End If
-								Sql = "Insert Into GiocatoriMails Values (" &
+						If MailGenitore1 <> "" Then
+							Attiva = "S"
+						Else
+							Attiva = "N"
+						End If
+						Sql = "Insert Into GiocatoriMails Values (" &
 										" " & idGiocatore & ", " &
 										"1, " &
 										"'" & MailGenitore1.Replace("'", "''") & "', " &
 										"'" & Attiva & "' " &
 										")"
-								Ritorno = EsegueSql(Conn, Sql, Connessione)
-								If Ritorno.Contains(StringaErrore) Then
-									Ok = False
-								End If
-								'End If
-								If Ok Then
-									If MailGenitore2 <> "" Then
-										Attiva = "S"
-									Else
-										Attiva = "N"
-									End If
-									Sql = "Insert Into GiocatoriMails Values (" &
+						Ritorno = EsegueSql(Conn, Sql, Connessione)
+						If Ritorno.Contains(StringaErrore) Then
+							Ok = False
+						End If
+						'End If
+						If Ok Then
+							If MailGenitore2 <> "" Then
+								Attiva = "S"
+							Else
+								Attiva = "N"
+							End If
+							Sql = "Insert Into GiocatoriMails Values (" &
 										" " & idGiocatore & ", " &
 										"2, " &
 										"'" & MailGenitore2.Replace("'", "''") & "', " &
 										"'" & Attiva & "' " &
 										")"
-									Ritorno = EsegueSql(Conn, Sql, Connessione)
-									If Ritorno.Contains(StringaErrore) Then
-										Ok = False
-									End If
-									'End If
-								End If
-								If Ok Then
-									If MailGenitore3 <> "" Then
-										Attiva = "S"
-									Else
-										Attiva = "N"
-									End If
-									Sql = "Insert Into GiocatoriMails Values (" &
+							Ritorno = EsegueSql(Conn, Sql, Connessione)
+							If Ritorno.Contains(StringaErrore) Then
+								Ok = False
+							End If
+							'End If
+						End If
+						If Ok Then
+							If MailGenitore3 <> "" Then
+								Attiva = "S"
+							Else
+								Attiva = "N"
+							End If
+							Sql = "Insert Into GiocatoriMails Values (" &
 										" " & idGiocatore & ", " &
 										"3, " &
 										"'" & MailGenitore3.Replace("'", "''") & "', " &
 										"'" & Attiva & "' " &
 										")"
-									Ritorno = EsegueSql(Conn, Sql, Connessione)
-									If Ritorno.Contains(StringaErrore) Then
-										Ok = False
-									Else
-									End If
-									'End If
-								End If
+							Ritorno = EsegueSql(Conn, Sql, Connessione)
+							If Ritorno.Contains(StringaErrore) Then
+								Ok = False
+							Else
 							End If
-							Rec.Close()
+							'End If
 						End If
+						'End If
+						'Rec.Close()
 					End If
+					'End If
 				End If
 
 				If Ok Then
@@ -3915,15 +3942,15 @@ Public Class wsGiocatori
 								Ritorno = StringaErrore & " Nessuna squadra rilevata"
 								Ok = False
 							Else
-								NomeSquadra = Rec("NomeSquadra").Value
-								NomePolisportiva = Rec("NomePolisportiva").Value
-								Indirizzo = Rec("Indirizzo").Value
-								CodiceFiscale = Rec("CodiceFiscale").Value
-								PIva = Rec("PIva").Value
-								Telefono = Rec("Telefono").Value
-								eMail = Rec("Mail").Value
+								NomeSquadra = "" & Rec("NomeSquadra").Value
+								NomePolisportiva = "" & Rec("NomePolisportiva").Value
+								Indirizzo = "" & Rec("Indirizzo").Value
+								CodiceFiscale = "" & Rec("CodiceFiscale").Value
+								PIva = "" & Rec("PIva").Value
+								Telefono = "" & Rec("Telefono").Value
+								eMail = "" & Rec("Mail").Value
 							End If
-							Rec.Close()
+							'Rec.Close()
 
 							If Ok Then
 								If idPagatore = 3 Then
@@ -3933,15 +3960,15 @@ Public Class wsGiocatori
 										Ritorno = StringaErrore & " Nessun giocatore rilevato"
 										Ok = False
 									Else
-										Cognome = Rec("Cognome").Value
-										Nome = Rec("Nome").Value
-										CodFiscalePagatore = Rec("CodFiscale").Value
+										Cognome = "" & Rec("Cognome").Value
+										Nome = "" & Rec("Nome").Value
+										CodFiscalePagatore = "" & Rec("CodFiscale").Value
 
-										CognomeIscritto = Rec("Cognome").Value
-										NomeIscritto = Rec("Nome").Value
-										CodFiscaleIscritto = Rec("CodFiscale").Value
+										CognomeIscritto = "" & Rec("Cognome").Value
+										NomeIscritto = "" & Rec("Nome").Value
+										CodFiscaleIscritto = "" & Rec("CodFiscale").Value
 									End If
-									Rec.Close()
+									'Rec.Close()
 								Else
 									Sql = "SELECT * FROM Giocatori Where idGiocatore=" & idGiocatore
 									Rec = LeggeQuery(Conn, Sql, Connessione)
@@ -3949,11 +3976,11 @@ Public Class wsGiocatori
 										Ritorno = StringaErrore & " Nessun giocatore rilevato"
 										Ok = False
 									Else
-										CognomeIscritto = Rec("Cognome").Value
-										NomeIscritto = Rec("Nome").Value
-										CodFiscaleIscritto = Rec("CodFiscale").Value
+										CognomeIscritto = "" & Rec("Cognome").Value
+										NomeIscritto = "" & Rec("Nome").Value
+										CodFiscaleIscritto = "" & Rec("CodFiscale").Value
 									End If
-									Rec.Close()
+									'Rec.Close()
 
 									Sql = "SELECT * FROM GiocatoriDettaglio Where idGiocatore=" & idGiocatore
 									Rec = LeggeQuery(Conn, Sql, Connessione)
@@ -3971,7 +3998,7 @@ Public Class wsGiocatori
 											CodFiscalePagatore = "" & Rec("CodFiscale2").Value
 										End If
 									End If
-									Rec.Close()
+									'Rec.Close()
 								End If
 
 								If Ok Then
@@ -3989,7 +4016,7 @@ Public Class wsGiocatori
 												ProgressivoGenerale = Rec(0).Value
 												Sql = "Update DatiFattura Set Progressivo = " & ProgressivoGenerale & " Where Anno=" & Now.Year
 											End If
-											Rec.Close()
+											'Rec.Close()
 
 											Ritorno = EsegueSql(Conn, Sql, Connessione)
 											If Ritorno.Contains(StringaErrore) Then
@@ -4043,7 +4070,7 @@ Public Class wsGiocatori
 									Else
 										nuovoIdPagamento = Rec(0).Value
 									End If
-									Rec.Close()
+									'Rec.Close()
 
 									Sql = "Update GiocatoriPagamenti Set " &
 										"Progressivo=" & nuovoIdPagamento & ", " &

@@ -26,6 +26,7 @@ Public Class wsRisposte
 				Dim Rec As Object = Server.CreateObject("ADODB.Recordset")
 				Dim Sql As String = ""
 				Dim Ok As Boolean = True
+				Dim Altro As String = ""
 
 				Sql = "Begin transaction"
 				Ritorno = EsegueSql(Conn, Sql, Connessione)
@@ -97,7 +98,6 @@ Public Class wsRisposte
 											Rec.Close()
 
 											Dim ma As New mail
-											Dim Altro As String
 											If Risposta = "SI" Then
 												Altro = "positiva"
 											Else
@@ -128,6 +128,7 @@ Public Class wsRisposte
 					If Ok Then
 						Sql = "commit"
 						Dim Ritorno2 As String = EsegueSql(Conn, Sql, Connessione)
+						Ritorno = "Risposta " & altro & " inviata"
 					Else
 						Sql = "rollback"
 						Dim Ritorno2 As String = EsegueSql(Conn, Sql, Connessione)

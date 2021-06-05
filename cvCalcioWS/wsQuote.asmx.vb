@@ -216,29 +216,62 @@ Public Class wsQuote
 							For Each q As String In quote
 								Dim qq() As String = q.Split(";")
 
-								Sql = "Select A.* From Giocatori A " &
+								'Sql = "Select A.* From Giocatori A " &
+								'	"Left Join GiocatoriDettaglio B On A.idGiocatore = B.idGiocatore " &
+								'	"Left Join GiocatoriPagamenti C On A.idGiocatore = C.idGiocatore " &
+								'	"Where B.idQuota = " & qq(0) & " And " &
+								'	"(C.Progressivo Is Null Or (C.Progressivo In (" & qq(1) & ") And (C.NumeroRicevuta = 'Bozza' Or C.NumeroRicevuta Is Null)))"
+
+								Sql = "Select A.idGiocatore, Cognome, Nome, A.Maggiorenne, D.Mail As EMail, D.Progressivo, D.Attiva From Giocatori A " &
 									"Left Join GiocatoriDettaglio B On A.idGiocatore = B.idGiocatore " &
 									"Left Join GiocatoriPagamenti C On A.idGiocatore = C.idGiocatore " &
+									"Left Join GiocatoriMails D On A.idGiocatore = D.idGiocatore " &
 									"Where B.idQuota = " & qq(0) & " And " &
-									"(C.Progressivo Is Null Or (C.Progressivo In (" & qq(1) & ") And (C.NumeroRicevuta = 'Bozza' Or C.NumeroRicevuta Is Null)))"
+									"(C.Progressivo Is Null Or (C.Progressivo In (" & qq(1) & ") And (C.NumeroRicevuta = 'Bozza' Or C.NumeroRicevuta Is Null))) " &
+									"And D.Attiva = 'S' And D.Mail <> '' And D.Mail Is Not Null " &
+									"Order By A.idGiocatore, D.Progressivo"
 								Rec2 = LeggeQuery(Conn, Sql, Connessione)
 								If TypeOf (Rec2) Is String Then
 									Ritorno = Rec2
 								Else
 									Do Until Rec2.Eof
-										Ritorno &= Rec2("idGiocatore").Value & ";"
-										Ritorno &= Rec2("Cognome").Value & ";"
-										Ritorno &= Rec2("Nome").Value & ";"
-										Ritorno &= qq(2) & ";"
-										Ritorno &= qq(3) & ";"
-										Ritorno &= qq(4) & ";"
-										Ritorno &= qq(5) & ";"
-										Ritorno &= Rec2("EMail").Value & ";"
-										Ritorno &= "§"
+										If Rec2("Maggiorenne").Value = "S" Then
+											If Rec2("Progressivo").Value = 3 Then
+												If Rec2("Attiva").Value = "S" Then
+													If "" & Rec2("EMail").Value <> "" Then
+														Ritorno &= Rec2("idGiocatore").Value & ";"
+														Ritorno &= Rec2("Cognome").Value & ";"
+														Ritorno &= Rec2("Nome").Value & ";"
+														Ritorno &= qq(2) & ";"
+														Ritorno &= qq(3) & ";"
+														Ritorno &= qq(4) & ";"
+														Ritorno &= qq(5) & ";"
+														Ritorno &= Rec2("EMail").Value & ";"
+														Ritorno &= "§"
+													End If
+												End If
+											End If
+										Else
+											If Rec2("Attiva").Value = "S" Then
+												If "" & Rec2("EMail").Value <> "" Then
+													If Not Ritorno.Contains(Rec2("Cognome").Value) Then
+														Ritorno &= Rec2("idGiocatore").Value & ";"
+														Ritorno &= Rec2("Cognome").Value & ";"
+														Ritorno &= Rec2("Nome").Value & ";"
+														Ritorno &= qq(2) & ";"
+														Ritorno &= qq(3) & ";"
+														Ritorno &= qq(4) & ";"
+														Ritorno &= qq(5) & ";"
+														Ritorno &= Rec2("EMail").Value & ";"
+														Ritorno &= "§"
+													End If
+												End If
+											End If
+										End If
 
 										Rec2.MoveNext
 									Loop
-									Rec2.Close
+									'Rec2.Close
 								End If
 							Next
 						End If
