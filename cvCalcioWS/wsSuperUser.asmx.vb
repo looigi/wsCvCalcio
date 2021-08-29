@@ -560,6 +560,7 @@ Public Class wsSuperUser
 							Dim CodiceSquadra As String = maxAnno & "_" & id
 							Dim RateManuali As String = "N"
 							Dim Cashback As String = "N"
+							Dim GestioneGenitori As String = "N"
 
 							Sql = "Select RateManuali, Cashback From [" & CodiceSquadra & "].[dbo].[Anni]"
 							Rec2 = LeggeQuery(ConnGen, Sql, ConnessioneGenerale)
@@ -569,6 +570,17 @@ Public Class wsSuperUser
 								If Not Rec2.Eof() Then
 									RateManuali = "" & Rec2("RateManuali").Value
 									Cashback = "" & Rec2("Cashback").Value
+								End If
+								Rec2.Close
+							End If
+
+							Sql = "Select * From GestioneGenitori Where idSquadra = " & id
+							Rec2 = LeggeQuery(ConnGen, Sql, ConnessioneGenerale)
+							If TypeOf (Rec2) Is String Then
+								Ritorno = Rec2
+							Else
+								If Not Rec2.Eof() Then
+									GestioneGenitori = "" & Rec2("GestioneGenitori").Value
 								End If
 								Rec2.Close
 							End If
@@ -586,6 +598,7 @@ Public Class wsSuperUser
 									Semaforo2 & "*" & Titolo2 & ";" &
 									RateManuali & ";" &
 									Cashback & ";" &
+									GestioneGenitori & ";" &
 									"§"
 
 							Rec.MoveNext()
@@ -600,7 +613,7 @@ Public Class wsSuperUser
 	End Function
 
 	<WebMethod()>
-	Public Function ModificaSquadra(idSquadra As String, Squadra As String, DataScadenza As String, idTipologia As String, idLicenza As String, rateManuali As String, Cashback As String) As String
+	Public Function ModificaSquadra(idSquadra As String, Squadra As String, DataScadenza As String, idTipologia As String, idLicenza As String, rateManuali As String, Cashback As String, GestioneGenitori As String) As String
 		Dim Ritorno As String = ""
 		Dim ConnessioneGenerale As String = LeggeImpostazioniDiBase(Server.MapPath("."), "")
 
@@ -649,6 +662,22 @@ Public Class wsSuperUser
 							Ritorno = EsegueSql(ConnGen, Sql, ConnessioneGenerale)
 							If Not Ritorno.Contains(StringaErrore) Then
 								Ritorno = "*"
+							End If
+
+							Sql = "Select * From GestioneGenitori Where idSquadra=" & idSquadra
+							Rec = LeggeQuery(ConnGen, Sql, ConnessioneGenerale)
+							If TypeOf (Rec) Is String Then
+								Ritorno = Rec
+							Else
+								If Not Rec.Eof() Then
+									Sql = "Update GestioneGenitori Set GestioneGenitori = '" & GestioneGenitori & "' Where idSquadra = " & idSquadra
+								Else
+									Sql = "Insert Into GestioneGenitori Values( " & idSquadra & ", '" & GestioneGenitori & "')"
+								End If
+								Ritorno = EsegueSql(ConnGen, Sql, ConnessioneGenerale)
+								If Not Ritorno.Contains(StringaErrore) Then
+									Ritorno = "*"
+								End If
 							End If
 						End If
 					End If

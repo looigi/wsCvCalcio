@@ -1565,6 +1565,7 @@ Public Class wsGiocatori
 				Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
 			Else
 				Dim Rec As Object = Server.CreateObject("ADODB.Recordset")
+				Dim Rec2 As Object = Server.CreateObject("ADODB.Recordset")
 				Dim Sql As String = ""
 
 				If Ritorno = "" Then
@@ -1582,7 +1583,8 @@ Public Class wsGiocatori
 							"Giocatori.idCategoria3 As idCategoria3, Categorie3.Descrizione As Categoria3, Categorie.Descrizione As Categoria1, Giocatori.Categorie, " &
 							"Giocatori.RapportoCompleto, Giocatori.idTaglia, Min(KitGiocatori.idTipoKit) As idTipologiaKit, Giocatori.Cap, Giocatori.CittaNascita, Giocatori.Maggiorenne, " &
 							"GiocatoriSemafori.Semaforo1, GiocatoriSemafori.Titolo1, GiocatoriSemafori.Semaforo2, GiocatoriSemafori.Titolo2, GiocatoriSemafori.Smeaforo3, GiocatoriSemafori.Titolo3, " &
-							"GiocatoriSemafori.Semaforo4, GiocatoriSemafori.Titolo4, GiocatoriSemafori.Semaforo5, GiocatoriSemafori.Titolo5, CodiceTessera " &
+							"GiocatoriSemafori.Semaforo4, GiocatoriSemafori.Titolo4, GiocatoriSemafori.Semaforo5, GiocatoriSemafori.Titolo5, CodiceTessera, " &
+							"GiocatoriDettaglio.MailGenitore1, GiocatoriDettaglio.MailGenitore2 " &
 							"FROM Giocatori " &
 							"Left Join KitGiocatori On Giocatori.idGiocatore=KitGiocatori.idGiocatore " &
 							"Left Join [Generale].[dbo].[Ruoli] On Giocatori.idRuolo=Ruoli.idRuolo " &
@@ -1591,12 +1593,13 @@ Public Class wsGiocatori
 							"Left Join Categorie As Categorie3 On Categorie3.idCategoria=Giocatori.idCategoria3 And Categorie3.idAnno=Giocatori.idAnno " &
 							"Left Join GiocatoriSemafori On Giocatori.idGiocatore = GiocatoriSemafori.idGiocatore " &
 							"Left Join [Generale].[dbo].[GiocatoriTessereNFC] As NFC On NFC.idGiocatore=Giocatori.idGiocatore And NFC.CodSquadra = '" & Squadra & "' " &
+							"Left Join GiocatoriDettaglio On GiocatoriDettaglio.idGiocatore = Giocatori.idGiocatore " &
 							"Where Giocatori.Eliminato='N' And Giocatori.idAnno=" & idAnno & " " &
 							"Group By Giocatori.idGiocatore, Ruoli.idRuolo, Cognome, Nome, Ruoli.Descrizione, EMail, Telefono, Soprannome, DataDiNascita, Indirizzo, CodFiscale, Maschio, " &
 							"Citta, Matricola, NumeroMaglia, Giocatori.idCategoria, Giocatori.idCategoria2, Categorie2.Descrizione, Giocatori.idCategoria3, Categorie3.Descrizione, Categorie.Descrizione, " &
 							"Giocatori.Categorie, Giocatori.RapportoCompleto, Giocatori.idTaglia, Giocatori.Cap, Giocatori.CittaNascita, Giocatori.Maggiorenne, " &
 							"GiocatoriSemafori.Semaforo1, GiocatoriSemafori.Titolo1, GiocatoriSemafori.Semaforo2, GiocatoriSemafori.Titolo2, GiocatoriSemafori.Smeaforo3, GiocatoriSemafori.Titolo3, " &
-							"GiocatoriSemafori.Semaforo4, GiocatoriSemafori.Titolo4, GiocatoriSemafori.Semaforo5, GiocatoriSemafori.Titolo5, CodiceTessera " &
+							"GiocatoriSemafori.Semaforo4, GiocatoriSemafori.Titolo4, GiocatoriSemafori.Semaforo5, GiocatoriSemafori.Titolo5, CodiceTessera, GiocatoriDettaglio.MailGenitore1, GiocatoriDettaglio.MailGenitore2 " &
 							"Order By Giocatori.Cognome, Giocatori.Nome"
 						Rec = LeggeQuery(Conn, Sql, Connessione)
 						If TypeOf (Rec) Is String Then
@@ -1640,6 +1643,35 @@ Public Class wsGiocatori
 										Semaforo5 = Rec("Semaforo5").Value & "*" & Rec("Titolo5").Value & ";"
 									End If
 
+									Dim UtenteGenitore1 As String = ""
+									Dim UtenteGenitore2 As String = ""
+
+									If Rec("MailGenitore1").Value <> "" Then
+										Sql = "Select * From [Generale].[dbo].[Utenti] Where Utente='" & Rec("MailGenitore1").Value.replace("'", "''") & "'"
+										Rec2 = LeggeQuery(Conn, Sql, Connessione)
+										If TypeOf (Rec2) Is String Then
+											Ritorno = Rec2
+										Else
+											If Not Rec2.Eof Then
+												UtenteGenitore1 = Rec2("Utente").Value
+											End If
+											Rec2.Close
+										End If
+									End If
+
+									If Rec("MailGenitore2").Value <> "" Then
+										Sql = "Select * From [Generale].[dbo].[Utenti] Where Utente='" & Rec("MailGenitore2").Value.replace("'", "''") & "'"
+										Rec2 = LeggeQuery(Conn, Sql, Connessione)
+										If TypeOf (Rec2) Is String Then
+											Ritorno = Rec2
+										Else
+											If Not Rec2.Eof Then
+												UtenteGenitore2 = Rec2("Utente").Value
+											End If
+											Rec2.Close
+										End If
+									End If
+
 									Ritorno &= Rec("idGiocatore").Value.ToString & ";"
 									Ritorno &= Rec("idR").Value.ToString & ";"
 									Ritorno &= Rec("Cognome").Value.ToString.Trim & ";"
@@ -1674,6 +1706,8 @@ Public Class wsGiocatori
 									Ritorno &= Rec("CittaNascita").Value.ToString & ";"
 									Ritorno &= Rec("Maggiorenne").Value.ToString & ";"
 									Ritorno &= Rec("CodiceTessera").Value.ToString & ";"
+									Ritorno &= UtenteGenitore1 & ";"
+									Ritorno &= UtenteGenitore2 & ";"
 									Ritorno &= "§"
 
 									Rec.MoveNext()
@@ -4680,4 +4714,91 @@ Public Class wsGiocatori
 
 		Return Ritorno
 	End Function
+
+	<WebMethod()>
+	Public Function CreaUtenzaGenitore(Squadra As String, idGiocatore As String, Utenza As String, Cognome As String, Nome As String, Telefono As String, Mittente As String) As String
+		Dim Ritorno As String = ""
+		Dim Connessione As String = LeggeImpostazioniDiBase(Server.MapPath("."), Squadra)
+		Dim c2() As String = Squadra.Split("_")
+		Dim Anno As String = Str(Val(c2(0))).Trim
+		Dim codSquadra As String = c2(1)
+
+		If Connessione = "" Then
+			Ritorno = ErroreConnessioneNonValida
+		Else
+			Dim Conn As Object = ApreDB(Connessione)
+
+			If TypeOf (Conn) Is String Then
+				Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
+			Else
+				Dim Rec As Object = Server.CreateObject("ADODB.Recordset")
+				Dim Sql As String = ""
+
+				Sql = "Select Max(idUtente) + 1 From [Generale].[dbo].[Utenti]"
+				Rec = LeggeQuery(Conn, Sql, Connessione)
+				If TypeOf (Rec) Is String Then
+					Ritorno = Rec
+				Else
+					Dim idUtente As String = 1
+
+					If Rec(0).Value Is DBNull.Value Then
+					Else
+						idUtente = Rec(0).Value
+					End If
+					Rec.Close
+
+					Dim Ok As Boolean = True
+					Dim pass As String = ""
+					Dim conta As Integer = 0
+
+					While Not pass.Contains(";")
+						pass = generaPassRandom()
+						conta += 1
+						If conta > 20 Then
+							Ritorno = StringaErrore & " Creazione password fallita"
+							Exit While
+						End If
+					End While
+
+					If Ok Then
+						Dim nuovaPass() = pass.Split(";")
+
+						Sql = "Insert Into [Generale].[dbo].[Utenti] Values (" &
+							" " & Anno & ", " &
+							" " & idUtente & ", " &
+							"'" & Utenza.Replace("'", "''") & "', " &
+							"'" & Cognome.Replace("'", "''") & "', " &
+							"'" & Nome.Replace("'", "''") & "', " &
+							"'" & nuovaPass(1).Replace("'", "''") & "', " &
+							"'" & Utenza.Replace("'", "''") & "', " &
+							"-1, " &
+							"3, " &
+							" " & codSquadra & ", " &
+							"1, " &
+							"'" & Telefono.Replace("'", "''") & "', " &
+							"'N', " &
+							"';" & idGiocatore & ";', " &
+							"'N', " &
+							"'1-1-1-1-1' " &
+							")"
+						Ritorno = EsegueSql(Conn, Sql, Connessione)
+						If Ritorno = "OK" Then
+							Dim m As New mail
+							Dim Oggetto As String = "Nuovo utente inCalcio"
+							Dim Body As String = ""
+							Body &= "E' stato creato l'utente '" & Utenza.ToUpper & "'. <br />"
+							Body &= "Per accedere al sito sarà possibile digitare la mail rilasciata alla segreteria in fase di iscrizione: " & Utenza.ToUpper & "<br />"
+							Body &= "La password valida per il solo primo accesso è: " & nuovaPass(0) & "<br /><br />"
+							Dim ChiScrive As String = "notifiche@incalcio.cloud"
+
+							Ritorno = m.SendEmail(Squadra, Mittente, Oggetto, Body, Utenza, {""})
+						End If
+					End If
+				End If
+			End If
+		End If
+
+		Return Ritorno
+	End Function
+
 End Class
