@@ -1646,29 +1646,33 @@ Public Class wsGiocatori
 									Dim UtenteGenitore1 As String = ""
 									Dim UtenteGenitore2 As String = ""
 
-									If Rec("MailGenitore1").Value <> "" Then
-										Sql = "Select * From [Generale].[dbo].[Utenti] Where Utente='" & Rec("MailGenitore1").Value.replace("'", "''") & "'"
-										Rec2 = LeggeQuery(Conn, Sql, Connessione)
-										If TypeOf (Rec2) Is String Then
-											Ritorno = Rec2
-										Else
-											If Not Rec2.Eof Then
-												UtenteGenitore1 = Rec2("Utente").Value
+									If Not Rec("MailGenitore1").Value Is DBNull.Value Then
+										If Rec("MailGenitore1").Value <> "" Then
+											Sql = "Select * From [Generale].[dbo].[Utenti] Where Utente='" & Rec("MailGenitore1").Value.replace("'", "''") & "'"
+											Rec2 = LeggeQuery(Conn, Sql, Connessione)
+											If TypeOf (Rec2) Is String Then
+												Ritorno = Rec2
+											Else
+												If Not Rec2.Eof Then
+													UtenteGenitore1 = Rec2("Utente").Value
+												End If
+												'Rec2.Close
 											End If
-											Rec2.Close
 										End If
 									End If
 
-									If Rec("MailGenitore2").Value <> "" Then
-										Sql = "Select * From [Generale].[dbo].[Utenti] Where Utente='" & Rec("MailGenitore2").Value.replace("'", "''") & "'"
-										Rec2 = LeggeQuery(Conn, Sql, Connessione)
-										If TypeOf (Rec2) Is String Then
-											Ritorno = Rec2
-										Else
-											If Not Rec2.Eof Then
-												UtenteGenitore2 = Rec2("Utente").Value
+									If Not Rec("MailGenitore2").Value Is DBNull.Value Then
+										If Rec("MailGenitore2").Value <> "" Then
+											Sql = "Select * From [Generale].[dbo].[Utenti] Where Utente='" & Rec("MailGenitore2").Value.replace("'", "''") & "'"
+											Rec2 = LeggeQuery(Conn, Sql, Connessione)
+											If TypeOf (Rec2) Is String Then
+												Ritorno = Rec2
+											Else
+												If Not Rec2.Eof Then
+													UtenteGenitore2 = Rec2("Utente").Value
+												End If
+												'Rec2.Close
 											End If
-											Rec2.Close
 										End If
 									End If
 

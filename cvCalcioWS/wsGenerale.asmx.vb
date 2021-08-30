@@ -929,8 +929,10 @@ Public Class wsGenerale
 								If TypeOf (Rec) Is String Then
 									Ritorno = Rec
 								Else
-									If Rec(1).Value = "S" Then
-										GestioneGenitori = "S"
+									If Not Rec.Eof Then
+										If Rec(1).Value = "S" Then
+											GestioneGenitori = "S"
+										End If
 									End If
 									Rec.Close
 								End If
