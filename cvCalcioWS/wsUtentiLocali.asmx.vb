@@ -36,7 +36,7 @@ Public Class wsUtentiLocali
 							Sql = "Insert Into ErroriLogin Values (" & idUtente & ", " & idEve & ")"
 						Else
 							idEve = Rec(0).Value
-							Sql = "Update ErroriLogin Set Contatore = " & idEve
+							Sql = "Update ErroriLogin Set Contatore = " & idEve & " Where idUtente=" & idUtente
 						End If
 						Rec.Close()
 					End If
