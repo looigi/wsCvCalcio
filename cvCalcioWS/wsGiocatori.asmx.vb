@@ -1316,7 +1316,7 @@ Public Class wsGiocatori
 						"Left Join Categorie As Cat3 On Cat3.idCategoria=Giocatori.idCategoria3 And Cat3.idAnno=Giocatori.idAnno " &
 						"Left Join GiocatoriDettaglio As Cat4 On Cat4.idGiocatore=Giocatori.idGiocatore " &
 						"Left Join Categorie As Cat1 On Cat1.idCategoria=Giocatori.idCategoria And Cat1.idAnno=Giocatori.idAnno " &
-						"Left Join [Generale].[dbo].[GiocatoriTessereNFC] As NFC On NFC.idGiocatore=Giocatori.idGiocatore " &
+						"Left Join [Generale].[dbo].[GiocatoriTessereNFC] As NFC On NFC.idGiocatore=Giocatori.idGiocatore And NFC.CodSquadra = '" & Squadra & "' " &
 						"Where Giocatori.Eliminato='N' And Giocatori.idAnno=" & idAnno & " " & Altro & " " &
 						"And RapportoCompleto = 'S' " &
 						"Order By Cognome, Nome"
@@ -1411,7 +1411,7 @@ Public Class wsGiocatori
 						"FROM Giocatori " &
 						"Left Join [Generale].[dbo].[Ruoli] On Giocatori.idRuolo=Ruoli.idRuolo " &
 						"Left Join Categorie On Categorie.idCategoria=Giocatori.idCategoria And Categorie.idAnno=Giocatori.idAnno " &
-						"Left Join [Generale].[dbo].[GiocatoriTessereNFC] As NFC On NFC.idGiocatore=Giocatori.idGiocatore " &
+						"Left Join [Generale].[dbo].[GiocatoriTessereNFC] As NFC On NFC.idGiocatore=Giocatori.idGiocatore And NFC.CodSquadra = '" & Squadra & "' " &
 						"Where Giocatori.Eliminato='N' And Giocatori.idAnno=" & idAnno & " And Giocatori.idCategoria=" & idCategoria & " " &
 						"And RapportoCompleto = 'S' " &
 						"Order By Ruoli.idRuolo, Cognome, Nome"

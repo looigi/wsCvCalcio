@@ -280,8 +280,8 @@ Module Globale
 
 		' Return NomeFileFinale
 
-		' Filone = Filone.Replace("***SFONDO***", PathBaseImmagini & "/bg.jpg")
-		Filone = Filone.Replace("***SFONDO***", "")
+		Filone = Filone.Replace("***SFONDO***", PathBaseImmagini & "/bg.jpg")
+		' Filone = Filone.Replace("***SFONDO***", "")
 
 		Sql = "SELECT Partite.idPartita, Partite.idCategoria, Partite.idAvversario, Partite.idTipologia, Partite.idCampo, " &
 						"Partite.idUnioneCalendario, Partite.DataOra, Partite.Giocata, Partite.OraConv, Risultati.Risultato, Risultati.Note, " &
@@ -476,7 +476,7 @@ Module Globale
 					Dirigenti.Append("<table style=""width: 99%; text-align: center;"">")
 
 					Do Until Rec.Eof
-						Dim Path As String = PathBaseImmagini & "/" & Squadra & "/Dirigenti/" & idAnno & "_" & Rec("idDirigente").Value & ".kgb"
+						Dim Path As String = PathBaseImmagini & "/" & NomeSquadra & "/Dirigenti/" & idAnno & "_" & Rec("idDirigente").Value & ".kgb"
 						Path = DecriptaImmagine(Path)
 
 						Dirigenti.Append("<tr>")
@@ -487,6 +487,7 @@ Module Globale
 						Dirigenti.Append("<span class=""testo nero"" style=""font-size: 13px;"">" & Rec("Cognome").Value & " " & Rec("Nome").Value & "</span>")
 						Dirigenti.Append("</td>")
 						Dirigenti.Append("</tr>")
+						Dirigenti.Append(vbCrLf)
 
 						Rec.MoveNext
 					Loop
@@ -539,6 +540,7 @@ Module Globale
 						Convocati.Append("<span class=""testo nero"" style=""font-size: 13px;"">" & C & "</span>")
 						Convocati.Append("</td>")
 						Convocati.Append("</tr>")
+						Convocati.Append(vbCrLf)
 
 						Rec.MoveNext
 					Loop
@@ -589,7 +591,7 @@ Module Globale
 							"Where idPartita = " & idPartita & " And idTempo = 3 And value <> '' " &
 							") A " &
 							"Order By idTempo, Minuto"
-					'Return Sql
+					Return Sql
 
 					Rec = LeggeQuery(Conn, Sql, Connessione)
 					If TypeOf (Rec) Is String Then
@@ -845,6 +847,7 @@ Module Globale
 						Dim Marcatori As New StringBuilder
 
 						Marcatori.Append("<table style=""width: 99%; text-align: center;"">")
+						Marcatori.Append(vbCrLf)
 						Marcatori.Append("<tr>")
 						Marcatori.Append("<td>")
 						Marcatori.Append("")
@@ -864,6 +867,7 @@ Module Globale
 						'Marcatori.Append("<span class=""testo verde"" style=""font-size: 13px;"">Ruolo</span>")
 						'Marcatori.Append("</td>")
 						Marcatori.Append("</tr>")
+						Marcatori.Append(vbCrLf)
 
 						Dim OldTempo As String = ""
 
@@ -891,6 +895,8 @@ Module Globale
 								'Marcatori.Append("<hr />")
 								'Marcatori.Append("</td>")
 								Marcatori.Append("</tr>")
+								Marcatori.Append(vbCrLf)
+
 								OldTempo = Mm(0)
 							End If
 
@@ -939,6 +945,7 @@ Module Globale
 							'Marcatori.Append("<span class=""testo nero"" style=""font-size: 13px;"">" & Mm(5) & "</span>")
 							'Marcatori.Append("</td>")
 							Marcatori.Append("</tr>")
+							Marcatori.Append(vbCrLf)
 						Next
 
 						Marcatori.Append("</table>")
@@ -956,6 +963,8 @@ Module Globale
 						Rec2 = LeggeQuery(Conn, Sql, Connessione)
 						If TypeOf (Rec2) Is String Then
 						Else
+							Dim tempoAtt As String = ""
+
 							Do Until Rec2.Eof
 								Dim Path As String
 
@@ -966,6 +975,12 @@ Module Globale
 									Path = DecriptaImmagine(Path)
 								End If
 
+								If tempoAtt <> "" & Rec2("idTempo").Value Then
+									If tempoAtt <> "" Then
+										Eventi.Append("<tr><td colspan=""5""><hr /></tr>")
+									End If
+									tempoAtt = "" & Rec2("idTempo").Value
+								End If
 								Eventi.Append("<tr>")
 								Eventi.Append("<td align=""right"">")
 								Eventi.Append("<span class=""testo nero"" style=""font-size: 13px;"">" & Rec2("idTempo").Value & "</span>")
@@ -983,6 +998,7 @@ Module Globale
 								Eventi.Append("<span class=""testo nero"" style=""font-size: 13px;"">" & Rec2("Giocatore").Value & "</span>")
 								Eventi.Append("</td>")
 								Eventi.Append("</tr>")
+								Eventi.Append(vbCrLf)
 
 								Rec2.MoveNext
 							Loop
@@ -1019,7 +1035,7 @@ Module Globale
 						gf.CreaAggiornaFile(NomeFileFinale, Filone)
 
 						Dim pp As New pdfGest
-						Ritorno = pp.ConverteHTMLInPDF(NomeFileFinale, NomeFileFinalePDF, "")
+						Ritorno = pp.ConverteHTMLInPDF(NomeFileFinale, NomeFileFinalePDF, "", True)
 					End If
 				End If
 			Else

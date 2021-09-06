@@ -2090,10 +2090,22 @@ Public Class wsPartite
 							'Dirigenti &= "</table>"
 							Filetto = Filetto.Replace("***DIRIGENTI***", Dirigenti)
 
-							gf.CreaDirectoryDaPercorso(p(0) & "\" & Squadra & "\Convocazioni\Anno" & idAnno & "\Partite\")
-							gf.CreaAggiornaFile(p(0) & "\" & Squadra & "\Convocazioni\Anno" & idAnno & "\Partite\Partita_" & idPartita & ".html", Filetto)
+							Dim path1 As String = p(0) & "\" & Squadra & "\Convocazioni\Anno" & idAnno & "\Partite\Partita_" & idPartita & ".html"
+							Dim pathPdf As String = p(0) & "\" & Squadra & "\Convocazioni\Anno" & idAnno & "\Partite\Partita_" & idPartita & ".pdf"
+							Dim pathLog As String = p(0) & "\" & Squadra & "\Convocazioni\Anno" & idAnno & "\Partite\Partita_" & idPartita & ".log"
 
-							Ritorno = "Allegati/" + Squadra & "/Convocazioni/Anno" & idAnno & "/Partite/Partita_" & idPartita & ".html"
+							gf.CreaDirectoryDaPercorso(p(0) & "\" & Squadra & "\Convocazioni\Anno" & idAnno & "\Partite\")
+							gf.EliminaFileFisico(path1)
+							gf.EliminaFileFisico(pathPdf)
+							gf.CreaAggiornaFile(path1, Filetto)
+
+							Ritorno = "Allegati/" + Squadra & "/Convocazioni/Anno" & idAnno & "/Partite/Partita_" & idPartita & ".pdf"
+
+							Dim pp2 As New pdfGest
+							Dim Ritorno2 As String = pp2.ConverteHTMLInPDF(path1, pathPdf, pathLog)
+							If Ritorno = "*" Then
+								Ritorno = Ritorno2
+							End If
 						Else
 							Ritorno = StringaErrore & " Data non valida"
 						End If
