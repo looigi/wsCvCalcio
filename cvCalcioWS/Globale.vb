@@ -284,32 +284,32 @@ Module Globale
 		' Filone = Filone.Replace("***SFONDO***", "")
 
 		Sql = "SELECT Partite.idPartita, Partite.idCategoria, Partite.idAvversario, Partite.idTipologia, Partite.idCampo, " &
-						"Partite.idUnioneCalendario, Partite.DataOra, Partite.Giocata, Partite.OraConv, Risultati.Risultato, Risultati.Note, " &
-						"RisultatiAggiuntivi.RisGiochetti, RisultatiAggiuntivi.GoalAvvPrimoTempo, RisultatiAggiuntivi.GoalAvvSecondoTempo, " &
-						"RisultatiAggiuntivi.GoalAvvTerzoTempo, SquadreAvversarie.Descrizione AS Avversario, CampiAvversari.Descrizione AS CampoA, " &
-						"TipologiePartite.Descrizione AS Tipologia, Allenatori.Cognome+' '+Allenatori.Nome AS Allenatore, Categorie.AnnoCategoria + '-' + Categorie.Descrizione As Categoria, " &
-						"CampiAvversari.Indirizzo as CampoIndirizzo, Partite.Casa, Allenatori.idAllenatore, CampiEsterni.Descrizione As CampoEsterno, " &
-						"RisultatiAggiuntivi.Tempo1Tempo, RisultatiAggiuntivi.Tempo2Tempo, RisultatiAggiuntivi.Tempo3Tempo, " &
-						"CoordinatePartite.Lat, CoordinatePartite.Lon, TempiGoalAvversari.TempiPrimoTempo, TempiGoalAvversari.TempiSecondoTempo, TempiGoalAvversari.TempiTerzoTempo, " &
-						"MeteoPartite.Tempo, MeteoPartite.Gradi, MeteoPartite.Umidita, MeteoPartite.Pressione, MeteoPartite.Icona, ArbitriPartite.idArbitro, Arbitri.Cognome + ' ' + Arbitri.Nome As Arbitro, " &
-						"Partite.RisultatoATempi, Partite.DataOraAppuntamento, Partite.LuogoAppuntamento, Partite.MezzoTrasporto, Categorie.AnticipoConvocazione, Anni.Indirizzo, Anni.Lat, Anni.Lon, " &
-						"Anni.CampoSquadra, Anni.NomePolisportiva, Partite.ShootOut, Partite.Tempi, Partite.PartitaConRigori, PartiteCapitani.idCapitano " &
-						"FROM Partite LEFT JOIN Risultati ON Partite.idPartita = Risultati.idPartita " &
-						"LEFT JOIN RisultatiAggiuntivi ON Partite.idPartita = RisultatiAggiuntivi.idPartita " &
-						"LEFT JOIN SquadreAvversarie ON Partite.idAvversario = SquadreAvversarie.idAvversario " &
-						"LEFT JOIN [Generale].[dbo].[TipologiePartite] ON Partite.idTipologia = TipologiePartite.idTipologia " &
-						"LEFT JOIN Allenatori ON Partite.idAnno = Allenatori.idAnno And Partite.idAllenatore = Allenatori.idAllenatore " &
-						"LEFT JOIN CampiAvversari ON SquadreAvversarie.idCampo = CampiAvversari.idCampo " &
-						"LEFT JOIN CampiEsterni ON Partite.idPartita = CampiEsterni.idPartita " &
-						"LEFT JOIN Categorie ON Partite.idCategoria = Categorie.idCategoria And Categorie.idAnno = Partite.idAnno " &
-						"LEFT JOIN CoordinatePartite On Partite.idPartita = CoordinatePartite.idPartita " &
-						"LEFT JOIN MeteoPartite On Partite.idPartita = MeteoPartite.idPartita " &
-						"LEFT JOIN TempiGoalAvversari On Partite.idPartita = TempiGoalAvversari.idPartita " &
-						"LEFT JOIN ArbitriPartite On Partite.idPartita = ArbitriPartite.idPartita And ArbitriPartite.idAnno = Partite.idAnno " &
-						"LEFT JOIN Arbitri On ArbitriPartite.idArbitro=Arbitri.idArbitro And ArbitriPartite.idAnno=Arbitri.idAnno " &
-						"LEFT JOIN Anni On Partite.idAnno = Anni.idAnno " &
-						"LEFT JOIN PartiteCapitani On Partite.idPartita = PartiteCapitani.idPartita " &
-						"WHERE Partite.idPartita=" & idPartita & " And Partite.idAnno=" & idAnno
+			"Partite.idUnioneCalendario, Partite.DataOra, Partite.Giocata, Partite.OraConv, Risultati.Risultato, Risultati.Note, " &
+			"RisultatiAggiuntivi.RisGiochetti, RisultatiAggiuntivi.GoalAvvPrimoTempo, RisultatiAggiuntivi.GoalAvvSecondoTempo, " &
+			"RisultatiAggiuntivi.GoalAvvTerzoTempo, SquadreAvversarie.Descrizione AS Avversario, CampiAvversari.Descrizione AS CampoA, " &
+			"TipologiePartite.Descrizione AS Tipologia, Allenatori.Cognome+' '+Allenatori.Nome AS Allenatore, Categorie.AnnoCategoria + '-' + Categorie.Descrizione As Categoria, " &
+			"CampiAvversari.Indirizzo as CampoIndirizzo, Partite.Casa, Allenatori.idAllenatore, CampiEsterni.Descrizione As CampoEsterno, " &
+			"RisultatiAggiuntivi.Tempo1Tempo, RisultatiAggiuntivi.Tempo2Tempo, RisultatiAggiuntivi.Tempo3Tempo, " &
+			"CoordinatePartite.Lat, CoordinatePartite.Lon, TempiGoalAvversari.TempiPrimoTempo, TempiGoalAvversari.TempiSecondoTempo, TempiGoalAvversari.TempiTerzoTempo, " &
+			"MeteoPartite.Tempo, MeteoPartite.Gradi, MeteoPartite.Umidita, MeteoPartite.Pressione, MeteoPartite.Icona, ArbitriPartite.idArbitro, Arbitri.Cognome + ' ' + Arbitri.Nome As Arbitro, " &
+			"Partite.RisultatoATempi, Partite.DataOraAppuntamento, Partite.LuogoAppuntamento, Partite.MezzoTrasporto, Categorie.AnticipoConvocazione, Anni.Indirizzo, Anni.Lat, Anni.Lon, " &
+			"Anni.CampoSquadra, Anni.NomePolisportiva, Partite.ShootOut, Partite.Tempi, Partite.PartitaConRigori, PartiteCapitani.idCapitano " &
+			"FROM Partite LEFT JOIN Risultati ON Partite.idPartita = Risultati.idPartita " &
+			"LEFT JOIN RisultatiAggiuntivi ON Partite.idPartita = RisultatiAggiuntivi.idPartita " &
+			"LEFT JOIN SquadreAvversarie ON Partite.idAvversario = SquadreAvversarie.idAvversario " &
+			"LEFT JOIN [Generale].[dbo].[TipologiePartite] ON Partite.idTipologia = TipologiePartite.idTipologia " &
+			"LEFT JOIN Allenatori ON Partite.idAnno = Allenatori.idAnno And Partite.idAllenatore = Allenatori.idAllenatore " &
+			"LEFT JOIN CampiAvversari ON SquadreAvversarie.idCampo = CampiAvversari.idCampo " &
+			"LEFT JOIN CampiEsterni ON Partite.idPartita = CampiEsterni.idPartita " &
+			"LEFT JOIN Categorie ON Partite.idCategoria = Categorie.idCategoria And Categorie.idAnno = Partite.idAnno " &
+			"LEFT JOIN CoordinatePartite On Partite.idPartita = CoordinatePartite.idPartita " &
+			"LEFT JOIN MeteoPartite On Partite.idPartita = MeteoPartite.idPartita " &
+			"LEFT JOIN TempiGoalAvversari On Partite.idPartita = TempiGoalAvversari.idPartita " &
+			"LEFT JOIN ArbitriPartite On Partite.idPartita = ArbitriPartite.idPartita And ArbitriPartite.idAnno = Partite.idAnno " &
+			"LEFT JOIN Arbitri On ArbitriPartite.idArbitro=Arbitri.idArbitro And ArbitriPartite.idAnno=Arbitri.idAnno " &
+			"LEFT JOIN Anni On Partite.idAnno = Anni.idAnno " &
+			"LEFT JOIN PartiteCapitani On Partite.idPartita = PartiteCapitani.idPartita " &
+			"WHERE Partite.idPartita=" & idPartita & " And Partite.idAnno=" & idAnno
 		Rec = LeggeQuery(Conn, Sql, Connessione)
 		If TypeOf (Rec) Is String Then
 			Ok = False
@@ -591,7 +591,7 @@ Module Globale
 							"Where idPartita = " & idPartita & " And idTempo = 3 And value <> '' " &
 							") A " &
 							"Order By idTempo, Minuto"
-					Return Sql
+					' Return Sql
 
 					Rec = LeggeQuery(Conn, Sql, Connessione)
 					If TypeOf (Rec) Is String Then
@@ -617,39 +617,6 @@ Module Globale
 						Loop
 						Rec.Close
 
-						'Dim ga1() As String = GoalAvv1Tempi.Split("#")
-
-						'For Each g As String In ga1
-						'	If g <> "" Then
-						'		ReDim Preserve Marc(QuantiGoal)
-						'		Marc(QuantiGoal) = "01;" & Format(Val(g), "00") & ";;Goal avversario;;;"
-						'		QuantiGoal2 += 1
-						'		QuantiGoal += 1
-						'	End If
-						'Next
-
-						'Dim ga2() As String = GoalAvv2Tempi.Split("#")
-
-						'For Each g As String In ga2
-						'	If g <> "" Then
-						'		ReDim Preserve Marc(QuantiGoal)
-						'		Marc(QuantiGoal) = "02;" & Format(Val(g), "00") & ";;Goal avversario;;;"
-						'		QuantiGoal2 += 1
-						'		QuantiGoal += 1
-						'	End If
-						'Next
-
-						'Dim ga3() As String = GoalAvv3Tempi.Split("#")
-
-						'For Each g As String In ga3
-						'	If g <> "" Then
-						'		ReDim Preserve Marc(QuantiGoal)
-						'		Marc(QuantiGoal) = "03;" & Format(Val(g), "00") & ";;Goal avversario;;;"
-						'		QuantiGoal2 += 1
-						'		QuantiGoal += 1
-						'	End If
-						'Next
-
 						For i As Integer = 0 To Marc.Length - 1
 							For k As Integer = 0 To Marc.Length - 1
 								If i <> k Then
@@ -661,6 +628,55 @@ Module Globale
 								End If
 							Next
 						Next
+
+						'' Tempi goal avversari
+						'Sql = "Select * From RisultatiAvversariMinuti Where idPartita=" & idPartita & " Order by idTempo"
+						'Rec = LeggeQuery(Conn, Sql, Connessione)
+						'If TypeOf (Rec) Is String Then
+						'	Ok = False
+						'	Ritorno = "Problemi lettura marcatori: " & Sql
+						'Else
+						'	Do Until Rec.Eof()
+						'		Select Case Rec("idTempo").Value
+						'			Case 1
+						'				Dim ga1() As String = Rec("Minuti").Value.Split(";")
+
+						'				For Each g As String In ga1
+						'					If g <> "" Then
+						'						ReDim Preserve Marc(QuantiGoal)
+						'						Marc(QuantiGoal) = "01;" & Format(Val(g), "00") & ";;Goal avversario;;;"
+						'						QuantiGoal2 += 1
+						'						QuantiGoal += 1
+						'					End If
+						'				Next
+						'			Case 2
+						'				Dim ga2() As String = Rec("Minuti").Value.Split(";")
+
+						'				For Each g As String In ga2
+						'					If g <> "" Then
+						'						ReDim Preserve Marc(QuantiGoal)
+						'						Marc(QuantiGoal) = "02;" & Format(Val(g), "00") & ";;Goal avversario;;;"
+						'						QuantiGoal2 += 1
+						'						QuantiGoal += 1
+						'					End If
+						'				Next
+						'			Case 3
+						'				Dim ga3() As String = Rec("Minuti").Value.Split(";")
+
+						'				For Each g As String In ga3
+						'					If g <> "" Then
+						'						ReDim Preserve Marc(QuantiGoal)
+						'						Marc(QuantiGoal) = "03;" & Format(Val(g), "00") & ";;Goal avversario;;;"
+						'						QuantiGoal2 += 1
+						'						QuantiGoal += 1
+						'					End If
+						'				Next
+						'		End Select
+
+						'		Rec.MoveNext
+						'	Loop
+						'	Rec.Close
+						'End If
 
 						Dim GoalPropri As Integer = 0
 						Dim GoalAvversari As Integer = 0
@@ -2041,5 +2057,175 @@ Module Globale
 		Rec.Close
 
 		Return CodiceTessera
+	End Function
+
+	Public Function RitornaCategorieUtente(Conn As Object, Connessione As String, Utente As String) As String
+		Dim Ritorno As String = ""
+		Dim Rec As Object = HttpContext.Current.Server.CreateObject("ADODB.Recordset")
+		Dim Sql As String = ""
+
+		Dim idGiocatore As String = ""
+
+		Sql = "Select * From [Generale].[dbo].[Utenti] Where EMail = '" & Utente.Replace("'", "''") & "'"
+		Rec = LeggeQuery(Conn, Sql, Connessione)
+		If TypeOf (Rec) Is String Then
+			Ritorno = Rec
+		Else
+			Dim idTipologia As String = ""
+
+			If Not Rec.Eof Then
+				idTipologia = Rec("idTipologia").Value
+				idGiocatore = Rec("idGiocatore").Value
+			Else
+				Rec.Close
+
+				' Forse è un giocatore ?
+				Sql = "Select * From Giocatori Where EMail = '" & Utente.Replace("'", "''") & "'"
+				Rec = LeggeQuery(Conn, Sql, Connessione)
+				If TypeOf (Rec) Is String Then
+					Ritorno = Rec
+				Else
+					If Not Rec.Eof Then
+						idTipologia = 6
+						idGiocatore = Rec("idGiocatore").Value
+					End If
+
+					Rec.Close
+				End If
+			End If
+
+			Select Case idTipologia
+				Case "0"
+					' Super User
+					Ritorno = "-1"
+				Case "1"
+					' Amministratore
+					Ritorno = "-1"
+				Case "2"
+					' Utente
+				Case "3"
+					' Genitore
+					If idGiocatore <> "" Then
+						Dim idG() As String = idGiocatore.Split(";")
+						Dim Ricerca As String = ""
+
+						For Each idC As String In idG
+							If idC <> "" Then
+								Ricerca &= idC & ","
+							End If
+						Next
+
+						If Ricerca <> "" Then
+							Ricerca = "(" & Mid(Ricerca, 1, Ricerca.Length - 1) & ")"
+
+							Sql = "Select Categorie From Giocatori Where idGiocatore In " & Ricerca
+							Rec = LeggeQuery(Conn, Sql, Connessione)
+							If TypeOf (Rec) Is String Then
+								Ritorno = Rec
+							Else
+								Dim Cat As String = ""
+
+								Do Until Rec.Eof
+									Cat &= Rec("Categorie").Value
+
+									Rec.MoveNext
+								Loop
+								Rec.Close
+
+								If Cat <> "" Then
+									Dim Cat2() As String = Cat.Split("-")
+									Dim Cate As New List(Of String)
+
+									For Each c As String In Cat2
+										Dim Ok As Boolean = True
+
+										For Each cc As String In Cate
+											If cc = c Then
+												Ok = False
+												Exit For
+											End If
+										Next
+
+										If Ok Then
+											Cate.Add(c)
+										End If
+									Next
+
+									For Each cate2 As String In Cate
+										Ritorno &= cate2 & ";"
+									Next
+								End If
+							End If
+						End If
+					End If
+				Case "4", "8"
+					' Dirigente
+					Sql = "Select B.idCategoria From Dirigenti A " &
+						"Left Join DirigentiCategorie B On A.idDirigente = B.idUtente " &
+						"Where A.EMail = '" & Utente.Replace("'", "''") & "' And A.Eliminato = 'N'"
+					Rec = LeggeQuery(Conn, Sql, Connessione)
+					If TypeOf (Rec) Is String Then
+						Ritorno = Rec
+					Else
+						Do Until Rec.Eof
+							Ritorno &= Rec("idCategoria").Value & ";"
+
+							Rec.MoveNext
+						Loop
+						Rec.Close
+					End If
+				Case "6"
+					' Giocatore
+					Sql = "Select Categorie From Giocatori Where idGiocatore In " & idGiocatore
+					Rec = LeggeQuery(Conn, Sql, Connessione)
+					If TypeOf (Rec) Is String Then
+						Ritorno = Rec
+					Else
+						If Not Rec.Eof Then
+							Dim Cat2() As String = Rec("Categorie").Value.Split("-")
+							Dim Cate As New List(Of String)
+
+							For Each c As String In Cat2
+								Dim Ok As Boolean = True
+
+								For Each cc As String In Cate
+									If cc = c Then
+										Ok = False
+										Exit For
+									End If
+								Next
+
+								If Ok Then
+									Cate.Add(c)
+								End If
+							Next
+
+							For Each cate2 As String In Cate
+								Ritorno &= cate2 & ";"
+							Next
+						End If
+
+						Rec.Close
+					End If
+				Case "5", "7"
+					' Allenatore
+					Sql = "Select B.idCategoria From Allenatori A " &
+						"Left Join AllenatoriCategorie B On A.idAllenatore = B.idUtente " &
+						"Where A.EMail = '" & Utente.Replace("'", "''") & "' And A.Eliminato = 'N'"
+					Rec = LeggeQuery(Conn, Sql, Connessione)
+					If TypeOf (Rec) Is String Then
+						Ritorno = Rec
+					Else
+						Do Until Rec.Eof
+							Ritorno &= Rec("idCategoria").Value & ";"
+
+							Rec.MoveNext
+						Loop
+						Rec.Close
+					End If
+			End Select
+		End If
+
+		Return Ritorno
 	End Function
 End Module

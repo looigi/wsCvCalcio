@@ -730,6 +730,88 @@ Public Class wsWidget
 	End Function
 
 	<WebMethod()>
+	Public Function RitornaProssimiEventiUtenti(Squadra As String, Limite As String, Utente As String) As String
+		Dim Ritorno As String = ""
+		Dim Connessione As String = LeggeImpostazioniDiBase(Server.MapPath("."), Squadra)
+
+		If Connessione = "" Then
+			Ritorno = ErroreConnessioneNonValida
+		Else
+			Dim Conn As Object = ApreDB(Connessione)
+
+			If TypeOf (Conn) Is String Then
+				Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
+			Else
+				Dim Rec As Object = Server.CreateObject("ADODB.Recordset")
+				Dim Rec2 As Object = Server.CreateObject("ADODB.Recordset")
+				Dim Sql As String
+				Dim Altro As String = ""
+
+				Dim Categorie As String = RitornaCategorieUtente(Conn, Connessione, Utente)
+
+				If Categorie <> "" Then
+					Dim Categorie1 As String = ""
+					Dim Categorie2 As String = ""
+
+					If Categorie <> "-1" Then
+						For Each c As String In Categorie.Split(";")
+							Categorie1 &= "CHARINDEX('" & c & "-', A.Categorie) > 1 Or "
+							Categorie2 &= c & ","
+						Next
+
+						Categorie1 = " And (" & Mid(Categorie1, 1, Categorie1.Length - 4) & ")"
+						Categorie2 = " Where A.idCategoria In (" & Mid(Categorie2, 1, Categorie2.Length - 1) & ")"
+					End If
+
+					If Limite <> "" Then
+						Altro = "Top " & Limite
+					End If
+
+					Sql = "Select " & Altro & " * From ( " &
+						"Select 'Cert. Scad.' As Cosa, A.idGiocatore As Id, 'Certificato medico scaduto' As PrimoCampo, A.Cognome + ' ' + A.Nome As SecondoCampo, B.ScadenzaCertificatoMedico As Data From Giocatori A " &
+						"Left Join GiocatoriDettaglio B On A.idGiocatore = B.idGiocatore " &
+						"Where A.Eliminato='N' And B.ScadenzaCertificatoMedico Is Not Null And B.ScadenzaCertificatoMedico <> '' " & Categorie1 & " " &
+						"And Convert(DateTime, B.ScadenzaCertificatoMedico, 121) < CURRENT_TIMESTAMP " &
+						"Union All " &
+						"Select 'Cert. Med.' As Cosa, A.idGiocatore As Id, A.Cognome As PrimoCampo, A.Nome As SecondoCampo, CONVERT(date, B.ScadenzaCertificatoMedico) As Data From Giocatori A " &
+						"Left Join GiocatoriDettaglio B On A.idGiocatore = B.idGiocatore " &
+						"Where A.Eliminato='N' And CertificatoMedico = 'S' And A.Eliminato = 'N' And Convert(DateTime, B.ScadenzaCertificatoMedico ,121) <= DateAdd(Day, 30, CURRENT_TIMESTAMP) " & Categorie1 & " " &
+						"Union All " &
+						"Select 'Partita' As Cosa, idPartita As Id, B.Descrizione As PrimoCampo, C.Descrizione As SecondoCampo, CONVERT(date, DataOra) As Data From Partite A " &
+						"Left Join Categorie B On A.idCategoria = B.idCategoria " &
+						"Left Join SquadreAvversarie C On A.idAvversario = C.idAvversario " & Categorie2 & " " &
+						"Union All " &
+						"Select 'Evento' As Cosa, idEvento As Id, Titolo As PrimoCampo, '' As SecondoCampo, CONVERT(date, Inizio) As Data From EventiConvocazioni " &
+						"Where idTipologia = 2" &
+						") A  " &
+						"Where Data > GETDATE() Or Cosa = 'Cert. Scad.' " &
+						"Order By Data"
+					Rec = LeggeQuery(Conn, Sql, Connessione)
+					If TypeOf (Rec) Is String Then
+						Ritorno = Rec
+					Else
+						Ritorno = ""
+						Do Until Rec.Eof
+							Ritorno &= Rec("Cosa").Value & ";" & Rec("Id").Value & ";" & Rec("PrimoCampo").Value & ";" & Rec("SecondoCampo").Value & ";" & Rec("Data").Value & "§"
+
+							Rec.MoveNext
+						Loop
+						Rec.Close
+
+						If Ritorno = "" Then
+							Ritorno = "ERROR: Nessun evento rilevato"
+						End If
+					End If
+				Else
+					Ritorno = "ERROR: Nessuna categoria rilevata"
+				End If
+			End If
+		End If
+
+		Return Ritorno
+	End Function
+
+	<WebMethod()>
 	Public Function CreaIndicatori(Squadra As String) As String
 		'Dim thread As New Thread(AddressOf RitornaIndicatoriThread)
 		'Dim parameters As New parametriIndicatori

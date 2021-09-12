@@ -1437,8 +1437,8 @@ Public Class wsPartite
 						"LEFT JOIN Anni On Partite.idAnno = Anni.idAnno " &
 						"LEFT JOIN PartiteCapitani On Partite.idPartita = PartiteCapitani.idPartita " &
 						"LEFT JOIN RisultatiAvversariMinuti As RisultatiAvversariMinuti1 On Partite.idPartita = RisultatiAvversariMinuti1.idPartita And RisultatiAvversariMinuti1.idTempo = 1 " &
-						"LEFT JOIN RisultatiAvversariMinuti As RisultatiAvversariMinuti2 On Partite.idPartita = RisultatiAvversariMinuti2.idPartita And RisultatiAvversariMinuti1.idTempo = 2 " &
-						"LEFT JOIN RisultatiAvversariMinuti As RisultatiAvversariMinuti3 On Partite.idPartita = RisultatiAvversariMinuti3.idPartita And RisultatiAvversariMinuti1.idTempo = 3 " &
+						"LEFT JOIN RisultatiAvversariMinuti As RisultatiAvversariMinuti2 On Partite.idPartita = RisultatiAvversariMinuti2.idPartita And RisultatiAvversariMinuti2.idTempo = 2 " &
+						"LEFT JOIN RisultatiAvversariMinuti As RisultatiAvversariMinuti3 On Partite.idPartita = RisultatiAvversariMinuti3.idPartita And RisultatiAvversariMinuti3.idTempo = 3 " &
 						"WHERE Partite.idPartita=" & idPartita & " And Partite.idAnno=" & idAnno
 
 					Rec = LeggeQuery(Conn, Sql, Connessione)
@@ -1686,9 +1686,9 @@ Public Class wsPartite
 								Ritorno &= Rec("Tempi").Value & ";"
 								Ritorno &= Rec("PartitaConRigori").Value & ";"
 								Ritorno &= Rec("idCapitano").Value & ";"
-								Ritorno &= Rec("TempiGAvv1").Value & ";"
-								Ritorno &= Rec("TempiGAvv2").Value & ";"
-								Ritorno &= Rec("TempiGAvv3").Value & ";"
+								Ritorno &= (Rec("TempiGAvv1").Value).replace(";", "%") & ";"
+								Ritorno &= (Rec("TempiGAvv2").Value).replace(";", "%") & ";"
+								Ritorno &= (Rec("TempiGAvv3").Value).replace(";", "%") & ";"
 								Ritorno &= "§"
 
 								Rec.MoveNext()

@@ -1848,7 +1848,7 @@ Public Class wsGenerale
 	'End Sub
 
 	<WebMethod()>
-	Public Function RitornaDatiContatti(Squadra As String, idCategoria As String) As String
+	Public Function RitornaDatiContatti(Squadra As String, Utente As String) As String
 		' RichiedeFirma?Squadra= 0002_00160&idGiocatore=432&Genitore=1 
 		Dim Ritorno As String = ""
 		Dim Connessione As String = LeggeImpostazioniDiBase(Server.MapPath("."), Squadra)
@@ -1863,45 +1863,58 @@ Public Class wsGenerale
 			Else
 				Dim Rec As Object = Server.CreateObject("ADODB.Recordset")
 				Dim Sql As String = ""
-				Dim Altro As String = ""
 
-				If idCategoria <> "-1" Then
-					Altro = "And CharIndex('" & idCategoria & "-', A.Categorie) > 0"
+				Dim Categorie As String = RitornaCategorieUtente(Conn, Connessione, Utente)
+				Dim RicCategoria As String = ""
+
+				If Categorie = "-1" Then
+					RicCategoria = ""
+				Else
+					Dim cat() As String = Categorie.Split(";")
+
+					For Each c As String In cat
+						RicCategoria &= "CharIndex('" & c & "-', Categorie) > 0 Or "
+					Next
+
+					If RicCategoria <> "" Then
+						RicCategoria = "And (" & Mid(RicCategoria, 1, RicCategoria.Length - 4) & ")"
+					End If
 				End If
 
-				Sql = "Select * From (Select idGiocatore, DataDiNascita, Cognome, Nome, Maggiorenne, EMail As Dettaglio1, Telefono As Dettaglio2, '' As Dettaglio3, '' As Dettaglio4, '' As Dettaglio5, '' As Dettaglio6 From Giocatori " &
-					"Where Eliminato = 'N' And CharIndex('" & idCategoria & "-', Categorie) > 0 And Maggiorenne = 'S' " &
+				Sql = "Select * From (" &
+					"Select idGiocatore, DataDiNascita, Cognome, Nome, Maggiorenne, EMail As Dettaglio1, Telefono As Dettaglio2, '' As Dettaglio3, '' As Dettaglio4, '' As Dettaglio5, '' As Dettaglio6 From Giocatori " &
+					"Where Eliminato = 'N' " & RicCategoria & " And Maggiorenne = 'S' " &
 					"Union All " &
 					"Select A.idGiocatore, DataDiNascita, Cognome, Nome, A.Maggiorenne, Genitore1 As Dettaglio1, MailGenitore1 As Dettaglio2, TelefonoGenitore1 As Dettaglio3, " &
 					"Genitore2 As Dettaglio4, MailGenitore2 As Dettaglio5, TelefonoGenitore2 As Dettaglio6 From Giocatori A " &
 					"Left Join GiocatoriDettaglio B On A.idGiocatore = B.idGiocatore " &
-					"Where A.Eliminato = 'N' " & Altro & " And A.Maggiorenne = 'N' " &
+					"Where A.Eliminato = 'N' " & RicCategoria & " And A.Maggiorenne = 'N' " &
 					") A Order By Cognome, Nome"
-					Rec = LeggeQuery(Conn, Sql, Connessione)
-					If TypeOf (Rec) Is String Then
-						Ritorno = Rec
-					Else
-						Ritorno = ""
-						Do Until Rec.Eof
-							Ritorno &= Rec("Cognome").Value & ";"
-							Ritorno &= Rec("Nome").Value & ";"
-							Ritorno &= Rec("Maggiorenne").Value & ";"
-							Ritorno &= Rec("Dettaglio1").Value & ";"
-							Ritorno &= Rec("Dettaglio2").Value & ";"
-							Ritorno &= Rec("Dettaglio3").Value & ";"
-							Ritorno &= Rec("Dettaglio4").Value & ";"
-							Ritorno &= Rec("Dettaglio5").Value & ";"
-							Ritorno &= Rec("Dettaglio6").Value & ";"
-							Ritorno &= Rec("idGiocatore").Value & ";"
-							Ritorno &= Rec("DataDiNascita").Value & ";"
-							Ritorno &= "§"
+				Rec = LeggeQuery(Conn, Sql, Connessione)
+				If TypeOf (Rec) Is String Then
+					Ritorno = Rec
+				Else
+					Ritorno = ""
+					Do Until Rec.Eof
+						Ritorno &= Rec("Cognome").Value & ";"
+						Ritorno &= Rec("Nome").Value & ";"
+						Ritorno &= Rec("Maggiorenne").Value & ";"
+						Ritorno &= Rec("Dettaglio1").Value & ";"
+						Ritorno &= Rec("Dettaglio2").Value & ";"
+						Ritorno &= Rec("Dettaglio3").Value & ";"
+						Ritorno &= Rec("Dettaglio4").Value & ";"
+						Ritorno &= Rec("Dettaglio5").Value & ";"
+						Ritorno &= Rec("Dettaglio6").Value & ";"
+						Ritorno &= Rec("idGiocatore").Value & ";"
+						Ritorno &= Rec("DataDiNascita").Value & ";"
+						Ritorno &= "§"
 
-							Rec.MoveNext
-						Loop
-						Rec.Close
-					End If
+						Rec.MoveNext
+					Loop
+					Rec.Close
 				End If
 			End If
+		End If
 
 		Return Ritorno
 	End Function
