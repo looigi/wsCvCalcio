@@ -212,6 +212,10 @@ Public Class wsGenitori
 								Next
 							End If
 						Next
+
+						If Ritorno = "" Then
+							Ritorno = "ERROR: Nessuna ricevuta rilevata"
+						End If
 					End If
 				End If
 			End If

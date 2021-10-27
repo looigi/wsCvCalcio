@@ -265,6 +265,7 @@ Module Globale
 		Dim PathBaseImmagini As String = pathMultimedia ' "http://loppa.duckdns.org:90/MultiMedia" ' "http://looigi.no-ip.biz:90/CVCalcio/App_Themes/Standard/Images"
 		Dim PathBaseMultimedia As String = pathMultimedia.Replace("Allegati", "Multimedia") ' "http://loppa.duckdns.org:90/MultiMedia" ' "http://looigi.no-ip.biz:90/CVCalcio/App_Themes/Standard/Images"
 		Dim PathBaseImmScon As String = pathMultimedia & "Sconosciuto.png" ' "http://looigi.no-ip.biz:90/CVCalcio/App_Themes/Standard/Images/Sconosciuto.png"
+		Dim PathLog As String = HttpContext.Current.Server.MapPath(".") & "\Log\Pdf.txt"
 		Dim Ritorno As String = "*"
 
 		Dim Filone As String = gf.LeggeFileIntero(HttpContext.Current.Server.MapPath(".") & "\Scheletri\base_partita.txt")
@@ -273,12 +274,48 @@ Module Globale
 			sIdPartita = "0" & sIdPartita
 		Next
 		Dim NomeFileFinale As String = pathAllegati & Squadra & "\Partite\Anno" & idAnno & "\" & sidPartita & "\" & idPartita & ".html"
-		Dim NomeFileFinalePDF As String = pathAllegati & Squadra & "\Partite\Anno" & idAnno & "\" & sidPartita & "\" & idPartita & ".pdf"
+		Dim NomeFileFinalePDF As String = pathAllegati & Squadra & "\Partite\Anno" & idAnno & "\" & sIdPartita & "\" & idPartita & ".pdf"
+		Dim PathPerMultimedia As String = pathAllegati & Squadra & "\Partite\Anno" & idAnno & "\" & sIdPartita & "\"
 
 		gf.CreaDirectoryDaPercorso(NomeFileFinale)
 		gf.EliminaFileFisico(NomeFileFinale)
+		gf.EliminaFileFisico(NomeFileFinalePDF)
 
-		' Return NomeFileFinale
+		gf.ApreFileDiTestoPerScrittura(NomeFileFinalePDF)
+		gf.ScriveTestoSuFileAperto("ppp")
+		gf.ChiudeFileDiTestoDopoScrittura()
+
+		' Multimedia
+		gf.ScansionaDirectorySingola(PathPerMultimedia)
+		Dim Multimedia() As String = gf.RitornaFilesRilevati
+		Dim qMultimedia As Integer = gf.RitornaQuantiFilesRilevati
+		Dim mmu As String = ""
+		For i As Integer = 1 To qMultimedia
+			Dim este As String = gf.TornaEstensioneFileDaPath(Multimedia(i)).ToUpper.Trim.Replace(".", "")
+			Dim PathEsternoMM As String = Multimedia(i).Replace(pathAllegati, pathMultimedia).Replace("Multimedia", "Allegati").Replace("\", "/")
+			Dim Nome As String = gf.TornaNomeFileDaPath(Multimedia(i))
+			Dim e As String = gf.TornaEstensioneFileDaPath(Nome)
+			Nome = Nome.Replace(e, "")
+			If Nome.Length > 14 Then
+				Nome = Mid(Nome, 1, 6) & "..." & Mid(Nome, Nome.Length - 6, 6)
+			End If
+			If este = "JPG" Or este = "JPEG" Or este = "JFIF" Or este = "BMP" Or este = "GIF" Or este = "PNG" Then
+				' Immagine
+				mmu &= "<div class=""multimedia""><a href=""" & PathEsternoMM & """ target=""_blank""><img src=""" & PathEsternoMM & """ width=""100%"" height=""100%""><br /><span class=""testo nero"" style=""font-size: 10px; white-space: nowrap;"">" & Nome & "</span></a></div>" & vbCrLf
+			Else
+				If este = "MP4" Or este = "WMV" Or este = "MPG" Then
+					' Filmato
+					mmu &= "<div class=""multimedia""><a href=""" & PathEsternoMM & """ target=""_blank""><img src=""" & PathBaseImmagini & "/video.png"" width=""100%"" height=""100%""><br /><span class=""testo nero"" style=""font-size: 10px; white-space: nowrap;"">" & Nome & "</span></a></div>" & vbCrLf
+				End If
+			End If
+		Next
+		If mmu <> "" Then
+			Filone = Filone.Replace("***MMVISIBILE***", "block")
+			Filone = Filone.Replace("***MULTIMEDIA***", mmu)
+		Else
+			Filone = Filone.Replace("***MMVISIBILE***", "none")
+		End If
+		' Multimedia
 
 		Filone = Filone.Replace("***SFONDO***", PathBaseImmagini & "/bg.jpg")
 		' Filone = Filone.Replace("***SFONDO***", "")
@@ -1051,12 +1088,16 @@ Module Globale
 						gf.CreaAggiornaFile(NomeFileFinale, Filone)
 
 						Dim pp As New pdfGest
-						Ritorno = pp.ConverteHTMLInPDF(NomeFileFinale, NomeFileFinalePDF, "", True)
+						Ritorno = pp.ConverteHTMLInPDF(NomeFileFinale, NomeFileFinalePDF, PathLog, True)
+
+						If Ritorno = "*" Then
+							Ritorno = NomeFileFinalePDF.Replace(pathAllegati, pathMultimedia).Replace("Multimedia", "Allegati").Replace("\", "/")
+						End If
 					End If
 				End If
 			Else
 				Ok = False
-				Ritorno = "Nessun dato rilevato"
+				Ritorno = "ERROR: Nessun dato rilevato"
 			End If
 		End If
 

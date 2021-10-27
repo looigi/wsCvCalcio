@@ -1006,11 +1006,11 @@ Public Class wsPartite
 								Dim a() As String = RigoriAvv.Split("§")
 
 								Sql = "Insert Into RigoriAvversari Values (" &
-								" " & idAnno & ", " &
-								" " & idPartita & ", " &
-								" " & a(0) & ", " &
-								" " & a(1) & " " &
-								")"
+									" " & idAnno & ", " &
+									" " & idPartita & ", " &
+									" " & a(0) & ", " &
+									" " & a(1) & " " &
+									")"
 								Ritorno = EsegueSql(Conn, Sql, Connessione)
 								If Ritorno.Contains(StringaErrore) Then
 									Ok = False
@@ -1171,17 +1171,37 @@ Public Class wsPartite
 					Sql = "Commit"
 					Dim Ritorno2 As String = EsegueSql(Conn, Sql, Connessione)
 
-					If Not Ritorno2.Contains(StringaErrore) Then
-						If CreaSchedaPartita = "S" Then
-							Ritorno = CreaHtmlPartita(Squadra, Conn, Connessione, idAnno, idPartita)
-						End If
-					End If
+					'If Not Ritorno2.Contains(StringaErrore) Then
+					'	If CreaSchedaPartita = "S" Then
+					'		Ritorno = CreaHtmlPartita(Squadra, Conn, Connessione, idAnno, idPartita)
+					'	End If
+					'End If
 				Else
 					Sql = "Rollback"
 					Dim Ritorno2 As String = EsegueSql(Conn, Sql, Connessione)
 				End If
 
 				Conn.Close()
+			End If
+		End If
+
+		Return Ritorno
+	End Function
+
+	<WebMethod()>
+	Public Function CreaHtmlPerPartita(Squadra As String, idAnno As String, idPartita As String) As String
+		Dim Ritorno As String = ""
+		Dim Connessione As String = LeggeImpostazioniDiBase(Server.MapPath("."), Squadra)
+
+		If Connessione = "" Then
+			Ritorno = ErroreConnessioneNonValida & ":" & Connessione
+		Else
+			Dim Conn As Object = ApreDB(Connessione)
+
+			If TypeOf (Conn) Is String Then
+				Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
+			Else
+				Ritorno = CreaHtmlPartita(Squadra, Conn, Connessione, idAnno, idPartita)
 			End If
 		End If
 
@@ -1686,9 +1706,12 @@ Public Class wsPartite
 								Ritorno &= Rec("Tempi").Value & ";"
 								Ritorno &= Rec("PartitaConRigori").Value & ";"
 								Ritorno &= Rec("idCapitano").Value & ";"
-								Ritorno &= (Rec("TempiGAvv1").Value).replace(";", "%") & ";"
-								Ritorno &= (Rec("TempiGAvv2").Value).replace(";", "%") & ";"
-								Ritorno &= (Rec("TempiGAvv3").Value).replace(";", "%") & ";"
+								Dim ga1 As String = IIf(Rec("TempiGAvv1").Value Is DBNull.Value, "", Rec("TempiGAvv1").Value)
+								Dim ga2 As String = IIf(Rec("TempiGAvv2").Value Is DBNull.Value, "", Rec("TempiGAvv2").Value)
+								Dim ga3 As String = IIf(Rec("TempiGAvv3").Value Is DBNull.Value, "", Rec("TempiGAvv3").Value)
+								Ritorno &= ga1.Replace(";", "%") & ";"
+								Ritorno &= ga2.Replace(";", "%") & ";"
+								Ritorno &= ga3.Replace(";", "%") & ";"
 								Ritorno &= "§"
 
 								Rec.MoveNext()
@@ -1822,6 +1845,31 @@ Public Class wsPartite
 								Ritorno &= "|"
 							End If
 							Rec.Close()
+
+							' Esiste PDF
+							Dim gf As New GestioneFilesDirectory
+							Dim sIdPartita As String = idPartita.Trim
+							For i As Integer = sIdPartita.Length - 1 To 3
+								sIdPartita = "0" & sIdPartita
+							Next
+							Dim paths As String = gf.LeggeFileIntero(HttpContext.Current.Server.MapPath(".") & "\Impostazioni\PathAllegati.txt")
+							Dim P() As String = paths.Split(";")
+							If Strings.Right(P(0), 1) <> "\" Then
+								P(0) &= "\"
+							End If
+							Dim pathAllegati As String = P(0).Replace(vbCrLf, "")
+							If Strings.Right(P(2), 1) <> "/" Then
+								P(2) &= "/"
+							End If
+							Dim pathMultimedia As String = P(2).Replace(vbCrLf, "")
+							Dim NomeFileFinalePDF As String = pathAllegati & Squadra & "\Partite\Anno" & idAnno & "\" & sIdPartita & "\" & idPartita & ".pdf"
+							'Return NomeFileFinalePDF
+
+							If File.Exists(NomeFileFinalePDF) Then
+								Ritorno &= NomeFileFinalePDF.Replace(pathAllegati, pathMultimedia).Replace("Multimedia", "Allegati").Replace("\", "/") & "|"
+							Else
+								Ritorno &= "|"
+							End If
 						End If
 					End If
 				Catch ex As Exception
@@ -1850,7 +1898,8 @@ Public Class wsPartite
 			Else
 				Dim Rec As Object = Server.CreateObject("ADODB.Recordset")
 				Dim Sql As String = ""
-				Dim idPartita As Integer
+				Dim idPartita1 As Integer
+				Dim idPartita2 As Integer
 
 				Try
 					Sql = "SELECT Max(idPartita)+1 FROM Partite"
@@ -1859,19 +1908,47 @@ Public Class wsPartite
 						Ritorno = Rec
 					Else
 						If Rec(0).Value Is DBNull.Value Then
-							idPartita = 1
+							idPartita1 = 1
 						Else
-							idPartita = Rec(0).Value
+							idPartita1 = Rec(0).Value
 						End If
 						Rec.Close()
 					End If
-					Ritorno = idPartita.ToString
 				Catch ex As Exception
 					Ritorno = StringaErrore & " " & ex.Message
 				End Try
 
-				Conn.Close()
+
+				Try
+					Sql = "SELECT Max(idPartita)+1 FROM CalendarioPartite"
+					Rec = LeggeQuery(Conn, Sql, Connessione)
+					If TypeOf (Rec) Is String Then
+						Ritorno = Rec
+					Else
+						If Rec.Eof Then
+							Ritorno = StringaErrore & " Nessun progressivo partita rilevato"
+						Else
+							If Rec(0).Value Is DBNull.Value Then
+								idPartita2 = 1
+							Else
+								idPartita2 = Rec(0).Value
+							End If
+						End If
+						Rec.Close()
+					End If
+				Catch ex As Exception
+					Ritorno = StringaErrore & " " & ex.Message
+				End Try
+
+				If idPartita1 >= idPartita2 Then
+					Ritorno = idPartita1
+				Else
+					Ritorno = idPartita2
+				End If
+
 			End If
+
+			Conn.Close()
 		End If
 
 		Return Ritorno
