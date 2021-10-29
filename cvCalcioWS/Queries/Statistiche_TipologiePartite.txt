@@ -1,0 +1,6 @@
+SELECT D.Categorie, Casa, B.Descrizione, Count(*) As Quante From Partite A
+Left Join [Generale].[dbo].[TipologiePartite] B On A.idTipologia = B.idTipologia 
+Left Join Convocati C On A.idPartita = C.idPartita And C.idProgressivo = 1
+Left Join Giocatori D On C.idGiocatore = D.idGiocatore 
+Where Giocata = 'S'
+Group By D.Categorie, Casa, B.Descrizione

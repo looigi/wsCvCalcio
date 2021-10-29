@@ -97,6 +97,9 @@
   <ItemGroup>
     <Content Include="App_Themes\Standard\bg.jpg" />
     <Content Include="pdf.asmx" />
+    <Content Include="Queries\Statistiche_FasceGoalFatti.txt" />
+    <Content Include="Queries\Statistiche_Goals.txt" />
+    <Content Include="Queries\Statistiche_Presenze.txt" />
     <Content Include="Scheletri\base_convocazioni.txt" />
     <Content Include="Scheletri\base_partita.txt" />
     <Content Include="Scheletri\base_statistiche.txt" />
