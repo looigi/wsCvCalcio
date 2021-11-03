@@ -2,6 +2,7 @@
 Imports System.Net
 Imports System.Threading
 Imports System.Timers
+Imports System.Windows.Forms
 
 Module Globale
 	Public effettuaLog As Boolean = True
@@ -14,6 +15,17 @@ Module Globale
 	Public nomeFileLogmail As String = ""
 
 	Public quanteConversioni As Integer = 0
+
+	Private Structure Sostituz
+		Dim Minuto As Integer
+		Dim Tempo As Integer
+		Dim idEntrato As Integer
+		Dim idUscito As Integer
+		Dim NominativoEntrato As String
+		Dim NominativoUscito As String
+		Dim SoprannomeEntrato As String
+		Dim SoprannomeUscito As String
+	End Structure
 
 	Public Structure strutturaMail
 		Dim Squadra As String
@@ -273,7 +285,7 @@ Module Globale
 		For i As Integer = sIdPartita.Length - 1 To 3
 			sIdPartita = "0" & sIdPartita
 		Next
-		Dim NomeFileFinale As String = pathAllegati & Squadra & "\Partite\Anno" & idAnno & "\" & sidPartita & "\" & idPartita & ".html"
+		Dim NomeFileFinale As String = pathAllegati & Squadra & "\Partite\Anno" & idAnno & "\" & sIdPartita & "\" & idPartita & ".html"
 		Dim NomeFileFinalePDF As String = pathAllegati & Squadra & "\Partite\Anno" & idAnno & "\" & sIdPartita & "\" & idPartita & ".pdf"
 		Dim PathPerMultimedia As String = pathAllegati & Squadra & "\Partite\Anno" & idAnno & "\" & sIdPartita & "\"
 
@@ -319,6 +331,35 @@ Module Globale
 
 		Filone = Filone.Replace("***SFONDO***", PathBaseImmagini & "/bg.jpg")
 		' Filone = Filone.Replace("***SFONDO***", "")
+
+		Dim Sostituzioni As New List(Of Sostituz)
+		Sql = "Select B.Minuto, B.Tempo, C.idGiocatore As idEntrato, C.Cognome As CognomeE, C.Soprannome As SoprannomeE, C.Nome As NomeE, D.idGiocatore As idUscito, D.Cognome As CognomeU, D.Soprannome As SoprannomeU, D.Nome As NomeU From Convocati A " &
+			"Left Join PartiteSostituzioni B On A.idPartita = B.idPartita And A.idGiocatore = B.idSostituito " &
+			"Left Join Giocatori C On C.idGiocatore = B.idEntrante " &
+			"Left Join Giocatori D On D.idGiocatore = B.idSostituito " &
+			"Where A.idPartita = " & idPartita & " And B.idPartita Is Not Null"
+		Rec = LeggeQuery(Conn, Sql, Connessione)
+		If TypeOf (Rec) Is String Then
+			Ok = False
+			Ritorno = "Problemi lettura generale"
+		Else
+			Do Until Rec.Eof()
+				Dim s As New Sostituz
+				s.idEntrato = Rec("idEntrato").Value
+				s.idUscito = Rec("idUscito").Value
+				s.Minuto = Rec("Minuto").Value
+				s.Tempo = Rec("Tempo").Value
+				s.NominativoEntrato = Rec("CognomeE").Value & " " & Rec("NomeE").Value
+				s.NominativoUscito = Rec("CognomeU").Value & " " & Rec("NomeU").Value
+				s.SoprannomeEntrato = Rec("SoprannomeE").Value
+				s.SoprannomeUscito = Rec("SoprannomeU").Value
+
+				Sostituzioni.Add(s)
+
+				Rec.MoveNext()
+			Loop
+			Rec.Close()
+		End If
 
 		Sql = "SELECT Partite.idPartita, Partite.idCategoria, Partite.idAvversario, Partite.idTipologia, Partite.idCampo, " &
 			"Partite.idUnioneCalendario, Partite.DataOra, Partite.Giocata, Partite.OraConv, Risultati.Risultato, Risultati.Note, " &
@@ -510,7 +551,7 @@ Module Globale
 					Ok = False
 					Ritorno = "Problemi lettura dirigenti"
 				Else
-					Dirigenti.Append("<table style=""width: 99%; text-align: center;"">")
+					Dirigenti.Append("<table style=""width: 99%; text-align: center;"" cellpadding=""0"" cellspacing=""0"">")
 
 					Do Until Rec.Eof
 						Dim Path As String = PathBaseImmagini & "/" & NomeSquadra & "/Dirigenti/" & idAnno & "_" & Rec("idDirigente").Value & ".kgb"
@@ -550,15 +591,16 @@ Module Globale
 					Ritorno = "Problemi lettura convocati"
 				Else
 					Dim Convocati As New StringBuilder
+					Dim Colore As String = "#aaa"
 
-					Convocati.Append("<table style=""width: 99%; text-align: center;"">")
+					Convocati.Append("<table style=""width: 99%; text-align: center;"" cellpadding=""0"" cellspacing=""0"">")
 
 					Do Until Rec.Eof
 						Dim C As String = Rec("Cognome").Value & " " & Rec("Nome").Value & "<br />" & Rec("Ruolo").Value
 						Dim Path As String = PathBaseMultimedia & "/" & NomeSquadra & "/Giocatori/" & idAnno & "_" & Rec("idGiocatore").Value & ".kgb"
 						Path = DecriptaImmagine(Path)
 
-						Convocati.Append("<tr>")
+						Convocati.Append("<tr style=""background-color: " & Colore & """>")
 						Convocati.Append("<td>")
 						If idCapitano = Rec("idGiocatore").Value Then
 							Convocati.Append("<span class=""testo nero"" style=""font-size: 15px; color: green;"">C</span>")
@@ -566,6 +608,23 @@ Module Globale
 							Convocati.Append("")
 						End If
 						Convocati.Append("</td>")
+
+						' Sostituzione
+						Convocati.Append("<td style=""text-align: center;"">")
+						For Each s As Sostituz In Sostituzioni
+							If s.idEntrato = Rec("idGiocatore").Value Then
+								Convocati.Append("<img src=""" & PathBaseImmagini & "/Entrato.png" & """ width=""30px"" height=""30px"">")
+								Convocati.Append("<br /><span class=""testo nero"" style=""font-size: 13px;"">Min. " & s.Minuto & "</span><br /><span class=""testo nero"" style=""font-size: 13px;"">T. " & s.Tempo & "°</span>")
+								Exit For
+							Else
+								If s.idUscito = Rec("idGiocatore").Value Then
+									Convocati.Append("<img src=""" & PathBaseImmagini & "/Uscito.png" & """ width=""30px"" height=""30px"">")
+									Convocati.Append("<br /><span class=""testo nero"" style=""font-size: 13px;"">Min. " & s.Minuto & "</span><br /><span class=""testo nero"" style=""font-size: 13px;"">T. " & s.Tempo & "°</span>")
+									Exit For
+								End If
+							End If
+						Next
+						Convocati.Append("<td>")
 
 						Convocati.Append("<td>")
 						Convocati.Append("<img src=""" & Path & """ style=""width: 50px; height: 50px;"" onerror=""this.src='" & PathBaseImmScon & "'"" />")
@@ -578,6 +637,8 @@ Module Globale
 						Convocati.Append("</td>")
 						Convocati.Append("</tr>")
 						Convocati.Append(vbCrLf)
+
+						If Colore = "#aaa" Then Colore = "#fff" Else Colore = "#aaa"
 
 						Rec.MoveNext
 					Loop
@@ -796,21 +857,21 @@ Module Globale
 
 								Do Until Rec2.Eof
 									Dim Termine As String = ""
-									Dim Colore As String = ""
+									Dim Colore2 As String = ""
 
 									If Rec2("Termine").Value = "1" Then
 										Termine = "Segnato"
-										Colore = "verde"
+										Colore2 = "verde"
 										RigoriSegnatiPropri += 1
 									Else
 										If Rec2("Termine").Value = "0" Then
 											Termine = "Sbagliato"
-											Colore = "rosso"
+											Colore2 = "rosso"
 										End If
 									End If
 									If Termine <> "" Then
 										' Rigoristi.Add("<span class=""testo " & Colore & """ style=""font-size: 15px;"">Rigore " & Rec2("idRigore").Value & ": " & Rec2("Giocatore").Value & " (" & Rec2("Descrizione").Value & ") - " & Termine & "</span>")
-										Rigoristi.Add(Colore & ";" & Rec2("idRigore").Value & ";;" & Rec2("Giocatore").Value & ";" & Rec2("Descrizione").Value & "; " & Termine & ";" & Rec2("idGiocatore").Value & ";")
+										Rigoristi.Add(Colore2 & ";" & Rec2("idRigore").Value & ";;" & Rec2("Giocatore").Value & ";" & Rec2("Descrizione").Value & "; " & Termine & ";" & Rec2("idGiocatore").Value & ";")
 									End If
 
 									Rec2.MoveNext
@@ -899,7 +960,7 @@ Module Globale
 
 						Dim Marcatori As New StringBuilder
 
-						Marcatori.Append("<table style=""width: 99%; text-align: center;"">")
+						Marcatori.Append("<table style=""width: 99%; text-align: center;"" cellpadding=""0"" cellspacing=""0"">")
 						Marcatori.Append(vbCrLf)
 						Marcatori.Append("<tr>")
 						Marcatori.Append("<td>")
@@ -924,6 +985,7 @@ Module Globale
 
 						Dim OldTempo As String = ""
 
+						Colore = "#aaa"
 						For Each m As String In Marc
 							Dim Mm() As String = m.Split(";")
 
@@ -974,7 +1036,7 @@ Module Globale
 								End If
 							End If
 
-							Marcatori.Append("<tr>")
+							Marcatori.Append("<tr style=""background-color: " & Colore & """>")
 							Marcatori.Append("<td>")
 							If Mm(6) = "S" Then
 								Marcatori.Append("<span class=""testo nero"" style=""font-size: 15px; font-weight: bold; color: red;"">R</span>")
@@ -999,6 +1061,8 @@ Module Globale
 							'Marcatori.Append("</td>")
 							Marcatori.Append("</tr>")
 							Marcatori.Append(vbCrLf)
+
+							If Colore = "#aaa" Then Colore = "#fff" Else Colore = "#aaa"
 						Next
 
 						Marcatori.Append("</table>")
@@ -1008,7 +1072,7 @@ Module Globale
 						' Eventi
 						Dim Eventi As New StringBuilder
 
-						Eventi.Append("<table style=""width: 99%; text-align: center;"">")
+						Eventi.Append("<table style=""width: 99%; text-align: center;"" cellpadding=""0"" cellspacing=""0"">")
 
 						Sql = "SELECT EventiPartita.idTempo, EventiPartita.Minuto, Eventi.Descrizione, iif(Giocatori.Cognome + ' ' + Giocatori.Nome is null, 'Avversario', Giocatori.Cognome + ' ' + Giocatori.Nome) As Giocatore, Giocatori.idGiocatore " &
 							"FROM (EventiPartita LEFT JOIN Giocatori ON (EventiPartita.idGiocatore = Giocatori.idGiocatore) AND (EventiPartita.idAnno = Giocatori.idAnno)) LEFT JOIN Eventi ON EventiPartita.idEvento = Eventi.idEvento " &
@@ -1018,6 +1082,7 @@ Module Globale
 						Else
 							Dim tempoAtt As String = ""
 
+							Colore = "#aaa"
 							Do Until Rec2.Eof
 								Dim Path As String
 
@@ -1034,7 +1099,7 @@ Module Globale
 									End If
 									tempoAtt = "" & Rec2("idTempo").Value
 								End If
-								Eventi.Append("<tr>")
+								Eventi.Append("<tr style=""background-color: " & Colore & """>")
 								Eventi.Append("<td align=""right"">")
 								Eventi.Append("<span class=""testo nero"" style=""font-size: 13px;"">" & Rec2("idTempo").Value & "</span>")
 								Eventi.Append("</td>")
@@ -1052,6 +1117,8 @@ Module Globale
 								Eventi.Append("</td>")
 								Eventi.Append("</tr>")
 								Eventi.Append(vbCrLf)
+
+								If Colore = "#aaa" Then Colore = "#fff" Else Colore = "#aaa"
 
 								Rec2.MoveNext
 							Loop
@@ -1084,6 +1151,12 @@ Module Globale
 								Filone = Filone.Replace("***COLORE RIS***", "nero")
 							End If
 						End If
+
+						'Dim wb As New WebBrowser
+						'wb.DocumentText = Filone
+						'Dim doc2 As HtmlDocument = wb.Document
+						'Dim width As Integer = wb.Document.Body.ScrollRectangle.Width
+						'Dim height As Integer = wb.Document.Body.ScrollRectangle.Height
 
 						gf.CreaAggiornaFile(NomeFileFinale, Filone)
 

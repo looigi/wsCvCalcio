@@ -1557,6 +1557,7 @@ Public Class wsCampionato
 		End If
 		Dim pathMultimedia As String = P(2).Replace(vbCrLf, "")
 		Dim PathBaseMultimedia As String = pathMultimedia.Replace("Allegati", "Multimedia")
+		Dim Colore As String = "#ccc"
 
 		If Connessione = "" Then
 			Ritorno = ErroreConnessioneNonValida
@@ -1596,12 +1597,13 @@ Public Class wsCampionato
 						Else
 							If Stampa = "S" Then
 								StampaMarcatori &= "<table style=""width: 100%;"" cellpading=""0"" cellspacing=""0"">" & vbCrLf
-								StampaMarcatori &= "<tr>" & vbCrLf
+								StampaMarcatori &= "<tr style=""background-color: gray;"">" & vbCrLf
 								StampaMarcatori &= "<th></th>" & vbCrLf
 								StampaMarcatori &= "<th>Nominativo</th>" & vbCrLf
 								StampaMarcatori &= "<th>Ruolo</th>" & vbCrLf
 								StampaMarcatori &= "<th>Goal Amichevole</th>" & vbCrLf
 								StampaMarcatori &= "<th>Goal Campionato</th>" & vbCrLf
+								StampaMarcatori &= "<th>Rigori</th>" & vbCrLf
 								StampaMarcatori &= "<th>Totale</th>" & vbCrLf
 								StampaMarcatori &= "</tr>" & vbCrLf
 							End If
@@ -1613,6 +1615,7 @@ Public Class wsCampionato
 								Ritorno &= Rec("Ruolo").Value & ";"
 								Ritorno &= Rec("GoalAmichevole").Value & ";"
 								Ritorno &= Rec("GoalCampionato").Value & ";"
+								Ritorno &= Rec("Rigori").Value & ";"
 								Ritorno &= Rec("Totale").Value & ";"
 								Ritorno &= Rec("idGiocatore").Value & ";"
 								Ritorno &= "§"
@@ -1624,12 +1627,14 @@ Public Class wsCampionato
 									Dim Path As String = PathBaseMultimedia & "/" & NomeSquadra & "/Giocatori/" & idAnno & "_" & Rec("idGiocatore").Value & ".kgb"
 									Path = DecriptaImmagine(Path)
 
-									StampaMarcatori &= "<tr>" & vbCrLf
+									StampaMarcatori &= "<tr style=""background-color: " & Colore & ";"">" & vbCrLf
+									If Colore = "#ccc" Then Colore = "#fff" Else Colore = "#ccc"
 									StampaMarcatori &= "<td><img src=""" & Path & """ width=""50"" height=""50"" /></td>" & vbCrLf
 									StampaMarcatori &= "<td>" & Nominativo & "</td>" & vbCrLf
 									StampaMarcatori &= "<td>" & Rec("Ruolo").Value & "</td>" & vbCrLf
 									StampaMarcatori &= "<td style=""text-align: right;"">" & Rec("GoalAmichevole").Value & "</td>" & vbCrLf
 									StampaMarcatori &= "<td style=""text-align: right;"">" & Rec("GoalCampionato").Value & "</td>" & vbCrLf
+									StampaMarcatori &= "<td style=""text-align: right;"">" & Rec("Rigori").Value & "</td>" & vbCrLf
 									StampaMarcatori &= "<td style=""text-align: right;"">" & Rec("Totale").Value & "</td>" & vbCrLf
 									StampaMarcatori &= "</tr>" & vbCrLf
 								End If
@@ -1660,7 +1665,7 @@ Public Class wsCampionato
 
 							If Stampa = "S" Then
 								StampaPresenze &= "<table style=""width: 100%;"" cellpading=""0"" cellspacing=""0"">" & vbCrLf
-								StampaPresenze &= "<tr>" & vbCrLf
+								StampaPresenze &= "<tr style=""background-color: gray;"">" & vbCrLf
 								StampaPresenze &= "<th></th>" & vbCrLf
 								StampaPresenze &= "<th>Nominativo</th>" & vbCrLf
 								StampaPresenze &= "<th>Ruolo</th>" & vbCrLf
@@ -1675,8 +1680,8 @@ Public Class wsCampionato
 								Ritorno &= Rec("Nome").Value & ";"
 								Ritorno &= Rec("Soprannome").Value & ";"
 								Ritorno &= Rec("Ruolo").Value & ";"
-								Ritorno &= Rec("PresenzeAmichevole").Value & ";"
 								Ritorno &= Rec("PresenzeCampionato").Value & ";"
+								Ritorno &= Rec("PresenzeAmichevole").Value & ";"
 								Ritorno &= Rec("Totale").Value & ";"
 								Ritorno &= Rec("idGiocatore").Value & ";"
 								Ritorno &= "§"
@@ -1688,12 +1693,13 @@ Public Class wsCampionato
 									Dim Path As String = PathBaseMultimedia & "/" & NomeSquadra & "/Giocatori/" & idAnno & "_" & Rec("idGiocatore").Value & ".kgb"
 									Path = DecriptaImmagine(Path)
 
-									StampaPresenze &= "<tr>" & vbCrLf
+									StampaPresenze &= "<tr style=""background-color: " & Colore & ";"">" & vbCrLf
+									If Colore = "#ccc" Then Colore = "#fff" Else Colore = "#ccc"
 									StampaPresenze &= "<td><img src=""" & Path & """ width=""50"" height=""50"" /></td>" & vbCrLf
 									StampaPresenze &= "<td>" & Nominativo & "</td>" & vbCrLf
 									StampaPresenze &= "<td>" & Rec("Ruolo").Value & "</td>" & vbCrLf
-									StampaPresenze &= "<td style=""text-align: right;"">" & Rec("PresenzeAmichevole").Value & "</td>" & vbCrLf
 									StampaPresenze &= "<td style=""text-align: right;"">" & Rec("PresenzeCampionato").Value & "</td>" & vbCrLf
+									StampaPresenze &= "<td style=""text-align: right;"">" & Rec("PresenzeAmichevole").Value & "</td>" & vbCrLf
 									StampaPresenze &= "<td style=""text-align: right;"">" & Rec("Totale").Value & "</td>" & vbCrLf
 									StampaPresenze &= "</tr>" & vbCrLf
 								End If
@@ -1724,11 +1730,11 @@ Public Class wsCampionato
 
 							If Stampa = "S" Then
 								StampaFgF &= "<table style=""width: 100%;"" cellpading=""0"" cellspacing=""0"">" & vbCrLf
-								StampaFgF &= "<tr>" & vbCrLf
+								StampaFgF &= "<tr style=""background-color: gray;"">" & vbCrLf
 								StampaFgF &= "<th>Tipologia</th>" & vbCrLf
 								StampaFgF &= "<th>Fascia</th>" & vbCrLf
-								StampaFgF &= "<th>Tempo</th>" & vbCrLf
-								StampaFgF &= "<th>Goals</th>" & vbCrLf
+								StampaFgF &= "<th style=""text-align: right;""> Tempo</th>" & vbCrLf
+								StampaFgF &= "<th style=""text-align: right;"">Goals</th>" & vbCrLf
 								StampaFgF &= "</tr>" & vbCrLf
 							End If
 
@@ -1740,7 +1746,8 @@ Public Class wsCampionato
 								Ritorno &= "§"
 
 								If Stampa = "S" Then
-									StampaFgF &= "<tr>" & vbCrLf
+									StampaFgF &= "<tr style=""background-color: " & Colore & ";"">" & vbCrLf
+									If Colore = "#ccc" Then Colore = "#fff" Else Colore = "#ccc"
 									StampaFgF &= "<td>" & Rec("Tipologia").Value & "</td>" & vbCrLf
 									StampaFgF &= "<td>" & Rec("Fascia").Value & "</td>" & vbCrLf
 									StampaFgF &= "<td style=""text-align: right;"">" & Rec("idTempo").Value & "</td>" & vbCrLf
@@ -1822,11 +1829,11 @@ Public Class wsCampionato
 
 							If Stampa = "S" Then
 								StampaFgs &= "<table style=""width: 100%;"" cellpading=""0"" cellspacing=""0"">" & vbCrLf
-								StampaFgs &= "<tr>" & vbCrLf
+								StampaFgs &= "<tr style=""background-color: gray;"">" & vbCrLf
 								StampaFgs &= "<th>Tipologia</th>" & vbCrLf
 								StampaFgs &= "<th>Fascia</th>" & vbCrLf
-								StampaFgs &= "<th>Tempo</th>" & vbCrLf
-								StampaFgs &= "<th>Goals</th>" & vbCrLf
+								StampaFgs &= "<th style=""text-align: right;"">Tempo</th>" & vbCrLf
+								StampaFgs &= "<th style=""text-align: right;"">Goals</th>" & vbCrLf
 								StampaFgs &= "</tr>" & vbCrLf
 							End If
 
@@ -1836,11 +1843,12 @@ Public Class wsCampionato
 										Ritorno &= Tipi(i) & ";" & Fascia(k) & ";" & k + 1 & ";" & Fascia1(i, k) & "§"
 
 										If Stampa = "S" Then
-											StampaFgs &= "<tr>" & vbCrLf
+											StampaFgs &= "<tr style=""background-color: " & Colore & ";"">" & vbCrLf
+											If Colore = "#ccc" Then Colore = "#fff" Else Colore = "#ccc"
 											StampaFgs &= "<td>" & Tipi(i) & "</td>" & vbCrLf
 											StampaFgs &= "<td>" & Fascia(k) & "</td>" & vbCrLf
-											StampaFgs &= "<td>" & k + 1 & "</td>" & vbCrLf
-											StampaFgs &= "<td>" & Fascia1(i, k) & "</td>" & vbCrLf
+											StampaFgs &= "<td style=""text-align: right;"">" & k + 1 & "</td>" & vbCrLf
+											StampaFgs &= "<td style=""text-align: right;"">" & Fascia1(i, k) & "</td>" & vbCrLf
 											StampaFgs &= "</tr>" & vbCrLf
 										End If
 									End If
@@ -1848,11 +1856,12 @@ Public Class wsCampionato
 										Ritorno &= Tipi(i) & ";" & Fascia(k) & ";" & k + 1 & ";" & Fascia2(i, k) & "§"
 
 										If Stampa = "S" Then
-											StampaFgs &= "<tr>" & vbCrLf
+											StampaFgs &= "<tr style=""background-color: " & Colore & ";"">" & vbCrLf
+											If Colore = "#ccc" Then Colore = "#fff" Else Colore = "#ccc"
 											StampaFgs &= "<td>" & Tipi(i) & "</td>" & vbCrLf
 											StampaFgs &= "<td>" & Fascia(k) & "</td>" & vbCrLf
-											StampaFgs &= "<td>" & k + 1 & "</td>" & vbCrLf
-											StampaFgs &= "<td>" & Fascia2(i, k) & "</td>" & vbCrLf
+											StampaFgs &= "<td style=""text-align: right;"">" & k + 1 & "</td>" & vbCrLf
+											StampaFgs &= "<td style=""text-align: right;"">" & Fascia2(i, k) & "</td>" & vbCrLf
 											StampaFgs &= "</tr>" & vbCrLf
 										End If
 									End If
@@ -1860,11 +1869,12 @@ Public Class wsCampionato
 										Ritorno &= Tipi(i) & ";" & Fascia(k) & ";" & k + 1 & ";" & Fascia3(i, k) & "§"
 
 										If Stampa = "S" Then
-											StampaFgs &= "<tr>" & vbCrLf
+											StampaFgs &= "<tr style=""background-color: " & Colore & ";"">" & vbCrLf
+											If Colore = "#ccc" Then Colore = "#fff" Else Colore = "#ccc"
 											StampaFgs &= "<td>" & Tipi(i) & "</td>" & vbCrLf
 											StampaFgs &= "<td>" & Fascia(k) & "</td>" & vbCrLf
-											StampaFgs &= "<td>" & k + 1 & "</td>" & vbCrLf
-											StampaFgs &= "<td>" & Fascia3(i, k) & "</td>" & vbCrLf
+											StampaFgs &= "<td style=""text-align: right;"">" & k + 1 & "</td>" & vbCrLf
+											StampaFgs &= "<td style=""text-align: right;"">" & Fascia3(i, k) & "</td>" & vbCrLf
 											StampaFgs &= "</tr>" & vbCrLf
 										End If
 									End If
@@ -1872,11 +1882,12 @@ Public Class wsCampionato
 										Ritorno &= Tipi(i) & ";" & Fascia(k) & ";" & k + 1 & ";" & Fascia4(i, k) & "§"
 
 										If Stampa = "S" Then
-											StampaFgs &= "<tr>" & vbCrLf
+											StampaFgs &= "<tr style=""background-color: " & Colore & ";"">" & vbCrLf
+											If Colore = "#ccc" Then Colore = "#fff" Else Colore = "#ccc"
 											StampaFgs &= "<td>" & Tipi(i) & "</td>" & vbCrLf
 											StampaFgs &= "<td>" & Fascia(k) & "</td>" & vbCrLf
-											StampaFgs &= "<td>" & k + 1 & "</td>" & vbCrLf
-											StampaFgs &= "<td>" & Fascia4(i, k) & "</td>" & vbCrLf
+											StampaFgs &= "<td style=""text-align: right;"">" & k + 1 & "</td>" & vbCrLf
+											StampaFgs &= "<td style=""text-align: right;"">" & Fascia4(i, k) & "</td>" & vbCrLf
 											StampaFgs &= "</tr>" & vbCrLf
 										End If
 									End If
@@ -1884,11 +1895,12 @@ Public Class wsCampionato
 										Ritorno &= Tipi(i) & ";" & Fascia(k) & ";" & k + 1 & ";" & Fascia5(i, k) & "§"
 
 										If Stampa = "S" Then
-											StampaFgs &= "<tr>" & vbCrLf
+											StampaFgs &= "<tr style=""background-color: " & Colore & ";"">" & vbCrLf
+											If Colore = "#ccc" Then Colore = "#fff" Else Colore = "#ccc"
 											StampaFgs &= "<td>" & Tipi(i) & "</td>" & vbCrLf
 											StampaFgs &= "<td>" & Fascia(k) & "</td>" & vbCrLf
-											StampaFgs &= "<td>" & k + 1 & "</td>" & vbCrLf
-											StampaFgs &= "<td>" & Fascia5(i, k) & "</td>" & vbCrLf
+											StampaFgs &= "<td style=""text-align: right;"">" & k + 1 & "</td>" & vbCrLf
+											StampaFgs &= "<td style=""text-align: right;"">" & Fascia5(i, k) & "</td>" & vbCrLf
 											StampaFgs &= "</tr>" & vbCrLf
 										End If
 									End If
@@ -1917,11 +1929,11 @@ Public Class wsCampionato
 
 							If Stampa = "S" Then
 								StampaEventi &= "<table style=""width: 100%;"" cellpading=""0"" cellspacing=""0"">" & vbCrLf
-								StampaEventi &= "<tr>" & vbCrLf
+								StampaEventi &= "<tr style=""background-color: gray;"">" & vbCrLf
 								StampaEventi &= "<th></th>" & vbCrLf
 								StampaEventi &= "<th>Nominativo</th>" & vbCrLf
 								StampaEventi &= "<th>Descrizione</th>" & vbCrLf
-								StampaEventi &= "<th>Quanti</th>" & vbCrLf
+								StampaEventi &= "<th style=""text-align: right;"">Quanti</th>" & vbCrLf
 								StampaEventi &= "</tr>" & vbCrLf
 							End If
 
@@ -1941,7 +1953,8 @@ Public Class wsCampionato
 									Dim Path As String = PathBaseMultimedia & "/" & NomeSquadra & "/Giocatori/" & idAnno & "_" & Rec("idGiocatore").Value & ".kgb"
 									Path = DecriptaImmagine(Path)
 
-									StampaEventi &= "<tr>" & vbCrLf
+									StampaEventi &= "<tr style=""background-color: " & Colore & ";"">" & vbCrLf
+									If Colore = "#ccc" Then Colore = "#fff" Else Colore = "#ccc"
 									StampaEventi &= "<td><img src=""" & Path & """ width=""50"" height=""50"" /></td>" & vbCrLf
 									StampaEventi &= "<td>" & Nominativo & "</td>" & vbCrLf
 									StampaEventi &= "<td>" & Rec("Descrizione").Value & "</td>" & vbCrLf
@@ -1975,10 +1988,10 @@ Public Class wsCampionato
 
 							If Stampa = "S" Then
 								StampaTipoPartite &= "<table style=""width: 100%;"" cellpading=""0"" cellspacing=""0"">" & vbCrLf
-								StampaTipoPartite &= "<tr>" & vbCrLf
+								StampaTipoPartite &= "<tr style=""background-color: gray;"">" & vbCrLf
 								StampaTipoPartite &= "<th>Dove</th>" & vbCrLf
 								StampaTipoPartite &= "<th>Descrizione</th>" & vbCrLf
-								StampaTipoPartite &= "<th>Quante</th>" & vbCrLf
+								StampaTipoPartite &= "<th style=""text-align: right;"">Quante</th>" & vbCrLf
 								StampaTipoPartite &= "</tr>" & vbCrLf
 							End If
 
@@ -1999,10 +2012,11 @@ Public Class wsCampionato
 								Ritorno &= "§"
 
 								If Stampa = "S" Then
-									StampaTipoPartite &= "<tr>" & vbCrLf
+									StampaTipoPartite &= "<tr style=""background-color: " & Colore & ";"">" & vbCrLf
+									If Colore = "#ccc" Then Colore = "#fff" Else Colore = "#ccc"
 									StampaTipoPartite &= "<td>" & Dove & "</td>" & vbCrLf
 									StampaTipoPartite &= "<td>" & Rec("Descrizione").Value & "</td>" & vbCrLf
-									StampaTipoPartite &= "<td>" & Rec("Quante").Value & "</td>" & vbCrLf
+									StampaTipoPartite &= "<td style=""text-align: right;"">" & Rec("Quante").Value & "</td>" & vbCrLf
 									StampaTipoPartite &= "</tr>" & vbCrLf
 								End If
 
@@ -2184,7 +2198,7 @@ Public Class wsCampionato
 
 							If Stampa = "S" Then
 								StampaStatistiche &= "<table style=""width: 100%;"" cellpading=""0"" cellspacing=""0"">" & vbCrLf
-								StampaStatistiche &= "<tr>" & vbCrLf
+								StampaStatistiche &= "<tr style=""background-color: gray;"">" & vbCrLf
 								StampaStatistiche &= "<th>Descrizione</th>" & vbCrLf
 								StampaStatistiche &= "</tr>" & vbCrLf
 							End If
@@ -2258,7 +2272,8 @@ Public Class wsCampionato
 
 							If Stampa = "S" Then
 								For Each l As String In Lista
-									StampaStatistiche &= "<tr>" & vbCrLf
+									StampaStatistiche &= "<tr style=""background-color: " & Colore & ";"">" & vbCrLf
+									If Colore = "#ccc" Then Colore = "#fff" Else Colore = "#ccc"
 									StampaStatistiche &= "<td>" & l & "</dh>" & vbCrLf
 									StampaStatistiche &= "</tr>" & vbCrLf
 								Next
@@ -2269,9 +2284,9 @@ Public Class wsCampionato
 
 							If Stampa = "S" Then
 								StampaAvversari &= "<table style=""width: 100%;"" cellpading=""0"" cellspacing=""0"">" & vbCrLf
-								StampaAvversari &= "<tr>" & vbCrLf
+								StampaAvversari &= "<tr style=""background-color: gray;"">" & vbCrLf
 								StampaAvversari &= "<th></th>" & vbCrLf
-								StampaAvversari &= "<th>Descrizione</th>" & vbCrLf
+								StampaAvversari &= "<th>Avversario</th>" & vbCrLf
 								StampaAvversari &= "</tr>" & vbCrLf
 							End If
 
@@ -2301,7 +2316,8 @@ Public Class wsCampionato
 									Dim Imm2 As String = PathBaseMultimedia & "/" & NomeSquadra & "/Avversari/" & idAvversario.Item(iii) & ".kgb"
 									Imm2 = DecriptaImmagine(Imm2)
 
-									StampaAvversari &= "<tr>" & vbCrLf
+									StampaAvversari &= "<tr style=""background-color: " & Colore & ";"">" & vbCrLf
+									If Colore = "#ccc" Then Colore = "#fff" Else Colore = "#ccc"
 									StampaAvversari &= "<td><img src=""" & Imm2 & """ width=""50"" height=""50"" /></td>" & vbCrLf
 									StampaAvversari &= "<td>" & a & ": " & Incontrati.Item(iii) & "</td>" & vbCrLf
 									StampaAvversari &= "</tr>" & vbCrLf
@@ -2331,10 +2347,10 @@ Public Class wsCampionato
 
 							If Stampa = "S" Then
 								StampaMeteo &= "<table style=""width: 100%;"" cellpading=""0"" cellspacing=""0"">" & vbCrLf
-								StampaMeteo &= "<tr>" & vbCrLf
+								StampaMeteo &= "<tr style=""background-color: gray;"">" & vbCrLf
 								StampaMeteo &= "<th></th>" & vbCrLf
 								StampaMeteo &= "<th>Tempo</th>" & vbCrLf
-								StampaMeteo &= "<th>Quante</th>" & vbCrLf
+								StampaMeteo &= "<th style=""text-align: right;"">Quante</th>" & vbCrLf
 								StampaMeteo &= "</tr>" & vbCrLf
 							End If
 
@@ -2345,10 +2361,11 @@ Public Class wsCampionato
 								Ritorno &= "§"
 
 								If Stampa = "S" Then
-									StampaMeteo &= "<tr>" & vbCrLf
+									StampaMeteo &= "<tr style=""background-color: " & Colore & ";"">" & vbCrLf
+									If Colore = "#ccc" Then Colore = "#fff" Else Colore = "#ccc"
 									StampaMeteo &= "<td><img src=""" & Rec("Icona").Value & """ width=""50"" height=""50"" /></td>" & vbCrLf
 									StampaMeteo &= "<td>" & Rec("Tempo").Value & "</td>" & vbCrLf
-									StampaMeteo &= "<td>" & Rec("Quante").Value & "</td>" & vbCrLf
+									StampaMeteo &= "<td style=""text-align: right;"">" & Rec("Quante").Value & "</td>" & vbCrLf
 									StampaMeteo &= "</tr>" & vbCrLf
 								End If
 
@@ -2440,6 +2457,7 @@ Public Class wsCampionato
 				Dim Rec As Object = Server.CreateObject("ADODB.Recordset")
 				Dim Sql As String = ""
 				Dim Ok As Boolean = True
+				Dim Colore As String = "#ccc"
 
 				Dim NomeSquadra As String = ""
 				Dim ss() As String = Squadra.Split("_")
@@ -2458,7 +2476,7 @@ Public Class wsCampionato
 
 				If Ok Then
 					Stampa &= "<table style=""width: 100%;"" cellpading=""0"" cellspacing=""0"">" & vbCrLf
-					Stampa &= "<tr>" & vbCrLf
+					Stampa &= "<tr style=""background-color: gray;"">" & vbCrLf
 					Stampa &= "<th></th>" & vbCrLf
 					Stampa &= "<th>Squadra</th>" & vbCrLf
 					Stampa &= "<th style=""text-align: right;"">Punti</th>" & vbCrLf
@@ -2485,7 +2503,9 @@ Public Class wsCampionato
 						If r <> "" Then
 							Dim Campi() As String = r.Split(";")
 
-							Stampa &= "<tr>"
+							Stampa &= "<tr style=""background-color: " & Colore & ";"">"
+							If Colore = "#ccc" Then Colore = "#fff" Else Colore = "#ccc"
+
 							Dim imm As String = ""
 
 							If Campi(0) = -1 Then
@@ -2558,6 +2578,7 @@ Public Class wsCampionato
 				Dim Rec As Object = Server.CreateObject("ADODB.Recordset")
 				Dim Sql As String = ""
 				Dim Ok As Boolean = True
+				Dim Colore As String = "#ccc"
 
 				Dim paths As String = gf.LeggeFileIntero(HttpContext.Current.Server.MapPath(".") & "\Impostazioni\PathAllegati.txt")
 				Dim P() As String = paths.Split(";")
@@ -2615,11 +2636,11 @@ Public Class wsCampionato
 							Ritorno = Rec
 						Else
 							Stampa &= "<table style=""width: 100%;"" cellpading=""0"" cellspacing=""0"">" & vbCrLf
-							Stampa &= "<tr>" & vbCrLf
+							Stampa &= "<tr style=""background-color: gray;"">" & vbCrLf
 							Stampa &= "<th></th>" & vbCrLf
-							Stampa &= "<th style=""text-align: right;"">Squadra in Casa</th>" & vbCrLf
+							Stampa &= "<th style=""text-align: center;"">Squadra in Casa</th>" & vbCrLf
 							Stampa &= "<th></th>" & vbCrLf
-							Stampa &= "<th style=""text-align: right;"">Squadra fuori Casa</th>" & vbCrLf
+							Stampa &= "<th style=""text-align: center;"">Squadra fuori Casa</th>" & vbCrLf
 							Stampa &= "<th style=""text-align: right;"">Risultato</th>" & vbCrLf
 							Stampa &= "</tr>" & vbCrLf
 
@@ -2644,11 +2665,13 @@ Public Class wsCampionato
 								End If
 								Dim Imm2 As String = DecriptaImmagine(imm)
 
+								Stampa &= "<tr style=""background-color: " & Colore & ";"">" & vbCrLf
+								If Colore = "#ccc" Then Colore = "#fff" Else Colore = "#ccc"
 								Stampa &= "<td><img src=""" & Imm1 & """ width=""50"" height=""50"" /></td>" & vbCrLf
 								Stampa &= "<td>" & Casa & "</td>"
 								Stampa &= "<td><img src=""" & Imm2 & """ width=""50"" height=""50"" /></td>" & vbCrLf
 								Stampa &= "<td>" & Fuori & "</td>"
-								Stampa &= "<td>" & Rec("Risultato").Value & "</td>"
+								Stampa &= "<td style=""text-align: right;"">" & Rec("Risultato").Value & "</td>"
 								Stampa &= "</tr>"
 
 								Rec.MoveNext

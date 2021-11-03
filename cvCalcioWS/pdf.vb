@@ -1,4 +1,5 @@
-﻿Imports SelectPdf
+﻿Imports System.Windows.Forms
+Imports SelectPdf
 
 Public Class pdfGest
 	Public Function ConverteHTMLInPDF(NomeHtml As String, pathSalvataggio As String, pathLog As String, Optional noMargini As Boolean = False, Optional Orizzontale As Boolean = False)
@@ -69,7 +70,8 @@ Public Class pdfGest
 			converter.Footer.Add(textPagina)
 		Else
 			'converter.Options.PdfPageSize = PdfPageSize.Custom
-			'converter.Options.PdfPageCustomSize = New Drawing.SizeF(200, 300)
+			'converter.Options.PdfPageCustomSize = New Drawing.SizeF(210, height)
+
 			converter.Options.JpegCompressionEnabled = True
 			converter.Options.MarginLeft = 2
 			converter.Options.MarginRight = 2
