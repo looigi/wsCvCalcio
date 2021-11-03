@@ -1315,11 +1315,11 @@ Module Globale
 		Dim Ritorno As String = ""
 		Dim Cosa As String = ""
 
-		If Lat = "undefined" Or Lon = "undefined" Or IsNumeric(Lat.Replace(",", ".")) = False Or IsNumeric(Lon.Replace(",", ".")) = False Then
-			Cosa = "q=Rome,IT"
-		Else
-			Cosa = "lat=" & Lat & "&lon=" & Lon
-		End If
+		'If Lat = "undefined" Or Lon = "undefined" Or IsNumeric(Lat.Replace(",", ".")) = False Or IsNumeric(Lon.Replace(",", ".")) = False Then
+		Cosa = "q=Rome,IT"
+		'Else
+		'	Cosa = "lat=" & Lat & "&lon=" & Lon
+		'End If
 
 		Try
 			Dim url As String = "http://api.openweathermap.org/data/2.5/weather?" & Cosa & "&mode=xml&units=metric&lang=it&appid=1856b7a9244abb668591169ef0a34308"

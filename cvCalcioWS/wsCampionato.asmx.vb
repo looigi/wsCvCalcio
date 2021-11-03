@@ -437,7 +437,10 @@ Public Class wsCampionato
 
 					For i As Integer = 0 To idSquadre.Count - 1
 						For k As Integer = 0 To idSquadre.Count - 1
-							If Val(Punti(i)) > Val(Punti(k)) Then
+							Dim p1 As String = Format(Punti(i), "00") + Format(gFatti(i) - gSubiti(i), "00") + Format(gFatti(i), "00") + Format(Giocate(i), "00") + Squadre(i)
+							Dim p2 As String = Format(Punti(k), "00") + Format(gFatti(k) - gSubiti(k), "00") + Format(gFatti(k), "00") + Format(Giocate(k), "00") + Squadre(k)
+
+							If p1 > p2 Then
 								Dim appo As Integer
 								Dim appo2 As String
 
@@ -1529,7 +1532,7 @@ Public Class wsCampionato
 	End Function
 
 	<WebMethod()>
-	Public Function Statistiche(Squadra As String, idCategoria As String, idAnno As String, Stampa As String) As String
+	Public Function Statistiche(Squadra As String, idCategoria As String, idAnno As String, Stampa As String, idGiornata As String) As String
 		Dim gf As New GestioneFilesDirectory
 		Dim Ritorno As String = ""
 		Dim Connessione As String = LeggeImpostazioniDiBase(Server.MapPath("."), Squadra)
@@ -2380,12 +2383,14 @@ Public Class wsCampionato
 						filetto = filetto.Replace("***AVVERSARI***", StampaAvversari)
 						filetto = filetto.Replace("***METEO***", StampaMeteo)
 
-						Dim Altro As String = Now.Year & Format(Now.Month, "00") & Format(Now.Day, "00") & Format(Now.Hour, "00") & Format(Now.Minute, "00") & Format(Now.Second, "00")
-						Dim NomeFileFinale As String = pathAllegati & Squadra & "\Statistiche\Stat_" & Altro & ".html"
-						Dim NomeFileFinalePDF As String = pathAllegati & Squadra & "\Statistiche\Stat_" & Altro & ".pdf"
+						'Dim Altro As String = Now.Year & Format(Now.Month, "00") & Format(Now.Day, "00") ' & Format(Now.Hour, "00") & Format(Now.Minute, "00") & Format(Now.Second, "00")
+						Dim NomeFileFinale As String = pathAllegati & Squadra & "\Statistiche\Statistiche_Giornata_" & idGiornata & ".html"
+						Dim NomeFileFinalePDF As String = pathAllegati & Squadra & "\Statistiche\Statistiche_Giornata_" & idGiornata & ".pdf"
 						Dim PathLog As String = HttpContext.Current.Server.MapPath(".") & "\Log\Pdf.txt"
 						gf.CreaDirectoryDaPercorso(NomeFileFinale)
 
+						gf.EliminaFileFisico(NomeFileFinale)
+						gf.EliminaFileFisico(NomeFileFinalePDF)
 						gf.CreaAggiornaFile(NomeFileFinale, filetto)
 
 						Dim pp As New pdfGest
@@ -2512,12 +2517,14 @@ Public Class wsCampionato
 					filetto = filetto.Replace("***GIORNATA***", Giornata)
 					filetto = filetto.Replace("***CLASSIFICA***", Stampa)
 
-					Dim Altro As String = Now.Year & Format(Now.Month, "00") & Format(Now.Day, "00") & Format(Now.Hour, "00") & Format(Now.Minute, "00") & Format(Now.Second, "00")
-					Dim NomeFileFinale As String = pathAllegati & Squadra & "\Statistiche\Class_" & Altro & ".html"
-					Dim NomeFileFinalePDF As String = pathAllegati & Squadra & "\Statistiche\Class_" & Altro & ".pdf"
+					'Dim Altro As String = Now.Year & Format(Now.Month, "00") & Format(Now.Day, "00") ' & Format(Now.Hour, "00") & Format(Now.Minute, "00") & Format(Now.Second, "00")
+					Dim NomeFileFinale As String = pathAllegati & Squadra & "\Statistiche\Classifica_Giornata_" & Giornata & ".html"
+					Dim NomeFileFinalePDF As String = pathAllegati & Squadra & "\Statistiche\Classifica_Giornata_" & Giornata & ".pdf"
 					Dim PathLog As String = HttpContext.Current.Server.MapPath(".") & "\Log\Pdf.txt"
 					gf.CreaDirectoryDaPercorso(NomeFileFinale)
 
+					gf.EliminaFileFisico(NomeFileFinale)
+					gf.EliminaFileFisico(NomeFileFinalePDF)
 					gf.CreaAggiornaFile(NomeFileFinale, filetto)
 
 					Dim pp As New pdfGest
@@ -2532,4 +2539,156 @@ Public Class wsCampionato
 
 		Return Ritorno
 	End Function
+
+	<WebMethod()>
+	Public Function StampaGiornata(Squadra As String, idAnno As String, idCategoria As String, idGiornata As String) As String
+		Dim Ritorno As String = ""
+		Dim Connessione As String = LeggeImpostazioniDiBase(Server.MapPath("."), Squadra)
+		Dim Stampa As String = ""
+		Dim gf As New GestioneFilesDirectory
+
+		If Connessione = "" Then
+			Ritorno = ErroreConnessioneNonValida
+		Else
+			Dim Conn As Object = ApreDB(Connessione)
+
+			If TypeOf (Conn) Is String Then
+				Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
+			Else
+				Dim Rec As Object = Server.CreateObject("ADODB.Recordset")
+				Dim Sql As String = ""
+				Dim Ok As Boolean = True
+
+				Dim paths As String = gf.LeggeFileIntero(HttpContext.Current.Server.MapPath(".") & "\Impostazioni\PathAllegati.txt")
+				Dim P() As String = paths.Split(";")
+				If Strings.Right(P(0), 1) <> "\" Then
+					P(0) &= "\"
+				End If
+				Dim pathAllegati As String = P(0).Replace(vbCrLf, "")
+				If Strings.Right(P(2), 1) <> "/" Then
+					P(2) &= "/"
+				End If
+				Dim pathMultimedia As String = P(2).Replace(vbCrLf, "")
+				Dim PathBaseMultimedia As String = pathMultimedia.Replace("Allegati", "Multimedia")
+
+				Dim NomeSquadra As String = ""
+				Dim ss() As String = Squadra.Split("_")
+				Sql = "Select * From [Generale].[dbo].[Squadre] Where idSquadra = " & Val(ss(1)).ToString
+				Rec = LeggeQuery(Conn, Sql, Connessione)
+				If TypeOf (Rec) Is String Then
+					Ok = False
+					Ritorno = "Problemi lettura squadra"
+				Else
+					If Rec.Eof Then
+					Else
+						NomeSquadra = "" & Rec("Descrizione").Value
+					End If
+					Rec.Close
+				End If
+
+				Dim NomeCategoria As String = ""
+				If Ok Then
+					Sql = "Select * From Categorie Where idCategoria=" & idCategoria
+					Rec = LeggeQuery(Conn, Sql, Connessione)
+					If TypeOf (Rec) Is String Then
+						Ok = False
+						Ritorno = "Problemi lettura categoria"
+					Else
+						If Rec.Eof Then
+						Else
+							NomeCategoria = "" & Rec("Descrizione").Value & " " & Rec("AnnoCategoria").Value
+						End If
+						Rec.Close
+					End If
+				End If
+
+				If Ok Then
+					Sql = "Select D.Descrizione As Casa, E.Descrizione As Fuori, A.idSqCasa, A.idSqFuori, F.Risultato " &
+					"From CalendarioPartite A " &
+					"Left Join SquadreAvversarie D On D.idAvversario = A.idSqCasa " &
+					"Left Join SquadreAvversarie E On E.idAvversario = A.idSqFuori " &
+					"left Join CalendarioRisultati F On A.idPartita = F.idPartita " &
+					"Where idGiornata = " & idGiornata & " And idCategoria = " & idCategoria & " Order By A.idPartita"
+					Try
+						Rec = LeggeQuery(Conn, Sql, Connessione)
+						If TypeOf (Rec) Is String Then
+							Ritorno = Rec
+						Else
+							Stampa &= "<table style=""width: 100%;"" cellpading=""0"" cellspacing=""0"">" & vbCrLf
+							Stampa &= "<tr>" & vbCrLf
+							Stampa &= "<th></th>" & vbCrLf
+							Stampa &= "<th style=""text-align: right;"">Squadra in Casa</th>" & vbCrLf
+							Stampa &= "<th></th>" & vbCrLf
+							Stampa &= "<th style=""text-align: right;"">Squadra fuori Casa</th>" & vbCrLf
+							Stampa &= "<th style=""text-align: right;"">Risultato</th>" & vbCrLf
+							Stampa &= "</tr>" & vbCrLf
+
+							Do Until Rec.eof
+								Dim imm As String = ""
+								Dim Casa As String = "" & Rec("Casa").Value
+								Dim Fuori As String = "" & Rec("Fuori").Value
+
+								If Rec("idSqCasa").Value = -1 Or Rec("idSqCasa").Value = 9999 Then
+									imm = PathBaseMultimedia & "/" & NomeSquadra & "/Categorie/" & idAnno & "_" & idCategoria & ".kgb"
+									Casa = NomeCategoria
+								Else
+									imm = PathBaseMultimedia & "/" & NomeSquadra & "/Avversari/" & Rec("idSqCasa").Value & ".kgb"
+								End If
+								Dim Imm1 As String = DecriptaImmagine(imm)
+
+								If Rec("idSqFuori").Value = -1 Or Rec("idSqFuori").Value = 9999 Then
+									imm = PathBaseMultimedia & "/" & NomeSquadra & "/Categorie/" & idAnno & "_" & idCategoria & ".kgb"
+									Fuori = NomeCategoria
+								Else
+									imm = PathBaseMultimedia & "/" & NomeSquadra & "/Avversari/" & Rec("idSqFuori").Value & ".kgb"
+								End If
+								Dim Imm2 As String = DecriptaImmagine(imm)
+
+								Stampa &= "<td><img src=""" & Imm1 & """ width=""50"" height=""50"" /></td>" & vbCrLf
+								Stampa &= "<td>" & Casa & "</td>"
+								Stampa &= "<td><img src=""" & Imm2 & """ width=""50"" height=""50"" /></td>" & vbCrLf
+								Stampa &= "<td>" & Fuori & "</td>"
+								Stampa &= "<td>" & Rec("Risultato").Value & "</td>"
+								Stampa &= "</tr>"
+
+								Rec.MoveNext
+							Loop
+							Rec.Close()
+
+							Stampa &= "</table>"
+
+							Dim PathBaseImmagini As String = pathMultimedia
+
+							Dim filetto As String = gf.LeggeFileIntero(HttpContext.Current.Server.MapPath(".") & "\Scheletri\statistiche_giornata.txt")
+							filetto = filetto.Replace("***SFONDO***", PathBaseImmagini & "/bg.jpg")
+							filetto = filetto.Replace("***GIORNATA***", idGiornata)
+							filetto = filetto.Replace("***CLASSIFICA***", Stampa)
+
+							'Dim Altro As String = Now.Year & Format(Now.Month, "00") & Format(Now.Day, "00") ' & Format(Now.Hour, "00") & Format(Now.Minute, "00") & Format(Now.Second, "00")
+							Dim NomeFileFinale As String = pathAllegati & Squadra & "\Statistiche\Giornata_" & idGiornata & ".html"
+							Dim NomeFileFinalePDF As String = pathAllegati & Squadra & "\Statistiche\Giornata_" & idGiornata & ".pdf"
+							Dim PathLog As String = HttpContext.Current.Server.MapPath(".") & "\Log\Pdf.txt"
+							gf.CreaDirectoryDaPercorso(NomeFileFinale)
+
+							gf.EliminaFileFisico(NomeFileFinale)
+							gf.EliminaFileFisico(NomeFileFinalePDF)
+							gf.CreaAggiornaFile(NomeFileFinale, filetto)
+
+							Dim pp As New pdfGest
+							Ritorno = pp.ConverteHTMLInPDF(NomeFileFinale, NomeFileFinalePDF, PathLog, True)
+
+							If Ritorno = "*" Then
+								Ritorno = NomeFileFinalePDF.Replace(pathAllegati, pathMultimedia).Replace("Multimedia", "Allegati").Replace("\", "/")
+							End If
+						End If
+					Catch ex As Exception
+						Ritorno = "ERROR: " & ex.Message
+					End Try
+				End If
+			End If
+		End If
+
+		Return Ritorno
+	End Function
+
 End Class

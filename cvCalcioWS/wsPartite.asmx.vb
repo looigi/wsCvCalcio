@@ -437,8 +437,8 @@ Public Class wsPartite
 
 				If Ok Then
 					If sTempo <> "" Then
-						If Coordinate <> "" Then
-							Dim CC() As String = Coordinate.Split(";")
+						'If Coordinate <> "" Then
+						Dim CC() As String = Coordinate.Split(";")
 							Dim TempoMeteo As String = RitornaMeteo(CC(0), CC(1))
 
 							If TempoMeteo.Contains(StringaErrore) Then
@@ -474,7 +474,7 @@ Public Class wsPartite
 									Ok = False
 								End Try
 							End If
-						End If
+						'End If
 					End If
 				End If
 
@@ -1877,6 +1877,65 @@ Public Class wsPartite
 				End Try
 
 				Conn.Close()
+			End If
+		End If
+
+		Return Ritorno
+	End Function
+
+	<WebMethod()>
+	Public Function RitornaMeteoWeb(Squadra As String, idPartita As String) As String
+		Dim Ritorno As String = ""
+		Dim Connessione As String = LeggeImpostazioniDiBase(Server.MapPath("."), Squadra)
+
+		If Connessione = "" Then
+			Ritorno = ErroreConnessioneNonValida
+		Else
+			Dim Conn As Object = ApreDB(Connessione)
+
+			If TypeOf (Conn) Is String Then
+				Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
+			Else
+				Dim Rec As Object = Server.CreateObject("ADODB.Recordset")
+				Dim Sql As String = ""
+
+				Sql = "Select * From MeteoPartite Where idPartita=" & idPartita
+
+				Try
+					Rec = LeggeQuery(Conn, Sql, Connessione)
+					If TypeOf (Rec) Is String Then
+						Ritorno = Rec
+					Else
+						If Rec.Eof() Then
+							Ritorno = RitornaMeteo("", "")
+							Dim TT() As String = Ritorno.Split(";")
+
+							'Temperatura
+							'Umidita
+							'Pressione
+							'Tempo
+							'Icona
+
+							Sql = "Insert Into MeteoPartite Values (" &
+								" " & idPartita & ", " &
+								"'" & TT(0) & "', " &
+								"'" & TT(1) & "', " &
+								"'" & TT(2) & "', " &
+								"'" & TT(3) & "', " &
+								"'" & TT(4) & "' " &
+								")"
+							Dim Ritorno2 As String = EsegueSql(Conn, Sql, Connessione)
+
+						Else
+							Ritorno = Rec(1).Value & ";" & Rec(2).Value & ";" & Rec(3).Value & ";" & Rec(4).Value & ";" & Rec(5).Value
+						End If
+
+						Rec.Close()
+					End If
+				Catch ex As Exception
+					Ritorno = StringaErrore & " " & ex.Message
+				End Try
+
 			End If
 		End If
 
