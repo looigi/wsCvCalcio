@@ -2,7 +2,7 @@
 Imports SelectPdf
 
 Public Class pdfGest
-	Public Function ConverteHTMLInPDF(NomeHtml As String, pathSalvataggio As String, pathLog As String, Optional noMargini As Boolean = False, Optional Orizzontale As Boolean = False)
+	Public Function ConverteHTMLInPDF(NomeHtml As String, pathSalvataggio As String, pathLog As String, Optional noMargini As Boolean = False, Optional Orizzontale As Boolean = False, Optional AltezzaReport As Integer = -1)
 		Dim Ritorno As String = ""
 
 		Dim gf As New GestioneFilesDirectory
@@ -18,7 +18,7 @@ Public Class pdfGest
 			gf.EliminaFileFisico(pathSalvataggio)
 			'Dim pdf As PdfDocument = PdfGenerator.GeneratePdf(fileHtml, PageSize.A4)
 			'pdf.Save(pathSalvataggio)
-			SurroundingSub(fileHtml, pathSalvataggio, noMargini, Orizzontale)
+			SurroundingSub(fileHtml, pathSalvataggio, noMargini, Orizzontale, AltezzaReport)
 			If pathLog <> "" Then
 				gf.ScriveTestoSuFileAperto("Elaborazione effettuata")
 			End If
@@ -37,16 +37,22 @@ Public Class pdfGest
 		Return Ritorno
 	End Function
 
-	Private Sub SurroundingSub(htmlString As String, fileSalvataggio As String, noMargini As Boolean, Orizzontale As Boolean)
+	Private Sub SurroundingSub(htmlString As String, fileSalvataggio As String, noMargini As Boolean, Orizzontale As Boolean, AltezzaReport As Integer)
 		' https://selectpdf.com/html-to-pdf/docs/html/PdfPageProperties.htm
 
 		Dim converter As HtmlToPdf = New HtmlToPdf
 		' noMargini = False
 		If noMargini = False Then
-			converter.Options.PdfPageSize = PdfPageSize.A4
-			If Orizzontale = True Then
-				converter.Options.PdfPageOrientation = PdfPageOrientation.Landscape
+			If AltezzaReport > -1 Then
+				converter.Options.PdfPageSize = PdfPageSize.Custom
+				converter.Options.PdfPageCustomSize = New Drawing.SizeF(210, AltezzaReport)
+			Else
+				converter.Options.PdfPageSize = PdfPageSize.A4
+				If Orizzontale = True Then
+					converter.Options.PdfPageOrientation = PdfPageOrientation.Landscape
+				End If
 			End If
+
 			converter.Options.JpegCompressionEnabled = True
 			converter.Options.MarginLeft = 50
 			converter.Options.MarginRight = 50
@@ -69,8 +75,12 @@ Public Class pdfGest
 			converter.Footer.Add(text)
 			converter.Footer.Add(textPagina)
 		Else
-			'converter.Options.PdfPageSize = PdfPageSize.Custom
-			'converter.Options.PdfPageCustomSize = New Drawing.SizeF(210, height)
+			If AltezzaReport > -1 Then
+				Dim alte As Single = AltezzaReport * 0.264583333
+
+				converter.Options.PdfPageSize = PdfPageSize.Custom
+				converter.Options.PdfPageCustomSize = New Drawing.SizeF(210, alte)
+			End If
 
 			converter.Options.JpegCompressionEnabled = True
 			converter.Options.MarginLeft = 2

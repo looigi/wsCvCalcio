@@ -319,7 +319,7 @@ Public Class wsPartite
 							" " & idUnioneCalendario & ", " &
 							"'" & RisultatoATempi & "', " &
 							"'" & DataOraAppuntamento & "', " &
-							"'" & LuogoAppuntamento.Replace("-", "") & "', " &
+							"'" & LuogoAppuntamento.Replace("-", "").Replace("'", "''") & "', " &
 							"'" & MezzoTrasporto & "', " &
 							"'" & ShootOut & "',  " &
 							" " & Tempi & ", " &
@@ -948,25 +948,25 @@ Public Class wsPartite
 					End If
 				End If
 
-				'If Ok Then
-				'	Try
-				'		If idArbitro = 0 Or idArbitro = "" Then idArbitro = 1
+				If Ok Then
+					Try
+						If idArbitro = 0 Or idArbitro = "" Then idArbitro = 1
 
-				'		Sql = "Insert Into ArbitriPartite Values (" &
-				'					" " & idAnno & ", " &
-				'					" " & idPartita & ", " &
-				'					"1, " &
-				'					" " & idArbitro & " " &
-				'					")"
-				'		Ritorno = EsegueSql(Conn, Sql, Connessione)
-				'		If Ritorno.Contains(StringaErrore) Then
-				'			Ok = False
-				'		End If
-				'	Catch ex As Exception
-				'		Ritorno = StringaErrore & " " & ex.Message
-				'		Ok = False
-				'	End Try
-				'End If
+						Sql = "Insert Into ArbitriPartite Values (" &
+									" " & idAnno & ", " &
+									" " & idPartita & ", " &
+									"1, " &
+									" " & idArbitro & " " &
+									")"
+						Ritorno = EsegueSql(Conn, Sql, Connessione)
+						If Ritorno.Contains(StringaErrore) Then
+							Ok = False
+						End If
+					Catch ex As Exception
+						Ritorno = StringaErrore & " " & ex.Message
+						Ok = False
+					End Try
+				End If
 
 				If Ok Then
 					If RigoriPropri <> "" And RigoriAvv.Contains("§") Then
