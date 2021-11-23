@@ -2031,8 +2031,9 @@ Public Class wsPartite
 				Dim Rec2 As Object = Server.CreateObject("ADODB.Recordset")
 				Dim Sql As String = ""
 
-				Sql = "SELECT Partite.Casa, Partite.idPartita, Partite.DataOra, Categorie.Descrizione As Categoria, SquadreAvversarie.Descrizione As Avversario, '' + CampiAvversari.Descrizione As Campo, " &
-					"CampiAvversari.Indirizzo, '' + CampiEsterni.Descrizione As CampoEsterno, Allenatori.Cognome + ' ' + Allenatori.Nome As Mister, Allenatori.Telefono, Partite.OraConv, " &
+				Sql = "SELECT Partite.Casa, Partite.idPartita, Partite.DataOra, Categorie.Descrizione As Categoria, Categorie.AnnoCategoria, SquadreAvversarie.idAvversario, SquadreAvversarie.Descrizione As Avversario, " &
+					"'' + CampiAvversari.Descrizione As Campo, Categorie.idCategoria, " &
+					"CampiAvversari.Indirizzo As IndirizzoAvv, '' + CampiEsterni.Descrizione As CampoEsterno, Allenatori.idAllenatore, Allenatori.Cognome + ' ' + Allenatori.Nome As Mister, Allenatori.Telefono, Partite.OraConv, " &
 					"Anni.CampoSquadra, Anni.Indirizzo As IndirizzoCasa, Categorie.AnticipoConvocazione, Partite.DataOraAppuntamento, Partite.LuogoAppuntamento, Partite.MezzoTrasporto, " &
 					"Anni.NomePolisportiva, Anni.NomeSquadra, Anni.Indirizzo " &
 					"FROM (((((Partite LEFT JOIN SquadreAvversarie ON Partite.idAvversario = SquadreAvversarie.idAvversario) " &
@@ -2048,23 +2049,17 @@ Public Class wsPartite
 				Else
 					If Not Rec.Eof Then
 						If Not Rec("DataOra").Value Is DBNull.Value Then
-							Dim paths As String = gf.LeggeFileIntero(Server.MapPath(".") & "\Impostazioni\Paths.txt")
-							Dim pp As String = paths
-							pp = pp.Replace(vbCrLf, "")
-							If Strings.Right(pp, 1) <> "\" Then
-								pp = pp & "\"
+							Dim paths2 As String = gf.LeggeFileIntero(HttpContext.Current.Server.MapPath(".") & "\Impostazioni\PathAllegati.txt")
+							Dim P2() As String = paths2.Split(";")
+							If Strings.Right(P2(0), 1) <> "\" Then
+								P2(0) &= "\"
 							End If
-
-							paths = gf.LeggeFileIntero(Server.MapPath(".") & "\Impostazioni\PathAllegati.txt")
-							Dim p() As String = paths.Split(";")
-							If Strings.Right(p(0), 1) <> "\" Then
-								p(0) = p(0) & "\"
+							Dim pathAllegati As String = P2(0).Replace(vbCrLf, "")
+							If Strings.Right(P2(2), 1) <> "/" Then
+								P2(2) &= "/"
 							End If
-							p(0) = p(0).Replace(vbCrLf, "")
-							If Strings.Right(p(2), 1) <> "/" Then
-								p(2) = p(2) & "/"
-							End If
-							p(2) = p(2).Replace(vbCrLf, "")
+							Dim pathMultimedia As String = P2(2).Replace(vbCrLf, "")
+							Dim PathBaseMultimedia As String = pathMultimedia.Replace("Allegati", "Multimedia")
 
 							' Dim Anticipo As Single = ("" & Rec("AnticipoConvocazione").Value).replace(",", ".")
 							'If Anticipo = 0 Then
@@ -2076,39 +2071,84 @@ Public Class wsPartite
 
 							Filetto = Filetto.Replace("***PARTITA***", idPartita)
 
-							Filetto = Filetto.Replace("***SQUADRA***", Rec("Categoria").Value)
+							Filetto = Filetto.Replace("***SQUADRA***", Rec("Categoria").Value & " " & Rec("AnnoCategoria").Value)
 
-							'Dim url As String = p(2) & Rec("NomeSquadra").Value.ToString.Replace(" ", "_") & "/Societa/" & idAnno & "_1.kgb"
-							'Dim Esten As String = Format(Now.Second, "00") & "_" & Now.Millisecond & RitornaValoreRandom(55)
-							'Dim urlConv As String = ""
-							' C:\IIS\GestioneCampionato\CalcioImages\Morti_De_Sonno_Fc\Societa
-							Dim fileUrlOrig As String = p(2) & Rec("NomeSquadra").Value.ToString.Replace(" ", "_") & "/Societa/Societa_1.png"
-							' If File.Exists(fileUrlOrig) Then
-							'	Dim fileUrlConv As String = pp & "Appoggio/" & Esten & ".jpg"
-							'	Dim c As New CriptaFiles
-							'	c.DecryptFile(CryptPasswordString, fileUrlOrig, fileUrlConv)
-							'urlConv = fileUrlOrig ' p(2) & "Appoggio/" & Esten & ".jpg"
-							'End If
+							Dim NomeSquadra As String = ""
+							Dim ss() As String = Squadra.Split("_")
 
-							Filetto = Filetto.Replace("***URL LOGO***", fileUrlOrig)
-
-							Filetto = Filetto.Replace("***NOME POLISPORTIVA***", Rec("NomePolisportiva").Value)
-							Filetto = Filetto.Replace("***INDIRIZZO POLISPORTIVA***", Rec("Indirizzo").Value)
-
-							Filetto = Filetto.Replace("***GARA***", Rec("Categoria").Value & " - " & Rec("Avversario").Value)
-							Filetto = Filetto.Replace("***DATA***", Format(Datella.Day, "00") & "/" & Format(Datella.Month, "00") & "/" & Datella.Year)
-							If Not Rec("CampoEsterno").Value Is DBNull.Value And "" & Rec("CampoEsterno").Value <> "" Then
-								Filetto = Filetto.Replace("***CAMPO***", Rec("CampoEsterno").Value)
-								Filetto = Filetto.Replace("***INDIRIZZO***", "")
+							Sql = "Select * From [Generale].[dbo].[Squadre] Where idSquadra = " & Val(ss(1)).ToString
+							Rec2 = LeggeQuery(Conn, Sql, Connessione)
+							If TypeOf (Rec2) Is String Then
+								Ritorno = "Problemi lettura squadra"
 							Else
-								If Rec("Casa").Value = "S" Then
-									Filetto = Filetto.Replace("***CAMPO***", Rec("CampoSquadra").Value)
-									Filetto = Filetto.Replace("***INDIRIZZO***", Rec("IndirizzoCasa").Value)
+								If Rec2.Eof Then
+								Else
+									NomeSquadra = "" & Rec2("Descrizione").Value
+								End If
+								Rec2.Close
+							End If
+
+							Dim multimediaPaths As String = gf.LeggeFileIntero(HttpContext.Current.Server.MapPath(".") & "\Impostazioni\PathAllegati.txt")
+							Dim mmPaths() As String = multimediaPaths.Split(";")
+							mmPaths(2) = mmPaths(2).Replace(vbCrLf, "")
+							If Strings.Right(mmPaths(2), 1) <> "/" Then
+								mmPaths(2) &= "/"
+							End If
+							Dim filePaths As String = gf.LeggeFileIntero(HttpContext.Current.Server.MapPath(".") & "\Impostazioni\Paths.txt")
+							filePaths = filePaths.Replace(vbCrLf, "")
+							If Strings.Right(filePaths, 1) <> "\" Then
+								filePaths &= "\"
+							End If
+							Dim ImmCat As String = PathBaseMultimedia & "/" & NomeSquadra & "/Categorie/" & idAnno & "_" & Rec("idCategoria").Value & ".kgb"
+							ImmCat = DecriptaImmagine(ImmCat)
+							Filetto = Filetto.Replace("***URL LOGO***", ImmCat)
+
+							Dim PathIimmSoc As String = PathBaseMultimedia & "/" & NomeSquadra & "/Societa/" & idAnno & "_1.kgb"
+							PathIimmSoc = DecriptaImmagine(PathIimmSoc)
+							Filetto = Filetto.Replace("***URL SOCIETA***", PathIimmSoc)
+
+							Filetto = Filetto.Replace("***NOME CATEGORIA***", Rec("Categoria").Value & " " & Rec("AnnoCategoria").Value)
+							Filetto = Filetto.Replace("***NOME AVVERSARIO***", Rec("Avversario").Value)
+
+							Dim ImmAvv As String = PathBaseMultimedia & "/" & NomeSquadra & "/Avversari/" & Rec("idAvversario").Value & ".kgb"
+							ImmAvv = DecriptaImmagine(ImmAvv)
+							Filetto = Filetto.Replace("***URL LOGO AVV***", ImmAvv)
+
+							Dim Gara As String = ""
+							If Rec("Casa").Value = "S" Then
+								Gara = Rec("Categoria").Value & " " & Rec("AnnoCategoria").Value & " - " & Rec("Avversario").Value
+							Else
+								Gara = Rec("Avversario").Value & " - " & Rec("Categoria").Value & " " & Rec("AnnoCategoria").Value
+							End If
+
+							Filetto = Filetto.Replace("***GARA***", gara)
+							Filetto = Filetto.Replace("***DATA***", Format(Datella.Day, "00") & "/" & Format(Datella.Month, "00") & "/" & Datella.Year)
+
+							Dim Indirizzo As String = ""
+							Dim ImmGPS As String = PathBaseMultimedia & "gps.png"
+							Dim ImmTelefono As String = PathBaseMultimedia & "tel.png"
+
+							If Rec("Casa").Value = "S" Then
+								Filetto = Filetto.Replace("***CAMPO***", Rec("CampoSquadra").Value)
+								Filetto = Filetto.Replace("***INDIRIZZO***", Rec("IndirizzoCasa").Value)
+
+								Indirizzo = Rec("IndirizzoCasa").Value
+							Else
+								If Not Rec("CampoEsterno").Value Is DBNull.Value And "" & Rec("CampoEsterno").Value <> "" Then
+									Filetto = Filetto.Replace("***CAMPO***", Rec("CampoEsterno").Value)
+									Filetto = Filetto.Replace("***INDIRIZZO***", "")
+
+									Indirizzo = Rec("CampoEsterno").Value
 								Else
 									Filetto = Filetto.Replace("***CAMPO***", Rec("Campo").Value)
-									Filetto = Filetto.Replace("***INDIRIZZO***", Rec("Indirizzo").Value)
+									Filetto = Filetto.Replace("***INDIRIZZO***", Rec("IndirizzoAvv").Value)
+
+									Indirizzo = Rec("IndirizzoAvv").Value
 								End If
 							End If
+							Filetto = Filetto.Replace("***INDIRIZZO GMAPS***", Indirizzo)
+
+							Filetto = Filetto.Replace("***IND GPS***", ImmGPS)
 
 							Dim Appuntamento As String = "" & Rec("DataOraAppuntamento").Value
 							If Appuntamento <> "" Then
@@ -2121,8 +2161,17 @@ Public Class wsPartite
 							Filetto = Filetto.Replace("***ORARIO1***", Appuntamento)
 							Filetto = Filetto.Replace("***ORARIO2***", OraConv)
 
-							Filetto = Filetto.Replace("***MISTER***", "" & Rec("Mister").Value)
-							Filetto = Filetto.Replace("***CELL***", "" & Rec("Telefono").Value)
+							Dim PathAll As String = PathBaseMultimedia & "/" & NomeSquadra & "/Allenatori/" & idAnno & "_" & Rec("idAllenatore").Value & ".kgb"
+							PathAll = DecriptaImmagine(PathAll)
+
+							Dim mis As String = "<table style=""width: 100%;"">"
+							' mis &= "<tr><th></th><th>Allenatore</th><th>Telefono</th></tr>"
+							mis &= "<tr><td style=""width: 5%;""><img src=""" & PathAll & """ width=""50"" height=""50"" /></td>"
+							mis &= "<td style=""width: 60%;"">" & Rec("Mister").Value & "</td>"
+							mis &= "<td style=""width: 5%; text-align: center;""><img src=""" & ImmTelefono & """ width=""50"" height=""50"" /></td>"
+							mis &= "<td style=""width: 30%;"">" & Rec("Telefono").Value & "</td></tr></table>"
+							Filetto = Filetto.Replace("***MISTER***", mis)
+							Filetto = Filetto.Replace("***CELL***", "")
 
 							'Filetto = Filetto.Replace("***DOAPPUNTAMENTO***", Rec("DataOraAppuntamento").Value)
 							'Filetto = Filetto.Replace("***APPUNTAMENTO***", Rec("LuogoAppuntamento").Value)
@@ -2139,7 +2188,7 @@ Public Class wsPartite
 
 							Dim Convocati As String = ""
 
-							Sql = "SELECT Giocatori.Cognome+' '+Giocatori.Nome AS Giocatore, Ruoli.idRuolo " &
+							Sql = "SELECT Giocatori.idGiocatore, Giocatori.Cognome +' '+Giocatori.Nome AS Giocatore, Ruoli.idRuolo " &
 								"FROM (Convocati LEFT JOIN Giocatori ON Convocati.idGiocatore = Giocatori.idGiocatore) LEFT JOIN [Generale].[dbo].[Ruoli] ON Giocatori.idRuolo = Ruoli.idRuolo " &
 								"WHERE Convocati.idPartita=" & idPartita & " AND Giocatori.idAnno=" & idAnno & " " &
 								"ORDER BY Ruoli.idRuolo, Giocatori.Cognome, Giocatori.Nome"
@@ -2148,27 +2197,74 @@ Public Class wsPartite
 								Ritorno = Rec
 							Else
 								Dim Giocatori As List(Of String) = New List(Of String)
+								Dim idGiocatore As List(Of Integer) = New List(Of Integer)
+								Dim idRuolo As List(Of Integer) = New List(Of Integer)
 
 								Do Until Rec.Eof
 									Giocatori.Add("" & Rec("Giocatore").Value)
+									idGiocatore.Add("" & Rec("idGiocatore").Value)
+									idRuolo.Add("" & Rec("idRuolo").Value)
 
 									Rec.MoveNext
 								Loop
 								Rec.Close
 
-								Convocati &= "<table style=""width: 100%;"" cellpadding=""0px"" cellspacing=""0px"">"
-								For i As Integer = 0 To 11
-									Dim Riga As String = "<tr>"
+								Dim Colore As String = "#fff"
+								Dim vecchioIdRuolo As Integer = -1
+								Dim vecchioIdRuolo2 As Integer = -1
+								Dim codiceColore() As String = {"", "#fff6a9", "#ffd0d0", "#c3caff", "#c7f7c7"}
 
-									Riga &= "<td style=""width: 10%;"" class=""adestra"">"
+								If Giocatori.Count > 13 Then
+									vecchioIdRuolo2 = idRuolo(13)
+								End If
+
+								Convocati &= "<table style=""width: 100%;"" cellpadding=""0px"" cellspacing=""0px"">"
+									For i As Integer = 0 To 11
+									Dim Riga As String = ""
+
+									Riga &= "<tr>"
+
+									Dim Path11 As String = ""
+									If i < Giocatori.Count Then
+										Path11 = PathBaseMultimedia & "/" & NomeSquadra & "/Giocatori/" & idAnno & "_" & idGiocatore.Item(i) & ".kgb"
+										Path11 = DecriptaImmagine(Path11)
+									End If
+
+									Dim Path12 As String = ""
+									If i + 12 < Giocatori.Count Then
+										Path12 = PathBaseMultimedia & "/" & NomeSquadra & "/Giocatori/" & idAnno & "_" & idGiocatore.Item(i + 12) & ".kgb"
+										Path12 = DecriptaImmagine(Path12)
+									End If
+
+									Dim Altro As String = ""
+
+									If i / 2 = Int(i / 2) Then
+										Colore = "#fff"
+									Else
+										If idRuolo.Item(i) > -1 Then
+											Colore = codiceColore(idRuolo.Item(i))
+										Else
+											Colore = "#ccc"
+										End If
+									End If
+									If vecchioIdRuolo <> idRuolo.Item(i) Then
+										Altro = "border-top: 2px solid #000;"
+										vecchioIdRuolo = idRuolo.Item(i)
+									End If
+
+									Riga &= "<td style=""width: 10%; background-color: " & Colore & "; " & Altro & """ class=""adestra"">"
 									Riga &= "<span class=""titolo3"">" & i + 1 & "</span>"
 									Riga &= "</td>"
 
-									Riga &= "<td style=""width:10px;"">"
-									Riga &= "&nbsp;"
+									Riga &= "<td style=""width: 10%; background-color: " & Colore & "; " & Altro & "text-align: center;"">"
+									If Path11 = "" Then
+										Riga &= "&nbsp;"
+									Else
+										Riga &= "<img src=""" & Path11 & """ width=""50"" height=""50"" />"
+									End If
 									Riga &= "</td>"
 
-									Riga &= "<td  style=""width: 35%;"">"
+									Riga &= "<td  style=""width: 30%; background-color: " & Colore & "; " & Altro & """>"
 									If i < Giocatori.Count Then
 										Riga &= "<span class=""titolo3"">" & Giocatori.Item(i) & "</span>"
 									Else
@@ -2176,15 +2272,47 @@ Public Class wsPartite
 									End If
 									Riga &= "</td>"
 
-									Riga &= "<td style=""width: 10%;"" class=""adestra"">"
-									Riga &= "<span class=""titolo3"">" & i + 11 & "</span>"
+									Dim Altro2 As String = ""
+									Dim Numero As String = ""
+
+									If i + 12 < Giocatori.Count Then
+										Numero = i + 13
+										If (i + 12) / 2 = Int((i + 12) / 2) Then
+											Colore = "#fff"
+										Else
+											If idRuolo.Item(i) > -1 Then
+												Colore = codiceColore(idRuolo.Item(i + 12))
+											Else
+												Colore = "#ccc"
+											End If
+										End If
+
+										If vecchioIdRuolo2 <> idRuolo.Item(i + 12) Then
+											Altro2 = "border-top: 2px solid #000;"
+											vecchioIdRuolo2 = idRuolo.Item(i + 12)
+										End If
+									Else
+										Numero = ""
+										'If (i + 12) / 2 = Int((i + 12) / 2) Then
+										Colore = "#fff"
+										'Else
+										'	Colore = "#ccc"
+										'End If
+									End If
+
+									Riga &= "<td style=""width: 10%; background-color: " & Colore & "; " & Altro2 & """ class=""adestra"">"
+									Riga &= "<span class=""titolo3"">" & numero & "</span>"
 									Riga &= "</td>"
 
-									Riga &= "<td style=""width:10px;"">"
-									Riga &= "&nbsp;"
+									Riga &= "<td style=""width: 10%; background-color: " & Colore & "; " & Altro2 & " text-align: center;"">"
+									If Path12 = "" Then
+										Riga &= "&nbsp;"
+									Else
+										Riga &= "<img src=""" & Path12 & """ width=""50"" height=""50"" />"
+									End If
 									Riga &= "</td>"
 
-									Riga &= "<td style=""width: 35%;"">"
+									Riga &= "<td style=""width: 30%; background-color: " & Colore & "; " & Altro2 & """>"
 									If i + 12 < Giocatori.Count Then
 										Riga &= "<span class=""titolo3"">" & Giocatori.Item(i + 12) & "</span>"
 									Else
@@ -2199,7 +2327,7 @@ Public Class wsPartite
 							End If
 							Filetto = Filetto.Replace("***CONVOCATI***", Convocati)
 
-							Dim pathFileAgg As String = p(0) & Squadra & "\Scheletri\testo_convocazioni.txt"
+							Dim pathFileAgg As String = pathAllegati & Squadra & "\Scheletri\testo_convocazioni.txt"
 							If Not File.Exists(pathFileAgg) Then
 								pathFileAgg = Server.MapPath(".") & "\Scheletri\testo_convocazioni.txt"
 							End If
@@ -2207,7 +2335,7 @@ Public Class wsPartite
 							Filetto = Filetto.Replace("***TESTO AGGIUNTIVO***", testo)
 
 							Dim Dirigenti As String = "" ' "<Table style=""width: 100%;"" cellpadding=""0px"" cellspacing=""0px"">"
-							Sql = "Select Cognome, Nome, Telefono From DirigentiPartite A " &
+							Sql = "Select A.idDirigente, Cognome, Nome, Telefono From DirigentiPartite A " &
 								"Left Join Dirigenti B On A.idDirigente = B.idDirigente " &
 								"Where A.idPartita = " & idPartita & " And Eliminato = 'N' " &
 								"Order By Progressivo"
@@ -2215,22 +2343,28 @@ Public Class wsPartite
 							If TypeOf (Rec) Is String Then
 								Ritorno = Rec
 							Else
-								' Dirigenti &= "<tr style=""border: 1px solid #999""><th><span style=""font-family: Arial; font-size: 16px;"">Dirigente</span></th><th><span style=""font-family: Arial; font-size: 16px;"">Telefono</span></th></tr>"
+								Dirigenti = "<table style=""width: 100%;"">" ' <tr style=""border: 1px solid #999""><th></th><th><span style=""font-family: Arial; font-size: 16px;"">Dirigente</span></th><th><span style=""font-family: Arial; font-size: 16px;"">Telefono</span></th></tr>"
 								Do Until Rec.Eof
-									Dirigenti &= Rec("Cognome").Value & " " & Rec("Nome").Value & "<br />" & Rec("Telefono").Value & "<br />"
+									Dim Path As String = PathBaseMultimedia & "/" & NomeSquadra & "/Dirigenti/" & idAnno & "_" & Rec("idDirigente").Value & ".kgb"
+									Path = DecriptaImmagine(Path)
+
+									Dirigenti &= "<tr><td style=""width: 5%;""><img src=""" & Path & """ width=""50"" height=""50"" /></td>"
+									Dirigenti &= "<td style=""width: 60%; text-align: left;"">" & Rec("Cognome").Value & " " & Rec("Nome").Value & "</td>"
+									Dirigenti &= "<td style=""width: 5%; text-align: center;""><img src=""" & ImmTelefono & """ width=""50"" height=""50"" /></td>"
+									Dirigenti &= "<td style=""width: 30%; text-align: left;"">" & Rec("Telefono").Value & "</td></tr>"
 
 									Rec.MoveNext
 								Loop
 								Rec.Close
 							End If
-							'Dirigenti &= "</table>"
+							Dirigenti &= "</table>"
 							Filetto = Filetto.Replace("***DIRIGENTI***", Dirigenti)
 
-							Dim path1 As String = p(0) & "\" & Squadra & "\Convocazioni\Anno" & idAnno & "\Partite\Partita_" & idPartita & ".html"
-							Dim pathPdf As String = p(0) & "\" & Squadra & "\Convocazioni\Anno" & idAnno & "\Partite\Partita_" & idPartita & ".pdf"
-							Dim pathLog As String = p(0) & "\" & Squadra & "\Convocazioni\Anno" & idAnno & "\Partite\Partita_" & idPartita & ".log"
+							Dim path1 As String = pathAllegati & "\" & Squadra & "\Convocazioni\Anno" & idAnno & "\Partite\Partita_" & idPartita & ".html"
+							Dim pathPdf As String = pathAllegati & "\" & Squadra & "\Convocazioni\Anno" & idAnno & "\Partite\Partita_" & idPartita & ".pdf"
+							Dim pathLog As String = pathAllegati & "\" & Squadra & "\Convocazioni\Anno" & idAnno & "\Partite\Partita_" & idPartita & ".log"
 
-							gf.CreaDirectoryDaPercorso(p(0) & "\" & Squadra & "\Convocazioni\Anno" & idAnno & "\Partite\")
+							gf.CreaDirectoryDaPercorso(pathAllegati & "\" & Squadra & "\Convocazioni\Anno" & idAnno & "\Partite\")
 							gf.EliminaFileFisico(path1)
 							gf.EliminaFileFisico(pathPdf)
 							gf.CreaAggiornaFile(path1, Filetto)

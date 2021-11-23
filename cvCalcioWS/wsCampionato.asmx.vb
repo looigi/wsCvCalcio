@@ -1545,6 +1545,7 @@ Public Class wsCampionato
 		Dim StampaTipoPartite As String = ""
 		Dim StampaAvversari As String = ""
 		Dim StampaMeteo As String = ""
+		Dim StampaAmmEsp As String = ""
 
 		Dim paths As String = gf.LeggeFileIntero(HttpContext.Current.Server.MapPath(".") & "\Impostazioni\PathAllegati.txt")
 		Dim P() As String = paths.Split(";")
@@ -2384,6 +2385,73 @@ Public Class wsCampionato
 				End If
 
 				If Ok Then
+					Dim AmmoEspu As String = ""
+
+					If Stampa = "S" Then
+						StampaAmmEsp &= "<table style=""width: 100%;"" cellpading=""0"" cellspacing=""0"">" & vbCrLf
+						StampaAmmEsp &= "<tr style=""background-color: gray;"">" & vbCrLf
+						StampaAmmEsp &= "<th>Tipo Partita</th>" & vbCrLf
+						StampaAmmEsp &= "<th>Tipologia</th>" & vbCrLf
+						StampaAmmEsp &= "<th></th>" & vbCrLf
+						StampaAmmEsp &= "<th>Nominativo</th>" & vbCrLf
+						StampaAmmEsp &= "<th style=""text-align: right;"">Quante</th>" & vbCrLf
+						StampaAmmEsp &= "</tr>" & vbCrLf
+					End If
+
+					Sql = "Select * From (" &
+						"Select Cognome, Nome, Soprannome, C.Descrizione As AmmoEspu, A.idGiocatore, B.Categorie, E.Descrizione As Tipologia, COUNT(*) As Quante From EventiPartita A " &
+						"Left Join Giocatori B On A.idGiocatore = B.idGiocatore " &
+						"Left Join Eventi C On A.idEvento = C.idEvento " &
+						"Left Join Partite D On D.idPartita = A.idPartita " &
+						"Left Join [Generale].[dbo].TipologiePartite E On D.idTipologia = E.idTipologia " &
+						"Where (C.Descrizione = 'Ammonito' Or C.Descrizione = 'Espulso') And  Categorie Like '%" & idCategoria & "-%' " &
+						"Group By Cognome, Nome, Soprannome, C.Descrizione, A.idGiocatore, B.Categorie, E.Descrizione" &
+						") As A Order By Tipologia, Quante Desc"
+					Try
+						Rec = LeggeQuery(Conn, Sql, Connessione)
+						If TypeOf (Rec) Is String Then
+							Ritorno = Rec
+						Else
+							Do Until Rec.Eof
+								AmmoEspu &= Rec("Cognome").Value & ";"
+								AmmoEspu &= Rec("Nome").Value & ";"
+								AmmoEspu &= Rec("Soprannome").Value & ";"
+								AmmoEspu &= Rec("AmmoEspu").Value & ";"
+								AmmoEspu &= Rec("idGiocatore").Value & ";"
+								AmmoEspu &= Rec("Tipologia").Value & ";"
+								AmmoEspu &= Rec("Quante").Value & "§"
+
+								If Stampa = "S" Then
+									Dim Path As String = PathBaseMultimedia & "/" & NomeSquadra & "/Giocatori/" & idAnno & "_" & Rec("idGiocatore").Value & ".kgb"
+									Path = DecriptaImmagine(Path)
+
+									StampaAmmEsp &= "<tr style=""background-color: " & Colore & ";"">" & vbCrLf
+									If Colore = "#ccc" Then Colore = "#fff" Else Colore = "#ccc"
+									StampaAmmEsp &= "<td>" & Rec("Tipologia").Value & "</td>" & vbCrLf
+									StampaAmmEsp &= "<td>" & Rec("AmmoEspu").Value & "</td>" & vbCrLf
+									StampaAmmEsp &= "<td><img src=""" & Path & """ width=""50"" height=""50"" /></td>" & vbCrLf
+									StampaAmmEsp &= "<td>" & Rec("Nome").Value & " '" & Rec("Soprannome").Value & "' " & Rec("Cognome").Value & "</td>" & vbCrLf
+									StampaAmmEsp &= "<td style=""text-align: right;"">" & Rec("Quante").Value & "</td>" & vbCrLf
+									StampaAmmEsp &= "</tr>" & vbCrLf
+								End If
+
+								Rec.MoveNext
+							Loop
+							Rec.Close
+
+							If Stampa = "S" Then
+								StampaAmmEsp &= "</table>"
+							End If
+
+							Ritorno &= "|" & AmmoEspu
+						End If
+					Catch ex As Exception
+						Ok = False
+						Ritorno = ex.Message
+					End Try
+				End If
+
+				If Ok Then
 					If Stampa = "S" Then
 						Dim PathBaseImmagini As String = pathMultimedia
 
@@ -2399,6 +2467,7 @@ Public Class wsCampionato
 						filetto = filetto.Replace("***TIPOPARTITE***", StampaTipoPartite)
 						filetto = filetto.Replace("***AVVERSARI***", StampaAvversari)
 						filetto = filetto.Replace("***METEO***", StampaMeteo)
+						filetto = filetto.Replace("***AMMESP***", StampaAmmEsp)
 
 						'Dim Altro As String = Now.Year & Format(Now.Month, "00") & Format(Now.Day, "00") ' & Format(Now.Hour, "00") & Format(Now.Minute, "00") & Format(Now.Second, "00")
 						Dim NomeFileFinale As String = pathAllegati & Squadra & "\Statistiche\Statistiche_Giornata_" & idGiornata & ".html"
@@ -2422,7 +2491,7 @@ Public Class wsCampionato
 			End If
 		End If
 
-		' Marcatori | Presenze | Fasce Goal Fatti | Fasce Goal Subiti | Eventi | Tipologie Partite | Partite | Avversari Incontrati | Meteo
+		' Marcatori | Presenze | Fasce Goal Fatti | Fasce Goal Subiti | Eventi | Tipologie Partite | Partite | Avversari Incontrati | Meteo | AmmoEspu
 
 		Return Ritorno
 	End Function

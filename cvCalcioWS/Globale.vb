@@ -606,7 +606,7 @@ Module Globale
 				Sql = "Select idGiocatore, Descrizione, Minuto, idTempo From " &
 					"EventiPartita " &
 					"Left Join Eventi On EventiPartita.idEvento = Eventi.idEvento " &
-					"Where idAnno = 1 And idPartita = 33 And (Upper(Descrizione)='AMMONITO' Or Upper(Descrizione)='ESPULSO')"
+					"Where idAnno = " & idAnno & " And idPartita = " & idPartita & " And (Upper(Descrizione)='AMMONITO' Or Upper(Descrizione)='ESPULSO')"
 				Rec = LeggeQuery(Conn, Sql, Connessione)
 				If TypeOf (Rec) Is String Then
 					Ok = False
