@@ -2035,13 +2035,14 @@ Public Class wsPartite
 					"'' + CampiAvversari.Descrizione As Campo, Categorie.idCategoria, " &
 					"CampiAvversari.Indirizzo As IndirizzoAvv, '' + CampiEsterni.Descrizione As CampoEsterno, Allenatori.idAllenatore, Allenatori.Cognome + ' ' + Allenatori.Nome As Mister, Allenatori.Telefono, Partite.OraConv, " &
 					"Anni.CampoSquadra, Anni.Indirizzo As IndirizzoCasa, Categorie.AnticipoConvocazione, Partite.DataOraAppuntamento, Partite.LuogoAppuntamento, Partite.MezzoTrasporto, " &
-					"Anni.NomePolisportiva, Anni.NomeSquadra, Anni.Indirizzo " &
+					"Anni.NomePolisportiva, Anni.NomeSquadra, Anni.Indirizzo, TipologiePartite.Descrizione As TipologiaPartita " &
 					"FROM (((((Partite LEFT JOIN SquadreAvversarie ON Partite.idAvversario = SquadreAvversarie.idAvversario) " &
 					"LEFT JOIN CampiAvversari ON SquadreAvversarie.idCampo = CampiAvversari.idCampo) " &
 					"LEFT JOIN Categorie ON (Partite.idAnno = Categorie.idAnno) And (Partite.idCategoria = Categorie.idCategoria)) " &
 					"LEFT JOIN CampiEsterni ON Partite.idPartita = CampiEsterni.idPartita) " &
 					"LEFT JOIN Allenatori ON (Partite.idAllenatore = Allenatori.idAllenatore) And (Partite.idCategoria = Allenatori.idCategoria) And (Partite.idAnno = Allenatori.idAnno)) " &
 					"LEFT JOIN Anni On Partite.idAnno = Anni.idAnno " &
+					"LEFT JOIN [Generale].[dbo].TipologiePartite On Partite.idTipologia = TipologiePartite.idTipologia " &
 					"WHERE Partite.idAnno=" & idAnno & " And Partite.idPartita=" & idPartita
 				Rec = LeggeQuery(Conn, Sql, Connessione)
 				If TypeOf (Rec) Is String Then
@@ -2072,6 +2073,7 @@ Public Class wsPartite
 							Filetto = Filetto.Replace("***PARTITA***", idPartita)
 
 							Filetto = Filetto.Replace("***SQUADRA***", Rec("Categoria").Value & " " & Rec("AnnoCategoria").Value)
+							Filetto = Filetto.Replace("***TIPOLOGIA PARTITA***", "--- " & Rec("TipologiaPartita").Value & " ---")
 
 							Dim NomeSquadra As String = ""
 							Dim ss() As String = Squadra.Split("_")
@@ -2099,20 +2101,35 @@ Public Class wsPartite
 							If Strings.Right(filePaths, 1) <> "\" Then
 								filePaths &= "\"
 							End If
-							Dim ImmCat As String = PathBaseMultimedia & "/" & NomeSquadra & "/Categorie/" & idAnno & "_" & Rec("idCategoria").Value & ".kgb"
-							ImmCat = DecriptaImmagine(ImmCat)
-							Filetto = Filetto.Replace("***URL LOGO***", ImmCat)
 
 							Dim PathIimmSoc As String = PathBaseMultimedia & "/" & NomeSquadra & "/Societa/" & idAnno & "_1.kgb"
 							PathIimmSoc = DecriptaImmagine(PathIimmSoc)
 							Filetto = Filetto.Replace("***URL SOCIETA***", PathIimmSoc)
 
-							Filetto = Filetto.Replace("***NOME CATEGORIA***", Rec("Categoria").Value & " " & Rec("AnnoCategoria").Value)
-							Filetto = Filetto.Replace("***NOME AVVERSARIO***", Rec("Avversario").Value)
+							If Rec("Casa").Value = "S" Then
+								Dim ImmCat As String = PathBaseMultimedia & "/" & NomeSquadra & "/Categorie/" & idAnno & "_" & Rec("idCategoria").Value & ".kgb"
+								ImmCat = DecriptaImmagine(ImmCat)
+								Filetto = Filetto.Replace("***URL LOGO***", ImmCat)
 
-							Dim ImmAvv As String = PathBaseMultimedia & "/" & NomeSquadra & "/Avversari/" & Rec("idAvversario").Value & ".kgb"
-							ImmAvv = DecriptaImmagine(ImmAvv)
-							Filetto = Filetto.Replace("***URL LOGO AVV***", ImmAvv)
+								Filetto = Filetto.Replace("***NOME CATEGORIA***", Rec("Categoria").Value & " " & Rec("AnnoCategoria").Value)
+								Filetto = Filetto.Replace("***NOME AVVERSARIO***", Rec("Avversario").Value)
+
+								Dim ImmAvv As String = PathBaseMultimedia & "/" & NomeSquadra & "/Avversari/" & Rec("idAvversario").Value & ".kgb"
+								ImmAvv = DecriptaImmagine(ImmAvv)
+								Filetto = Filetto.Replace("***URL LOGO AVV***", ImmAvv)
+							Else
+								Dim ImmCat As String = PathBaseMultimedia & "/" & NomeSquadra & "/Categorie/" & idAnno & "_" & Rec("idCategoria").Value & ".kgb"
+								ImmCat = DecriptaImmagine(ImmCat)
+								Filetto = Filetto.Replace("***URL LOGO AVV***", ImmCat)
+
+								Filetto = Filetto.Replace("***NOME CATEGORIA***", Rec("Avversario").Value)
+								Filetto = Filetto.Replace("***NOME AVVERSARIO***", Rec("Categoria").Value & " " & Rec("AnnoCategoria").Value)
+
+								Dim ImmAvv As String = PathBaseMultimedia & "/" & NomeSquadra & "/Avversari/" & Rec("idAvversario").Value & ".kgb"
+								ImmAvv = DecriptaImmagine(ImmAvv)
+								Filetto = Filetto.Replace("***URL LOGO***", ImmAvv)
+							End If
+
 
 							Dim Gara As String = ""
 							If Rec("Casa").Value = "S" Then
@@ -2218,8 +2235,20 @@ Public Class wsPartite
 									vecchioIdRuolo2 = idRuolo(13)
 								End If
 
+								Dim metaGiocatori As Integer = Int(Giocatori.Count / 2)
+								'If Giocatori.Count / 2 <> Int(Giocatori.Count / 2) Then
+								'	metaGiocatori -= 1
+								'End If
+
+								'Dim ii As Integer = 0
+								'For Each g As String In Giocatori
+								'	Convocati &= ii + 1 & ":" & g & "<br />"
+								'	ii += 1
+								'Next
+								'Convocati &= "<hr />"
+
 								Convocati &= "<table style=""width: 100%;"" cellpadding=""0px"" cellspacing=""0px"">"
-									For i As Integer = 0 To 11
+								For i As Integer = 0 To metaGiocatori - 1
 									Dim Riga As String = ""
 
 									Riga &= "<tr>"
@@ -2231,8 +2260,8 @@ Public Class wsPartite
 									End If
 
 									Dim Path12 As String = ""
-									If i + 12 < Giocatori.Count Then
-										Path12 = PathBaseMultimedia & "/" & NomeSquadra & "/Giocatori/" & idAnno & "_" & idGiocatore.Item(i + 12) & ".kgb"
+									If i + (metaGiocatori + 0) < Giocatori.Count Then
+										Path12 = PathBaseMultimedia & "/" & NomeSquadra & "/Giocatori/" & idAnno & "_" & idGiocatore.Item(i + (metaGiocatori + 0)) & ".kgb"
 										Path12 = DecriptaImmagine(Path12)
 									End If
 
@@ -2275,21 +2304,21 @@ Public Class wsPartite
 									Dim Altro2 As String = ""
 									Dim Numero As String = ""
 
-									If i + 12 < Giocatori.Count Then
-										Numero = i + 13
-										If (i + 12) / 2 = Int((i + 12) / 2) Then
+									If i + (metaGiocatori + 0) < Giocatori.Count Then
+										Numero = i + (metaGiocatori + 1)
+										If (i + (metaGiocatori + 0)) / 2 = Int((i + (metaGiocatori + 0)) / 2) Then
 											Colore = "#fff"
 										Else
 											If idRuolo.Item(i) > -1 Then
-												Colore = codiceColore(idRuolo.Item(i + 12))
+												Colore = codiceColore(idRuolo.Item(i + (metaGiocatori + 0)))
 											Else
 												Colore = "#ccc"
 											End If
 										End If
 
-										If vecchioIdRuolo2 <> idRuolo.Item(i + 12) Then
+										If vecchioIdRuolo2 <> idRuolo.Item(i + (metaGiocatori + 0)) Then
 											Altro2 = "border-top: 2px solid #000;"
-											vecchioIdRuolo2 = idRuolo.Item(i + 12)
+											vecchioIdRuolo2 = idRuolo.Item(i + (metaGiocatori + 0))
 										End If
 									Else
 										Numero = ""
@@ -2301,7 +2330,7 @@ Public Class wsPartite
 									End If
 
 									Riga &= "<td style=""width: 10%; background-color: " & Colore & "; " & Altro2 & """ class=""adestra"">"
-									Riga &= "<span class=""titolo3"">" & numero & "</span>"
+									Riga &= "<span class=""titolo3"">" & Numero & "</span>"
 									Riga &= "</td>"
 
 									Riga &= "<td style=""width: 10%; background-color: " & Colore & "; " & Altro2 & " text-align: center;"">"
@@ -2313,8 +2342,8 @@ Public Class wsPartite
 									Riga &= "</td>"
 
 									Riga &= "<td style=""width: 30%; background-color: " & Colore & "; " & Altro2 & """>"
-									If i + 12 < Giocatori.Count Then
-										Riga &= "<span class=""titolo3"">" & Giocatori.Item(i + 12) & "</span>"
+									If i + (metaGiocatori + 0) < Giocatori.Count Then
+										Riga &= "<span class=""titolo3"">" & Giocatori.Item(i + (metaGiocatori + 0)) & "</span>"
 									Else
 										Riga &= "<span class=""titolo3"">&nbsp;</span>"
 									End If
