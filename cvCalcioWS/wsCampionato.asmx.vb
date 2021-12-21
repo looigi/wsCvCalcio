@@ -52,7 +52,7 @@ Public Class wsCampionato
 				Try
 					' Squadre avversarie
 					Sql = "SELECT AvversariCalendario.idAvversario As idAvv, SquadreAvversarie.Descrizione As Squadra, CampiAvversari.idCampo As idCampo, CampiAvversari.Descrizione As Campo, " &
-						"CampiAvversari.Indirizzo As Indirizzo, AvversariCoord.Lat, AvversariCoord.Lon " &
+						"CampiAvversari.Indirizzo As Indirizzo, AvversariCoord.Lat, AvversariCoord.Lon, SquadreAvversarie.FuoriClassifica " &
 						"FROM AvversariCalendario LEFT JOIN SquadreAvversarie ON AvversariCalendario.idAvversario = SquadreAvversarie.idAvversario " &
 						"Left Join CampiAvversari On SquadreAvversarie.idCampo = CampiAvversari.idCampo " &
 						"Left Join AvversariCoord On SquadreAvversarie.idAvversario = AvversariCoord.idAvversario " &
@@ -80,6 +80,7 @@ Public Class wsCampionato
 									Rec("Indirizzo").Value.ToString.Replace(";", ",") & ";" &
 									Rec("Lat").Value & ";" &
 									Rec("Lon").Value & ";" &
+									Rec("FuoriClassifica").Value & ";" &
 									"§"
 							Rec.MoveNext()
 						Loop
@@ -239,8 +240,10 @@ Public Class wsCampionato
 				Dim Pareggiate As New ArrayList
 				Dim Perse As New ArrayList
 				Dim Punti As New ArrayList
+				Dim PuntiFC As New ArrayList
 				Dim gFatti As New ArrayList
 				Dim gSubiti As New ArrayList
+				Dim FuoriClassifica As New ArrayList
 
 				Dim CeRisultato As Boolean = False
 				Dim g1 As Integer = 0
@@ -260,7 +263,7 @@ Public Class wsCampionato
 				End If
 				Rec.Close
 
-				Sql = "Select SquadreAvversarie.idAvversario, SquadreAvversarie.Descrizione From (AvversariCalendario " &
+				Sql = "Select SquadreAvversarie.idAvversario, SquadreAvversarie.Descrizione, SquadreAvversarie.FuoriClassifica From (AvversariCalendario " &
 					"LEFT JOIN SquadreAvversarie As SquadreAvversarie On AvversariCalendario.idAvversario = SquadreAvversarie.idAvversario) " &
 					"Where idAnno=" & idAnno & " And idCategoria=" & idCategoria
 				Rec = LeggeQuery(Conn, Sql, Connessione)
@@ -277,11 +280,14 @@ Public Class wsCampionato
 					Punti.Add(0)
 					gFatti.Add(0)
 					gSubiti.Add(0)
+					PuntiFC.Add(0)
+					FuoriClassifica.Add(False)
 
 					Do Until Rec.Eof
 						If Rec("idAvversario").Value <> 999 Then
 							idSquadre.Add(Rec("idAvversario").Value)
 							Squadre.Add(Rec("Descrizione").Value)
+							FuoriClassifica.Add(IIf(Rec("FuoriClassifica").Value = "S", True, False))
 							Giocate.Add(0)
 							Vinte.Add(0)
 							Pareggiate.Add(0)
@@ -289,6 +295,7 @@ Public Class wsCampionato
 							Punti.Add(0)
 							gFatti.Add(0)
 							gSubiti.Add(0)
+							PuntiFC.Add(0)
 						End If
 
 						Rec.MoveNext
@@ -319,6 +326,8 @@ Public Class wsCampionato
 					Return Ritorno
 				Else
 					Do Until Rec.Eof
+						Dim bFuoriClassifica As Boolean = False
+
 						If "" & Rec("Risultato1").Value <> "" Then
 							Dim g() As String = Rec("Risultato1").Value.split("-")
 
@@ -333,6 +342,12 @@ Public Class wsCampionato
 							CeRisultato = True
 						Else
 							CeRisultato = False
+						End If
+
+						If ControllaValiditaSquadra(idSquadre, FuoriClassifica, Rec("idSqCasa").Value, Rec("idSqFuori").Value) = True Then
+							bFuoriClassifica = False
+						Else
+							bFuoriClassifica = True
 						End If
 
 						'If "" & Rec("RisGiochetti").Value <> "" Then
@@ -417,17 +432,30 @@ Public Class wsCampionato
 							If g1 > g2 Then
 								Vinte(Indice1) += 1
 								Perse(Indice2) += 1
-								Punti(Indice1) += 3
+								If bFuoriClassifica = False Then
+									Punti(Indice1) += 3
+								Else
+									PuntiFC(Indice1) += 3
+								End If
 							Else
 								If g1 < g2 Then
 									Vinte(Indice2) += 1
 									Perse(Indice1) += 1
-									Punti(Indice2) += 3
+									If bFuoriClassifica = False Then
+										Punti(Indice2) += 3
+									Else
+										PuntiFC(Indice2) += 3
+									End If
 								Else
 									Pareggiate(Indice1) += 1
 									Pareggiate(Indice2) += 1
-									Punti(Indice1) += 1
-									Punti(Indice2) += 1
+									If bFuoriClassifica = False Then
+										Punti(Indice1) += 1
+										Punti(Indice2) += 1
+									Else
+										PuntiFC(Indice1) += 1
+										PuntiFC(Indice2) += 1
+									End If
 								End If
 							End If
 						End If
@@ -456,9 +484,17 @@ Public Class wsCampionato
 								Punti(i) = Punti(k)
 								Punti(k) = appo
 
+								appo = PuntiFC(i)
+								PuntiFC(i) = PuntiFC(k)
+								PuntiFC(k) = appo
+
 								appo = Giocate(i)
 								Giocate(i) = Giocate(k)
 								Giocate(k) = appo
+
+								appo = FuoriClassifica(i)
+								FuoriClassifica(i) = FuoriClassifica(k)
+								FuoriClassifica(k) = appo
 
 								appo = Vinte(i)
 								Vinte(i) = Vinte(k)
@@ -488,7 +524,11 @@ Public Class wsCampionato
 					For Each i As Integer In idSquadre
 						Ritorno &= idSquadre(c) & ";"
 						Ritorno &= Squadre(c) & ";"
-						Ritorno &= Punti(c) & ";"
+						If FuoriClassifica(c) = True Then
+							Ritorno &= (500 + PuntiFC(c)) & ";"
+						Else
+							Ritorno &= Punti(c) & ";"
+						End If
 						Ritorno &= Giocate(c) & ";"
 						Ritorno &= Vinte(c) & ";"
 						Ritorno &= Pareggiate(c) & ";"
@@ -1546,6 +1586,7 @@ Public Class wsCampionato
 		Dim StampaAvversari As String = ""
 		Dim StampaMeteo As String = ""
 		Dim StampaAmmEsp As String = ""
+		Dim StampaSostituzioni As String = ""
 
 		Dim paths As String = gf.LeggeFileIntero(HttpContext.Current.Server.MapPath(".") & "\Impostazioni\PathAllegati.txt")
 		Dim P() As String = paths.Split(";")
@@ -1646,6 +1687,68 @@ Public Class wsCampionato
 
 							If Stampa = "S" Then
 								StampaMarcatori &= "</table>"
+							End If
+						End If
+					Catch ex As Exception
+						Ritorno = "ERROR: " & ex.Message
+						Ok = False
+					End Try
+				End If
+
+				Dim RitornoSost As String = ""
+
+				If Ok Then
+					filetto = gf.LeggeFileIntero(Server.MapPath(".") & "\Queries\Statistiche_Sostituzioni.txt")
+					Sql = "Select idGiocatore, Cosa, Cognome, Nome, Soprannome, Ruolo, Volte From (" & filetto & ") As B Where Categorie Like '%" & idCategoria & "-%' Order By Cosa, Volte Desc"
+					Try
+						Rec = LeggeQuery(Conn, Sql, Connessione)
+						If TypeOf (Rec) Is String Then
+							Ritorno = Rec
+						Else
+							If Stampa = "S" Then
+								StampaSostituzioni &= "<table style=""width: 100%;"" cellpading=""0"" cellspacing=""0"">" & vbCrLf
+								StampaSostituzioni &= "<tr style=""background-color: gray;"">" & vbCrLf
+								StampaSostituzioni &= "<th></th>" & vbCrLf
+								StampaSostituzioni &= "<th>Nominativo</th>" & vbCrLf
+								StampaSostituzioni &= "<th>Ruolo</th>" & vbCrLf
+								StampaSostituzioni &= "<th>Volte</th>" & vbCrLf
+								StampaSostituzioni &= "</tr>" & vbCrLf
+							End If
+
+							Do Until Rec.Eof
+								RitornoSost &= Rec("Cognome").Value & ";"
+								RitornoSost &= Rec("Nome").Value & ";"
+								RitornoSost &= Rec("Soprannome").Value & ";"
+								RitornoSost &= Rec("Ruolo").Value & ";"
+								RitornoSost &= Rec("Volte").Value & ";"
+								RitornoSost &= Rec("idGiocatore").Value & ";"
+								RitornoSost &= Rec("Cosa").Value & ";"
+								RitornoSost &= "§"
+
+								If Stampa = "S" Then
+									Dim Soprannome As String = Rec("Soprannome").Value
+									If Soprannome <> "" Then Soprannome = "'" & Soprannome & "' "
+									Dim Nominativo As String = Rec("Nome").Value & " " & Soprannome & Rec("Cognome").Value
+									Dim Path As String = PathBaseMultimedia & "/" & NomeSquadra & "/Giocatori/" & idAnno & "_" & Rec("idGiocatore").Value & ".kgb"
+									Path = DecriptaImmagine(Path)
+
+									StampaSostituzioni &= "<tr style=""background-color: " & Colore & ";"">" & vbCrLf
+									If Colore = "#ccc" Then Colore = "#fff" Else Colore = "#ccc"
+									StampaSostituzioni &= "<td><img src=""" & Path & """ width=""50"" height=""50"" /></td>" & vbCrLf
+									StampaSostituzioni &= "<td>" & Nominativo & "</td>" & vbCrLf
+									StampaSostituzioni &= "<td>" & Rec("Ruolo").Value & "</td>" & vbCrLf
+									StampaSostituzioni &= "<td style=""text-align: right;"">" & Rec("PresenzeCampionato").Value & "</td>" & vbCrLf
+									StampaSostituzioni &= "<td style=""text-align: right;"">" & Rec("PresenzeAmichevole").Value & "</td>" & vbCrLf
+									StampaSostituzioni &= "<td style=""text-align: right;"">" & Rec("Totale").Value & "</td>" & vbCrLf
+									StampaSostituzioni &= "</tr>" & vbCrLf
+								End If
+
+								Rec.MoveNext
+							Loop
+							Rec.Close()
+
+							If Stampa = "S" Then
+								StampaSostituzioni &= "</table>"
 							End If
 						End If
 					Catch ex As Exception
@@ -2451,6 +2554,8 @@ Public Class wsCampionato
 					End Try
 				End If
 
+				Ritorno &= "|" & RitornoSost
+
 				If Ok Then
 					If Stampa = "S" Then
 						Dim PathBaseImmagini As String = pathMultimedia
@@ -2468,6 +2573,7 @@ Public Class wsCampionato
 						filetto = filetto.Replace("***AVVERSARI***", StampaAvversari)
 						filetto = filetto.Replace("***METEO***", StampaMeteo)
 						filetto = filetto.Replace("***AMMESP***", StampaAmmEsp)
+						filetto = filetto.Replace("***SOSTITUZIONI***", StampaSostituzioni)
 
 						'Dim Altro As String = Now.Year & Format(Now.Month, "00") & Format(Now.Day, "00") ' & Format(Now.Hour, "00") & Format(Now.Minute, "00") & Format(Now.Second, "00")
 						Dim NomeFileFinale As String = pathAllegati & Squadra & "\Statistiche\Statistiche_Giornata_" & idGiornata & ".html"
@@ -2491,7 +2597,7 @@ Public Class wsCampionato
 			End If
 		End If
 
-		' Marcatori | Presenze | Fasce Goal Fatti | Fasce Goal Subiti | Eventi | Tipologie Partite | Partite | Avversari Incontrati | Meteo | AmmoEspu
+		' Marcatori | Presenze | Fasce Goal Fatti | Fasce Goal Subiti | Eventi | Tipologie Partite | Partite | Avversari Incontrati | Meteo | AmmoEspu | Sostituzioni
 
 		Return Ritorno
 	End Function
@@ -2586,7 +2692,11 @@ Public Class wsCampionato
 
 							Stampa &= "<td><img src=""" & Imm1 & """ width=""50"" height=""50"" /></td>" & vbCrLf
 							Stampa &= "<td>" & Campi(1) & "</td>"
-							Stampa &= "<td style=""text-align: right;"">" & Campi(2) & "</td>"
+							If Campi(2) > 499 Then
+								Stampa &= "<td style=""text-align: right;"">*" & Campi(2) - 500 & "*</td>"
+							Else
+								Stampa &= "<td style=""text-align: right;"">" & Campi(2) & "</td>"
+							End If
 							Stampa &= "<td style=""text-align: right;"">" & Campi(3) & "</td>"
 							Stampa &= "<td style=""text-align: right;"">" & Campi(4) & "</td>"
 							Stampa &= "<td style=""text-align: right;"">" & Campi(5) & "</td>"
@@ -2783,4 +2893,32 @@ Public Class wsCampionato
 		Return Ritorno
 	End Function
 
+	Private Function ControllaValiditaSquadra(Squadre As ArrayList, Lista As ArrayList, squadra1 As Integer, squadra2 As Integer) As Boolean
+		Dim q As Integer = 0
+		Dim FcC As String = ""
+		Dim FcF As String = ""
+		Dim Ritorno As Boolean = False
+
+		If squadra1 = 9999 Or squadra2 = 9999 Or squadra1 = -1 Or squadra2 = -1 Then
+			Return True
+		End If
+
+		For Each id As Integer In Squadre
+			If id = squadra1 Then
+				FcC = IIf(Lista.Item(q) = True, "S", "N")
+			End If
+			If id = squadra2 Then
+				FcF = IIf(Lista.Item(q) = True, "S", "N")
+			End If
+			q += 1
+		Next
+
+		If FcC = "N" And FcF = "N" Then
+			Ritorno = True
+		Else
+			Ritorno = False
+		End If
+
+		Return Ritorno
+	End Function
 End Class

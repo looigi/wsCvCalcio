@@ -9,7 +9,7 @@ Public Class wsEventi
 	Inherits System.Web.Services.WebService
 
 	<WebMethod()>
-	Public Function SalvaEvento(Squadra As String, idEvento As String, Evento As String) As String
+	Public Function SalvaEvento(Squadra As String, idEvento As String, Evento As String, SoloPortiere As String) As String
 		Dim Ritorno As String = ""
 		Dim Connessione As String = LeggeImpostazioniDiBase(Server.MapPath("."), Squadra)
 
@@ -61,7 +61,8 @@ Public Class wsEventi
 						Sql = "Insert Into Eventi Values (" &
 							" " & idEve & ", " &
 							"'" & Evento.Replace("'", "''") & "', " &
-							"'N'" &
+							"'N', " &
+							"'" & SoloPortiere & "' " &
 							")"
 						Ritorno = EsegueSql(Conn, Sql, Connessione)
 						If Ritorno.Contains(StringaErrore) Then
@@ -112,7 +113,7 @@ Public Class wsEventi
 						Else
 							Ritorno = ""
 							Do Until Rec.Eof
-								Ritorno &= Rec("idEvento").Value.ToString & ";" & Rec("Descrizione").Value.ToString & "§"
+								Ritorno &= Rec("idEvento").Value.ToString & ";" & Rec("Descrizione").Value.ToString & ";" & Rec("SoloPortiere").Value.ToString & "§"
 
 								Rec.MoveNext()
 							Loop

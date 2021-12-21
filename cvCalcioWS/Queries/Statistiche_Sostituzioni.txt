@@ -1,0 +1,10 @@
+Select B.idGiocatore, Categorie, 'Sostituito' As Cosa, B.Cognome, B.Nome, B.Soprannome, C.Descrizione As Ruolo, Count(*) As Volte From PartiteSostituzioni A
+Left Join Giocatori B On A.idSostituito = B.idGiocatore 
+Left Join Generale.dbo.Ruoli C On B.idRuolo = C.idRuolo 
+Group By B.idGiocatore, Categorie, B.Cognome, B.Nome, B.Soprannome, C.Descrizione
+Union All
+Select B.idGiocatore, Categorie, 'Entrato' As Cosa, B.Cognome, B.Nome, B.Soprannome, C.Descrizione As Ruolo, COUNT(*) As Volte From PartiteSostituzioni A
+Left Join Giocatori B On A.idEntrante = B.idGiocatore 
+Left Join Generale.dbo.Ruoli C On B.idRuolo = C.idRuolo 
+Group By B.idGiocatore, Categorie, B.Cognome, B.Nome, B.Soprannome, C.Descrizione
+

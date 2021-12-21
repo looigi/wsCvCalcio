@@ -274,7 +274,7 @@ Public Class wsCategorie
 										"GiornoAllenamento2, OraInizio2, OraFine2, " &
 										"GiornoAllenamento3, OraInizio3, OraFine3, " &
 										"GiornoAllenamento4, OraInizio4, OraFine4, " &
-										"AnnoCategoria, ShootOut, Tempi " &
+										"AnnoCategoria, ShootOut, Tempi, TempoGioco " &
 										"FROM Categorie Where idAnno=" & idAnno & " And Eliminato='N' Order By Descrizione"
 								Case "5", "7"
 									Sql = "Select A.idCategoria, B.Descrizione, AnticipoConvocazione, B.RisultatoATempi, " &
@@ -282,7 +282,7 @@ Public Class wsCategorie
 										"B.GiornoAllenamento2, B.OraInizio2, B.OraFine2, " &
 										"B.GiornoAllenamento3, B.OraInizio3, B.OraFine3, " &
 										"B.GiornoAllenamento4, B.OraInizio4, B.OraFine4, " &
-										"AnnoCategoria, ShootOut, Tempi " &
+										"AnnoCategoria, ShootOut, Tempi, TempoGioco " &
 										"From AllenatoriCategorie A " &
 										"Left Join Categorie B On A.idCategoria = B.idCategoria " &
 										"Where B.idAnno = " & idAnno & " And A.idUtente = " & idUtente & " And Eliminato='N' Order By Descrizione"
@@ -292,7 +292,7 @@ Public Class wsCategorie
 										"B.GiornoAllenamento2, B.OraInizio2, B.OraFine2, " &
 										"B.GiornoAllenamento3, B.OraInizio3, B.OraFine3, " &
 										"B.GiornoAllenamento4, B.OraInizio4, B.OraFine4, " &
-										"AnnoCategoria, ShootOut, Tempi " &
+										"AnnoCategoria, ShootOut, Tempi, TempoGioco " &
 										"From DirigentiCategorie A " &
 										"Left Join Categorie B On A.idCategoria = B.idCategoria " &
 										"Where B.idAnno = " & idAnno & " And A.idUtente = " & idUtente & " And Eliminato='N' Order By Descrizione"
@@ -302,7 +302,7 @@ Public Class wsCategorie
 										"B.GiornoAllenamento2, B.OraInizio2, B.OraFine2, " &
 										"B.GiornoAllenamento3, B.OraInizio3, B.OraFine3, " &
 										"B.GiornoAllenamento4, B.OraInizio4, B.OraFine4, " &
-										"AnnoCategoria, ShootOut, Tempi " &
+										"AnnoCategoria, ShootOut, Tempi, TempoGioco " &
 										"From UtentiCategorie A " &
 										"Left Join Categorie B On A.idCategoria = B.idCategoria " &
 										"Where B.idAnno = " & idAnno & " And A.idUtente = " & idUtente & " And Eliminato='N' Order By Descrizione"
@@ -326,7 +326,7 @@ Public Class wsCategorie
 											Rec("GiornoAllenamento2").Value & ";" & Rec("OraInizio2").Value & ";" & Rec("OraFine2").Value & ";" &
 											Rec("GiornoAllenamento3").Value & ";" & Rec("OraInizio3").Value & ";" & Rec("OraFine3").Value & ";" &
 											Rec("GiornoAllenamento4").Value & ";" & Rec("OraInizio4").Value & ";" & Rec("OraFine4").Value & ";" &
-											Rec("AnnoCategoria").Value & ";" & Rec("ShootOut").Value & ";" & Rec("Tempi").Value &
+											Rec("AnnoCategoria").Value & ";" & Rec("ShootOut").Value & ";" & Rec("Tempi").Value & ";" & Rec("TempoGioco").Value &
 											"§"
 
 										Rec.MoveNext()
@@ -374,7 +374,7 @@ Public Class wsCategorie
 						Else
 							Ritorno = ""
 							Do Until Rec.Eof
-								Ritorno &= Rec("idCategoria").Value.ToString & ";" & Rec("Descrizione").Value.ToString & ";" & Rec("AnticipoConvocazione").Value & ";" & Rec("RisultatoATempi").Value & ";" & Rec("AnnoCategoria").Value & "§"
+								Ritorno &= Rec("idCategoria").Value.ToString & ";" & Rec("Descrizione").Value.ToString & ";" & Rec("AnticipoConvocazione").Value & ";" & Rec("RisultatoATempi").Value & ";" & Rec("AnnoCategoria").Value & ";" & Rec("TempoGioco").Value & "§"
 
 								Rec.MoveNext()
 							Loop
@@ -396,7 +396,7 @@ Public Class wsCategorie
 	Public Function SalvaCategoria(Squadra As String, ByVal idAnno As String, idCategoria As String, Categoria As String, AnticipoConvocazione As String, RisultatoATempi As String,
 								   GiornoAllenamento1 As String, OraInizio1 As String, OraFine1 As String, GiornoAllenamento2 As String, OraInizio2 As String, OraFine2 As String,
 								   GiornoAllenamento3 As String, OraInizio3 As String, OraFine3 As String, GiornoAllenamento4 As String, OraInizio4 As String, OraFine4 As String,
-								   AnnoCategoria As String, ShootOut As String, Tempi As String) As String
+								   AnnoCategoria As String, ShootOut As String, Tempi As String, TempoGioco As String) As String
 		Dim Ritorno As String = ""
 		Dim Connessione As String = LeggeImpostazioniDiBase(Server.MapPath("."), Squadra)
 
@@ -471,7 +471,8 @@ Public Class wsCategorie
 								"'" & OraFine4 & "', " &
 								"'" & AnnoCategoria & "', " &
 								"'" & ShootOut & "', " &
-								" " & Tempi & " " &
+								" " & Tempi & ", " &
+								" " & TempoGioco & " " &
 								")"
 							Ritorno = EsegueSql(Conn, Sql, Connessione)
 							If Ritorno.Contains(StringaErrore) Then

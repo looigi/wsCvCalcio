@@ -66,7 +66,7 @@ Public Class wsAvversari
 				End If
 				Try
 					Sql = "SELECT SquadreAvversarie.idAvversario, SquadreAvversarie.idCampo, SquadreAvversarie.Descrizione, " &
-						"CampiAvversari.Descrizione As Campo, Indirizzo, Lat, Lon, Telefono, Referente, EMail, Fax " &
+						"CampiAvversari.Descrizione As Campo, Indirizzo, Lat, Lon, Telefono, Referente, EMail, Fax, FuoriClassifica " &
 						"FROM (SquadreAvversarie " &
 						"Left Join CampiAvversari On SquadreAvversarie.idCampo=CampiAvversari.idCampo) " &
 						"Left Join AvversariCoord On AvversariCoord.idAvversario=SquadreAvversarie.idAvversario " &
@@ -83,7 +83,7 @@ Public Class wsAvversari
 								Ritorno &= Rec("idAvversario").Value.ToString & ";" & Rec("idCampo").Value.ToString & ";" & Rec("Descrizione").Value.ToString.Trim & ";" & Rec("Campo").Value.ToString.Trim & ";" &
 									Rec("Indirizzo").Value.ToString.Trim & ";" & Rec("Lat").Value.ToString & ";" & Rec("Lon").Value.ToString & ";" &
 									Rec("Telefono").Value.ToString & ";" & Rec("Referente").Value.ToString & ";" & Rec("EMail").Value.ToString & ";" &
-									Rec("Fax").Value.ToString & ";§"
+									Rec("Fax").Value.ToString & ";" & Rec("FuoriClassifica").Value & ";§"
 
 								Rec.MoveNext()
 							Loop
@@ -104,7 +104,7 @@ Public Class wsAvversari
 	<WebMethod()>
 	Public Function SalvaAvversario(Squadra As String, idAnno As String, idAvversario As String, idCampo As String, Avversario As String,
 									Campo As String, Indirizzo As String, Coords As String, Telefono As String, Referente As String,
-									EMail As String, Fax As String) As String
+									EMail As String, Fax As String, FuoriClassifica As String) As String
 		Dim Ritorno As String = ""
 		Dim Connessione As String = LeggeImpostazioniDiBase(Server.MapPath("."), Squadra)
 
@@ -189,7 +189,8 @@ Public Class wsAvversari
 							"'" & Telefono.Replace("'", "''") & "', " &
 							"'" & Referente.Replace("'", "''") & "', " &
 							"'" & EMail.Replace("'", "''") & "', " &
-							"'" & Fax.Replace("'", "''") & "' " &
+							"'" & Fax.Replace("'", "''") & "', " &
+							"'" & FuoriClassifica & "' " &
 							")"
 						Ritorno = EsegueSql(Conn, Sql, Connessione)
 						If Ritorno.Contains(StringaErrore) Then

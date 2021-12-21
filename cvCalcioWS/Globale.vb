@@ -317,6 +317,7 @@ Module Globale
 			Dim PathEsternoMM As String = Multimedia(i).Replace(pathAllegati, pathMultimedia).Replace("Multimedia", "Allegati").Replace("\", "/")
 			Dim Nome As String = gf.TornaNomeFileDaPath(Multimedia(i))
 			Dim e As String = gf.TornaEstensioneFileDaPath(Nome)
+
 			Nome = Nome.Replace(e, "")
 			If Nome.Length > 14 Then
 				Nome = Mid(Nome, 1, 6) & "..." & Mid(Nome, Nome.Length - 6, 6)
@@ -381,6 +382,20 @@ Module Globale
 			Loop
 			Rec.Close()
 		End If
+
+		Dim InFormazione As New List(Of Integer)
+
+		Sql = "Select * From Titolari " &
+			"Where idPartita=" & idPartita
+		Rec2 = LeggeQuery(Conn, Sql, Connessione)
+		If TypeOf (Rec2) Is String Then
+		Else
+			Do Until Rec2.Eof
+				InFormazione.Add(Rec2("idGiocatore").Value)
+				Rec2.MoveNext
+			Loop
+		End If
+		Rec2.Close()
 
 		Sql = "SELECT Partite.idPartita, Partite.idCategoria, Partite.idAvversario, Partite.idTipologia, Partite.idCampo, " &
 			"Partite.idUnioneCalendario, Partite.DataOra, Partite.Giocata, Partite.OraConv, Risultati.Risultato, Risultati.Note, " &
@@ -455,7 +470,18 @@ Module Globale
 					End If
 				End If
 				Filone = Filone.Replace("***METEO***", "" & Meteo.ToString)
-				Filone = Filone.Replace("***NOTE***", "" & Rec("Note").Value)
+
+				Dim Notelle As String = "" & Rec("Note").Value
+
+				If Notelle <> "" Then
+					Notelle = Notelle.Replace("**BR**", "<br />")
+
+					Filone = Filone.Replace("***NOTE***", "NOTE: <hr />" & Notelle)
+
+					altezzaReport += 70
+				Else
+					Filone = Filone.Replace("***NOTE***", "")
+				End If
 
 				Dim CiSonoGiochetti As Boolean = False
 				Dim Giochetti() As String = {}
@@ -603,6 +629,7 @@ Module Globale
 				' Ammoniti / Espulsi
 				Dim Ammoniti As New List(Of AmmoEspu)
 				Dim Espulsi As New List(Of AmmoEspu)
+
 				Sql = "Select idGiocatore, Descrizione, Minuto, idTempo From " &
 					"EventiPartita " &
 					"Left Join Eventi On EventiPartita.idEvento = Eventi.idEvento " &
@@ -654,7 +681,22 @@ Module Globale
 						Dim Path As String = PathBaseMultimedia & "/" & NomeSquadra & "/Giocatori/" & idAnno & "_" & Rec("idGiocatore").Value & ".kgb"
 						Path = DecriptaImmagine(Path)
 
+						Dim messoTit As Boolean = False
+
+						' Titolari
 						Convocati.Append("<tr style=""background-color: " & Colore & """>")
+						Convocati.Append("<td>")
+						For Each inf As Integer In InFormazione
+							If inf = Rec("idGiocatore").Value Then
+								Convocati.Append("<img src=""" & PathBaseImmagini & "/Titolare.png" & """ width=""30px"" height=""30px"">")
+								' altezzaConvocati += 63
+								messoTit = True
+								Exit For
+							End If
+						Next
+						If Not messoTit Then Convocati.Append("&nbsp;")
+						Convocati.Append("</td>")
+
 						Convocati.Append("<td>")
 						If idCapitano = Rec("idGiocatore").Value Then
 							Convocati.Append("<span class=""testo nero"" style=""font-size: 15px; color: green;"">C</span>")
@@ -1049,13 +1091,13 @@ Module Globale
 						Marcatori.Append(vbCrLf)
 						Marcatori.Append("<tr>")
 						Marcatori.Append("<td>")
-						Marcatori.Append("")
+						Marcatori.Append("<span class=""testo verde"" style=""font-size: 13px;"">Rig.</span>")
 						Marcatori.Append("</td>")
 						Marcatori.Append("<td>")
-						Marcatori.Append("<span class=""testo verde"" style=""font-size: 13px;"">Tempo</span>")
+						Marcatori.Append("<span class=""testo verde"" style=""font-size: 13px;"">T.</span>")
 						Marcatori.Append("</td>")
 						Marcatori.Append("<td>")
-						Marcatori.Append("<span class=""testo verde"" style=""font-size: 13px;"">Minuto</span>")
+						Marcatori.Append("<span class=""testo verde"" style=""font-size: 13px;"">Min.</span>")
 						Marcatori.Append("</td>")
 						Marcatori.Append("<td>")
 						Marcatori.Append("</td>")
@@ -1124,7 +1166,7 @@ Module Globale
 							Marcatori.Append("<tr style=""background-color: " & Colore & """>")
 							Marcatori.Append("<td>")
 							If Mm(6) = "S" Then
-								Marcatori.Append("<span class=""testo nero"" style=""font-size: 15px; font-weight: bold; color: red;"">R</span>")
+								Marcatori.Append("<span class=""testo nero"" style=""font-size: 15px; font-weight: bold; color: red;"">*</span>")
 							Else
 								Marcatori.Append("")
 							End If
@@ -1153,9 +1195,12 @@ Module Globale
 						Marcatori.Append("</table>")
 
 						Filone = Filone.Replace("***MARCATORI***", Marcatori.ToString)
+						'Filone = Marcatori.ToString
 
 						' Eventi
 						Dim Eventi As New StringBuilder
+						Dim Evento As New List(Of String)
+						Dim QuantiEventi As New List(Of Integer)
 
 						Eventi.Append("<table style=""width: 99%; text-align: center;"" cellpadding=""0"" cellspacing=""0"">")
 						Eventi.Append(vbCrLf)
@@ -1167,7 +1212,6 @@ Module Globale
 						If TypeOf (Rec2) Is String Then
 						Else
 							Dim tempoAtt As String = ""
-
 							Colore = "#aaa"
 							Do Until Rec2.Eof
 								Dim Path As String
@@ -1221,14 +1265,44 @@ Module Globale
 								Eventi.Append("<img src=""" & Path & """ style=""width: 30px; height: 30px;"" onerror=""this.src='" & PathBaseImmScon & "'"" />")
 								Eventi.Append("</td>")
 								Eventi.Append("<td align=""left"">")
-								Eventi.Append("<span class=""testo nero"" style=""font-size: 13px;"">" & Rec2("Giocatore").Value & "</span>")
+
+								Dim Nome As String = Rec2("Giocatore").Value
+								Dim Cognome As String = ""
+
+								If Nome.Contains(" ") Then
+									Dim a As Integer = Nome.IndexOf(" ")
+
+									Cognome = Mid(Nome, a + 1, Nome.Length).Trim
+									Nome = Mid(Nome, 1, a).Trim
+									Eventi.Append("<span class=""testo nero"" style=""font-size: 13px;"">" & Nome & "<br />" & Cognome & "</span>")
+								Else
+									Eventi.Append("<span class=""testo nero"" style=""font-size: 13px;"">" & Nome & "</span>")
+								End If
+
 								Eventi.Append("</td>")
 								Eventi.Append("</tr>")
 								Eventi.Append(vbCrLf)
 
 								If Colore = "#aaa" Then Colore = "#fff" Else Colore = "#aaa"
 
-								altezzaEventi += 30
+								altezzaEventi += 29
+
+								Dim OkEv As Boolean = False
+								Dim q2 As Integer = 0
+
+								For Each e As String In Evento
+									If e = Rec2("Descrizione").Value Then
+										OkEv = True
+										QuantiEventi.Item(q2) += 1
+										Exit For
+									End If
+
+									q2 += 1
+								Next
+								If Not OkEv Then
+									Evento.Add(Rec2("Descrizione").Value)
+									QuantiEventi.Add(1)
+								End If
 
 								Rec2.MoveNext
 							Loop
@@ -1237,6 +1311,55 @@ Module Globale
 
 						Eventi.Append("</table>")
 						Filone = Filone.Replace("***RACCONTO***", Eventi.ToString)
+
+						For i As Integer = 0 To QuantiEventi.Count - 1
+							For k = i + 1 To QuantiEventi.Count - 1
+								If QuantiEventi.Item(i) < QuantiEventi.Item(k) Then
+									Dim Appo As Integer = QuantiEventi.Item(i)
+									QuantiEventi.Item(i) = QuantiEventi.Item(k)
+									QuantiEventi(k) = Appo
+
+									Dim sAppo As String = Evento.Item(i)
+									Evento.Item(i) = Evento.Item(k)
+									Evento(k) = sAppo
+								End If
+							Next
+						Next
+
+						Dim q As Integer = 0
+						Dim Riepilogo As New StringBuilder
+
+						Riepilogo.Append("<div style=""width: 98%; border: 1px solid #999; border-radius: 3px; background-color: #fffccb; height: auto; padding: 3px; margin: 3px;"">")
+						Riepilogo.Append("<table style=""width: 99%; text-align: center;"" cellpadding=""0"" cellspacing=""0"">")
+						Riepilogo.Append(vbCrLf)
+						Riepilogo.Append("<tr>")
+						Riepilogo.Append("<th><span class=""testo verde"" style=""font-size: 13px;"">Evento</span>")
+						Riepilogo.Append("</th>")
+						Riepilogo.Append("<th><span class=""testo verde"" style=""font-size: 13px;"">Quanti</span>")
+						Riepilogo.Append("</th>")
+						Riepilogo.Append("</tr>")
+						Riepilogo.Append(vbCrLf)
+
+						For Each e As String In Evento
+							Riepilogo.Append("<tr>")
+							Riepilogo.Append("<td align=""left"">")
+							Riepilogo.Append("<span class=""testo nero"" style=""font-size: 13px;"">" & e & "</span>")
+							Riepilogo.Append("</td>")
+							Riepilogo.Append("<td align=""right"">")
+							Riepilogo.Append("<span class=""testo nero"" style=""font-size: 13px;"">" & QuantiEventi.Item(q) & "</span>")
+							Riepilogo.Append("</td>")
+							Riepilogo.Append("</tr>")
+							Riepilogo.Append(vbCrLf)
+
+							altezzaEventi += 29
+
+							q += 1
+						Next
+						Riepilogo.Append("</table>")
+						Riepilogo.Append("</div>")
+						Riepilogo.Append(vbCrLf)
+
+						Filone = Filone.Replace("***RIEPILOGO RACCONTO***", Riepilogo.ToString)
 
 						If altezzaConvocati > altezzaEventi Then
 							altezzaReport += altezzaConvocati
@@ -1524,20 +1647,20 @@ Module Globale
 			'Pressione: dsResult.Tables(6).Rows(0)
 			'Tempo:  dsResult.Tables(13).Rows(0)(1)
 
-			Ritorno &= dsResult.Tables(13).Rows(0)(1).ToString() & ";"
+			Ritorno &= dsResult.Tables("weather").Rows(0)(1).ToString() & ";"
 
 			'txtMinima.Text = dsResult.Tables(4).Rows(0)(1).ToString()
 			'txtMassima.Text = dsResult.Tables(4).Rows(0)(2).ToString()
-			Ritorno &= dsResult.Tables(3).Rows(0)(0).ToString() & ";"
+			Ritorno &= dsResult.Tables("temperature").Rows(0)(0).ToString() & ";"
 			'txtSorge.Text = DateTime.Parse(dsResult.Tables(3).Rows(0)(0).ToString()).ToString("dd/MM/yyyy hh:mm:ss")
 			'txtTramonta.Text = DateTime.Parse(dsResult.Tables(3).Rows(0)(1).ToString()).ToString("dd/MM/yyyy HH:mm:ss")
-			Ritorno &= dsResult.Tables(5).Rows(0)(0).ToString() & ";"
-			Ritorno &= dsResult.Tables(6).Rows(0)(0).ToString() & ";"
+			Ritorno &= dsResult.Tables("humidity").Rows(0)(0).ToString() & ";"
+			Ritorno &= dsResult.Tables("pressure").Rows(0)(0).ToString() & ";"
 			'txtventoVelocita.Text = dsResult.Tables(8).Rows(0)(0).ToString() + " " + dsResult.Tables(8).Rows(0)(1).ToString()
 			'txtDirezioneVento.Text = dsResult.Tables(9).Rows(0)(1).ToString() + "     " + dsResult.Tables(9).Rows(0)(2).ToString()
 			'txtPrecipitazione.Text = dsResult.Tables(11).Rows(0)(0).ToString()
 
-			Ritorno &= "http://openweathermap.org/img/w/" + dsResult.Tables(13).Rows(0)(2).ToString() + ".png" & ";"
+			Ritorno &= "http://openweathermap.org/img/w/" + dsResult.Tables("temperature").Rows(0)(2).ToString() + ".png" & ";"
 		Catch ex As Exception
 			Ritorno = StringaErrore & " " & ex.Message
 		End Try

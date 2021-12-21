@@ -4,17 +4,17 @@ FROM            (SELECT        C.Categorie, C.idGiocatore, C.Cognome, C.Nome, C.
                           FROM            dbo.Convocati AS A LEFT OUTER JOIN
                                                     dbo.Partite AS B ON A.idPartita = B.idPartita LEFT OUTER JOIN
                                                     dbo.Giocatori AS C ON A.idGiocatore = C.idGiocatore LEFT OUTER JOIN
-                                                    Generale.dbo.Tipologie AS D ON B.idTipologia = D.idTipologia LEFT OUTER JOIN
+                                                    Generale.dbo.TipologiePartite AS D ON B.idTipologia = D.idTipologia LEFT OUTER JOIN
                                                     Generale.dbo.Ruoli AS E ON C.idRuolo = E.idRuolo
-                          WHERE        (D.idTipologia = 1)
+                          WHERE        (D.idTipologia = 1) And Giocata = 'S'
                           GROUP BY C.Categorie, C.idGiocatore, C.Cognome, C.Nome, C.Soprannome, E.Descrizione
                           UNION ALL
                           SELECT        C.Categorie, C.idGiocatore, C.Cognome, C.Nome, C.Soprannome, E.Descrizione AS Ruolo, 0 AS PresenzAmichevole, COUNT(*) AS PresenzaCampionato
                           FROM            dbo.Convocati AS A LEFT OUTER JOIN
                                                    dbo.Partite AS B ON A.idPartita = B.idPartita LEFT OUTER JOIN
                                                    dbo.Giocatori AS C ON A.idGiocatore = C.idGiocatore LEFT OUTER JOIN
-                                                   Generale.dbo.Tipologie AS D ON B.idTipologia = D.idTipologia LEFT OUTER JOIN
+                                                   Generale.dbo.TipologiePartite AS D ON B.idTipologia = D.idTipologia LEFT OUTER JOIN
                                                    Generale.dbo.Ruoli AS E ON C.idRuolo = E.idRuolo
-                          WHERE        (D.idTipologia = 2)
+                          WHERE        (D.idTipologia = 2) And Giocata = 'S'
                           GROUP BY C.Categorie, C.idGiocatore, C.Cognome, C.Nome, C.Soprannome, E.Descrizione) AS A_1
 GROUP BY Categorie, idGiocatore, Cognome, Nome, Soprannome, Ruolo

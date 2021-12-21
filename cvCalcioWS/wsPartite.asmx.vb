@@ -14,6 +14,75 @@ Public Class wsPartite
 	Inherits System.Web.Services.WebService
 
 	<WebMethod()>
+	Public Function SalvaTitolari(Squadra As String, idPartita As String, Giocatori As String) As String
+		Dim Ritorno As String = ""
+		Dim Connessione As String = LeggeImpostazioniDiBase(Server.MapPath("."), Squadra)
+
+		If Connessione = "" Then
+			Ritorno = ErroreConnessioneNonValida & ":" & Connessione
+		Else
+			Dim Conn As Object = ApreDB(Connessione)
+
+			If TypeOf (Conn) Is String Then
+				Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
+			Else
+				Dim Ok As Boolean = True
+				Dim Rec As Object = Server.CreateObject("ADODB.Recordset")
+				Dim Sql As String = ""
+
+				Sql = "Begin transaction"
+				Ritorno = EsegueSql(Conn, Sql, Connessione)
+				If Ritorno <> "*" Then
+					Ok = False
+				End If
+
+				If Ok Then
+					Sql = "Delete From Titolari Where idPartita = " & idPartita
+					Ritorno = EsegueSql(Conn, Sql, Connessione)
+					If Ritorno <> "*" Then
+						Ok = False
+					End If
+				End If
+
+				If Ok Then
+					Dim Progressivo As Integer = 0
+					Dim id() As String = Giocatori.Split(";")
+
+					For Each i As String In id
+						If i <> "" Then
+							Progressivo += 1
+
+							Sql = "Insert Into Titolari Values (" &
+								" " & idPartita & ", " &
+								" " & Progressivo & ", " &
+								" " & i & " " &
+								")"
+							Ritorno = EsegueSql(Conn, Sql, Connessione)
+							If Ritorno <> "*" Then
+								Ok = False
+								Exit For
+							End If
+						End If
+					Next
+				End If
+
+				If Ok Then
+					Ritorno = "*"
+					Sql = "Commit"
+					Dim Ritorno2 As String = EsegueSql(Conn, Sql, Connessione)
+				Else
+					Sql = "Rollback"
+					Dim Ritorno2 As String = EsegueSql(Conn, Sql, Connessione)
+				End If
+
+				Conn.Close()
+			End If
+		End If
+
+		Return Ritorno
+	End Function
+
+	<WebMethod()>
 	Public Function SalvaPartita(Squadra As String, idPartita As String, ByVal idAnno As String, ByVal idCategoria As String, ByVal idAvversario As String,
 								 idAllenatore As String, DataOra As String, Casa As String, idTipologia As String,
 								 idCampo As String, Risultato As String, Notelle As String, Marcatori As String, Convocati As String,
@@ -1440,7 +1509,7 @@ Public Class wsPartite
 						"MeteoPartite.Tempo, MeteoPartite.Gradi, MeteoPartite.Umidita, MeteoPartite.Pressione, MeteoPartite.Icona, ArbitriPartite.idArbitro, Arbitri.Cognome + ' ' + Arbitri.Nome As Arbitro, " &
 						"Partite.RisultatoATempi, Partite.DataOraAppuntamento, Partite.LuogoAppuntamento, Partite.MezzoTrasporto, Categorie.AnticipoConvocazione, Anni.Indirizzo, Anni.Lat, Anni.Lon, " &
 						"Anni.CampoSquadra, Anni.NomePolisportiva, Partite.ShootOut, Partite.Tempi, Partite.PartitaConRigori, PartiteCapitani.idCapitano, " &
-						"RisultatiAvversariMinuti1.Minuti As TempiGAvv1, RisultatiAvversariMinuti2.Minuti As TempiGAvv2, RisultatiAvversariMinuti3.Minuti As TempiGAvv3 " &
+						"RisultatiAvversariMinuti1.Minuti As TempiGAvv1, RisultatiAvversariMinuti2.Minuti As TempiGAvv2, RisultatiAvversariMinuti3.Minuti As TempiGAvv3, Categorie.TempoGioco " &
 						"FROM Partite LEFT JOIN Risultati ON Partite.idPartita = Risultati.idPartita " &
 						"LEFT JOIN RisultatiAggiuntivi ON Partite.idPartita = RisultatiAggiuntivi.idPartita " &
 						"LEFT JOIN SquadreAvversarie ON Partite.idAvversario = SquadreAvversarie.idAvversario " &
@@ -1712,6 +1781,23 @@ Public Class wsPartite
 								Ritorno &= ga1.Replace(";", "%") & ";"
 								Ritorno &= ga2.Replace(";", "%") & ";"
 								Ritorno &= ga3.Replace(";", "%") & ";"
+								Ritorno &= Rec("TempoGioco").Value & ";"
+
+								Dim CiSonoTitolari As String = "S"
+
+								Sql = "Select Count(*) From Titolari Where idPartita = " & Rec("idPartita").Value.ToString
+								Rec2 = LeggeQuery(Conn, Sql, Connessione)
+								If TypeOf (Rec2) Is String Then
+								Else
+									If Rec2(0).Value Is DBNull.Value Then
+										CiSonoTitolari = "N"
+									Else
+										CiSonoTitolari = "S"
+									End If
+									Rec2.Close
+								End If
+
+								Ritorno &= CiSonoTitolari & ";"
 								Ritorno &= "§"
 
 								Rec.MoveNext()
