@@ -1,1 +1,1 @@
-D:\Sorgenti\VB.Net\Miei\WEB\Webservices\cvCalcio\cvCalcioWS\cvCalcioWS\CSV\
+U:\IIS\inCalcio\CalcioImages

@@ -1841,6 +1841,77 @@ Public Class wsGenerale
 		Return Ritorno
 	End Function
 
+
+	<WebMethod()>
+	Public Function ConverteImmagineGP(CodiceSquadra As String, Immagine As String) As String
+		Dim Ritorno As String = ""
+		Dim gf As New GestioneFilesDirectory
+		Dim path As String = ""
+		Dim pathImmagine As String = ""
+		Dim pathDestinazione As String = ""
+		Dim fileOrigine As String = ""
+		Dim fileDestinazione As String = ""
+		Dim urlIniziale As String = ""
+		Dim chiave As String = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+		Dim Datella As String = ""
+		For I As Integer = 1 To 10
+			Dim codice As Integer = RitornaValoreRandom(chiave.Length - 1) + 1
+			Datella &= Mid(chiave, codice, 1)
+		Next
+		Dim nn As String = gf.TornaNomeFileDaPath(Immagine)
+		If nn.Contains(".") Then
+			nn = Mid(nn, 1, nn.IndexOf("."))
+		End If
+		Datella &= "_" & nn
+		Dim Ok As Boolean = True
+		Dim cr As New CriptaFiles
+
+		' http://192.168.0.227:92/MultiMedia/Morti_De_Sonno_Fc/Giocatori/1_542.jpg
+
+		path = gf.LeggeFileIntero(Server.MapPath(".") & "\Impostazioni\Paths.txt")
+		path = path.Replace(vbCrLf, "")
+		If Strings.Right(path, 1) <> "\" Then
+			path &= "\"
+		End If
+
+		If Ok Then
+			pathDestinazione = path & "Appoggio\"
+			fileOrigine = path & Immagine
+			fileDestinazione = pathDestinazione & Datella & ".jpg"
+
+			fileOrigine = fileOrigine.Replace("%2F", "\")
+			fileDestinazione = fileDestinazione.Replace("%2F", "\")
+
+			If Immagine <> "" Then
+				If File.Exists(fileOrigine) Then
+					gf.CreaDirectoryDaPercorso(fileDestinazione)
+					cr.DecryptFile(CryptPasswordString, fileOrigine, fileDestinazione)
+
+					' File.Copy(fileOrigine, fileDestinazione)
+
+					Ritorno = fileDestinazione
+					quanteConversioni += 1
+					If quanteConversioni > 50 Then
+						PulisceCartellaTemporanea()
+						quanteConversioni = 0
+					End If
+					'Dim t As New Timer With {.Interval = 10000}
+					't.Tag = DateTime.Now
+					'AddHandler t.Tick, Sub(sender, e) MyTickHandler(t, fileDestinazione)
+					't.Start()
+				Else
+					Ritorno = StringaErrore & " Immagine non esistente"
+				End If
+			Else
+				Ritorno = StringaErrore & " Nessuna immagine passata"
+			End If
+		Else
+			Ritorno = StringaErrore & " Errore nel decodificare la stringa"
+		End If
+
+		Return Ritorno
+	End Function
+
 	'Private Sub MyTickHandler(t As Timer, ritorno As String)
 	'	File.Delete(ritorno)
 	'	t.Stop()

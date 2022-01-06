@@ -1569,16 +1569,46 @@ Public Class wsGiocatori
 				Dim Sql As String = ""
 
 				If Ritorno = "" Then
+					Dim Ok As Boolean = True
 					Dim gf As New GestioneFilesDirectory
 					Dim Percorso As String = gf.LeggeFileIntero(Server.MapPath(".") & "\Impostazioni\Paths.txt")
-					gf = Nothing
 					Percorso = Percorso.Trim()
 					If Strings.Right(Percorso, 1) <> "\" Then
 						Percorso &= "\"
 					End If
 
-					Try
-						Sql = "SELECT Giocatori.idGiocatore, Ruoli.idRuolo As idR, Giocatori.Cognome, Giocatori.Nome, Ruoli.Descrizione, Giocatori.EMail, Giocatori.Telefono, Giocatori.Soprannome, Giocatori.DataDiNascita, Giocatori.Indirizzo, " &
+					Dim NomeSquadra As String = ""
+					Dim ss() As String = Squadra.Split("_")
+					Sql = "Select * From [Generale].[dbo].[Squadre] Where idSquadra = " & Val(ss(1)).ToString
+					Rec = LeggeQuery(Conn, Sql, Connessione)
+					If TypeOf (Rec) Is String Then
+						Ok = False
+						Ritorno = "Problemi lettura squadra"
+					Else
+						If Rec.Eof Then
+						Else
+							NomeSquadra = "" & Rec("Descrizione").Value
+						End If
+						Rec.Close
+					End If
+
+					Dim paths As String = gf.LeggeFileIntero(Server.MapPath(".") & "\Impostazioni\PathAllegati.txt")
+					Dim P() As String = paths.Split(";")
+					If Strings.Right(P(0), 1) <> "\" Then
+						P(0) &= "\"
+					End If
+					Dim pathAllegati As String = P(0).Replace(vbCrLf, "")
+					If Strings.Right(P(2), 1) <> "/" Then
+						P(2) &= "/"
+					End If
+					Dim pathMultimedia As String = P(2).Replace(vbCrLf, "")
+					Dim PathBaseMultimedia As String = P(3) ' pathMultimedia.Replace("Allegati", "Multimedia")
+					Dim pathHTTPMultimedia As String = P(2)
+					gf = Nothing
+
+					If OK Then
+						Try
+							Sql = "SELECT Giocatori.idGiocatore, Ruoli.idRuolo As idR, Giocatori.Cognome, Giocatori.Nome, Ruoli.Descrizione, Giocatori.EMail, Giocatori.Telefono, Giocatori.Soprannome, Giocatori.DataDiNascita, Giocatori.Indirizzo, " &
 							"CodFiscale, Maschio, Citta, Matricola, NumeroMaglia, Giocatori.idCategoria, Giocatori.idCategoria2 As idCategoria2, Categorie2.Descrizione As Categoria2, " &
 							"Giocatori.idCategoria3 As idCategoria3, Categorie3.Descrizione As Categoria3, Categorie.Descrizione As Categoria1, Giocatori.Categorie, " &
 							"Giocatori.RapportoCompleto, Giocatori.idTaglia, Min(KitGiocatori.idTipoKit) As idTipologiaKit, Giocatori.Cap, Giocatori.CittaNascita, Giocatori.Maggiorenne, " &
@@ -1604,131 +1634,337 @@ Public Class wsGiocatori
 							"GiocatoriSemafori.Semaforo4, GiocatoriSemafori.Titolo4, GiocatoriSemafori.Semaforo5, GiocatoriSemafori.Titolo5, CodiceTessera, GiocatoriDettaglio.MailGenitore1, GiocatoriDettaglio.MailGenitore2, " &
 							"UtentiPadre.idGiocatore, UtentiMadre.idGiocatore " &
 							"Order By Giocatori.Cognome, Giocatori.Nome"
-						Rec = LeggeQuery(Conn, Sql, Connessione)
-						If TypeOf (Rec) Is String Then
-							Ritorno = Rec
-						Else
-							If Rec.Eof Then
-								Ritorno = StringaErrore & " Nessun giocatore rilevato"
+							Rec = LeggeQuery(Conn, Sql, Connessione)
+							If TypeOf (Rec) Is String Then
+								Ritorno = Rec
 							Else
-								Ritorno = ""
-								Do Until Rec.Eof
-									Dim Semaforo1 As String = ""
-									Dim Semaforo2 As String = ""
-									Dim Semaforo3 As String = ""
-									Dim Semaforo4 As String = ""
-									Dim Semaforo5 As String = ""
+								If Rec.Eof Then
+									Ritorno = StringaErrore & " Nessun giocatore rilevato"
+								Else
+									Ritorno = ""
+									Do Until Rec.Eof
+										Dim Semaforo1 As String = ""
+										Dim Semaforo2 As String = ""
+										Dim Semaforo3 As String = ""
+										Dim Semaforo4 As String = ""
+										Dim Semaforo5 As String = ""
 
-									If Rec("Semaforo1").Value Is DBNull.Value Or "" & Rec("Semaforo1").Value = "" Then
-										Semaforo1 = "rosso" & "*" & "Giocatore non iscritto;"
-									Else
-										Semaforo1 = Rec("Semaforo1").Value & "*" & Rec("Titolo1").Value & ";"
-									End If
-									'If Rec("Semaforo2").Value Is DBNull.Value Or "" & Rec("Semaforo2").Value = "" Then
-									'	Semaforo2 = "rosso" & "*" & "Pagamento non completo;"
-									'Else
-									'Semaforo2 = Rec("Semaforo2").Value & "*" & Rec("Titolo2").Value & ";"
-									'End If
-									Semaforo2 = "*;"
-									If Rec("Smeaforo3").Value Is DBNull.Value Or "" & Rec("Smeaforo3").Value = "" Then
-										Semaforo3 = "rosso" & "*" & "Nessuna firma validata;"
-									Else
-										Semaforo3 = Rec("Smeaforo3").Value & "*" & Rec("Titolo3").Value & ";"
-									End If
-									If Rec("Semaforo4").Value Is DBNull.Value Or "" & Rec("Semaforo4").Value = "" Then
-										Semaforo4 = "rosso" & "*" & "Flag certificato non impostato;"
-									Else
-										Semaforo4 = Rec("Semaforo4").Value & "*" & Rec("Titolo4").Value & ";"
-									End If
-									If Rec("Semaforo5").Value Is DBNull.Value Or "" & Rec("Semaforo5").Value = "" Then
-										Semaforo5 = "rosso" & "*" & "Nessun elemento kit consegnato;"
-									Else
-										Semaforo5 = Rec("Semaforo5").Value & "*" & Rec("Titolo5").Value & ";"
-									End If
+										If Rec("Semaforo1").Value Is DBNull.Value Or "" & Rec("Semaforo1").Value = "" Then
+											Semaforo1 = "rosso" & "*" & "Giocatore non iscritto;"
+										Else
+											Semaforo1 = Rec("Semaforo1").Value & "*" & Rec("Titolo1").Value & ";"
+										End If
+										'If Rec("Semaforo2").Value Is DBNull.Value Or "" & Rec("Semaforo2").Value = "" Then
+										'	Semaforo2 = "rosso" & "*" & "Pagamento non completo;"
+										'Else
+										'Semaforo2 = Rec("Semaforo2").Value & "*" & Rec("Titolo2").Value & ";"
+										'End If
+										Semaforo2 = "*;"
+										If Rec("Smeaforo3").Value Is DBNull.Value Or "" & Rec("Smeaforo3").Value = "" Then
+											Semaforo3 = "rosso" & "*" & "Nessuna firma validata;"
+										Else
+											Semaforo3 = Rec("Smeaforo3").Value & "*" & Rec("Titolo3").Value & ";"
+										End If
+										If Rec("Semaforo4").Value Is DBNull.Value Or "" & Rec("Semaforo4").Value = "" Then
+											Semaforo4 = "rosso" & "*" & "Flag certificato non impostato;"
+										Else
+											Semaforo4 = Rec("Semaforo4").Value & "*" & Rec("Titolo4").Value & ";"
+										End If
+										If Rec("Semaforo5").Value Is DBNull.Value Or "" & Rec("Semaforo5").Value = "" Then
+											Semaforo5 = "rosso" & "*" & "Nessun elemento kit consegnato;"
+										Else
+											Semaforo5 = Rec("Semaforo5").Value & "*" & Rec("Titolo5").Value & ";"
+										End If
 
-									Dim UtenteGenitore1 As String = ""
-									Dim UtenteGenitore2 As String = ""
+										Dim UtenteGenitore1 As String = ""
+										Dim UtenteGenitore2 As String = ""
 
-									If Not Rec("MailGenitore1").Value Is DBNull.Value Then
-										If Rec("MailGenitore1").Value <> "" Then
-											Sql = "Select * From [Generale].[dbo].[Utenti] Where Utente='" & Rec("MailGenitore1").Value.replace("'", "''") & "'"
-											Rec2 = LeggeQuery(Conn, Sql, Connessione)
-											If TypeOf (Rec2) Is String Then
-												Ritorno = Rec2
-											Else
-												If Not Rec2.Eof Then
-													UtenteGenitore1 = Rec2("Utente").Value
+										If Not Rec("MailGenitore1").Value Is DBNull.Value Then
+											If Rec("MailGenitore1").Value <> "" Then
+												Sql = "Select * From [Generale].[dbo].[Utenti] Where Utente='" & Rec("MailGenitore1").Value.replace("'", "''") & "'"
+												Rec2 = LeggeQuery(Conn, Sql, Connessione)
+												If TypeOf (Rec2) Is String Then
+													Ritorno = Rec2
+												Else
+													If Not Rec2.Eof Then
+														UtenteGenitore1 = Rec2("Utente").Value
+													End If
+													'Rec2.Close
 												End If
-												'Rec2.Close
 											End If
 										End If
-									End If
 
-									If Not Rec("MailGenitore2").Value Is DBNull.Value Then
-										If Rec("MailGenitore2").Value <> "" Then
-											Sql = "Select * From [Generale].[dbo].[Utenti] Where Utente='" & Rec("MailGenitore2").Value.replace("'", "''") & "'"
-											Rec2 = LeggeQuery(Conn, Sql, Connessione)
-											If TypeOf (Rec2) Is String Then
-												Ritorno = Rec2
-											Else
-												If Not Rec2.Eof Then
-													UtenteGenitore2 = Rec2("Utente").Value
+										If Not Rec("MailGenitore2").Value Is DBNull.Value Then
+											If Rec("MailGenitore2").Value <> "" Then
+												Sql = "Select * From [Generale].[dbo].[Utenti] Where Utente='" & Rec("MailGenitore2").Value.replace("'", "''") & "'"
+												Rec2 = LeggeQuery(Conn, Sql, Connessione)
+												If TypeOf (Rec2) Is String Then
+													Ritorno = Rec2
+												Else
+													If Not Rec2.Eof Then
+														UtenteGenitore2 = Rec2("Utente").Value
+													End If
+													'Rec2.Close
 												End If
-												'Rec2.Close
 											End If
 										End If
-									End If
 
-									Ritorno &= Rec("idGiocatore").Value.ToString & ";"
-									Ritorno &= Rec("idR").Value.ToString & ";"
-									Ritorno &= Rec("Cognome").Value.ToString.Trim & ";"
-									Ritorno &= Rec("Nome").Value.ToString.Trim & ";"
-									Ritorno &= Rec("Descrizione").Value.ToString.Trim & ";"
-									Ritorno &= Rec("EMail").Value.ToString.Trim & ";"
-									Ritorno &= Rec("Telefono").Value.ToString.Trim & ";"
-									Ritorno &= Rec("Soprannome").Value.ToString.Trim & ";"
-									Ritorno &= Rec("DataDiNascita").Value.ToString & ";"
-									Ritorno &= Rec("Indirizzo").Value.ToString.Trim & ";"
-									Ritorno &= Rec("CodFiscale").Value.ToString.Trim & ";"
-									Ritorno &= Rec("Maschio").Value.ToString.Trim & ";"
-									Ritorno &= Rec("Citta").Value.ToString.Trim & ";"
-									Ritorno &= Rec("Matricola").Value.ToString.Trim & ";"
-									Ritorno &= Rec("NumeroMaglia").Value.ToString.Trim & ";"
-									Ritorno &= Rec("idCategoria").Value.ToString & ";"
-									Ritorno &= Rec("idCategoria2").Value.ToString & ";"
-									Ritorno &= Rec("Categoria2").Value.ToString & ";"
-									Ritorno &= Rec("idCategoria3").Value.ToString & ";"
-									Ritorno &= Rec("Categoria3").Value.ToString & ";"
-									Ritorno &= Rec("Categoria1").Value.ToString & ";"
-									Ritorno &= Rec("Categorie").Value.ToString & ";"
-									Ritorno &= Rec("RapportoCompleto").Value.ToString & ";"
-									Ritorno &= Rec("idTaglia").Value.ToString & ";"
-									Ritorno &= Semaforo1
-									Ritorno &= Semaforo2
-									Ritorno &= Semaforo3
-									Ritorno &= Semaforo4
-									Ritorno &= Semaforo5
-									Ritorno &= Rec("idTipologiaKit").Value.ToString & ";"
-									Ritorno &= Rec("Cap").Value.ToString & ";"
-									Ritorno &= Rec("CittaNascita").Value.ToString & ";"
-									Ritorno &= Rec("Maggiorenne").Value.ToString & ";"
-									Ritorno &= Rec("CodiceTessera").Value.ToString & ";"
-									Ritorno &= UtenteGenitore1 & ";"
-									Ritorno &= UtenteGenitore2 & ";"
-									Ritorno &= Rec("AmministratiPadre").Value & ";"
-									Ritorno &= Rec("AmministratiMadre").Value & ";"
-									Ritorno &= "§"
+										Ritorno &= Rec("idGiocatore").Value.ToString & ";"
+										Ritorno &= Rec("idR").Value.ToString & ";"
+										Ritorno &= Rec("Cognome").Value.ToString.Trim & ";"
+										Ritorno &= Rec("Nome").Value.ToString.Trim & ";"
+										Ritorno &= Rec("Descrizione").Value.ToString.Trim & ";"
+										Ritorno &= Rec("EMail").Value.ToString.Trim & ";"
+										Ritorno &= Rec("Telefono").Value.ToString.Trim & ";"
+										Ritorno &= Rec("Soprannome").Value.ToString.Trim & ";"
+										Ritorno &= Rec("DataDiNascita").Value.ToString & ";"
+										Ritorno &= Rec("Indirizzo").Value.ToString.Trim & ";"
+										Ritorno &= Rec("CodFiscale").Value.ToString.Trim & ";"
+										Ritorno &= Rec("Maschio").Value.ToString.Trim & ";"
+										Ritorno &= Rec("Citta").Value.ToString.Trim & ";"
+										Ritorno &= Rec("Matricola").Value.ToString.Trim & ";"
+										Ritorno &= Rec("NumeroMaglia").Value.ToString.Trim & ";"
+										Ritorno &= Rec("idCategoria").Value.ToString & ";"
+										Ritorno &= Rec("idCategoria2").Value.ToString & ";"
+										Ritorno &= Rec("Categoria2").Value.ToString & ";"
+										Ritorno &= Rec("idCategoria3").Value.ToString & ";"
+										Ritorno &= Rec("Categoria3").Value.ToString & ";"
+										Ritorno &= Rec("Categoria1").Value.ToString & ";"
+										Ritorno &= Rec("Categorie").Value.ToString & ";"
+										Ritorno &= Rec("RapportoCompleto").Value.ToString & ";"
+										Ritorno &= Rec("idTaglia").Value.ToString & ";"
+										Ritorno &= Semaforo1
+										Ritorno &= Semaforo2
+										Ritorno &= Semaforo3
+										Ritorno &= Semaforo4
+										Ritorno &= Semaforo5
+										Ritorno &= Rec("idTipologiaKit").Value.ToString & ";"
+										Ritorno &= Rec("Cap").Value.ToString & ";"
+										Ritorno &= Rec("CittaNascita").Value.ToString & ";"
+										Ritorno &= Rec("Maggiorenne").Value.ToString & ";"
+										Ritorno &= Rec("CodiceTessera").Value.ToString & ";"
+										Ritorno &= UtenteGenitore1 & ";"
+										Ritorno &= UtenteGenitore2 & ";"
+										Ritorno &= Rec("AmministratiPadre").Value & ";"
+										Ritorno &= Rec("AmministratiMadre").Value & ";"
 
-									Rec.MoveNext()
-								Loop
+										Dim CeGreenPass As String = "N"
+										Dim PathGP As String = PathBaseMultimedia & NomeSquadra.Replace(" ", "_") & "\GreenPass\" & Rec("idGiocatore").Value & "\GreenPass.kgb"
+										Dim path As String = ""
+										If File.Exists(PathGP) Then
+											CeGreenPass = "S"
+											path = pathHTTPMultimedia & NomeSquadra.Replace(" ", "_") & "/GreenPass/" & Rec("idGiocatore").Value & "/GreenPass.kgb"
+										End If
+
+										Ritorno &= CeGreenPass & ";"
+										Ritorno &= path & ";"
+										Ritorno &= "§"
+
+										Rec.MoveNext()
+									Loop
+								End If
+								Rec.Close()
 							End If
-							Rec.Close()
-						End If
+						Catch ex As Exception
+							Ritorno = StringaErrore & " " & ex.Message
+						End Try
+					End If
+				End If
+
+				Conn.Close()
+			End If
+		End If
+
+		Return Ritorno
+	End Function
+
+	<WebMethod()>
+	Public Function EliminaGreenPass(Squadra As String, idGiocatore As String) As String
+		Dim Ritorno As String = ""
+		Dim Connessione As String = LeggeImpostazioniDiBase(Server.MapPath("."), Squadra)
+
+		If Connessione = "" Then
+			Ritorno = ErroreConnessioneNonValida
+		Else
+			Dim Conn As Object = ApreDB(Connessione)
+
+			If TypeOf (Conn) Is String Then
+				Ritorno = ErroreConnessioneDBNonValida & ": " & Conn
+			Else
+				Dim Sql As String
+				Dim Ok As Boolean = True
+
+				Sql = "Begin transaction"
+				Ritorno = EsegueSql(Conn, Sql, Connessione)
+
+				Dim gf As New GestioneFilesDirectory
+				Dim Rec As Object = Server.CreateObject("ADODB.Recordset")
+				Dim NomeSquadra As String = ""
+				Dim ss() As String = Squadra.Split("_")
+				Sql = "Select * From [Generale].[dbo].[Squadre] Where idSquadra = " & Val(ss(1)).ToString
+				Rec = LeggeQuery(Conn, Sql, Connessione)
+				If TypeOf (Rec) Is String Then
+					Ok = False
+					Ritorno = "Problemi lettura squadra"
+				Else
+					If Rec.Eof Then
+					Else
+						NomeSquadra = "" & Rec("Descrizione").Value
+					End If
+					Rec.Close
+				End If
+
+				If Ok Then
+					Dim paths As String = gf.LeggeFileIntero(Server.MapPath(".") & "\Impostazioni\PathAllegati.txt")
+					Dim P() As String = paths.Split(";")
+					If Strings.Right(P(0), 1) <> "\" Then
+						P(0) &= "\"
+					End If
+					Dim pathAllegati As String = P(0).Replace(vbCrLf, "")
+					If Strings.Right(P(2), 1) <> "/" Then
+						P(2) &= "/"
+					End If
+					Dim pathMultimedia As String = P(2).Replace(vbCrLf, "")
+					Dim PathBaseMultimedia As String = P(3) ' pathMultimedia.Replace("Allegati", "Multimedia")
+					Dim PathGP As String = PathBaseMultimedia & NomeSquadra.Replace(" ", "_") & "\GreenPass\" & idGiocatore & "\GreenPass.kgb"
+					Try
+						File.Delete(PathGP)
+						Ritorno = "*"
+
+						Ritorno = EliminaStringaGreenPass(Squadra, idGiocatore)
 					Catch ex As Exception
 						Ritorno = StringaErrore & " " & ex.Message
 					End Try
 				End If
+				gf = Nothing
 
+				Conn.Close()
+			End If
+		End If
+
+		Return Ritorno
+	End Function
+
+	<WebMethod()>
+	Public Function RitornoStringaGreenPass(Squadra As String, idGiocatore As String) As String
+		Dim Ritorno As String = ""
+		Dim Connessione As String = LeggeImpostazioniDiBase(Server.MapPath("."), Squadra)
+
+		If Connessione = "" Then
+			Ritorno = ErroreConnessioneNonValida
+		Else
+			Dim Conn As Object = ApreDB(Connessione)
+
+			If TypeOf (Conn) Is String Then
+				Ritorno = ErroreConnessioneDBNonValida & ": " & Conn
+			Else
+				Dim Sql As String
+				Dim Ok As Boolean = True
+				Dim Rec As Object = Server.CreateObject("ADODB.Recordset")
+
+				Sql = "Select * From GreenPassDati Where idGiocatore=" & idGiocatore
+				Rec = LeggeQuery(Conn, Sql, Connessione)
+				If TypeOf (Rec) Is String Then
+					Ritorno = Rec
+					Return Ritorno
+				Else
+					If Rec.Eof Then
+						Ritorno = StringaErrore & " Nessuna stringa rilevata"
+					Else
+						Ritorno = Rec("Stringa").Value
+					End If
+				End If
+				Rec.Close
+
+				Conn.Close()
+			End If
+		End If
+
+		Return Ritorno
+	End Function
+
+	<WebMethod()>
+	Public Function ScriveStringaGreenPass(Squadra As String, idGiocatore As String, StringaGP As String) As String
+		Dim Ritorno As String = ""
+		Dim Connessione As String = LeggeImpostazioniDiBase(Server.MapPath("."), Squadra)
+
+		If Connessione = "" Then
+			Ritorno = ErroreConnessioneNonValida
+		Else
+			Dim Conn As Object = ApreDB(Connessione)
+
+			If TypeOf (Conn) Is String Then
+				Ritorno = ErroreConnessioneDBNonValida & ": " & Conn
+			Else
+				Dim Sql As String
+				Dim Ok As Boolean = True
+
+				Sql = "Begin transaction"
+				Ritorno = EsegueSql(Conn, Sql, Connessione)
+
+				Sql = "Delete From GreenPassDati Where idGiocatore=" & idGiocatore
+				Ritorno = EsegueSql(Conn, Sql, Connessione)
+				If Ritorno <> "*" Then
+					Ok = False
+				End If
+
+				If Ok Then
+					Sql = "Insert Into GreenPassDati Values (" &
+						" " & idGiocatore & ", " &
+						"'" & StringaGP & "'" &
+						")"
+					Ritorno = EsegueSql(Conn, Sql, Connessione)
+					If Ritorno <> "*" Then
+						Ok = False
+					End If
+				End If
+
+				If Ok Then
+					Sql = "commit"
+					Dim Ritorno2 As String = EsegueSql(Conn, Sql, Connessione)
+				Else
+					Sql = "rollback"
+					Dim Ritorno2 As String = EsegueSql(Conn, Sql, Connessione)
+				End If
+				Conn.Close()
+			End If
+		End If
+
+		Return Ritorno
+	End Function
+
+	<WebMethod()>
+	Public Function EliminaStringaGreenPass(Squadra As String, idGiocatore As String) As String
+		Dim Ritorno As String = ""
+		Dim Connessione As String = LeggeImpostazioniDiBase(Server.MapPath("."), Squadra)
+
+		If Connessione = "" Then
+			Ritorno = ErroreConnessioneNonValida
+		Else
+			Dim Conn As Object = ApreDB(Connessione)
+
+			If TypeOf (Conn) Is String Then
+				Ritorno = ErroreConnessioneDBNonValida & ": " & Conn
+			Else
+				Dim Sql As String
+				Dim Ok As Boolean = True
+
+				Sql = "Begin transaction"
+				Ritorno = EsegueSql(Conn, Sql, Connessione)
+
+				Sql = "Delete From GreenPassDati Where idGiocatore=" & idGiocatore
+				Ritorno = EsegueSql(Conn, Sql, Connessione)
+				If Ritorno <> "*" Then
+					Ok = False
+				End If
+
+				If Ok Then
+					Sql = "commit"
+					Dim Ritorno2 As String = EsegueSql(Conn, Sql, Connessione)
+				Else
+					Sql = "rollback"
+					Dim Ritorno2 As String = EsegueSql(Conn, Sql, Connessione)
+				End If
 				Conn.Close()
 			End If
 		End If

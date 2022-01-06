@@ -1278,7 +1278,7 @@ Public Class wsPartite
 	End Function
 
 	<WebMethod()>
-	Public Function RitornaPartite(Squadra As String, idAnno As String, idCategoria As String) As String
+	Public Function RitornaPartite(Squadra As String, idAnno As String, idCategoria As String, TutteLePartite As String) As String
 		Dim Ritorno As String = ""
 		Dim Connessione As String = LeggeImpostazioniDiBase(Server.MapPath("."), Squadra)
 
@@ -1293,7 +1293,13 @@ Public Class wsPartite
 				Dim Rec As Object = Server.CreateObject("ADODB.Recordset")
 				Dim Rec2 As Object = Server.CreateObject("ADODB.Recordset")
 				Dim Sql As String = ""
+				Dim Altro As String = ""
 
+				If TutteLePartite = "N" Then
+					Dim Domani As Date = Now.AddDays(5)
+
+					Altro = " And Cast(DataOra As Date) Between '2000-01-01' And '" & Domani.Year & "-" & Format(Domani.Month, "00") & "-" & Format(Domani.Day, "00") & "'"
+				End If
 				Try
 					Sql = "SELECT Partite.DataOra, Partite.idPartita, Categorie.Descrizione As Categoria, SquadreAvversarie.Descrizione As Avversario, Risultati.Risultato, " &
 						"Partite.Casa, Allenatori.Cognome+' '+Allenatori.Nome AS Allenatore, Partite.Casa As Casa, CampiAvversari.Descrizione+' '+CampiAvversari.Indirizzo As Campo, " &
@@ -1309,7 +1315,7 @@ Public Class wsPartite
 						"LEFT JOIN AvversariCoord ON Partite.idAvversario = AvversariCoord.idAvversario) " &
 						"LEFT JOIN ArbitriPartite ON (Partite.idPartita = ArbitriPartite.idPartita And Partite.idAnno=ArbitriPartite.idAnno)) " &
 						"LEFT JOIN Arbitri ON (Arbitri.idArbitro = ArbitriPartite.idArbitro And ArbitriPartite.idAnno = Arbitri.idAnno)) " &
-						"WHERE Partite.idAnno=" & idAnno & "  " &
+						"WHERE Partite.idAnno=" & idAnno & " " & Altro & " " &
 						"And Partite.idCategoria=" & idCategoria & " Order By DataOra Desc"
 					' And Arbitri.idAnno=" & idAnno & " And Partite.Giocata='S'
 					Rec = LeggeQuery(Conn, Sql, Connessione)

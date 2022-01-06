@@ -1712,6 +1712,7 @@ Public Class wsCampionato
 								StampaSostituzioni &= "<th>Nominativo</th>" & vbCrLf
 								StampaSostituzioni &= "<th>Ruolo</th>" & vbCrLf
 								StampaSostituzioni &= "<th>Volte</th>" & vbCrLf
+								StampaSostituzioni &= "<th>Cosa</th>" & vbCrLf
 								StampaSostituzioni &= "</tr>" & vbCrLf
 							End If
 
@@ -1737,9 +1738,8 @@ Public Class wsCampionato
 									StampaSostituzioni &= "<td><img src=""" & Path & """ width=""50"" height=""50"" /></td>" & vbCrLf
 									StampaSostituzioni &= "<td>" & Nominativo & "</td>" & vbCrLf
 									StampaSostituzioni &= "<td>" & Rec("Ruolo").Value & "</td>" & vbCrLf
-									StampaSostituzioni &= "<td style=""text-align: right;"">" & Rec("PresenzeCampionato").Value & "</td>" & vbCrLf
-									StampaSostituzioni &= "<td style=""text-align: right;"">" & Rec("PresenzeAmichevole").Value & "</td>" & vbCrLf
-									StampaSostituzioni &= "<td style=""text-align: right;"">" & Rec("Totale").Value & "</td>" & vbCrLf
+									StampaSostituzioni &= "<td style=""text-align: right;"">" & Rec("Volte").Value & "</td>" & vbCrLf
+									StampaSostituzioni &= "<td>" & Rec("Cosa").Value & "</td>" & vbCrLf
 									StampaSostituzioni &= "</tr>" & vbCrLf
 								End If
 
