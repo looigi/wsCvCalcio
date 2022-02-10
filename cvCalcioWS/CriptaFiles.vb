@@ -17,6 +17,15 @@ Public Class CriptaFiles
 	Public Sub CryptFile(ByVal password As String, ByVal _
 		in_file As String, ByVal out_file As String, ByVal _
 		encrypt As Boolean)
+
+		If TipoDB <> "SQLSERVER" Then
+			in_file = in_file.Replace("\", "/")
+			in_file = in_file.Replace("//", "/")
+
+			out_file = out_file.Replace("\", "/")
+			out_file = out_file.Replace("//", "/")
+		End If
+
 		' Create input and output file streams.
 		Using in_stream As New FileStream(in_file,
 			FileMode.Open, FileAccess.Read)

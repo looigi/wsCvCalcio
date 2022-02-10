@@ -3,6 +3,7 @@ Imports System.IO
 Imports System.Threading
 Imports System.Web.Services
 Imports System.Web.Services.Protocols
+Imports ADODB
 
 ' Per consentire la chiamata di questo servizio Web dallo script utilizzando ASP.NET AJAX, rimuovere il commento dalla riga seguente.
 ' <System.Web.Script.Services.ScriptService()> _
@@ -45,20 +46,20 @@ Public Class wsWidget
 		If Connessione = "" Then
 			Ritorno = ErroreConnessioneNonValida
 		Else
-			Dim Conn As Object = ApreDB(Connessione)
+			Dim Conn As Object = new clsGestioneDB
 
 			If TypeOf (Conn) Is String Then
 				Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
 			Else
 				Dim Sql As String = ""
-				Dim Rec As Object = Server.CreateObject("ADODB.Recordset")
+				Dim Rec As Object
 
 				Sql = "Select * From AggiornamentoWidgets Where idSquadra=" & idSquadra
-				Rec = LeggeQuery(Conn, Sql, Connessione)
+				Rec = Conn.LeggeQuery(Server.MapPath("."),   Sql, Connessione)
 				If TypeOf (Rec) Is String Then
 					Ritorno = Rec
 				Else
-					If Not Rec.Eof Then
+					If Not Rec.Eof() Then
 						CreaConteggi(Squadra)
 						CreaFirmeDaValidare(Squadra, "S")
 						CreaIndicatori(Squadra)
@@ -66,7 +67,7 @@ Public Class wsWidget
 						CreaQuoteNonSaldate(Squadra)
 
 						Sql = "Update [Generale].[dbo].[AggiornamentoWidgets] Set AggiornaWidgets='N' Where idSquadra=" & idSquadra
-						Ritorno = EsegueSql(Conn, Sql, Connessione)
+						Ritorno = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
 						If Ritorno = "OK" Then
 							Ritorno = "*"
 						End If
@@ -95,25 +96,25 @@ Public Class wsWidget
 		If Connessione = "" Then
 			Ritorno = ErroreConnessioneNonValida
 		Else
-			Dim Conn As Object = ApreDB(Connessione)
+			Dim Conn As Object = new clsGestioneDB
 
 			If TypeOf (Conn) Is String Then
 				Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
 			Else
 				Dim Sql As String = ""
-				Dim Rec As Object = Server.CreateObject("ADODB.Recordset")
+				Dim Rec As Object
 
 				Sql = "Select * From AggiornamentoWidgets Where idSquadra=" & idSquadra
-				Rec = LeggeQuery(Conn, Sql, Connessione)
+				Rec = Conn.LeggeQuery(Server.MapPath("."),   Sql, Connessione)
 				If TypeOf (Rec) Is String Then
 					Ritorno = Rec
 				Else
-					If Rec.Eof Then
+					If Rec.Eof() Then
 						Sql = "Insert Into AggiornamentoWidgets Values (" & idSquadra & ", 'S')"
 					Else
 						Sql = "Update AggiornamentoWidgets Set AggiornaWidgets='S' Where idSquadra=" & idSquadra
 					End If
-					Ritorno = EsegueSql(Conn, Sql, Connessione)
+					Ritorno = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
 					If Ritorno = "OK" Then
 						Ritorno = "*"
 					End If
@@ -142,27 +143,27 @@ Public Class wsWidget
 		If Connessione = "" Then
 			Ritorno = ErroreConnessioneNonValida
 		Else
-			Dim Conn As Object = ApreDB(Connessione)
+			Dim Conn As Object = new clsGestioneDB
 			Dim Trovato As Boolean = False
 
 			If TypeOf (Conn) Is String Then
 				Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
 			Else
-				Dim Rec As Object = Server.CreateObject("ADODB.Recordset")
+				Dim Rec As Object
 				Dim Sql As String = "Select * From WidgetConteggi"
-				Rec = LeggeQuery(Conn, Sql, Connessione)
+				Rec = Conn.LeggeQuery(Server.MapPath("."),   Sql, Connessione)
 				If TypeOf (Rec) Is String Then
 					Ritorno = Rec
 				Else
-					If Not Rec.Eof Then
+					If Not Rec.Eof() Then
 						Trovato = True
-						Do Until Rec.Eof
+						Do Until Rec.Eof()
 							Ritorno &= Rec("idTipologia").Value & ";" & Rec("Descrizione").Value & ";" & Rec("Quanti").Value & "§"
 
 							Rec.MoveNext()
 						Loop
 					End If
-					Rec.Close
+					Rec.Close()
 				End If
 			End If
 
@@ -183,7 +184,7 @@ Public Class wsWidget
 		If Connessione = "" Then
 			Ritorno = ErroreConnessioneNonValida
 		Else
-			Dim Conn As Object = ApreDB(Connessione)
+			Dim Conn As Object = new clsGestioneDB
 
 			If TypeOf (Conn) Is String Then
 				Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
@@ -192,16 +193,16 @@ Public Class wsWidget
 				Dim Anno As String = Str(Val(c(0))).Trim
 				Dim codSquadra As String = c(1)
 
-				Dim Rec As Object = Server.CreateObject("ADODB.Recordset")
+				Dim Rec As Object
 				Dim Sql As String = "Delete From WidgetConteggi"
-				Ritorno = EsegueSql(Conn, Sql, Connessione)
+				Ritorno = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
 
-				Sql = "Insert Into WidgetConteggi Select A.idTipologia, B.Descrizione, Count(*) As Quanti From [Generale].[dbo].[Utenti] A " &
+				Sql = "Insert Into WidgetConteggi Select A.idTipologia, B.Descrizione, " & IIf(TipoDB = "SQLSERVER", "Isnull(Count(*),0)", "COALESCE(Count(*),0)") & " As Quanti From [Generale].[dbo].[Utenti] A " &
 					"Left Join [Generale].[dbo].[Tipologie] B On A.idTipologia = B.idTipologia  " &
 					"Where Eliminato = 'N' And B.idTipologia > 2 And idSquadra = " & codSquadra & " " &
 					"Group By A.idTipologia, B.Descrizione " &
 					"Order By Descrizione"
-				Ritorno = EsegueSql(Conn, Sql, Connessione)
+				Ritorno = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
 			End If
 		End If
 
@@ -227,27 +228,29 @@ Public Class wsWidget
 		If Connessione = "" Then
 			Ritorno = ErroreConnessioneNonValida
 		Else
-			Dim Conn As Object = ApreDB(Connessione)
+			Dim Conn As Object = new clsGestioneDB
 			Dim Trovato As Boolean = False
 
 			If TypeOf (Conn) Is String Then
 				Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
 			Else
-				Dim Rec As Object = Server.CreateObject("ADODB.Recordset")
+				Dim Rec As Object
 
 				Dim Altro As String = ""
+				Dim Altro2 As String = ""
 				If Tutte = "" Or Tutte = "N" Or Tutte = "NO" Then
-					Altro = "Top 3"
+					Altro = IIf(TipoDB = "SQLSERVER", "Top 3", "")
+					Altro2 = IIf(TipoDB = "SQLSERVER", "", "Limit 3")
 				End If
 
-				Dim Sql As String = "Select " & Altro & " * From WidgetFirme"
-				Rec = LeggeQuery(Conn, Sql, Connessione)
+				Dim Sql As String = "Select " & Altro & " * From WidgetFirme " & Altro2
+				Rec = Conn.LeggeQuery(Server.MapPath("."),   Sql, Connessione)
 				If TypeOf (Rec) Is String Then
 					Ritorno = Rec
 				Else
-					If Not Rec.Eof Then
+					If Not Rec.Eof() Then
 						Trovato = True
-						Do Until Rec.Eof
+						Do Until Rec.Eof()
 							Ritorno &= Rec("idGiocatore").Value.ToString & ";" &
 									Rec("idGenitore").Value.ToString & ";" &
 									Rec("Datella").Value.ToString.Trim & ";" &
@@ -259,7 +262,7 @@ Public Class wsWidget
 							Rec.MoveNext()
 						Loop
 					End If
-					Rec.Close
+					Rec.Close()
 				End If
 			End If
 
@@ -281,12 +284,12 @@ Public Class wsWidget
 		If Connessione = "" Then
 			Ritorno = ErroreConnessioneNonValida
 		Else
-			Dim Conn As Object = ApreDB(Connessione)
+			Dim Conn As Object = new clsGestioneDB
 
 			If TypeOf (Conn) Is String Then
 				Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
 			Else
-				Dim Rec As Object = Server.CreateObject("ADODB.Recordset")
+				Dim Rec As Object
 				Dim Altro As String = ""
 
 				If Tutte = "" Or Tutte = "N" Or Tutte = "NO" Then
@@ -294,7 +297,7 @@ Public Class wsWidget
 				End If
 
 				Dim Sql As String = "Delete From WidgetFirme"
-				Ritorno = EsegueSql(Conn, Sql, Connessione)
+				Ritorno = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
 
 				Sql = "Insert Into WidgetFirme Select " & Altro & " A.*, B.Cognome + ' ' + B.Nome As Giocatore, " &
 					"CASE A.idGenitore " &
@@ -306,7 +309,7 @@ Public Class wsWidget
 					"Left Join Giocatori B On A.idGiocatore = B.idGiocatore " &
 					"Left Join GiocatoriDettaglio C On A.idGiocatore = C.idGiocatore " &
 					"Where (DataFirma Is Not Null And DataFirma <> '') And (Validazione Is Null Or Validazione = '') And idGenitore < 100"
-				Ritorno = EsegueSql(Conn, Sql, Connessione)
+				Ritorno = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
 			End If
 		End If
 
@@ -332,7 +335,7 @@ Public Class wsWidget
 		If Connessione = "" Then
 			Ritorno = ErroreConnessioneNonValida
 		Else
-			Dim Conn As Object = ApreDB(Connessione)
+			Dim Conn As Object = new clsGestioneDB
 			Dim Trovato1 As Boolean = False
 			Dim Trovato2 As Boolean = False
 
@@ -340,35 +343,35 @@ Public Class wsWidget
 				Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
 			Else
 				'Dim Tutti As Integer = 0
-				Dim Rec As Object = Server.CreateObject("ADODB.Recordset")
+				Dim Rec As Object
 				Dim Sql As String = ""
 				'Sql = "Select * From WidgetIscritti1"
-				'Rec = LeggeQuery(Conn, Sql, Connessione)
+				'Rec = Conn.LeggeQuery(Server.MapPath("."),   Sql, Connessione)
 				'If TypeOf (Rec) Is String Then
 				'	Ritorno = Rec
 				'Else
-				'	If Not Rec.Eof Then
+				'	If Not Rec.Eof() Then
 				'		Trovato1 = True
 				'		If Rec(0).Value Is DBNull.Value Then
 				'			Tutti = 0
 				'		Else
 				'			Tutti = Rec(0).Value
 				'		End If
-				'		Rec.Close
+				'		Rec.Close()
 				'	End If
 				'End If
 
 				Sql = "Select * From WidgetIscritti2 Order By Anno"
-				Rec = LeggeQuery(Conn, Sql, Connessione)
+				Rec = Conn.LeggeQuery(Server.MapPath("."),   Sql, Connessione)
 				If TypeOf (Rec) Is String Then
 					Ritorno = Rec
 				Else
-					If Not Rec.Eof Then
+					If Not Rec.Eof() Then
 						Trovato2 = True
-						Do Until Rec.Eof
+						Do Until Rec.Eof()
 							Ritorno &= Rec("Anno").Value & ";" & Rec("Anno").Value & ";" & Rec("Quanti").Value & "§"
 
-							Rec.MoveNext
+							Rec.MoveNext()
 						Loop
 						Rec.Close()
 
@@ -394,32 +397,32 @@ Public Class wsWidget
 		If Connessione = "" Then
 			Ritorno = ErroreConnessioneNonValida
 		Else
-			Dim Conn As Object = ApreDB(Connessione)
+			Dim Conn As Object = new clsGestioneDB
 
 			If TypeOf (Conn) Is String Then
 				Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
 			Else
-				Dim Rec As Object = Server.CreateObject("ADODB.Recordset")
+				Dim Rec As Object
 				Dim listaCategorie As New List(Of String)
 				Dim idCategorie As New List(Of String)
 				Dim Ok As Boolean = True
 
 				Dim Sql As String = "Delete From WidgetIscritti1"
-				Ritorno = EsegueSql(Conn, Sql, Connessione)
+				Ritorno = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
 
 				Dim Tutti As Integer = 0
-				Sql = "Insert Into WidgetIscritti1 Select Count(*) From Giocatori Where Eliminato='N'" '  And RapportoCompleto='S'"
-				Ritorno = EsegueSql(Conn, Sql, Connessione)
+				Sql = "Insert Into WidgetIscritti1 Select " & IIf(TipoDB = "SQLSERVER", "Isnull(Count(*),0)", "COALESCE(Count(*),0)") & " From Giocatori Where Eliminato='N'" '  And RapportoCompleto='S'"
+				Ritorno = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
 
 				If Ok Then
 					Sql = "Delete From WidgetIscritti2"
-					Ritorno = EsegueSql(Conn, Sql, Connessione)
+					Ritorno = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
 
-					Sql = "Insert Into WidgetIscritti2 Select YEAR(CONVERT(Date, DataDiNascita)) As Anno, Count(*) As Quanti From Giocatori " &
+					Sql = "Insert Into WidgetIscritti2 Select YEAR(" & IIf(TipoDB = "SQLSERVER", "CONVERT(Date, DataDiNascita)", "CONVERT(DataDiNascita, Date)") & ") As Anno, " & IIf(TipoDB = "SQLSERVER", "Isnull(Count(*),0)", "COALESCE(Count(*),0)") & " As Quanti From Giocatori " &
 						"Where Eliminato = 'N' " & ' And RapportoCompleto='S' " &
-						"Group By YEAR(CONVERT(date, DataDiNascita)) " &
+						"Group By YEAR(" & IIf(TipoDB = "SQLSERVER", "CONVERT(date, DataDiNascita)", "CONVERT(DataDiNascita, date)") & ") " &
 						"Order By 1"
-					Ritorno = EsegueSql(Conn, Sql, Connessione)
+					Ritorno = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
 				End If
 			End If
 
@@ -450,41 +453,41 @@ Public Class wsWidget
 		If Connessione = "" Then
 			Ritorno = ErroreConnessioneNonValida
 		Else
-			Dim Conn As Object = ApreDB(Connessione)
+			Dim Conn As Object = new clsGestioneDB
 			Dim Trovato As Boolean = False
 
 			If TypeOf (Conn) Is String Then
 				Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
 			Else
-				Dim Rec As Object = Server.CreateObject("ADODB.Recordset")
+				Dim Rec As Object
 				Dim Sql As String = "Select * From WidgetQuoteNonSaldate Order By Anno1, Anno2"
-				Rec = LeggeQuery(Conn, Sql, Connessione)
+				Rec = Conn.LeggeQuery(Server.MapPath("."),   Sql, Connessione)
 				If TypeOf (Rec) Is String Then
 					Ritorno = Rec
 				Else
-					If Not Rec.Eof Then
+					If Not Rec.Eof() Then
 						Trovato = True
 						Ritorno = ""
-						Do Until Rec.Eof
+						Do Until Rec.Eof()
 							Ritorno &= Rec("Anno1").Value & ";" & Rec("Anno2").Value & ";" & Rec("Differenza").Value & "§"
 
 							Rec.MoveNext()
 						Loop
 					End If
-					Rec.Close
+					Rec.Close()
 
 					Dim Totalone As String = "0"
 
 					Sql = "Select * From WidgetTotaleQuote"
-					Rec = LeggeQuery(Conn, Sql, Connessione)
+					Rec = Conn.LeggeQuery(Server.MapPath("."),   Sql, Connessione)
 					If TypeOf (Rec) Is String Then
 						Ritorno = Rec
 					Else
-						If Not Rec.Eof Then
+						If Not Rec.Eof() Then
 							Trovato = True
 							Totalone = Rec("Totale").Value
 
-							Rec.close
+							Rec.Close()
 						End If
 					End If
 
@@ -509,51 +512,51 @@ Public Class wsWidget
 		If Connessione = "" Then
 			Ritorno = ErroreConnessioneNonValida
 		Else
-			Dim Conn As Object = ApreDB(Connessione)
+			Dim Conn As Object = new clsGestioneDB
 
 			If TypeOf (Conn) Is String Then
 				Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
 			Else
-				Dim Rec As Object = Server.CreateObject("ADODB.Recordset")
-				Dim Rec2 As Object = Server.CreateObject("ADODB.Recordset")
-				Dim Rec3 As Object = Server.CreateObject("ADODB.Recordset")
+				Dim Rec As Object
+				Dim Rec2 As Object
+				Dim Rec3 As Object
 				Dim Sql As String
 				'Dim listaCategorie As New List(Of String)
 				'Dim idCategorie As New List(Of String)
 				Dim Ok As Boolean = True
 
 				'Sql = "Select * From Categorie Where Eliminato='N' "
-				'Rec = LeggeQuery(Conn, Sql, Connessione)
+				'Rec = Conn.LeggeQuery(Server.MapPath("."),   Sql, Connessione)
 				'If TypeOf (Rec) Is String Then
 				'	Ritorno = Rec
 				'	Ok = False
 				'Else
-				'	Do Until Rec.Eof
+				'	Do Until Rec.Eof()
 				'		idCategorie.Add(Rec("idCategoria").Value)
 				'		listaCategorie.Add(Rec("Descrizione").Value)
 
 				'		Rec.MoveNext
 				'	Loop
-				'	Rec.Close
+				'	Rec.Close()
 				'End If
 
 				'If Ok Then
 				'Dim Differenza(idCategorie.Count) As Single
 				Sql = "Delete From WidgetTotaleQuote"
-				Ritorno = EsegueSql(Conn, Sql, Connessione)
+				Ritorno = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
 
 				Dim Totalone As String = "0"
 
 				Sql = "Select Sum(DaPagare) - Sum(Sconto) From ( " &
 					"Select Cognome, Nome, DataDiNascita, Descrizione, DaPagare, Sconto, TotalePagato, (DaPagare - Sconto) - TotalePagato As Differenza From (  " &
-					"Select Cognome, Nome, DataDiNascita, C.Descrizione, IsNull(C.Importo, 0) As DaPagare, IsNull(B.Sconto, 0) As Sconto, " &
-					"(Select IsNull(Sum(Pagamento),0) From GiocatoriPagamenti Where idGiocatore=A.idGiocatore And Eliminato='N' And idTipoPagamento = 1 And Validato='S') As TotalePagato " &
+					"Select Cognome, Nome, DataDiNascita, C.Descrizione, " & IIf(TipoDB = "SQLSERVER", "IsNull(C.Importo, 0)", "COALESCE(C.Importo, 0)") & " As DaPagare, " & IIf(TipoDB = "SQLSERVER", "IsNull(B.Sconto, 0)", "COALESCE(B.Sconto, 0)") & " As Sconto, " &
+					"(Select " & IIf(TipoDB = "SQLSERVER", "IsNull(Sum(Pagamento),0)", "COALESCE(Sum(Pagamento),0)") & " From GiocatoriPagamenti Where idGiocatore=A.idGiocatore And Eliminato='N' And idTipoPagamento = 1 And Validato='S') As TotalePagato " &
 					"From Giocatori A " &
 					"Left Join GiocatoriDettaglio B On A.idGiocatore = B.idGiocatore " &
 					"Left Join Quote C On B.idQuota = C.idQuota " &
 					"Where A.Eliminato='N' And C.Eliminato='N' " &
 					") As A ) as B"
-				Rec = LeggeQuery(Conn, Sql, Connessione)
+				Rec = Conn.LeggeQuery(Server.MapPath("."),   Sql, Connessione)
 				If TypeOf (Rec) Is String Then
 					Ritorno = Rec
 					Ok = False
@@ -566,40 +569,40 @@ Public Class wsWidget
 				End If
 
 				Sql = "Insert Into WidgetTotaleQuote Values (" & Totalone.Replace(",", ".") & ")"
-				Ritorno = EsegueSql(Conn, Sql, Connessione)
+				Ritorno = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
 
 				Sql = "Delete From WidgetQuoteNonSaldate"
-				Ritorno = EsegueSql(Conn, Sql, Connessione)
+				Ritorno = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
 
 				'For Each id As String In idCategorie
-				Sql = "Select YEAR(CONVERT(date, DataDiNascita)) As Anno From Giocatori " &
+				Sql = "Select YEAR(" & IIf(TipoDB = "SQLSERVER", "CONVERT(date, DataDiNascita)", "CONVERT(DataDiNascita, date)") & ") As Anno From Giocatori " &
 					"Where Eliminato = 'N' " &
-					"Group By YEAR(CONVERT(date, DataDiNascita)) " &
+					"Group By YEAR(" & IIf(TipoDB = "SQLSERVER", "CONVERT(date, DataDiNascita)", "CONVERT(DataDiNascita, date)") & ") " &
 					"Order By 1"
-				Rec = LeggeQuery(Conn, Sql, Connessione)
+				Rec = Conn.LeggeQuery(Server.MapPath("."),   Sql, Connessione)
 				If TypeOf (Rec) Is String Then
 					Ritorno = Rec
 					Ok = False
 				Else
-					Do Until Rec.Eof
+					Do Until Rec.Eof()
 						Sql = "Select A.idGiocatore, TotalePagamento, B.Sconto From Giocatori A " &
 							"Left Join GiocatoriDettaglio B On A.idGiocatore = B.idGiocatore " &
-							"Where A.Eliminato = 'N' And YEAR(CONVERT(date, DataDiNascita)) = " & Rec("Anno").Value
-						Rec2 = LeggeQuery(Conn, Sql, Connessione)
+							"Where A.Eliminato = 'N' And YEAR(" & IIf(TipoDB = "SQLSERVER", "CONVERT(date, DataDiNascita)", "CONVERT(DataDiNascita, date)") & ") = " & Rec("Anno").Value
+						Rec2 = Conn.LeggeQuery(Server.MapPath("."),Sql, Connessione)
 						If TypeOf (Rec2) Is String Then
 							Ritorno = Rec2
 							Ok = False
 						Else
 							Dim Differenza As Single = 0
 
-							Do Until Rec2.Eof
-								Dim s As String = ("" & Rec2("TotalePagamento").value).replace(",", ".")
-								Dim s2 As String = ("" & Rec2("Sconto").value).replace(",", ".")
+							Do Until Rec2.Eof()
+								Dim s As String = ("" & Rec2("TotalePagamento").Value).replace(",", ".")
+								Dim s2 As String = ("" & Rec2("Sconto").Value).replace(",", ".")
 								Dim TotalePagamento As Single = Val(s) - Val(s2)
 								Dim Pagato As Single = 0
 
 								Sql = "Select Sum(Pagamento) From GiocatoriPagamenti Where idGiocatore=" & Rec2("idGiocatore").Value & " And Eliminato='N' And idTipoPagamento=1 And Validato='S'"
-								Rec3 = LeggeQuery(Conn, Sql, Connessione)
+								Rec3 = Conn.LeggeQuery(Server.MapPath("."), Sql, Connessione)
 								If TypeOf (Rec3) Is String Then
 									Ritorno = Rec3
 									Ok = False
@@ -610,18 +613,18 @@ Public Class wsWidget
 										Dim p As String = ("" & Rec3(0).Value).replace(",", ".")
 										Pagato = Val(p)
 									End If
-									Rec3.Close
+									Rec3.Close()
 								End If
 								Differenza += (TotalePagamento - Pagato)
 
-								Rec2.MoveNext
+								Rec2.MoveNext()
 							Loop
-							Rec2.Close
+							Rec2.Close()
 
 							'Ritorno &= Rec("Anno").Value & ";" & Rec("Anno").Value & ";" & Differenza & "§"
 
 							Sql = "Insert Into WidgetQuoteNonSaldate Values (" & Rec("Anno").Value & ", " & Rec("Anno").Value & ", " & Differenza & ")"
-							Ritorno = EsegueSql(Conn, Sql, Connessione)
+							Ritorno = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
 						End If
 
 						'Dim qualeCat As Integer = 0
@@ -633,9 +636,9 @@ Public Class wsWidget
 						'	qualeCat += 1
 						'Next
 
-						Rec.MoveNext
+						Rec.MoveNext()
 					Loop
-					Rec.Close
+					Rec.Close()
 				End If
 				'Next
 
@@ -643,7 +646,7 @@ Public Class wsWidget
 				'	"Left Join Giocatori B On A.idGiocatore = B.idGiocatore " &
 				'	"Left Join GiocatoriDettaglio C On A.idGiocatore = C.idGiocatore " &
 				'	"Where B.Categorie = '' And A.Eliminato='N'"
-				'Rec = LeggeQuery(Conn, Sql, Connessione)
+				'Rec = Conn.LeggeQuery(Server.MapPath("."),   Sql, Connessione)
 				'If TypeOf (Rec) Is String Then
 				'	Ritorno = Rec
 				'	Ok = False
@@ -653,7 +656,7 @@ Public Class wsWidget
 				'	Else
 				'		Ritorno &= "-1;Nessuna Categoria;" & Rec(0).Value & "§"
 				'	End If
-				'	Rec.Close
+				'	Rec.Close()
 				'End If
 
 				'Dim quale As Integer = 0
@@ -679,49 +682,56 @@ Public Class wsWidget
 		If Connessione = "" Then
 			Ritorno = ErroreConnessioneNonValida
 		Else
-			Dim Conn As Object = ApreDB(Connessione)
+			Dim Conn As Object = new clsGestioneDB
 
 			If TypeOf (Conn) Is String Then
 				Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
 			Else
-				Dim Rec As Object = Server.CreateObject("ADODB.Recordset")
-				Dim Rec2 As Object = Server.CreateObject("ADODB.Recordset")
+				Dim Rec As Object
+				Dim Rec2 As Object
 				Dim Sql As String
 				Dim Altro As String = ""
+				Dim Altro2 As String = ""
 
 				If Limite <> "" Then
-					Altro = "Top " & Limite
+					If TipoDB = "SQLSERVER" Then
+						Altro = "Top " & Limite
+						Altro2 = ""
+					Else
+						Altro = ""
+						Altro2 = "Limit " & Limite
+					End If
 				End If
 
 				Sql = "Select " & Altro & " * From ( " &
 					"Select 'Cert. Scad.' As Cosa, A.idGiocatore As Id, 'Certificato medico scaduto' As PrimoCampo, A.Cognome + ' ' + A.Nome As SecondoCampo, B.ScadenzaCertificatoMedico As Data From Giocatori A " &
 					"Left Join GiocatoriDettaglio B On A.idGiocatore = B.idGiocatore " &
 					"Where A.Eliminato='N' And B.ScadenzaCertificatoMedico Is Not Null And B.ScadenzaCertificatoMedico <> '' " &
-					"And Convert(DateTime, B.ScadenzaCertificatoMedico, 121) < CURRENT_TIMESTAMP " &
+					"And " & IIf(TipoDB = "SQLSERVER", "Convert(DateTime, B.ScadenzaCertificatoMedico, 121)", "Convert(B.ScadenzaCertificatoMedico, DateTime)") & " < CURRENT_TIMESTAMP " &
 					"Union All " &
-					"Select 'Cert. Med.' As Cosa, A.idGiocatore As Id, A.Cognome As PrimoCampo, A.Nome As SecondoCampo, CONVERT(date, B.ScadenzaCertificatoMedico) As Data From Giocatori A " &
+					"Select 'Cert. Med.' As Cosa, A.idGiocatore As Id, A.Cognome As PrimoCampo, A.Nome As SecondoCampo, " & IIf(TipoDB = "SQLSERVER", "CONVERT(date, B.ScadenzaCertificatoMedico)", "CONVERT(B.ScadenzaCertificatoMedico, date)") & "As Data From Giocatori A " &
 					"Left Join GiocatoriDettaglio B On A.idGiocatore = B.idGiocatore " &
-					"Where A.Eliminato='N' And CertificatoMedico = 'S' And A.Eliminato = 'N' And Convert(DateTime, B.ScadenzaCertificatoMedico ,121) <= DateAdd(Day, 30, CURRENT_TIMESTAMP) " &
+					"Where A.Eliminato='N' And CertificatoMedico = 'S' And A.Eliminato = 'N' And " & IIf(TipoDB = "SQLSERVER", "Convert(DateTime, B.ScadenzaCertificatoMedico ,121)", "Convert(B.ScadenzaCertificatoMedico, DateTime)") & " <= " & IIf(TipoDB = "SQLSERVER", "DateAdd(Day, 30, CURRENT_TIMESTAMP)", "ADDDATE(CURRENT_TIMESTAMP, 30)") & " " &
 					"Union All " &
-					"Select 'Partita' As Cosa, idPartita As Id, B.Descrizione As PrimoCampo, C.Descrizione As SecondoCampo, CONVERT(date, DataOra) As Data From Partite A " &
+					"Select 'Partita' As Cosa, idPartita As Id, B.Descrizione As PrimoCampo, C.Descrizione As SecondoCampo, " & IIf(TipoDB = "SQLSERVER", "CONVERT(date, DataOra)", "CONVERT(DataOra, date)") & " As Data From Partite A " &
 					"Left Join Categorie B On A.idCategoria = B.idCategoria " &
 					"Left Join SquadreAvversarie C On A.idAvversario = C.idAvversario " &
 					"Union All " &
-					"Select 'Evento' As Cosa, idEvento As Id, Titolo As PrimoCampo, '' As SecondoCampo, CONVERT(date, Inizio) As Data From EventiConvocazioni " &
+					"Select 'Evento' As Cosa, idEvento As Id, Titolo As PrimoCampo, '' As SecondoCampo, " & IIf(TipoDB = "SQLSERVER", "CONVERT(date, Inizio)", "CONVERT(Inizio, date)") & " As Data From EventiConvocazioni " &
 					"Where idTipologia = 2) A  " &
-					"Where Data > GETDATE() Or Cosa = 'Cert. Scad.' " &
-					"Order By Data"
-				Rec = LeggeQuery(Conn, Sql, Connessione)
+					"Where Data > " & IIf(TipoDB = "SQLSERVER", "GETDATE()", "CURRENT_DATE()") & " Or Cosa = 'Cert. Scad.' " &
+					"Order By Data " & Altro2
+				Rec = Conn.LeggeQuery(Server.MapPath("."), Sql, Connessione)
 				If TypeOf (Rec) Is String Then
 					Ritorno = Rec
 				Else
 					Ritorno = ""
-					Do Until Rec.Eof
+					Do Until Rec.Eof()
 						Ritorno &= Rec("Cosa").Value & ";" & Rec("Id").Value & ";" & Rec("PrimoCampo").Value & ";" & Rec("SecondoCampo").Value & ";" & Rec("Data").Value & "§"
 
-						Rec.MoveNext
+						Rec.MoveNext()
 					Loop
-					Rec.Close
+					Rec.Close()
 				End If
 			End If
 		End If
@@ -737,17 +747,17 @@ Public Class wsWidget
 		If Connessione = "" Then
 			Ritorno = ErroreConnessioneNonValida
 		Else
-			Dim Conn As Object = ApreDB(Connessione)
+			Dim Conn As Object = new clsGestioneDB
 
 			If TypeOf (Conn) Is String Then
 				Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
 			Else
-				Dim Rec As Object = Server.CreateObject("ADODB.Recordset")
-				Dim Rec2 As Object = Server.CreateObject("ADODB.Recordset")
+				Dim Rec As Object
+				Dim Rec2 As Object
 				Dim Sql As String
 				Dim Altro As String = ""
 
-				Dim Categorie As String = RitornaCategorieUtente(Conn, Connessione, Utente)
+				Dim Categorie As String = RitornaCategorieUtente(Server.MapPath("."), Conn, Connessione, Utente)
 
 				If Categorie <> "" Then
 					Dim Categorie1 As String = ""
@@ -755,7 +765,11 @@ Public Class wsWidget
 
 					If Categorie <> "-1" Then
 						For Each c As String In Categorie.Split(";")
-							Categorie1 &= "CHARINDEX('" & c & "-', A.Categorie) > 1 Or "
+							If TipoDB = "SQLSERVER" Then
+								Categorie1 &= "CHARINDEX('" & c & "-', A.Categorie) > 1 Or "
+							Else
+								Categorie1 &= "Instr(A.Categorie, '" & c & "-') > 1 Or "
+							End If
 							Categorie2 &= c & ","
 						Next
 
@@ -771,32 +785,32 @@ Public Class wsWidget
 						"Select 'Cert. Scad.' As Cosa, A.idGiocatore As Id, 'Certificato medico scaduto' As PrimoCampo, A.Cognome + ' ' + A.Nome As SecondoCampo, B.ScadenzaCertificatoMedico As Data From Giocatori A " &
 						"Left Join GiocatoriDettaglio B On A.idGiocatore = B.idGiocatore " &
 						"Where A.Eliminato='N' And B.ScadenzaCertificatoMedico Is Not Null And B.ScadenzaCertificatoMedico <> '' " & Categorie1 & " " &
-						"And Convert(DateTime, B.ScadenzaCertificatoMedico, 121) < CURRENT_TIMESTAMP " &
+						"And " & IIf(TipoDB = "SQLSERVER", "Convert(DateTime, B.ScadenzaCertificatoMedico, 121)", "Convert(B.ScadenzaCertificatoMedico, DateTime)") & " < CURRENT_TIMESTAMP " &
 						"Union All " &
-						"Select 'Cert. Med.' As Cosa, A.idGiocatore As Id, A.Cognome As PrimoCampo, A.Nome As SecondoCampo, CONVERT(date, B.ScadenzaCertificatoMedico) As Data From Giocatori A " &
+						"Select 'Cert. Med.' As Cosa, A.idGiocatore As Id, A.Cognome As PrimoCampo, A.Nome As SecondoCampo, " & IIf(TipoDB = "SQLSERVER", "CONVERT(date, B.ScadenzaCertificatoMedico)", "CONVERT(B.ScadenzaCertificatoMedico, date)") & " As Data From Giocatori A " &
 						"Left Join GiocatoriDettaglio B On A.idGiocatore = B.idGiocatore " &
-						"Where A.Eliminato='N' And CertificatoMedico = 'S' And A.Eliminato = 'N' And Convert(DateTime, B.ScadenzaCertificatoMedico ,121) <= DateAdd(Day, 30, CURRENT_TIMESTAMP) " & Categorie1 & " " &
+						"Where A.Eliminato='N' And CertificatoMedico = 'S' And A.Eliminato = 'N' And " & IIf(TipoDB = "SQLSERVER", "Convert(DateTime, B.ScadenzaCertificatoMedico ,121)", "Convert(B.ScadenzaCertificatoMedico ,DateTime)") & " <= " & IIf(TipoDB = "SQLSERVER", "DateAdd(Day, 30, CURRENT_TIMESTAMP)", "ADDDATE(CURRENT_TIMESTAMP, 30)") & " " & Categorie1 & " " &
 						"Union All " &
-						"Select 'Partita' As Cosa, idPartita As Id, B.Descrizione As PrimoCampo, C.Descrizione As SecondoCampo, CONVERT(date, DataOra) As Data From Partite A " &
+						"Select 'Partita' As Cosa, idPartita As Id, B.Descrizione As PrimoCampo, C.Descrizione As SecondoCampo, " & IIf(TipoDB = "SQLSERVER", "CONVERT(date, DataOra)", "CONVERT(DataOra, date)") & " As Data From Partite A " &
 						"Left Join Categorie B On A.idCategoria = B.idCategoria " &
 						"Left Join SquadreAvversarie C On A.idAvversario = C.idAvversario " & Categorie2 & " " &
 						"Union All " &
-						"Select 'Evento' As Cosa, idEvento As Id, Titolo As PrimoCampo, '' As SecondoCampo, CONVERT(date, Inizio) As Data From EventiConvocazioni " &
+						"Select 'Evento' As Cosa, idEvento As Id, Titolo As PrimoCampo, '' As SecondoCampo, " & IIf(TipoDB = "SQLSERVER", "CONVERT(date, Inizio)", "CONVERT(Inizio, date)") & " As Data From EventiConvocazioni " &
 						"Where idTipologia = 2" &
 						") A  " &
-						"Where Data > GETDATE() Or Cosa = 'Cert. Scad.' " &
+						"Where Data > " & IIf(TipoDB = "SQLSERVER", "GETDATE()", "CUURENT_DATE()") & " Or Cosa = 'Cert. Scad.' " &
 						"Order By Data"
-					Rec = LeggeQuery(Conn, Sql, Connessione)
+					Rec = Conn.LeggeQuery(Server.MapPath("."),   Sql, Connessione)
 					If TypeOf (Rec) Is String Then
 						Ritorno = Rec
 					Else
 						Ritorno = ""
-						Do Until Rec.Eof
+						Do Until Rec.Eof()
 							Ritorno &= Rec("Cosa").Value & ";" & Rec("Id").Value & ";" & Rec("PrimoCampo").Value & ";" & Rec("SecondoCampo").Value & ";" & Rec("Data").Value & "§"
 
-							Rec.MoveNext
+							Rec.MoveNext()
 						Loop
-						Rec.Close
+						Rec.Close()
 
 						If Ritorno = "" Then
 							Ritorno = "ERROR: Nessun evento rilevato"
@@ -830,17 +844,17 @@ Public Class wsWidget
 		If Connessione = "" Then
 			Ritorno = ErroreConnessioneNonValida
 		Else
-			Dim Conn As Object = ApreDB(Connessione)
+			Dim Conn As Object = new clsGestioneDB
 
 			If TypeOf (Conn) Is String Then
 				Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
 			Else
 				Dim Sql As String = ""
-				Dim Rec As Object = Server.CreateObject("ADODB.Recordset")
-				Dim Rec2 As Object = Server.CreateObject("ADODB.Recordset")
+				Dim Rec As Object
+				Dim Rec2 As Object
 
 				Sql = "Delete From WidgetIndicatori"
-				Ritorno = EsegueSql(Conn, Sql, Connessione)
+				Ritorno = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
 
 				Dim SenzaQuota As Integer = 0
 				Dim CertificatoScadutoAssente As Integer = 0
@@ -848,13 +862,13 @@ Public Class wsWidget
 				Dim KitNonConsegnato As Integer = 0
 
 				' Giocatori senza quota
-				Sql = "Select Count(*) " &
+				Sql = "Select " & IIf(TipoDB = "SQLSERVER", "Isnull(Count(*),0)", "COALESCE(Count(*),0)") & " " &
 					"From " &
 					"Giocatori A " &
 					"Left Join GiocatoriDettaglio B On A.idGiocatore = B.idGiocatore " &
 					"Left Join Quote C On B.idQuota = C.idQuota And C.Eliminato = 'N' " &
 					"Where A.Eliminato = 'N' And C.Descrizione Is Null"
-				Rec = LeggeQuery(Conn, Sql, Connessione)
+				Rec = Conn.LeggeQuery(Server.MapPath("."),   Sql, Connessione)
 				If TypeOf (Rec) Is String Then
 					Ritorno = Rec
 					Return Ritorno
@@ -864,16 +878,16 @@ Public Class wsWidget
 					Else
 						SenzaQuota = "" & Rec(0).Value
 					End If
-					Rec.Close
+					Rec.Close()
 				End If
 
 				' Certificato scaduto / assente
-				Sql = "Select Count(*) From Giocatori A " &
+				Sql = "Select " & IIf(TipoDB = "SQLSERVER", "Isnull(Count(*),0)", "COALESCE(Count(*),0)") & " From Giocatori A " &
 						"Left Join GiocatoriDettaglio B On A.idGiocatore = B.idGiocatore " &
 						"Where A.Eliminato = 'N' And "
-				Sql &= " ((B.ScadenzaCertificatoMedico Is Not Null And B.ScadenzaCertificatoMedico <> '' And Convert(DateTime, B.ScadenzaCertificatoMedico ,121) <= CURRENT_TIMESTAMP And B.CertificatoMedico = 'S') Or "
+				Sql &= " ((B.ScadenzaCertificatoMedico Is Not Null And B.ScadenzaCertificatoMedico <> '' And " & IIf(TipoDB = "SQLSERVER", "Convert(DateTime, B.ScadenzaCertificatoMedico ,121)", "Convert(B.ScadenzaCertificatoMedico ,DateTime)") & " <= CURRENT_TIMESTAMP And B.CertificatoMedico = 'S') Or "
 				Sql &= " (B.CertificatoMedico Is Null Or B.CertificatoMedico = '' Or B.CertificatoMedico = 'N' Or (B.CertificatoMedico = 'S' And (B.ScadenzaCertificatoMedico Is Null Or B.ScadenzaCertificatoMedico = ''))))"
-				Rec = LeggeQuery(Conn, Sql, Connessione)
+				Rec = Conn.LeggeQuery(Server.MapPath("."),   Sql, Connessione)
 				If TypeOf (Rec) Is String Then
 					Ritorno = Rec
 					Return Ritorno
@@ -883,7 +897,7 @@ Public Class wsWidget
 					Else
 						CertificatoScadutoAssente = "" & Rec(0).Value
 					End If
-					Rec.Close
+					Rec.Close()
 				End If
 
 				' Giocatori senza firma
@@ -908,23 +922,23 @@ Public Class wsWidget
 				Dim IscrFirmaEntrambi As String = ""
 
 				Sql = "Select * From Anni"
-				Rec = LeggeQuery(Conn, Sql, Connessione)
+				Rec = Conn.LeggeQuery(Server.MapPath("."),   Sql, Connessione)
 				If TypeOf (Rec) Is String Then
 					Ritorno = Rec
 					Return Ritorno
 				Else
-					If Rec.Eof = False Then
+					If Rec.Eof() = False Then
 						IscrFirmaEntrambi = "" & Rec("iscrFirmaEntrambi").Value
 					End If
 				End If
 
 				Sql = "Select * From [Generale].[dbo].[Squadre] Where idSquadra = " & idSquadra
-				Rec = LeggeQuery(Conn, Sql, Connessione)
+				Rec = Conn.LeggeQuery(Server.MapPath("."),   Sql, Connessione)
 				If TypeOf (Rec) Is String Then
 					Ritorno = Rec
 					Return Ritorno
 				Else
-					If Rec.Eof = False Then
+					If Rec.Eof() = False Then
 						NomeSquadra = "" & Rec("Descrizione").Value
 					End If
 				End If
@@ -932,19 +946,19 @@ Public Class wsWidget
 				Sql = "Select * From Giocatori A " &
 						"Left Join GiocatoriDettaglio B On A.idGiocatore = B.idGiocatore " &
 						"Where A.Eliminato = 'N' "
-				Rec = LeggeQuery(Conn, Sql, Connessione)
+				Rec = Conn.LeggeQuery(Server.MapPath("."),   Sql, Connessione)
 				If TypeOf (Rec) Is String Then
 					Ritorno = Rec
 					Return Ritorno
 				Else
-					Do Until Rec.Eof
+					Do Until Rec.Eof()
 						Dim urlFirma As String = ""
 						Dim CiSonoFirme As Boolean = True
 
 						If "" & Rec("Maggiorenne").Value = "S" Then
 							If "" & Rec("AbilitaFirmaGenitore3").Value = "S" Then
 								urlFirma = pp & "\" & NomeSquadra.Replace(" ", "_") & "\Firme\" & idAnno & "_" & Rec("idGiocatore").Value & "_3.kgb"
-								If Not File.Exists(urlFirma) Then
+								If Not ControllaEsistenzaFile(urlFirma) Then
 									CiSonoFirme = False
 								End If
 							Else
@@ -957,7 +971,7 @@ Public Class wsWidget
 								If "" & Rec("AffidamentoCongiunto").Value = "S" Then
 									If "" & Rec("AbilitaFirmaGenitore1").Value = "S" Then
 										urlFirma = pp & "\" & NomeSquadra.Replace(" ", "_") & "\Firme\" & idAnno & "_" & Rec("idGiocatore").Value & "_1.kgb"
-										If Not File.Exists(urlFirma) Then
+										If Not ControllaEsistenzaFile(urlFirma) Then
 											CiSonoFirme = False
 										End If
 									Else
@@ -968,7 +982,7 @@ Public Class wsWidget
 
 									If "" & Rec("AbilitaFirmaGenitore2").Value = "S" Then
 										urlFirma = pp & "\" & NomeSquadra.Replace(" ", "_") & "\Firme\" & idAnno & "_" & Rec("idGiocatore").Value & "_2.kgb"
-										If Not File.Exists(urlFirma) Then
+										If Not ControllaEsistenzaFile(urlFirma) Then
 											CiSonoFirme = False
 										End If
 									Else
@@ -980,7 +994,7 @@ Public Class wsWidget
 									If "" & Rec("idTutore").Value = "1" Then
 										If "" & Rec("AbilitaFirmaGenitore1").Value = "S" Then
 											urlFirma = pp & "\" & NomeSquadra.Replace(" ", "_") & "\Firme\" & idAnno & "_" & Rec("idGiocatore").Value & "_1.kgb"
-											If Not File.Exists(urlFirma) Then
+											If Not ControllaEsistenzaFile(urlFirma) Then
 												CiSonoFirme = False
 											End If
 										Else
@@ -991,7 +1005,7 @@ Public Class wsWidget
 									Else
 										If "" & Rec("AbilitaFirmaGenitore2").Value = "S" Then
 											urlFirma = pp & "\" & NomeSquadra.Replace(" ", "_") & "\Firme\" & idAnno & "_" & Rec("idGiocatore").Value & "_2.kgb"
-											If Not File.Exists(urlFirma) Then
+											If Not ControllaEsistenzaFile(urlFirma) Then
 												CiSonoFirme = False
 											End If
 										Else
@@ -1005,7 +1019,7 @@ Public Class wsWidget
 								If IscrFirmaEntrambi = "S" Then
 									If "" & Rec("AbilitaFirmaGenitore1").Value = "S" Then
 										urlFirma = pp & "\" & NomeSquadra.Replace(" ", "_") & "\Firme\" & idAnno & "_" & Rec("idGiocatore").Value & "_1.kgb"
-										If Not File.Exists(urlFirma) Then
+										If Not ControllaEsistenzaFile(urlFirma) Then
 											CiSonoFirme = False
 										End If
 									Else
@@ -1016,7 +1030,7 @@ Public Class wsWidget
 
 									If "" & Rec("AbilitaFirmaGenitore2").Value = "S" Then
 										urlFirma = pp & "\" & NomeSquadra.Replace(" ", "_") & "\Firme\" & idAnno & "_" & Rec("idGiocatore").Value & "_2.kgb"
-										If Not File.Exists(urlFirma) Then
+										If Not ControllaEsistenzaFile(urlFirma) Then
 											CiSonoFirme = False
 										End If
 									Else
@@ -1028,7 +1042,7 @@ Public Class wsWidget
 									If "" & Rec("Genitore1").Value <> "" Then
 										If "" & Rec("AbilitaFirmaGenitore1").Value = "S" Then
 											urlFirma = pp & "\" & NomeSquadra.Replace(" ", "_") & "\Firme\" & idAnno & "_" & Rec("idGiocatore").Value & "_1.kgb"
-											If Not File.Exists(urlFirma) Then
+											If Not ControllaEsistenzaFile(urlFirma) Then
 												CiSonoFirme = False
 											End If
 										Else
@@ -1039,7 +1053,7 @@ Public Class wsWidget
 									Else
 										If "" & Rec("AbilitaFirmaGenitore2").Value = "S" Then
 											urlFirma = pp & "\" & NomeSquadra.Replace(" ", "_") & "\Firme\" & idAnno & "_" & Rec("idGiocatore").Value & "_2.kgb"
-											If Not File.Exists(urlFirma) Then
+											If Not ControllaEsistenzaFile(urlFirma) Then
 												CiSonoFirme = False
 											End If
 										Else
@@ -1067,7 +1081,7 @@ Public Class wsWidget
 							"Left Join Taglie F On E.idTaglia = F.idTaglia " &
 							"Left Join KitElementi G On G.idElemento = C.idElemento " &
 							"Where B.idGiocatore = " & Rec("idGiocatore").Value & " And C.Eliminato='N' And A.Eliminato='N' And D.Eliminato='N' And E.Eliminato='N' And G.Eliminato='N'"
-						Rec2 = LeggeQuery(Conn, Sql, Connessione)
+						Rec2 = Conn.LeggeQuery(Server.MapPath("."),Sql, Connessione)
 						If TypeOf (Rec2) Is String Then
 							Ritorno = Rec2
 							Return Ritorno
@@ -1075,7 +1089,7 @@ Public Class wsWidget
 							Dim Tutto As Boolean = True
 							Dim Qualcosa As Boolean = False
 
-							If Rec2.eof Then
+							If Rec2.Eof() Then
 								Tutto = False
 							Else
 								Do Until Rec2.Eof()
@@ -1086,9 +1100,9 @@ Public Class wsWidget
 
 									'If Val("" & Rec2("QuantitaConsegnata").Value) > 0 Then
 									Qualcosa = True
-										If Val("" & Rec2("QuantitaConsegnata").Value) < Val("" & Rec2("Quantita").Value) Then
-											Tutto = False
-										End If
+									If Val("" & Rec2("QuantitaConsegnata").Value) < Val("" & Rec2("Quantita").Value) Then
+										Tutto = False
+									End If
 									'Else
 									'	Tutto = False
 									'End If
@@ -1112,7 +1126,7 @@ Public Class wsWidget
 				Rec.Close()
 
 				Sql = "Insert Into WidgetIndicatori Values (" & SenzaQuota & ", " & CertificatoScadutoAssente & ", " & SenzaFirma & ", " & KitNonConsegnato & ")"
-				Ritorno = EsegueSql(Conn, Sql, Connessione)
+				Ritorno = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
 			End If
 		End If
 
@@ -1127,22 +1141,22 @@ Public Class wsWidget
 		If Connessione = "" Then
 			Ritorno = ErroreConnessioneNonValida
 		Else
-			Dim Conn As Object = ApreDB(Connessione)
+			Dim Conn As Object = new clsGestioneDB
 			Dim Trovato As Boolean = False
 
 			If TypeOf (Conn) Is String Then
 				Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
 			Else
-				Dim Rec As Object = Server.CreateObject("ADODB.Recordset")
+				Dim Rec as object
 				Dim Sql As String = "Select * From WidgetIndicatori"
-				Rec = LeggeQuery(Conn, Sql, Connessione)
+				Rec = Conn.LeggeQuery(Server.MapPath("."),   Sql, Connessione)
 				If TypeOf (Rec) Is String Then
 					Ritorno = Rec
 				Else
-					If Not Rec.Eof Then
+					If Not Rec.Eof() Then
 						Trovato = True
 						Ritorno &= Rec("SenzaQuota").Value & ";" & Rec("CertificatoScadutoAssente").Value & ";" & Rec("SenzaFirma").Value & ";" & Rec("KitNonConsegnato").Value
-						Rec.Close
+						Rec.Close()
 					End If
 				End If
 			End If

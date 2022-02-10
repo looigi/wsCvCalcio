@@ -14,20 +14,20 @@ Public Class mailImap
 		Return S
 	End Function
 
-	Public Function RitornaMessaggi(Squadra As String, idAnno As String, idUtente As String, Casella As String) As String
+	Public Function RitornaMessaggi(MP As String, Squadra As String, idAnno As String, idUtente As String, Casella As String) As String
 		Dim Ritorno As String = ""
-		Dim Connessione As String = LeggeImpostazioniDiBase(HttpContext.Current.Server.MapPath("."), Squadra)
+		Dim Connessione As String = LeggeImpostazioniDiBase(MP, Squadra)
 
 		If Connessione = "" Then
 			Ritorno = ErroreConnessioneNonValida
 		Else
-			Dim Conn As Object = ApreDB(Connessione)
+			Dim Conn As Object = new clsGestioneDB
 
 			If TypeOf (Conn) Is String Then
 				Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
 			Else
-				Dim Rec As Object = HttpContext.Current.Server.CreateObject("ADODB.Recordset")
-				Dim Rec2 As Object = HttpContext.Current.Server.CreateObject("ADODB.Recordset")
+				Dim Rec As Object ' = HttpContext.Current.Server.CreateObject("ADODB.Recordset")
+				Dim Rec2 As Object ' = HttpContext.Current.Server.CreateObject("ADODB.Recordset")
 				Dim Sql As String = ""
 				Dim idMail As Integer = 0
 				Dim Ok As Boolean = True
@@ -36,7 +36,7 @@ Public Class mailImap
 				Dim Password As String = ""
 				Dim UltimoControllo As String = ""
 				Dim gf As New GestioneFilesDirectory
-				Dim Righe As String = gf.LeggeFileIntero(HttpContext.Current.Server.MapPath(".") & "\Impostazioni\PercorsoAttachment.txt")
+				Dim Righe As String = gf.LeggeFileIntero(MP & "\Impostazioni\PercorsoAttachment.txt")
 				Dim pathAttachments = Righe.Replace(vbCrLf, "")
 				If pathAttachments.EndsWith("\") Then
 					pathAttachments = Mid(pathAttachments, 1, pathAttachments.Length - 1)
@@ -47,12 +47,12 @@ Public Class mailImap
 				Sql = "SELECT * From [Generale].[dbo].[Utenti] A " &
 					"Left Join [Generale].[dbo].[UtentiMails] B On A.idUtente = B.idUtente " &
 					"Where A.idAnno = " & idAnno & " And A.idUtente = " & idUtente
-				Rec = LeggeQuery(Conn, Sql, Connessione)
+				Rec = Conn.LeggeQuery(MP, Sql, Connessione)
 				If TypeOf (Rec) Is String Then
 					Ritorno = Rec
 					Ok = False
 				Else
-					If Rec.Eof Then
+					If Rec.Eof() Then
 						Ok = False
 						Ritorno = StringaErrore & " Nessun utente rilevato"
 					Else
@@ -69,21 +69,21 @@ Public Class mailImap
 							InizioRicerca = "SENTSINCE " & DataSplit(2) & "-" & mesi(Val(DataSplit(1))) & "-" & DataSplit(0)
 						End If
 					End If
-					Rec.Close
+					Rec.Close()
 				End If
 
 				If Ok Then
 					Sql = "SELECT Max(idMail)+1 From Mails"
-					Rec = LeggeQuery(Conn, Sql, Connessione)
+					Rec = Conn.LeggeQuery(MP, Sql, Connessione)
 					If Rec(0).Value Is DBNull.Value Then
 						idMail = 1
 					Else
 						idMail = Rec(0).Value
 					End If
-					Rec.Close
+					Rec.Close()
 
-					Sql = "Begin transaction"
-					Ritorno = EsegueSql(Conn, Sql, Connessione)
+					Sql = iif(tipodb="SQLSERVER", "Begin transaction", "Start transaction")
+					Ritorno = Conn.EsegueSql(MP, Sql, Connessione)
 
 					Dim imap As ImapClient
 
@@ -122,12 +122,12 @@ Public Class mailImap
 								End If
 
 								Sql = "Select * From Mails Where id = '" & idMessage & "'"
-								Rec = LeggeQuery(Conn, Sql, Connessione)
+								Rec = Conn.LeggeQuery(MP, Sql, Connessione)
 								If TypeOf (Rec) Is String Then
 									Ritorno = Rec
 									Ok = False
 								Else
-									If Rec.Eof Then
+									If Rec.Eof() Then
 										Dim Destinatari As MailAddressCollection = m.To
 										Dim Mittente As MailAddress = m.From
 
@@ -163,7 +163,7 @@ Public Class mailImap
 											"'" & m.From.Address & "', " &
 											"'" & m.From.DisplayName & "' " &
 											")"
-										Ritorno = EsegueSql(Conn, Sql, Connessione)
+										Ritorno = Conn.EsegueSql(MP, Sql, Connessione)
 										If Ritorno.Contains(StringaErrore) Then
 											Ok = False
 										End If
@@ -198,7 +198,7 @@ Public Class mailImap
 													"'', " &
 													" " & a.ContentStream.Length & " " &
 													")"
-												Ritorno = EsegueSql(Conn, Sql, Connessione)
+												Ritorno = Conn.EsegueSql(MP, Sql, Connessione)
 												If Ritorno.Contains(StringaErrore) Then
 													Ok = False
 													Exit For
@@ -229,7 +229,7 @@ Public Class mailImap
 													"'" & SistemaStringa(nome) & "', " &
 													"'" & SistemaStringa(d.Address) & "' " &
 													")"
-												Ritorno = EsegueSql(Conn, Sql, Connessione)
+												Ritorno = Conn.EsegueSql(MP, Sql, Connessione)
 												If Ritorno.Contains(StringaErrore) Then
 													Ok = False
 													Exit For
@@ -261,7 +261,7 @@ Public Class mailImap
 						Dim Datella As String = Now.Year & ";" & Format(Now.Month, "00") & ";" & Format(Now.Day, "00") & ";" & Format(Now.Hour, "00") & ";" & Format(Now.Minute, "00") & ";" & Format(Now.Second, "00")
 
 						Sql = "Update [Generale].[dbo].[UtentiMails] Set UltimoControllo = '" & Datella & "' Where idUtente = " & idUtente
-						Ritorno = EsegueSql(Conn, Sql, Connessione)
+						Ritorno = Conn.EsegueSql(MP, Sql, Connessione)
 						If Ritorno.Contains(StringaErrore) Then
 							Ok = False
 						End If
@@ -269,11 +269,11 @@ Public Class mailImap
 
 					If Ok Then
 						Sql = "commit"
-						Dim Ritorno2 As String = EsegueSql(Conn, Sql, Connessione)
+						Dim Ritorno2 As String = Conn.EsegueSql(MP, Sql, Connessione)
 						Ritorno = QuanteMails
 					Else
 						Sql = "rollback"
-						Dim Ritorno2 As String = EsegueSql(Conn, Sql, Connessione)
+						Dim Ritorno2 As String = Conn.EsegueSql(MP, Sql, Connessione)
 					End If
 				End If
 

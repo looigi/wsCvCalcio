@@ -6,6 +6,7 @@ Imports System.Web.ApplicationServices
 Imports System.Web.Hosting
 Imports System.IO
 Imports System.Security.Principal
+Imports ADODB
 
 <System.Web.Services.WebService(Namespace:="http://cvcalcio_part.org/")>
 <System.Web.Services.WebServiceBinding(ConformsTo:=WsiProfiles.BasicProfile1_1)>
@@ -21,24 +22,24 @@ Public Class wsPartite
 		If Connessione = "" Then
 			Ritorno = ErroreConnessioneNonValida & ":" & Connessione
 		Else
-			Dim Conn As Object = ApreDB(Connessione)
+			Dim Conn As Object = new clsGestioneDB
 
 			If TypeOf (Conn) Is String Then
 				Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
 			Else
 				Dim Ok As Boolean = True
-				Dim Rec As Object = Server.CreateObject("ADODB.Recordset")
+				Dim Rec As Object
 				Dim Sql As String = ""
 
-				Sql = "Begin transaction"
-				Ritorno = EsegueSql(Conn, Sql, Connessione)
+				Sql = iif(tipodb="SQLSERVER", "Begin transaction", "Start transaction")
+				Ritorno = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
 				If Ritorno <> "*" Then
 					Ok = False
 				End If
 
 				If Ok Then
 					Sql = "Delete From Titolari Where idPartita = " & idPartita
-					Ritorno = EsegueSql(Conn, Sql, Connessione)
+					Ritorno = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
 					If Ritorno <> "*" Then
 						Ok = False
 					End If
@@ -57,7 +58,7 @@ Public Class wsPartite
 								" " & Progressivo & ", " &
 								" " & i & " " &
 								")"
-							Ritorno = EsegueSql(Conn, Sql, Connessione)
+							Ritorno = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
 							If Ritorno <> "*" Then
 								Ok = False
 								Exit For
@@ -69,10 +70,10 @@ Public Class wsPartite
 				If Ok Then
 					Ritorno = "*"
 					Sql = "Commit"
-					Dim Ritorno2 As String = EsegueSql(Conn, Sql, Connessione)
+					Dim Ritorno2 As String = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
 				Else
 					Sql = "Rollback"
-					Dim Ritorno2 As String = EsegueSql(Conn, Sql, Connessione)
+					Dim Ritorno2 As String = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
 				End If
 
 				Conn.Close()
@@ -100,17 +101,17 @@ Public Class wsPartite
 		If Connessione = "" Then
 			Ritorno = ErroreConnessioneNonValida & ":" & Connessione
 		Else
-			Dim Conn As Object = ApreDB(Connessione)
+			Dim Conn As Object = new clsGestioneDB
 
 			If TypeOf (Conn) Is String Then
 				Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
 			Else
 				Dim Ok As Boolean = True
-				Dim Rec As Object = Server.CreateObject("ADODB.Recordset")
+				Dim Rec As Object
 				Dim Sql As String = ""
 
-				Sql = "Begin transaction"
-				Ritorno = EsegueSql(Conn, Sql, Connessione)
+				Sql = iif(tipodb="SQLSERVER", "Begin transaction", "Start transaction")
+				Ritorno = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
 				If Ritorno <> "*" Then
 					Ok = False
 				End If
@@ -118,7 +119,7 @@ Public Class wsPartite
 				If Ok Then
 					Try
 						Sql = "Delete From RisultatiAvversariMinuti Where idPartita=" & idPartita
-						Ritorno = EsegueSql(Conn, Sql, Connessione)
+						Ritorno = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
 						If Ritorno.Contains(StringaErrore) Then
 							Ok = False
 						End If
@@ -132,7 +133,7 @@ Public Class wsPartite
 				If Ok Then
 					Try
 						Sql = "Delete From Partite Where idPartita=" & idPartita
-						Ritorno = EsegueSql(Conn, Sql, Connessione)
+						Ritorno = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
 						If Ritorno.Contains(StringaErrore) Then
 							Ok = False
 						End If
@@ -146,7 +147,7 @@ Public Class wsPartite
 				If Ok Then
 					Try
 						Sql = "Delete From Risultati Where idPartita=" & idPartita
-						Ritorno = EsegueSql(Conn, Sql, Connessione)
+						Ritorno = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
 						If Ritorno.Contains(StringaErrore) Then
 							Ok = False
 						End If
@@ -160,7 +161,7 @@ Public Class wsPartite
 				If Ok Then
 					Try
 						Sql = "Delete From Marcatori Where idPartita=" & idPartita
-						Ritorno = EsegueSql(Conn, Sql, Connessione)
+						Ritorno = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
 						If Ritorno.Contains(StringaErrore) Then
 							Ok = False
 						End If
@@ -174,7 +175,7 @@ Public Class wsPartite
 				If Ok Then
 					Try
 						Sql = "Delete From Convocati Where idPartita=" & idPartita
-						Ritorno = EsegueSql(Conn, Sql, Connessione)
+						Ritorno = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
 						If Ritorno.Contains(StringaErrore) Then
 							Ok = False
 						End If
@@ -188,7 +189,7 @@ Public Class wsPartite
 				If Ok Then
 					Try
 						Sql = "Delete From RisultatiAggiuntivi Where idPartita=" & idPartita
-						Ritorno = EsegueSql(Conn, Sql, Connessione)
+						Ritorno = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
 						If Ritorno.Contains(StringaErrore) Then
 							Ok = False
 						End If
@@ -202,7 +203,7 @@ Public Class wsPartite
 				If Ok Then
 					Try
 						Sql = "Delete From RisultatiAggiuntiviMarcatori Where idPartita=" & idPartita
-						Ritorno = EsegueSql(Conn, Sql, Connessione)
+						Ritorno = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
 						If Ritorno.Contains(StringaErrore) Then
 							Ok = False
 						End If
@@ -216,7 +217,7 @@ Public Class wsPartite
 				If Ok Then
 					Try
 						Sql = "Delete From CampiEsterni Where idPartita=" & idPartita
-						Ritorno = EsegueSql(Conn, Sql, Connessione)
+						Ritorno = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
 						If Ritorno.Contains(StringaErrore) Then
 							Ok = False
 						End If
@@ -230,7 +231,7 @@ Public Class wsPartite
 				If Ok Then
 					Try
 						Sql = "Delete From CoordinatePartite Where idPartita=" & idPartita
-						Ritorno = EsegueSql(Conn, Sql, Connessione)
+						Ritorno = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
 						If Ritorno.Contains(StringaErrore) Then
 							Ok = False
 						End If
@@ -244,7 +245,7 @@ Public Class wsPartite
 				If Ok Then
 					Try
 						Sql = "Delete From MeteoPartite Where idPartita=" & idPartita
-						Ritorno = EsegueSql(Conn, Sql, Connessione)
+						Ritorno = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
 						If Ritorno.Contains(StringaErrore) Then
 							Ok = False
 						End If
@@ -258,7 +259,7 @@ Public Class wsPartite
 				If Ok Then
 					Try
 						Sql = "Delete From TempiGoalAvversari Where idPartita=" & idPartita
-						Ritorno = EsegueSql(Conn, Sql, Connessione)
+						Ritorno = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
 						If Ritorno.Contains(StringaErrore) Then
 							Ok = False
 						End If
@@ -272,7 +273,7 @@ Public Class wsPartite
 				If Ok Then
 					Try
 						Sql = "Delete From DirigentiPartite Where idPartita=" & idPartita & " And idAnno=" & idAnno
-						Ritorno = EsegueSql(Conn, Sql, Connessione)
+						Ritorno = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
 						If Ritorno.Contains(StringaErrore) Then
 							Ok = False
 						End If
@@ -286,7 +287,7 @@ Public Class wsPartite
 				If Ok Then
 					Try
 						Sql = "Delete From ArbitriPartite Where idPartita=" & idPartita & " And idAnno=" & idAnno
-						Ritorno = EsegueSql(Conn, Sql, Connessione)
+						Ritorno = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
 						If Ritorno.Contains(StringaErrore) Then
 							Ok = False
 						End If
@@ -300,7 +301,7 @@ Public Class wsPartite
 				If Ok Then
 					Try
 						Sql = "delete from RigoriAvversari Where idPartita=" & idPartita & " And idAnno=" & idAnno
-						Ritorno = EsegueSql(Conn, Sql, Connessione)
+						Ritorno = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
 						If Ritorno.Contains(StringaErrore) Then
 							Ok = False
 						End If
@@ -314,7 +315,7 @@ Public Class wsPartite
 				If Ok Then
 					Try
 						Sql = "Delete from RigoriPropri Where idPartita=" & idPartita & " And idAnno=" & idAnno
-						Ritorno = EsegueSql(Conn, Sql, Connessione)
+						Ritorno = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
 						If Ritorno.Contains(StringaErrore) Then
 							Ok = False
 						End If
@@ -328,7 +329,7 @@ Public Class wsPartite
 				If Ok Then
 					Try
 						Sql = "Delete from EventiPartita Where idPartita=" & idPartita & " And idAnno=" & idAnno
-						Ritorno = EsegueSql(Conn, Sql, Connessione)
+						Ritorno = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
 						If Ritorno.Contains(StringaErrore) Then
 							Ok = False
 						End If
@@ -342,7 +343,7 @@ Public Class wsPartite
 				If Ok Then
 					Try
 						Sql = "Delete From InFormazione Where idPartita=" & idPartita
-						Ritorno = EsegueSql(Conn, Sql, Connessione)
+						Ritorno = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
 						If Ritorno.Contains(StringaErrore) Then
 							Ok = False
 						End If
@@ -356,7 +357,7 @@ Public Class wsPartite
 				If Ok Then
 					Try
 						Sql = "Delete From PartiteCapitani Where idPartita=" & idPartita
-						Ritorno = EsegueSql(Conn, Sql, Connessione)
+						Ritorno = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
 						If Ritorno.Contains(StringaErrore) Then
 							Ok = False
 						End If
@@ -394,7 +395,7 @@ Public Class wsPartite
 							" " & Tempi & ", " &
 							"'" & PartitaConRigori & "' " &
 							")"
-						Ritorno = EsegueSql(Conn, Sql, Connessione)
+						Ritorno = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
 						If Ritorno.Contains(StringaErrore) Then
 							Ok = False
 						End If
@@ -411,7 +412,7 @@ Public Class wsPartite
 								" " & idPartita & ", " &
 								"'" & Campo.Replace("'", "''") & "' " &
 								")"
-							Ritorno = EsegueSql(Conn, Sql, Connessione)
+							Ritorno = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
 							If Ritorno.Contains(StringaErrore) Then
 								Ok = False
 							End If
@@ -429,7 +430,7 @@ Public Class wsPartite
 						" " & idPartita & ", " &
 						" " & idCapitano & " " &
 						")"
-							Ritorno = EsegueSql(Conn, Sql, Connessione)
+							Ritorno = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
 							If Ritorno.Contains(StringaErrore) Then
 								Ok = False
 							End If
@@ -447,7 +448,7 @@ Public Class wsPartite
 							"'" & Risultato & "', " &
 							"'" & Notelle.Replace("'", "''") & "' " &
 							")"
-						Ritorno = EsegueSql(Conn, Sql, Connessione)
+						Ritorno = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
 						If Ritorno.Contains(StringaErrore) Then
 							Ok = False
 						End If
@@ -472,7 +473,7 @@ Public Class wsPartite
 								"'" & Tempo2Tempo & "', " &
 								"'" & Tempo3Tempo & "' " &
 								")"
-							Ritorno = EsegueSql(Conn, Sql, Connessione)
+							Ritorno = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
 							If Ritorno.Contains(StringaErrore) Then
 								Ok = False
 							End If
@@ -493,7 +494,7 @@ Public Class wsPartite
 								"'" & CC(0) & "', " &
 								"'" & CC(1) & "' " &
 								")"
-							Ritorno = EsegueSql(Conn, Sql, Connessione)
+							Ritorno = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
 							If Ritorno.Contains(StringaErrore) Then
 								Ok = False
 							End If
@@ -508,41 +509,41 @@ Public Class wsPartite
 					If sTempo <> "" Then
 						'If Coordinate <> "" Then
 						Dim CC() As String = Coordinate.Split(";")
-							Dim TempoMeteo As String = RitornaMeteo(CC(0), CC(1))
+						Dim TempoMeteo As String = RitornaMeteo(CC(0), CC(1))
 
-							If TempoMeteo.Contains(StringaErrore) Then
-								Ritorno = TempoMeteo
-								TempoMeteo = ""
-								'Ok = False
-							End If
+						If TempoMeteo.Contains(StringaErrore) Then
+							Ritorno = TempoMeteo
+							TempoMeteo = ""
+							'Ok = False
+						End If
 
-							If TempoMeteo <> "" Then
-								Dim TT() As String = TempoMeteo.Split(";")
+						If TempoMeteo <> "" Then
+							Dim TT() As String = TempoMeteo.Split(";")
 
-								'Temperatura
-								'Umidita
-								'Pressione
-								'Tempo
-								'Icona
+							'Temperatura
+							'Umidita
+							'Pressione
+							'Tempo
+							'Icona
 
-								Try
-									Sql = "Insert Into MeteoPartite Values (" &
-										" " & idPartita & ", " &
-										"'" & TT(0) & "', " &
-										"'" & TT(1) & "', " &
-										"'" & TT(2) & "', " &
-										"'" & TT(3) & "', " &
-										"'" & TT(4) & "' " &
-										")"
-									Ritorno = EsegueSql(Conn, Sql, Connessione)
-									If Ritorno.Contains(StringaErrore) Then
-										Ok = False
-									End If
-								Catch ex As Exception
-									Ritorno = StringaErrore & " " & ex.Message
+							Try
+								Sql = "Insert Into MeteoPartite Values (" &
+									" " & idPartita & ", " &
+									"'" & TT(0) & "', " &
+									"'" & TT(1) & "', " &
+									"'" & TT(2) & "', " &
+									"'" & TT(3) & "', " &
+									"'" & TT(4) & "' " &
+									")"
+								Ritorno = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
+								If Ritorno.Contains(StringaErrore) Then
 									Ok = False
-								End Try
-							End If
+								End If
+							Catch ex As Exception
+								Ritorno = StringaErrore & " " & ex.Message
+								Ok = False
+							End Try
+						End If
 						'End If
 					End If
 				End If
@@ -555,7 +556,7 @@ Public Class wsPartite
 							"'" & TGA2.Replace("$", "#") & "', " &
 							"'" & TGA3.Replace("$", "#") & "' " &
 							")"
-						Ritorno = EsegueSql(Conn, Sql, Connessione)
+						Ritorno = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
 						If Ritorno.Contains(StringaErrore) Then
 							Ok = False
 						End If
@@ -588,7 +589,7 @@ Public Class wsPartite
 
 									If Ok Then
 										Sql = "SELECT Max(Progressivo)+1 FROM RisultatiAggiuntiviMarcatori Where idPartita=" & idPartita & " And idTempo=" & Tempo
-										Rec = LeggeQuery(Conn, Sql, Connessione)
+										Rec = Conn.LeggeQuery(Server.MapPath("."),  Sql, Connessione)
 										If TypeOf (Rec) Is String Then
 											Ritorno = Rec
 											Ok = False
@@ -609,7 +610,7 @@ Public Class wsPartite
 											" " & Minuto & ", " &
 											"'" & Rigore & "' " &
 											")"
-										Ritorno = EsegueSql(Conn, Sql, Connessione)
+										Ritorno = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
 										If Ritorno.Contains(StringaErrore) Then
 											Ok = False
 											Exit For
@@ -629,7 +630,7 @@ Public Class wsPartite
 						Dim Progressivo As Integer = -1
 
 						Sql = "SELECT Max(idProgressivo)+1 FROM Convocati Where idPartita=" & idPartita
-						Rec = LeggeQuery(Conn, Sql, Connessione)
+						Rec = Conn.LeggeQuery(Server.MapPath("."),  Sql, Connessione)
 						If TypeOf (Rec) Is String Then
 							Ritorno = Rec
 							Ok = False
@@ -664,12 +665,12 @@ Public Class wsPartite
 						Sql = "Select A.Mail, A.idGiocatore, A.Progressivo, B.Cognome, B.Nome From GiocatoriMails A " &
 							"Left Join Giocatori B On A.idGiocatore = B.idGiocatore " &
 							"Where A.idGiocatore in (" & convString & ") And Attiva = 'S' And A.Mail <> ''"
-						Rec = LeggeQuery(Conn, Sql, Connessione)
+						Rec = Conn.LeggeQuery(Server.MapPath("."),  Sql, Connessione)
 						If TypeOf (Rec) Is String Then
 							Ritorno = Rec
 							Ok = False
 						Else
-							Dim Rec2 As Object = Server.CreateObject("ADODB.Recordset")
+							Dim Rec2 As Object
 
 							Do Until Rec.Eof()
 								If "" & Rec("Mail").Value <> "" Then
@@ -677,8 +678,8 @@ Public Class wsPartite
 										"Left Join Giocatori B On A.idGiocatore = B.idGiocatore " &
 										"Where A.idGiocatore=" & Rec("idGiocatore").Value & " " &
 										"Order By Cognome, Nome"
-									Rec2 = LeggeQuery(Conn, Sql, Connessione)
-									If Not Rec2.Eof Then
+									Rec2 = Conn.LeggeQuery(Server.MapPath("."),Sql, Connessione)
+									If Not Rec2.Eof() Then
 										Dim genitore As String = ""
 										Select Case Val("" & Rec("Progressivo").Value)
 											Case 1
@@ -701,7 +702,7 @@ Public Class wsPartite
 
 										MailsConvocati.Add(Rec("Cognome").Value & ";" & Rec("Nome").Value & ";" & Rec("Mail").Value & ";C;" & Rec("idGiocatore").Value)
 									End If
-									Rec2.Close
+									Rec2.Close()
 								End If
 
 								Rec.MoveNext()
@@ -722,7 +723,7 @@ Public Class wsPartite
 												" " & Progressivo & ", " &
 												" " & idGioc & " " &
 												")"
-											Ritorno = EsegueSql(Conn, Sql, Connessione)
+											Ritorno = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
 											If Ritorno.Contains(StringaErrore) Then
 												Ok = False
 												Exit For
@@ -750,7 +751,7 @@ Public Class wsPartite
 								Dim tipoPartita As String = ""
 
 								Sql = "Select * From SquadreAvversarie A Left Join AvversariCoord B On A.idAvversario = B.idAvversario Where A.idAvversario = " & idAvversario
-								Rec = LeggeQuery(Conn, Sql, Connessione)
+								Rec = Conn.LeggeQuery(Server.MapPath("."),  Sql, Connessione)
 								If TypeOf (Rec) Is String Then
 									Ritorno = Rec
 									Ok = False
@@ -766,7 +767,7 @@ Public Class wsPartite
 								End If
 
 								Sql = "Select * From Categorie Where idCategoria = " & idCategoria
-								Rec = LeggeQuery(Conn, Sql, Connessione)
+								Rec = Conn.LeggeQuery(Server.MapPath("."),  Sql, Connessione)
 								If TypeOf (Rec) Is String Then
 									Ritorno = Rec
 									Ok = False
@@ -779,7 +780,7 @@ Public Class wsPartite
 								End If
 
 								Sql = "Select * From [Generale].[dbo].[TipologiePartite] Where idTipologia = " & idTipologia
-								Rec = LeggeQuery(Conn, Sql, Connessione)
+								Rec = Conn.LeggeQuery(Server.MapPath("."),  Sql, Connessione)
 								If TypeOf (Rec) Is String Then
 									Ritorno = Rec
 									Ok = False
@@ -791,7 +792,7 @@ Public Class wsPartite
 								End If
 
 								Sql = "Select * From Allenatori Where idAllenatore = " & idAllenatore
-								Rec = LeggeQuery(Conn, Sql, Connessione)
+								Rec = Conn.LeggeQuery(Server.MapPath("."),  Sql, Connessione)
 								If TypeOf (Rec) Is String Then
 									Ritorno = Rec
 									Ok = False
@@ -806,7 +807,7 @@ Public Class wsPartite
 
 								If Casa = "S" Then
 									Sql = "Select * From Anni Where idAnno = " & idAnno
-									Rec = LeggeQuery(Conn, Sql, Connessione)
+									Rec = Conn.LeggeQuery(Server.MapPath("."),  Sql, Connessione)
 									If TypeOf (Rec) Is String Then
 										Ritorno = Rec
 										Ok = False
@@ -823,7 +824,7 @@ Public Class wsPartite
 									End If
 								Else
 									Sql = "Select * From CampiAvversari Where idCampo = " & idCampo
-									Rec = LeggeQuery(Conn, Sql, Connessione)
+									Rec = Conn.LeggeQuery(Server.MapPath("."),  Sql, Connessione)
 									If TypeOf (Rec) Is String Then
 										Ritorno = Rec
 										Ok = False
@@ -918,7 +919,7 @@ Public Class wsPartite
 									End If
 
 									If MandaMail = "S" And (c(3) = "C" Or c(3) = "A" Or c(3) = "D") Then
-										Ritorno = ma.SendEmail(Squadra, Mittente, Oggetto, Body2, c(2), {""})
+										Ritorno = ma.SendEmail(Server.MapPath("."), Squadra, Mittente, Oggetto, Body2, c(2), {""})
 									End If
 
 									If c(3) = "C" Then
@@ -951,7 +952,7 @@ Public Class wsPartite
 												" " & Progressivo & ", " &
 												" " & C & " " &
 												")"
-								Ritorno = EsegueSql(Conn, Sql, Connessione)
+								Ritorno = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
 								If Ritorno.Contains(StringaErrore) Then
 									Ok = False
 									Exit For
@@ -970,7 +971,7 @@ Public Class wsPartite
 						Dim Progressivo As Integer = -1
 
 						Sql = "SELECT Max(Progressivo)+1 FROM DirigentiPartite Where idPartita=" & idPartita & " And idAnno=" & idAnno
-						Rec = LeggeQuery(Conn, Sql, Connessione)
+						Rec = Conn.LeggeQuery(Server.MapPath("."),  Sql, Connessione)
 						If TypeOf (Rec) Is String Then
 							Ritorno = Rec
 							Ok = False
@@ -997,7 +998,7 @@ Public Class wsPartite
 												" " & Progressivo & ", " &
 												" " & idDirigente & " " &
 												")"
-											Ritorno = EsegueSql(Conn, Sql, Connessione)
+											Ritorno = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
 											If Ritorno.Contains(StringaErrore) Then
 												Ok = False
 												Exit For
@@ -1027,7 +1028,7 @@ Public Class wsPartite
 									"1, " &
 									" " & idArbitro & " " &
 									")"
-						Ritorno = EsegueSql(Conn, Sql, Connessione)
+						Ritorno = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
 						If Ritorno.Contains(StringaErrore) Then
 							Ok = False
 						End If
@@ -1055,7 +1056,7 @@ Public Class wsPartite
 										" " & c(0) & ", " &
 										" " & c(6) & " " &
 										")"
-									Ritorno = EsegueSql(Conn, Sql, Connessione)
+									Ritorno = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
 									If Ritorno.Contains(StringaErrore) Then
 										Ok = False
 									End If
@@ -1080,7 +1081,7 @@ Public Class wsPartite
 									" " & a(0) & ", " &
 									" " & a(1) & " " &
 									")"
-								Ritorno = EsegueSql(Conn, Sql, Connessione)
+								Ritorno = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
 								If Ritorno.Contains(StringaErrore) Then
 									Ok = False
 								End If
@@ -1115,7 +1116,7 @@ Public Class wsPartite
 										" " & idGiocatore & ", " &
 										" " & Minuto & " " &
 										")"
-									Ritorno = EsegueSql(Conn, Sql, Connessione)
+									Ritorno = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
 									If Ritorno.Contains(StringaErrore) Then
 										Ok = False
 										Exit For
@@ -1152,7 +1153,7 @@ Public Class wsPartite
 										" " & idGiocatore & ", " &
 										" " & Minuto & " " &
 										")"
-									Ritorno = EsegueSql(Conn, Sql, Connessione)
+									Ritorno = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
 									If Ritorno.Contains(StringaErrore) Then
 										Ok = False
 										Exit For
@@ -1189,7 +1190,7 @@ Public Class wsPartite
 										" " & idGiocatore & ", " &
 										" " & Minuto & " " &
 										")"
-									Ritorno = EsegueSql(Conn, Sql, Connessione)
+									Ritorno = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
 									If Ritorno.Contains(StringaErrore) Then
 										Ok = False
 										Exit For
@@ -1209,7 +1210,7 @@ Public Class wsPartite
 									"1, " &
 									"'" & TempiGoalAvversari1T & "' " &
 									")"
-					Ritorno = EsegueSql(Conn, Sql, Connessione)
+					Ritorno = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
 					If Ritorno.Contains(StringaErrore) Then
 						Ok = False
 					Else
@@ -1218,7 +1219,7 @@ Public Class wsPartite
 									"2, " &
 									"'" & TempiGoalAvversari2T & "' " &
 									")"
-						Ritorno = EsegueSql(Conn, Sql, Connessione)
+						Ritorno = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
 						If Ritorno.Contains(StringaErrore) Then
 							Ok = False
 						Else
@@ -1227,7 +1228,7 @@ Public Class wsPartite
 									"3, " &
 									"'" & TempiGoalAvversari3T & "' " &
 									")"
-							Ritorno = EsegueSql(Conn, Sql, Connessione)
+							Ritorno = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
 							If Ritorno.Contains(StringaErrore) Then
 								Ok = False
 							End If
@@ -1238,7 +1239,7 @@ Public Class wsPartite
 				If Ok Then
 					Ritorno = "*"
 					Sql = "Commit"
-					Dim Ritorno2 As String = EsegueSql(Conn, Sql, Connessione)
+					Dim Ritorno2 As String = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
 
 					'If Not Ritorno2.Contains(StringaErrore) Then
 					'	If CreaSchedaPartita = "S" Then
@@ -1247,7 +1248,7 @@ Public Class wsPartite
 					'End If
 				Else
 					Sql = "Rollback"
-					Dim Ritorno2 As String = EsegueSql(Conn, Sql, Connessione)
+					Dim Ritorno2 As String = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
 				End If
 
 				Conn.Close()
@@ -1265,12 +1266,12 @@ Public Class wsPartite
 		If Connessione = "" Then
 			Ritorno = ErroreConnessioneNonValida & ":" & Connessione
 		Else
-			Dim Conn As Object = ApreDB(Connessione)
+			Dim Conn As Object = new clsGestioneDB
 
 			If TypeOf (Conn) Is String Then
 				Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
 			Else
-				Ritorno = CreaHtmlPartita(Squadra, Conn, Connessione, idAnno, idPartita)
+				Ritorno = CreaHtmlPartita(Server.MapPath("."), Squadra, Conn, Connessione, idAnno, idPartita)
 			End If
 		End If
 
@@ -1285,13 +1286,13 @@ Public Class wsPartite
 		If Connessione = "" Then
 			Ritorno = ErroreConnessioneNonValida
 		Else
-			Dim Conn As Object = ApreDB(Connessione)
+			Dim Conn As Object = new clsGestioneDB
 
 			If TypeOf (Conn) Is String Then
 				Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
 			Else
-				Dim Rec As Object = Server.CreateObject("ADODB.Recordset")
-				Dim Rec2 As Object = Server.CreateObject("ADODB.Recordset")
+				Dim Rec As Object
+				Dim Rec2 As Object
 				Dim Sql As String = ""
 				Dim Altro As String = ""
 
@@ -1318,15 +1319,15 @@ Public Class wsPartite
 						"WHERE Partite.idAnno=" & idAnno & " " & Altro & " " &
 						"And Partite.idCategoria=" & idCategoria & " Order By DataOra Desc"
 					' And Arbitri.idAnno=" & idAnno & " And Partite.Giocata='S'
-					Rec = LeggeQuery(Conn, Sql, Connessione)
+					Rec = Conn.LeggeQuery(Server.MapPath("."),  Sql, Connessione)
 					If TypeOf (Rec) Is String Then
 						Ritorno = Rec
 					Else
-						If Rec.Eof Then
+						If Rec.Eof() Then
 							Ritorno = StringaErrore & " Nessuna partita rilevata"
 						Else
 							Ritorno = ""
-							Do Until Rec.Eof
+							Do Until Rec.Eof()
 								Dim Campo As String = Rec("Casa").Value
 
 								If Campo = "S" Then
@@ -1369,10 +1370,10 @@ Public Class wsPartite
 								Sql = "Select GoalAvvPrimoTempo, GoalAvvSecondoTempo, GoalAvvTerzoTempo " &
 									"From RisultatiAggiuntivi " &
 									"Where idPartita=" & Rec("idPartita").Value.ToString
-								Rec2 = LeggeQuery(Conn, Sql, Connessione)
+								Rec2 = Conn.LeggeQuery(Server.MapPath("."),Sql, Connessione)
 								If TypeOf (Rec2) Is String Then
 								Else
-									If Not Rec2.Eof Then
+									If Not Rec2.Eof() Then
 										If Rec2("GoalAvvPrimoTempo").Value > 0 Then
 											goalAvversari += Rec2("GoalAvvPrimoTempo").Value
 										End If
@@ -1384,23 +1385,23 @@ Public Class wsPartite
 										End If
 									End If
 								End If
-								Rec2.Close
+								Rec2.Close()
 
 								Dim goalPropri As Integer = 0
 
-								Sql = "Select Count(*) As Goals " &
+								Sql = "Select " & IIf(TipoDB = "SQLSERVER", "Isnull(Count(*),0)", "COALESCE(Count(*),0)") & " As Goals " &
 									"From RisultatiAggiuntiviMarcatori " &
 									"Where idPartita=" & Rec("idPartita").Value.ToString
-								Rec2 = LeggeQuery(Conn, Sql, Connessione)
+								Rec2 = Conn.LeggeQuery(Server.MapPath("."),Sql, Connessione)
 								If TypeOf (Rec2) Is String Then
 								Else
-									If Not Rec2.Eof Then
+									If Not Rec2.Eof() Then
 										If Not Rec2("Goals").Value Is DBNull.Value Then
 											goalPropri = Rec2("Goals").Value
 										End If
 									End If
 								End If
-								Rec2.Close
+								Rec2.Close()
 
 								If Rec("Casa").Value.ToString.ToUpper = "S" Then
 									Ritorno &= goalPropri.ToString.Trim & "-" & goalAvversari.ToString.Trim & ";"
@@ -1408,7 +1409,7 @@ Public Class wsPartite
 									Ritorno &= goalAvversari.ToString.Trim & "-" & goalPropri.ToString.Trim & ";"
 								End If
 
-								Dim MultiMediaPartite As String = RitornaMultimediaPerTipologia(Squadra, idAnno, Rec("idPartita").Value, "Partite")
+								Dim MultiMediaPartite As String = RitornaMultimediaPerTipologia(Server.MapPath("."), Squadra, idAnno, Rec("idPartita").Value, "Partite")
 
 								If MultiMediaPartite <> "" And MultiMediaPartite.Contains("§") Then
 									Dim QuanteImmagini() As String = MultiMediaPartite.Split("§")
@@ -1436,10 +1437,10 @@ Public Class wsPartite
 									"Left Join [Generale].[dbo].[Ruoli] On Giocatori.idRuolo = Ruoli.idRuolo) " &
 									"Where RigoriPropri.idAnno=" & idAnno & " And idPartita=" & Rec("idPartita").Value.ToString & " " &
 									"Order By RigoriPropri.idRigore"
-								Rec2 = LeggeQuery(Conn, Sql, Connessione)
+								Rec2 = Conn.LeggeQuery(Server.MapPath("."),Sql, Connessione)
 								If TypeOf (Rec2) Is String Then
 								Else
-									Do Until Rec2.Eof
+									Do Until Rec2.Eof()
 										' 448;Centrocampista;Cataldi Lorenzo;;;14;-1;
 										RigoriPropri &= Rec2("idGiocatore").Value & "!"
 										RigoriPropri &= Rec2("Descrizione").Value & "!"
@@ -1450,16 +1451,16 @@ Public Class wsPartite
 										RigoriPropri &= Rec2("Termine").Value & "!"
 										RigoriPropri &= "%"
 
-										Rec2.MoveNext
+										Rec2.MoveNext()
 									Loop
 								End If
-								Rec2.Close
+								Rec2.Close()
 
 								Sql = "Select * From RigoriAvversari Where idAnno=" & idAnno & " And idPartita=" & Rec("idPartita").Value.ToString
-								Rec2 = LeggeQuery(Conn, Sql, Connessione)
+								Rec2 = Conn.LeggeQuery(Server.MapPath("."),Sql, Connessione)
 								If TypeOf (Rec2) Is String Then
 								Else
-									If Not Rec2.Eof Then
+									If Not Rec2.Eof() Then
 										RigoriAvv = Rec2("Segnati").Value & "!" & Rec2("Sbagliati").Value & "!"
 									End If
 								End If
@@ -1494,13 +1495,13 @@ Public Class wsPartite
 		If Connessione = "" Then
 			Ritorno = ErroreConnessioneNonValida
 		Else
-			Dim Conn As Object = ApreDB(Connessione)
+			Dim Conn As Object = new clsGestioneDB
 
 			If TypeOf (Conn) Is String Then
 				Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
 			Else
-				Dim Rec As Object = Server.CreateObject("ADODB.Recordset")
-				Dim Rec2 As Object = Server.CreateObject("ADODB.Recordset")
+				Dim Rec As Object
+				Dim Rec2 As Object
 				Dim Sql As String = ""
 
 				Try
@@ -1536,15 +1537,15 @@ Public Class wsPartite
 						"LEFT JOIN RisultatiAvversariMinuti As RisultatiAvversariMinuti3 On Partite.idPartita = RisultatiAvversariMinuti3.idPartita And RisultatiAvversariMinuti3.idTempo = 3 " &
 						"WHERE Partite.idPartita=" & idPartita & " And Partite.idAnno=" & idAnno
 
-					Rec = LeggeQuery(Conn, Sql, Connessione)
+					Rec = Conn.LeggeQuery(Server.MapPath("."),  Sql, Connessione)
 					If TypeOf (Rec) Is String Then
-						Ritorno = Sql & "--->" & Rec
+						Ritorno = Sql & "--->" & Rec.ToString
 					Else
-						If Rec.Eof Then
+						If Rec.Eof() Then
 							Ritorno = StringaErrore & " No partites found"
 						Else
 							Ritorno = ""
-							Do Until Rec.Eof
+							Do Until Rec.Eof()
 								Ritorno &= Rec("idCategoria").Value.ToString & ";" &
 									Rec("idAvversario").Value.ToString & ";" &
 									Rec("idTipologia").Value.ToString & ";" &
@@ -1576,10 +1577,10 @@ Public Class wsPartite
 								Sql = "Select GoalAvvPrimoTempo, GoalAvvSecondoTempo, GoalAvvTerzoTempo " &
 									"From RisultatiAggiuntivi " &
 									"Where idPartita=" & Rec("idPartita").Value.ToString
-								Rec2 = LeggeQuery(Conn, Sql, Connessione)
+								Rec2 = Conn.LeggeQuery(Server.MapPath("."),Sql, Connessione)
 								If TypeOf (Rec2) Is String Then
 								Else
-									If Not Rec2.Eof Then
+									If Not Rec2.Eof() Then
 										If Rec2("GoalAvvPrimoTempo").Value > 0 Then
 											goalAvversari += Rec2("GoalAvvPrimoTempo").Value
 										End If
@@ -1591,7 +1592,7 @@ Public Class wsPartite
 										End If
 									End If
 								End If
-								Rec2.Close
+								Rec2.Close()
 
 								Dim Dirigenti As String = ""
 
@@ -1599,32 +1600,32 @@ Public Class wsPartite
 									"From DirigentiPartite " &
 									"Left Join Dirigenti On (DirigentiPartite.idAnno=Dirigenti.idAnno And DirigentiPartite.idDirigente=Dirigenti.idDirigente) " &
 									"Where DirigentiPartite.idPartita=" & Rec("idPartita").Value.ToString & " And DirigentiPartite.idAnno=" & idAnno
-								Rec2 = LeggeQuery(Conn, Sql, Connessione)
+								Rec2 = Conn.LeggeQuery(Server.MapPath("."),Sql, Connessione)
 								If TypeOf (Rec2) Is String Then
 								Else
-									Do Until Rec2.Eof
+									Do Until Rec2.Eof()
 										Dirigenti &= Rec2("idDirigente").Value & "!" & Rec2("Dirigente").Value & "%"
 
 										Rec2.MoveNext()
 									Loop
-									Rec2.Close
+									Rec2.Close()
 								End If
 
 								Dim goalPropri As Integer = 0
 
-								Sql = "Select Count(*) As Goals " &
+								Sql = "Select " & IIf(TipoDB = "SQLSERVER", "Isnull(Count(*),0)", "COALESCE(Count(*),0)") & " As Goals " &
 									"From RisultatiAggiuntiviMarcatori " &
 									"Where idPartita=" & Rec("idPartita").Value.ToString
-								Rec2 = LeggeQuery(Conn, Sql, Connessione)
+								Rec2 = Conn.LeggeQuery(Server.MapPath("."),Sql, Connessione)
 								If TypeOf (Rec2) Is String Then
 								Else
-									If Not Rec2.Eof Then
+									If Not Rec2.Eof() Then
 										If Not Rec2("Goals").Value Is DBNull.Value Then
 											goalPropri = Rec2("Goals").Value
 										End If
 									End If
 								End If
-								Rec2.Close
+								Rec2.Close()
 
 								'21
 								If Rec("Casa").Value.ToString.ToUpper = "S" Then
@@ -1666,10 +1667,10 @@ Public Class wsPartite
 									"Left Join [Generale].[dbo].[Ruoli] On Giocatori.idRuolo = Ruoli.idRuolo) " &
 									"Where RigoriPropri.idAnno=" & idAnno & " And idPartita=" & Rec("idPartita").Value.ToString & " " &
 									"Order By RigoriPropri.idRigore"
-								Rec2 = LeggeQuery(Conn, Sql, Connessione)
+								Rec2 = Conn.LeggeQuery(Server.MapPath("."),Sql, Connessione)
 								If TypeOf (Rec2) Is String Then
 								Else
-									Do Until Rec2.Eof
+									Do Until Rec2.Eof()
 										' 448;Centrocampista;Cataldi Lorenzo;;;14;-1;
 										RigoriPropri &= Rec2("idGiocatore").Value & "!"
 										RigoriPropri &= Rec2("Descrizione").Value & "!"
@@ -1680,16 +1681,16 @@ Public Class wsPartite
 										RigoriPropri &= Rec2("Termine").Value & "!"
 										RigoriPropri &= "%"
 
-										Rec2.MoveNext
+										Rec2.MoveNext()
 									Loop
 								End If
-								Rec2.Close
+								Rec2.Close()
 
 								Sql = "Select * From RigoriAvversari Where idAnno=" & idAnno & " And idPartita=" & Rec("idPartita").Value.ToString
-								Rec2 = LeggeQuery(Conn, Sql, Connessione)
+								Rec2 = Conn.LeggeQuery(Server.MapPath("."),Sql, Connessione)
 								If TypeOf (Rec2) Is String Then
 								Else
-									If Not Rec2.Eof Then
+									If Not Rec2.Eof() Then
 										RigoriAvv = Rec2("Segnati").Value & "!" & Rec2("Sbagliati").Value & "!"
 									End If
 								End If
@@ -1704,19 +1705,19 @@ Public Class wsPartite
 									"From ((EventiPartita LEFT Join Eventi On Eventi.idEvento=EventiPartita.idEvento) " &
 									"LEFT JOIN Giocatori On EventiPartita.idAnno=Giocatori.idAnno And EventiPartita.idGiocatore=Giocatori.idGiocatore) " &
 									"Where EventiPartita.idAnno=" & idAnno & " And idPartita=" & Rec("idPartita").Value.ToString & " And idTempo=1 Order By Progressivo"
-								Rec2 = LeggeQuery(Conn, Sql, Connessione)
+								Rec2 = Conn.LeggeQuery(Server.MapPath("."),Sql, Connessione)
 								If TypeOf (Rec2) Is String Then
 								Else
-									Do Until Rec2.Eof
+									Do Until Rec2.Eof()
 										EventiPrimoTempo &= Rec2("Minuto").Value & "!" &
 											Rec2("idEvento").Value & "!" &
 											Rec2("Descrizione").Value & "!" &
 											Rec2("idGiocatore").Value & "!" &
 											Rec2("Giocatore").Value & "!%"
 
-										Rec2.MoveNext
+										Rec2.MoveNext()
 									Loop
-									Rec2.Close
+									Rec2.Close()
 								End If
 
 								Dim EventiSecondoTempo As String = ""
@@ -1725,19 +1726,19 @@ Public Class wsPartite
 									"From ((EventiPartita LEFT Join Eventi On Eventi.idEvento=EventiPartita.idEvento) " &
 									"LEFT JOIN Giocatori On EventiPartita.idAnno=Giocatori.idAnno And EventiPartita.idGiocatore=Giocatori.idGiocatore) " &
 									"Where EventiPartita.idAnno=" & idAnno & " And idPartita=" & Rec("idPartita").Value.ToString & " And idTempo=2 Order By Progressivo"
-								Rec2 = LeggeQuery(Conn, Sql, Connessione)
+								Rec2 = Conn.LeggeQuery(Server.MapPath("."),Sql, Connessione)
 								If TypeOf (Rec2) Is String Then
 								Else
-									Do Until Rec2.Eof
+									Do Until Rec2.Eof()
 										EventiSecondoTempo &= Rec2("Minuto").Value & "!" &
 											Rec2("idEvento").Value & "!" &
 											Rec2("Descrizione").Value & "!" &
 											Rec2("idGiocatore").Value & "!" &
 											Rec2("Giocatore").Value & "!%"
 
-										Rec2.MoveNext
+										Rec2.MoveNext()
 									Loop
-									Rec2.Close
+									Rec2.Close()
 								End If
 
 								Dim EventiTerzoTempo As String = ""
@@ -1746,19 +1747,19 @@ Public Class wsPartite
 									"From ((EventiPartita LEFT Join Eventi On Eventi.idEvento=EventiPartita.idEvento) " &
 									"LEFT JOIN Giocatori On EventiPartita.idAnno=Giocatori.idAnno And EventiPartita.idGiocatore=Giocatori.idGiocatore) " &
 									"Where EventiPartita.idAnno=" & idAnno & " And idPartita=" & Rec("idPartita").Value.ToString & " And idTempo=3 Order By Progressivo"
-								Rec2 = LeggeQuery(Conn, Sql, Connessione)
+								Rec2 = Conn.LeggeQuery(Server.MapPath("."),Sql, Connessione)
 								If TypeOf (Rec2) Is String Then
 								Else
-									Do Until Rec2.Eof
+									Do Until Rec2.Eof()
 										EventiTerzoTempo &= Rec2("Minuto").Value & "!" &
 											Rec2("idEvento").Value & "!" &
 											Rec2("Descrizione").Value & "!" &
 											Rec2("idGiocatore").Value & "!" &
 											Rec2("Giocatore").Value & "!%"
 
-										Rec2.MoveNext
+										Rec2.MoveNext()
 									Loop
-									Rec2.Close
+									Rec2.Close()
 								End If
 
 								'39
@@ -1791,8 +1792,8 @@ Public Class wsPartite
 
 								Dim CiSonoTitolari As String = "S"
 
-								Sql = "Select Count(*) From Titolari Where idPartita = " & Rec("idPartita").Value.ToString
-								Rec2 = LeggeQuery(Conn, Sql, Connessione)
+								Sql = "Select " & IIf(TipoDB = "SQLSERVER", "Isnull(Count(*),0)", "COALESCE(Count(*),0)") & " From Titolari Where idPartita = " & Rec("idPartita").Value.ToString
+								Rec2 = Conn.LeggeQuery(Server.MapPath("."),Sql, Connessione)
 								If TypeOf (Rec2) Is String Then
 								Else
 									If Rec2(0).Value Is DBNull.Value Then
@@ -1800,7 +1801,7 @@ Public Class wsPartite
 									Else
 										CiSonoTitolari = "S"
 									End If
-									Rec2.Close
+									Rec2.Close()
 								End If
 
 								Ritorno &= CiSonoTitolari & ";"
@@ -1821,14 +1822,14 @@ Public Class wsPartite
 							"Select idTempo, Progressivo, -1, Minuto, 'Autorete' As Cognome, '' As Nome, '' As Ruolo, 999 As NumeroMaglia, 'N' As Rigore FROM RisultatiAggiuntiviMarcatori " &
 							"Where RisultatiAggiuntiviMarcatori.idPartita = " & idPartita & " And RisultatiAggiuntiviMarcatori.idGiocatore = -1 " &
 							") As A  Order By idTempo, Progressivo"
-						Rec = LeggeQuery(Conn, Sql, Connessione)
+						Rec = Conn.LeggeQuery(Server.MapPath("."),  Sql, Connessione)
 						If TypeOf (Rec) Is String Then
-							Ritorno = Sql & "--->" & Rec
+							Ritorno = Sql & "--->" & Rec.ToString
 						Else
-							If Rec.Eof Then
+							If Rec.Eof() Then
 								'Ritorno &= "|"
 							Else
-								Do Until Rec.Eof
+								Do Until Rec.Eof()
 									Ritorno &= Rec("idTempo").Value.ToString & ";" &
 										Rec("Progressivo").Value.ToString & ";" &
 										Rec("idGiocatore").Value.ToString & ";" &
@@ -1852,14 +1853,14 @@ Public Class wsPartite
 							"Left Join Giocatori On Marcatori.idGiocatore = Giocatori.idGiocatore) " &
 							"Left Join [Generale].[dbo].[Ruoli] On Giocatori.idRuolo = Ruoli.idRuolo) " &
 							"Where Marcatori.idPartita=" & idPartita & " And Giocatori.idAnno=" & idAnno & " Order By idProgressivo"
-						Rec = LeggeQuery(Conn, Sql, Connessione)
+						Rec = Conn.LeggeQuery(Server.MapPath("."),  Sql, Connessione)
 						If TypeOf (Rec) Is String Then
-							Ritorno = Sql & "--->" & Rec
+							Ritorno = Sql & "--->" & Rec.ToString
 						Else
-							If Rec.Eof Then
+							If Rec.Eof() Then
 								Ritorno &= "|"
 							Else
-								Do Until Rec.Eof
+								Do Until Rec.Eof()
 									Ritorno &= "1;" &
 										Rec("idProgressivo").Value.ToString & ";" &
 										Rec("idGiocatore").Value.ToString & ";" &
@@ -1884,14 +1885,14 @@ Public Class wsPartite
 							"Left Join ConvocatiPartiteRisposte On ConvocatiPartiteRisposte.idGiocatore = Convocati.idGiocatore And ConvocatiPartiteRisposte.idPartita = Convocati.idPartita " &
 							"Left Join [Generale].[dbo].[Ruoli] On Giocatori.idRuolo = Ruoli.idRuolo " &
 							"Where Convocati.idPartita=" & idPartita & " And Giocatori.idAnno=" & idAnno & " Order By Cognome, Nome"
-						Rec = LeggeQuery(Conn, Sql, Connessione)
+						Rec = Conn.LeggeQuery(Server.MapPath("."),  Sql, Connessione)
 						If TypeOf (Rec) Is String Then
-							Ritorno = Sql & "--->" & Rec
+							Ritorno = Sql & "--->" & Rec.ToString
 						Else
-							If Rec.Eof Then
+							If Rec.Eof() Then
 								Ritorno &= "|"
 							Else
-								Do Until Rec.Eof
+								Do Until Rec.Eof()
 									Ritorno &= Rec("idProgressivo").Value.ToString & ";" &
 										Rec("idGiocatore").Value.ToString & ";" &
 										Rec("Cognome").Value.ToString & ";" &
@@ -1915,14 +1916,14 @@ Public Class wsPartite
 							"Left Join Giocatori On InFormazione.idGiocatore = Giocatori.idGiocatore " &
 							"Left Join [Generale].[dbo].[Ruoli] On Giocatori.idRuolo = Ruoli.idRuolo " &
 							"Where InFormazione.idPartita=" & idPartita & " And Giocatori.idAnno=" & idAnno & " Order By idProgressivo"
-						Rec = LeggeQuery(Conn, Sql, Connessione)
+						Rec = Conn.LeggeQuery(Server.MapPath("."),  Sql, Connessione)
 						If TypeOf (Rec) Is String Then
-							Ritorno = Sql & "--->" & Rec
+							Ritorno = Sql & "--->" & Rec.ToString
 						Else
-							If Rec.Eof Then
+							If Rec.Eof() Then
 								Ritorno &= "|"
 							Else
-								Do Until Rec.Eof
+								Do Until Rec.Eof()
 									Ritorno &= Rec("idProgressivo").Value.ToString & ";" &
 										Rec("idGiocatore").Value.ToString & ";" &
 										Rec("Cognome").Value.ToString & ";" &
@@ -1957,7 +1958,7 @@ Public Class wsPartite
 							Dim NomeFileFinalePDF As String = pathAllegati & Squadra & "\Partite\Anno" & idAnno & "\" & sIdPartita & "\" & idPartita & ".pdf"
 							'Return NomeFileFinalePDF
 
-							If File.Exists(NomeFileFinalePDF) Then
+							If ControllaEsistenzaFile(NomeFileFinalePDF) Then
 								Ritorno &= NomeFileFinalePDF.Replace(pathAllegati, pathMultimedia).Replace("Multimedia", "Allegati").Replace("\", "/") & "|"
 							Else
 								Ritorno &= "|"
@@ -1983,18 +1984,18 @@ Public Class wsPartite
 		If Connessione = "" Then
 			Ritorno = ErroreConnessioneNonValida
 		Else
-			Dim Conn As Object = ApreDB(Connessione)
+			Dim Conn As Object = new clsGestioneDB
 
 			If TypeOf (Conn) Is String Then
 				Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
 			Else
-				Dim Rec As Object = Server.CreateObject("ADODB.Recordset")
+				Dim Rec As Object
 				Dim Sql As String = ""
 
 				Sql = "Select * From MeteoPartite Where idPartita=" & idPartita
 
 				Try
-					Rec = LeggeQuery(Conn, Sql, Connessione)
+					Rec = Conn.LeggeQuery(Server.MapPath("."),  Sql, Connessione)
 					If TypeOf (Rec) Is String Then
 						Ritorno = Rec
 					Else
@@ -2016,7 +2017,7 @@ Public Class wsPartite
 								"'" & TT(3) & "', " &
 								"'" & TT(4) & "' " &
 								")"
-							Dim Ritorno2 As String = EsegueSql(Conn, Sql, Connessione)
+							Dim Ritorno2 As String = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
 
 						Else
 							Ritorno = Rec(1).Value & ";" & Rec(2).Value & ";" & Rec(3).Value & ";" & Rec(4).Value & ";" & Rec(5).Value
@@ -2042,19 +2043,19 @@ Public Class wsPartite
 		If Connessione = "" Then
 			Ritorno = ErroreConnessioneNonValida
 		Else
-			Dim Conn As Object = ApreDB(Connessione)
+			Dim Conn As Object = new clsGestioneDB
 
 			If TypeOf (Conn) Is String Then
 				Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
 			Else
-				Dim Rec As Object = Server.CreateObject("ADODB.Recordset")
+				Dim Rec As Object
 				Dim Sql As String = ""
 				Dim idPartita1 As Integer
 				Dim idPartita2 As Integer
 
 				Try
 					Sql = "SELECT Max(idPartita)+1 FROM Partite"
-					Rec = LeggeQuery(Conn, Sql, Connessione)
+					Rec = Conn.LeggeQuery(Server.MapPath("."),  Sql, Connessione)
 					If TypeOf (Rec) Is String Then
 						Ritorno = Rec
 					Else
@@ -2072,11 +2073,11 @@ Public Class wsPartite
 
 				Try
 					Sql = "SELECT Max(idPartita)+1 FROM CalendarioPartite"
-					Rec = LeggeQuery(Conn, Sql, Connessione)
+					Rec = Conn.LeggeQuery(Server.MapPath("."),  Sql, Connessione)
 					If TypeOf (Rec) Is String Then
 						Ritorno = Rec
 					Else
-						If Rec.Eof Then
+						If Rec.Eof() Then
 							Ritorno = StringaErrore & " Nessun progressivo partita rilevato"
 						Else
 							If Rec(0).Value Is DBNull.Value Then
@@ -2114,13 +2115,13 @@ Public Class wsPartite
 		If Connessione = "" Then
 			Ritorno = ErroreConnessioneNonValida
 		Else
-			Dim Conn As Object = ApreDB(Connessione)
+			Dim Conn As Object = new clsGestioneDB
 
 			If TypeOf (Conn) Is String Then
 				Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
 			Else
-				Dim Rec As Object = Server.CreateObject("ADODB.Recordset")
-				Dim Rec2 As Object = Server.CreateObject("ADODB.Recordset")
+				Dim Rec As Object
+				Dim Rec2 As Object
 				Dim Sql As String = ""
 
 				Sql = "SELECT Partite.Casa, Partite.idPartita, Partite.DataOra, Categorie.Descrizione As Categoria, Categorie.AnnoCategoria, SquadreAvversarie.idAvversario, SquadreAvversarie.Descrizione As Avversario, " &
@@ -2136,11 +2137,11 @@ Public Class wsPartite
 					"LEFT JOIN Anni On Partite.idAnno = Anni.idAnno " &
 					"LEFT JOIN [Generale].[dbo].TipologiePartite On Partite.idTipologia = TipologiePartite.idTipologia " &
 					"WHERE Partite.idAnno=" & idAnno & " And Partite.idPartita=" & idPartita
-				Rec = LeggeQuery(Conn, Sql, Connessione)
+				Rec = Conn.LeggeQuery(Server.MapPath("."),  Sql, Connessione)
 				If TypeOf (Rec) Is String Then
 					Ritorno = Rec
 				Else
-					If Not Rec.Eof Then
+					If Not Rec.Eof() Then
 						If Not Rec("DataOra").Value Is DBNull.Value Then
 							Dim paths2 As String = gf.LeggeFileIntero(HttpContext.Current.Server.MapPath(".") & "\Impostazioni\PathAllegati.txt")
 							Dim P2() As String = paths2.Split(";")
@@ -2171,15 +2172,15 @@ Public Class wsPartite
 							Dim ss() As String = Squadra.Split("_")
 
 							Sql = "Select * From [Generale].[dbo].[Squadre] Where idSquadra = " & Val(ss(1)).ToString
-							Rec2 = LeggeQuery(Conn, Sql, Connessione)
+							Rec2 = Conn.LeggeQuery(Server.MapPath("."),Sql, Connessione)
 							If TypeOf (Rec2) Is String Then
 								Ritorno = "Problemi lettura squadra"
 							Else
-								If Rec2.Eof Then
+								If Rec2.Eof() Then
 								Else
 									NomeSquadra = "" & Rec2("Descrizione").Value
 								End If
-								Rec2.Close
+								Rec2.Close()
 							End If
 
 							Dim multimediaPaths As String = gf.LeggeFileIntero(HttpContext.Current.Server.MapPath(".") & "\Impostazioni\PathAllegati.txt")
@@ -2195,30 +2196,30 @@ Public Class wsPartite
 							End If
 
 							Dim PathIimmSoc As String = PathBaseMultimedia & "/" & NomeSquadra & "/Societa/" & idAnno & "_1.kgb"
-							PathIimmSoc = DecriptaImmagine(PathIimmSoc)
+							PathIimmSoc = DecriptaImmagine(Server.MapPath("."), PathIimmSoc)
 							Filetto = Filetto.Replace("***URL SOCIETA***", PathIimmSoc)
 
 							If Rec("Casa").Value = "S" Then
 								Dim ImmCat As String = PathBaseMultimedia & "/" & NomeSquadra & "/Categorie/" & idAnno & "_" & Rec("idCategoria").Value & ".kgb"
-								ImmCat = DecriptaImmagine(ImmCat)
+								ImmCat = DecriptaImmagine(Server.MapPath("."), ImmCat)
 								Filetto = Filetto.Replace("***URL LOGO***", ImmCat)
 
 								Filetto = Filetto.Replace("***NOME CATEGORIA***", Rec("Categoria").Value & " " & Rec("AnnoCategoria").Value)
 								Filetto = Filetto.Replace("***NOME AVVERSARIO***", Rec("Avversario").Value)
 
 								Dim ImmAvv As String = PathBaseMultimedia & "/" & NomeSquadra & "/Avversari/" & Rec("idAvversario").Value & ".kgb"
-								ImmAvv = DecriptaImmagine(ImmAvv)
+								ImmAvv = DecriptaImmagine(Server.MapPath("."), ImmAvv)
 								Filetto = Filetto.Replace("***URL LOGO AVV***", ImmAvv)
 							Else
 								Dim ImmCat As String = PathBaseMultimedia & "/" & NomeSquadra & "/Categorie/" & idAnno & "_" & Rec("idCategoria").Value & ".kgb"
-								ImmCat = DecriptaImmagine(ImmCat)
+								ImmCat = DecriptaImmagine(Server.MapPath("."), ImmCat)
 								Filetto = Filetto.Replace("***URL LOGO AVV***", ImmCat)
 
 								Filetto = Filetto.Replace("***NOME CATEGORIA***", Rec("Avversario").Value)
 								Filetto = Filetto.Replace("***NOME AVVERSARIO***", Rec("Categoria").Value & " " & Rec("AnnoCategoria").Value)
 
 								Dim ImmAvv As String = PathBaseMultimedia & "/" & NomeSquadra & "/Avversari/" & Rec("idAvversario").Value & ".kgb"
-								ImmAvv = DecriptaImmagine(ImmAvv)
+								ImmAvv = DecriptaImmagine(Server.MapPath("."), ImmAvv)
 								Filetto = Filetto.Replace("***URL LOGO***", ImmAvv)
 							End If
 
@@ -2230,7 +2231,7 @@ Public Class wsPartite
 								Gara = Rec("Avversario").Value & " - " & Rec("Categoria").Value & " " & Rec("AnnoCategoria").Value
 							End If
 
-							Filetto = Filetto.Replace("***GARA***", gara)
+							Filetto = Filetto.Replace("***GARA***", Gara)
 							Filetto = Filetto.Replace("***DATA***", Format(Datella.Day, "00") & "/" & Format(Datella.Month, "00") & "/" & Datella.Year)
 
 							Dim Indirizzo As String = ""
@@ -2271,7 +2272,7 @@ Public Class wsPartite
 							Filetto = Filetto.Replace("***ORARIO2***", OraConv)
 
 							Dim PathAll As String = PathBaseMultimedia & "/" & NomeSquadra & "/Allenatori/" & idAnno & "_" & Rec("idAllenatore").Value & ".kgb"
-							PathAll = DecriptaImmagine(PathAll)
+							PathAll = DecriptaImmagine(Server.MapPath("."), PathAll)
 
 							Dim mis As String = "<table style=""width: 100%;"">"
 							' mis &= "<tr><th></th><th>Allenatore</th><th>Telefono</th></tr>"
@@ -2301,7 +2302,7 @@ Public Class wsPartite
 								"FROM (Convocati LEFT JOIN Giocatori ON Convocati.idGiocatore = Giocatori.idGiocatore) LEFT JOIN [Generale].[dbo].[Ruoli] ON Giocatori.idRuolo = Ruoli.idRuolo " &
 								"WHERE Convocati.idPartita=" & idPartita & " AND Giocatori.idAnno=" & idAnno & " " &
 								"ORDER BY Ruoli.idRuolo, Giocatori.Cognome, Giocatori.Nome"
-							Rec = LeggeQuery(Conn, Sql, Connessione)
+							Rec = Conn.LeggeQuery(Server.MapPath("."),  Sql, Connessione)
 							If TypeOf (Rec) Is String Then
 								Ritorno = Rec
 							Else
@@ -2309,14 +2310,14 @@ Public Class wsPartite
 								Dim idGiocatore As List(Of Integer) = New List(Of Integer)
 								Dim idRuolo As List(Of Integer) = New List(Of Integer)
 
-								Do Until Rec.Eof
+								Do Until Rec.Eof()
 									Giocatori.Add("" & Rec("Giocatore").Value)
 									idGiocatore.Add("" & Rec("idGiocatore").Value)
 									idRuolo.Add("" & Rec("idRuolo").Value)
 
-									Rec.MoveNext
+									Rec.MoveNext()
 								Loop
-								Rec.Close
+								Rec.Close()
 
 								Dim Colore As String = "#fff"
 								Dim vecchioIdRuolo As Integer = -1
@@ -2348,13 +2349,13 @@ Public Class wsPartite
 									Dim Path11 As String = ""
 									If i < Giocatori.Count Then
 										Path11 = PathBaseMultimedia & "/" & NomeSquadra & "/Giocatori/" & idAnno & "_" & idGiocatore.Item(i) & ".kgb"
-										Path11 = DecriptaImmagine(Path11)
+										Path11 = DecriptaImmagine(Server.MapPath("."), Path11)
 									End If
 
 									Dim Path12 As String = ""
 									If i + (metaGiocatori + 0) < Giocatori.Count Then
 										Path12 = PathBaseMultimedia & "/" & NomeSquadra & "/Giocatori/" & idAnno & "_" & idGiocatore.Item(i + (metaGiocatori + 0)) & ".kgb"
-										Path12 = DecriptaImmagine(Path12)
+										Path12 = DecriptaImmagine(Server.MapPath("."), Path12)
 									End If
 
 									Dim Altro As String = ""
@@ -2449,7 +2450,7 @@ Public Class wsPartite
 							Filetto = Filetto.Replace("***CONVOCATI***", Convocati)
 
 							Dim pathFileAgg As String = pathAllegati & Squadra & "\Scheletri\testo_convocazioni.txt"
-							If Not File.Exists(pathFileAgg) Then
+							If Not ControllaEsistenzaFile(pathFileAgg) Then
 								pathFileAgg = Server.MapPath(".") & "\Scheletri\testo_convocazioni.txt"
 							End If
 							Dim testo As String = gf.LeggeFileIntero(pathFileAgg)
@@ -2460,23 +2461,23 @@ Public Class wsPartite
 								"Left Join Dirigenti B On A.idDirigente = B.idDirigente " &
 								"Where A.idPartita = " & idPartita & " And Eliminato = 'N' " &
 								"Order By Progressivo"
-							Rec = LeggeQuery(Conn, Sql, Connessione)
+							Rec = Conn.LeggeQuery(Server.MapPath("."),  Sql, Connessione)
 							If TypeOf (Rec) Is String Then
 								Ritorno = Rec
 							Else
 								Dirigenti = "<table style=""width: 100%;"">" ' <tr style=""border: 1px solid #999""><th></th><th><span style=""font-family: Arial; font-size: 16px;"">Dirigente</span></th><th><span style=""font-family: Arial; font-size: 16px;"">Telefono</span></th></tr>"
-								Do Until Rec.Eof
+								Do Until Rec.Eof()
 									Dim Path As String = PathBaseMultimedia & "/" & NomeSquadra & "/Dirigenti/" & idAnno & "_" & Rec("idDirigente").Value & ".kgb"
-									Path = DecriptaImmagine(Path)
+									Path = DecriptaImmagine(Server.MapPath("."), Path)
 
 									Dirigenti &= "<tr><td style=""width: 5%;""><img src=""" & Path & """ width=""50"" height=""50"" /></td>"
 									Dirigenti &= "<td style=""width: 60%; text-align: left;"">" & Rec("Cognome").Value & " " & Rec("Nome").Value & "</td>"
 									Dirigenti &= "<td style=""width: 5%; text-align: center;""><img src=""" & ImmTelefono & """ width=""50"" height=""50"" /></td>"
 									Dirigenti &= "<td style=""width: 30%; text-align: left;"">" & Rec("Telefono").Value & "</td></tr>"
 
-									Rec.MoveNext
+									Rec.MoveNext()
 								Loop
-								Rec.Close
+								Rec.Close()
 							End If
 							Dirigenti &= "</table>"
 							Filetto = Filetto.Replace("***DIRIGENTI***", Dirigenti)
@@ -2512,7 +2513,7 @@ Public Class wsPartite
 
 	<WebMethod()>
 	Public Function EliminaPartitaGEN(Squadra As String, idAnno As String, idPartita As String) As String
-		Return EliminaPartita(Squadra, idAnno, idPartita)
+		Return EliminaPartita(Server.MapPath("."), Squadra, idAnno, idPartita)
 	End Function
 
 	<WebMethod()>
@@ -2558,7 +2559,7 @@ Public Class wsPartite
 			IndirizzoWS &= "/"
 		End If
 
-		If Not File.Exists(pathPdf) Then
+		If Not ControllaEsistenzaFile(pathPdf) Then
 			Dim pp As New pdfGest
 			Ritorno = pp.ConverteHTMLInPDF(path1, pathPdf, pathLog)
 		Else
@@ -2571,14 +2572,14 @@ Public Class wsPartite
 			If Connessione = "" Then
 				Ritorno = ErroreConnessioneNonValida & ":" & Connessione
 			Else
-				Dim Conn As Object = ApreDB(Connessione)
+				Dim Conn As Object = new clsGestioneDB
 
 				If TypeOf (Conn) Is String Then
 					Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
 				Else
 					Dim Ok As Boolean = True
-					Dim Rec As Object = Server.CreateObject("ADODB.Recordset")
-					Dim Rec2 As Object = Server.CreateObject("ADODB.Recordset")
+					Dim Rec As Object
+					Dim Rec2 As Object
 					Dim Sql As String = ""
 
 					Dim Tipologia As String = ""
@@ -2592,7 +2593,7 @@ Public Class wsPartite
 					Dim Casa As String = ""
 					Dim NomePolisportiva As String = ""
 
-					Sql = "Select isnull(B.Descrizione, '') As Tipologia, C.Descrizione As Categoria, D.Descrizione As Avversario, DataOra, DataOraAppuntamento As Appuntamento, LuogoAppuntamento, " &
+					Sql = "Select B.Descrizione As Tipologia, C.Descrizione As Categoria, D.Descrizione As Avversario, DataOra, DataOraAppuntamento As Appuntamento, LuogoAppuntamento, " &
 						"E.Cognome + ' ' + E.Nome As Allenatore, Casa " &
 						"From Partite A " &
 						"Left Join [Generale].[dbo].[TipologiePartite] B On A.idTipologia = B.idTipologia " &
@@ -2600,10 +2601,10 @@ Public Class wsPartite
 						"Left Join SquadreAvversarie D On A.idAvversario = D.idAvversario  " &
 						"Left Join Allenatori E On A.idAllenatore = E.idAllenatore " &
 						"Where idPartita = " & idPartita
-					Rec = LeggeQuery(Conn, Sql, Connessione)
-					If Not Rec.Eof Then
+					Rec = Conn.LeggeQuery(Server.MapPath("."),  Sql, Connessione)
+					If Not Rec.Eof() Then
 						Casa = Rec("Casa").Value
-						Tipologia = Rec("Tipologia").Value
+						Tipologia = "" & Rec("Tipologia").Value
 						Categoria = Rec("Categoria").Value
 						Avversario = Rec("Avversario").Value
 						DataOra = Rec("DataOra").Value
@@ -2624,8 +2625,8 @@ Public Class wsPartite
 							"Left Join CampiAvversari B On A.idCampo = B.idCampo " &
 							"Left Join CampiEsterni C On A.idPartita = C.idPartita " &
 							"Where A.idPartita = " & idPartita
-						Rec = LeggeQuery(Conn, Sql, Connessione)
-						If Rec.Eof Then
+						Rec = Conn.LeggeQuery(Server.MapPath("."),  Sql, Connessione)
+						If Rec.Eof() Then
 							Oggetto = " Campo esterno"
 						Else
 							If Casa = "N" Then
@@ -2640,9 +2641,9 @@ Public Class wsPartite
 					'Sql = "Select * From DirigentiPartite A " &
 					'	"Left Join Dirigenti B On A.idDirigente = B.idDirigente " &
 					'	"Where idPartita = " & idPartita
-					'Rec = LeggeQuery(Conn, Sql, Connessione)
+					'Rec = Conn.LeggeQuery(Server.MapPath("."),  Sql, Connessione)
 					'Dirigenti = ""
-					'Do Until Rec.Eof
+					'Do Until Rec.Eof()
 					'	Dirigenti = Rec("Cognome").Value & " " & Rec("Nome").Value & ", "
 
 					'	Rec.MoveNext
@@ -2652,8 +2653,8 @@ Public Class wsPartite
 					'End If
 
 					Sql = "Select * From Anni"
-					Rec = LeggeQuery(Conn, Sql, Connessione)
-					If Not Rec.Eof Then
+					Rec = Conn.LeggeQuery(Server.MapPath("."),  Sql, Connessione)
+					If Not Rec.Eof() Then
 						NomePolisportiva = Rec("NomePolisportiva").Value
 					End If
 
@@ -2676,20 +2677,20 @@ Public Class wsPartite
 						"Left Join Allenatori B On A.idAllenatore = B.idAllenatore  " &
 						"Where idPartita = " & idPartita & " " &
 						") A Where EMail <> '' And EMail Is Not Null"
-					Rec = LeggeQuery(Conn, Sql, Connessione)
+					Rec = Conn.LeggeQuery(Server.MapPath("."),  Sql, Connessione)
 					If TypeOf (Rec) Is String Then
 						Ritorno = Rec
 					Else
 						'Dim Giocatori As List(Of String) = New List(Of String)
 						'Dim pathTemplate As String = p(0) & Squadra & "\Scheletri\mail_convocazione.txt"
-						'If Not File.Exists(pathTemplate) Then
+						'If Not ControllaEsistenzaFile(pathTemplate) Then
 						'	pathTemplate = Server.MapPath(".") & "\Scheletri\mail_convocazione.txt"
 						'End If
 						'Dim templ As String = gf.LeggeFileIntero(pathTemplate)
 						Dim ma As New mail
 						'Dim Oggetto As String = "Convocazione nuova partita: "
 
-						Do Until Rec.Eof
+						Do Until Rec.Eof()
 							If Not Rec(0).Value Is DBNull.Value Then
 								Dim Body2 As String = ""
 
@@ -2715,11 +2716,11 @@ Public Class wsPartite
 										'Body2 = Body2.Replace("***Partecipo***", "<div style=""width: 100%""><div style=""background-color: green; color: white; width:50%; float: left; text-align: center;"">---</div>")
 										'Body2 = Body2.Replace("***Non Posso***", "<div style=""background-color: red; color: white; width: 50%; float: left; text-align: center;"">---</div></div>")
 
-										Ritorno = ma.SendEmail(Squadra, Mittente, Oggetto, Body2, Rec(0).Value, {pathPdf})
+										Ritorno = ma.SendEmail(Server.MapPath("."), Squadra, Mittente, Oggetto, Body2, Rec(0).Value, {pathPdf})
 									Case "Giocatore Maggiorenne", "Giocatore"
 										Sql = "Select * From Giocatori Where idGiocatore = " & Rec(1).Value
-										Rec2 = LeggeQuery(Conn, Sql, Connessione)
-										If Not Rec2.eof Then
+										Rec2 = Conn.LeggeQuery(Server.MapPath("."),Sql, Connessione)
+										If Not Rec2.Eof() Then
 											Body2 = "Il giocatore " & Rec2("Cognome").Value & " " & Rec2("Nome").Value & " è convocato per la partita in oggetto.<br /><br />Saluti<br />" & NomePolisportiva
 											'Body2 = Body2.Replace("***cognome menu anagrafica3***", Rec2("Cognome").Value)
 											'Body2 = Body2.Replace("***Nome menu anagrafica3***", Rec2("Nome").Value)
@@ -2730,7 +2731,7 @@ Public Class wsPartite
 											'Body2 = Body2.Replace("***Partecipo***", "<div style=""width: 100%""><div style=""background-color: green; color: white; width:50%; float: left; text-align: center;""><a href=""" & IndirizzoOK & """>Partecipo</a></div>")
 											'Body2 = Body2.Replace("***Non Posso***", "<div style=""background-color: red; color: white; width: 50%; float: left; text-align: center;""><a href=""" & IndirizzoKO & """>Non Posso</a></div></div>")
 
-											Ritorno = ma.SendEmail(Squadra, Mittente, Oggetto, Body2, Rec(0).Value, {pathPdf})
+											Ritorno = ma.SendEmail(Server.MapPath("."), Squadra, Mittente, Oggetto, Body2, Rec(0).Value, {pathPdf})
 										End If
 									Case "Allenatore"
 										Body2 = "Lei è convocato per la partita in oggetto.<br /><br />Saluti<br />" & NomePolisportiva
@@ -2740,13 +2741,13 @@ Public Class wsPartite
 										'Body2 = Body2.Replace("***Partecipo***", "<div style=""width: 100%""><div style=""background-color: green; color: white; width:50%; float: left; text-align: center;"">---</div>")
 										'Body2 = Body2.Replace("***Non Posso***", "<div style=""background-color: red; color: white; width: 50%; float: left; text-align: center;"">---</div></div>")
 
-										Ritorno = ma.SendEmail(Squadra, Mittente, Oggetto, Body2, Rec(0).Value, {pathPdf})
+										Ritorno = ma.SendEmail(Server.MapPath("."), Squadra, Mittente, Oggetto, Body2, Rec(0).Value, {pathPdf})
 								End Select
 							End If
 
-							Rec.MoveNext
+							Rec.MoveNext()
 						Loop
-						Rec.Close
+						Rec.Close()
 
 					End If
 				End If
@@ -2765,24 +2766,24 @@ Public Class wsPartite
 		If Connessione = "" Then
 			Ritorno = ErroreConnessioneNonValida
 		Else
-			Dim Conn As Object = ApreDB(Connessione)
+			Dim Conn As Object = new clsGestioneDB
 
 			If TypeOf (Conn) Is String Then
 				Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
 			Else
-				Dim Rec As Object = Server.CreateObject("ADODB.Recordset")
+				Dim Rec As Object
 				Dim Sql As String = ""
 				Dim Ok As Boolean = True
 
-				Sql = "Begin transaction"
-				Ritorno = EsegueSql(Conn, Sql, Connessione)
+				Sql = iif(tipodb="SQLSERVER", "Begin transaction", "Start transaction")
+				Ritorno = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
 				If Ritorno <> "*" Then
 					Ok = False
 				End If
 
 				If Ok Then
 					Sql = "Delete From PartiteSostituzioni Where idPartita = " & idPartita
-					Ritorno = EsegueSql(Conn, Sql, Connessione)
+					Ritorno = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
 					If Ritorno <> "*" Then
 						Ok = False
 					End If
@@ -2800,7 +2801,7 @@ Public Class wsPartite
 							Dim Progressivo As Integer
 
 							Sql = "Select Max(Progressivo)+1 From PartiteSostituzioni Where idPartita=" & idPartita & " And Tempo=" & Tempo
-							Rec = LeggeQuery(Conn, Sql, Connessione)
+							Rec = Conn.LeggeQuery(Server.MapPath("."),  Sql, Connessione)
 							If TypeOf (Rec) Is String Then
 								Ritorno = Rec
 								Ok = False
@@ -2810,12 +2811,12 @@ Public Class wsPartite
 								Else
 									Progressivo = Rec(0).Value
 								End If
-								Rec.Close
+								Rec.Close()
 							End If
 
 							If Ok Then
 								Sql = "Insert Into PartiteSostituzioni Values (" & idPartita & ", " & Tempo & ", " & Progressivo & ", " & idSostituito & ", " & idEntrante & ", " & Minuto & ")"
-								Ritorno = EsegueSql(Conn, Sql, Connessione)
+								Ritorno = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
 								If Ritorno <> "*" Then
 									Ok = False
 									Exit For
@@ -2828,10 +2829,10 @@ Public Class wsPartite
 				If Ok Then
 					Ritorno = "*"
 					Sql = "Commit"
-					Dim Ritorno2 As String = EsegueSql(Conn, Sql, Connessione)
+					Dim Ritorno2 As String = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
 				Else
 					Sql = "Rollback"
-					Dim Ritorno2 As String = EsegueSql(Conn, Sql, Connessione)
+					Dim Ritorno2 As String = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
 				End If
 
 				Conn.Close()
@@ -2850,23 +2851,23 @@ Public Class wsPartite
 		If Connessione = "" Then
 			Ritorno = ErroreConnessioneNonValida
 		Else
-			Dim Conn As Object = ApreDB(Connessione)
+			Dim Conn As Object = new clsGestioneDB
 
 			If TypeOf (Conn) Is String Then
 				Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
 			Else
-				Dim Rec As Object = Server.CreateObject("ADODB.Recordset")
+				Dim Rec As Object
 				Dim Sql As String = "Select * From PartiteSostituzioni Where idPartita=" & idPartita & " Order By Tempo, Minuto"
-				Rec = LeggeQuery(Conn, Sql, Connessione)
+				Rec = Conn.LeggeQuery(Server.MapPath("."),  Sql, Connessione)
 				If TypeOf (Rec) Is String Then
 					Ritorno = Rec
 				Else
-					Do Until Rec.Eof
+					Do Until Rec.Eof()
 						Ritorno &= Rec("idSostituito").Value & ";" & Rec("idEntrante").Value & ";" & Rec("Tempo").Value & ";" & Rec("Minuto").Value & "§"
 
-						Rec.MoveNext
+						Rec.MoveNext()
 					Loop
-					Rec.Close
+					Rec.Close()
 				End If
 			End If
 		End If
@@ -2883,14 +2884,14 @@ Public Class wsPartite
 		If Connessione = "" Then
 			Ritorno = ErroreConnessioneNonValida
 		Else
-			Dim Conn As Object = ApreDB(Connessione)
+			Dim Conn As Object = new clsGestioneDB
 
 			If TypeOf (Conn) Is String Then
 				Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
 			Else
-				Dim Rec As Object = Server.CreateObject("ADODB.Recordset")
+				Dim Rec as object
 				Dim Sql As String = "Delete From PartiteSostituzioni Where idPartita=" & idPartita & " And Progressivo=" & Progressivo
-				Ritorno = EsegueSql(Conn, Sql, Connessione)
+				Ritorno = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
 			End If
 		End If
 

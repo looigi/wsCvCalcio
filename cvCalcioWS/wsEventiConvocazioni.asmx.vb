@@ -1,6 +1,7 @@
 ﻿Imports System.Web.Services
 Imports System.Web.Services.Protocols
 Imports System.ComponentModel
+Imports ADODB
 
 ' Per consentire la chiamata di questo servizio Web dallo script utilizzando ASP.NET AJAX, rimuovere il commento dalla riga seguente.
 ' <System.Web.Script.Services.ScriptService()> _
@@ -19,17 +20,17 @@ Public Class wsEventiConvocazioni
 		If Connessione = "" Then
 			Ritorno = ErroreConnessioneNonValida
 		Else
-			Dim Conn As Object = ApreDB(Connessione)
+			Dim Conn As Object = new clsGestioneDB
 
 			If TypeOf (Conn) Is String Then
 				Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
 			Else
-				Dim Rec As Object = Server.CreateObject("ADODB.Recordset")
+				Dim Rec As Object
 				Dim Sql As String = ""
 				'Dim idUtente As String = ""
 
 				Sql = "SELECT Max(idEvento)+1 FROM EventiConvocazioni"
-				Rec = LeggeQuery(Conn, Sql, Connessione)
+				Rec = Conn.LeggeQuery(Server.MapPath("."),   Sql, Connessione)
 				If TypeOf (Rec) Is String Then
 					Ritorno = Rec
 				Else
@@ -55,21 +56,21 @@ Public Class wsEventiConvocazioni
 		If Connessione = "" Then
 			Ritorno = ErroreConnessioneNonValida
 		Else
-			Dim Conn As Object = ApreDB(Connessione)
+			Dim Conn As Object = new clsGestioneDB
 
 			If TypeOf (Conn) Is String Then
 				Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
 			Else
-				Dim Rec As Object = Server.CreateObject("ADODB.Recordset")
+				Dim Rec As Object
 				Dim Sql As String = ""
 				'Dim idUtente As String = ""
 
 				Sql = "SELECT * From EventiConvocazioni"
-				Rec = LeggeQuery(Conn, Sql, Connessione)
+				Rec = Conn.LeggeQuery(Server.MapPath("."),   Sql, Connessione)
 				If TypeOf (Rec) Is String Then
 					Ritorno = Rec
 				Else
-					Do Until Rec.Eof
+					Do Until Rec.Eof()
 						Ritorno &= Rec("idEvento").Value & ";"
 						Ritorno &= Rec("idTipologia").Value & ";"
 						Ritorno &= Rec("Titolo").Value & ";"
@@ -83,7 +84,7 @@ Public Class wsEventiConvocazioni
 						Ritorno &= Rec("idPartita").Value & ";"
 						Ritorno &= "§"
 
-						Rec.MoveNext
+						Rec.MoveNext()
 					Loop
 				End If
 				Rec.Close()
@@ -103,7 +104,7 @@ Public Class wsEventiConvocazioni
 		If Connessione = "" Then
 			Ritorno = ErroreConnessioneNonValida
 		Else
-			Dim Conn As Object = ApreDB(Connessione)
+			Dim Conn As Object = new clsGestioneDB
 
 			If TypeOf (Conn) Is String Then
 				Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
@@ -123,7 +124,7 @@ Public Class wsEventiConvocazioni
 					"'" & metaNotes.Replace("'", "''").Replace(";", "-") & "', " &
 					"'" & idPartita & "' " &
 					")"
-				Ritorno = EsegueSql(Conn, Sql, Connessione)
+				Ritorno = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
 				'If Ritorno <> "*" Then
 				'	Ritorno = Sql
 				'End If
@@ -142,37 +143,37 @@ Public Class wsEventiConvocazioni
 		If Connessione = "" Then
 			Ritorno = ErroreConnessioneNonValida
 		Else
-			Dim Conn As Object = ApreDB(Connessione)
+			Dim Conn As Object = new clsGestioneDB
 
 			If TypeOf (Conn) Is String Then
 				Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
 			Else
 				Dim Sql As String = ""
-				Dim Rec As Object = Server.CreateObject("ADODB.Recordset")
+				Dim Rec As Object
 				Dim ritEliminazione As String = ""
 
 				Sql = "Select * From EventiConvocazioni Where idEvento = " & idEvento
-				Rec = LeggeQuery(Conn, Sql, Connessione)
+				Rec = Conn.LeggeQuery(Server.MapPath("."),   Sql, Connessione)
 				If TypeOf (Rec) Is String Then
 					Ritorno = Rec
 				Else
-					If Not Rec.Eof Then
+					If Not Rec.Eof() Then
 						If Val(Rec("idTipologia").Value) = 1 Then
 							Dim idPartita As String = Rec("idPartita").Value
 
 							If idPartita Is DBNull.Value Then
 								ritEliminazione = "*"
 							Else
-								ritEliminazione = EliminaPartita(Squadra, idAnno, idPartita)
+								ritEliminazione = EliminaPartita(Server.MapPath("."), Squadra, idAnno, idPartita)
 							End If
 						End If
 					End If
-					Rec.Close
+					Rec.Close()
 				End If
 
 				If ritEliminazione = "*" Then
 					Sql = "Delete From EventiConvocazioni Where idEvento = " & idEvento
-					Ritorno = EsegueSql(Conn, Sql, Connessione)
+					Ritorno = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
 				Else
 					Ritorno = ritEliminazione
 				End If
@@ -192,7 +193,7 @@ Public Class wsEventiConvocazioni
 		If Connessione = "" Then
 			Ritorno = ErroreConnessioneNonValida
 		Else
-			Dim Conn As Object = ApreDB(Connessione)
+			Dim Conn As Object = new clsGestioneDB
 
 			If TypeOf (Conn) Is String Then
 				Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
@@ -211,7 +212,7 @@ Public Class wsEventiConvocazioni
 					"metaNotes = '" & metaNotes.Replace("'", "''").Replace(";", ",") & "', " &
 					"idPartita = '" & idPartita & "' " &
 					"Where idEvento = " & idEvento
-				Ritorno = EsegueSql(Conn, Sql, Connessione)
+				Ritorno = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
 			End If
 		End If
 

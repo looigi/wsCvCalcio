@@ -3,12 +3,13 @@ Imports System.Web.Services.Protocols
 Imports System.ComponentModel
 Imports System.Data.Odbc
 Imports System.Web.UI.WebControls.Adapters
+Imports ADODB
 
 <System.Web.Services.WebService(Namespace:="http://cvcalcio_dir.org/")>
-<System.Web.Services.WebServiceBinding(ConformsTo:=WsiProfiles.BasicProfile1_1)> _
-<ToolboxItem(False)> _
+<System.Web.Services.WebServiceBinding(ConformsTo:=WsiProfiles.BasicProfile1_1)>
+<ToolboxItem(False)>
 Public Class wsDirigenti
-    Inherits System.Web.Services.WebService
+	Inherits System.Web.Services.WebService
 
 	<WebMethod()>
 	Public Function RitornaNuovoID(Squadra As String, ByVal idAnno As String) As String
@@ -19,17 +20,17 @@ Public Class wsDirigenti
 		If Connessione = "" Then
 			Ritorno = ErroreConnessioneNonValida
 		Else
-			Dim Conn As Object = ApreDB(Connessione)
+			Dim Conn As Object = new clsGestioneDB
 
 			If TypeOf (Conn) Is String Then
 				Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
 			Else
-				Dim Rec As Object = Server.CreateObject("ADODB.Recordset")
+				Dim Rec As Object
 				Dim Sql As String = ""
 				'Dim idUtente As String = ""
 
 				Sql = "SELECT Max(idDirigente)+1 FROM Dirigenti Where idAnno=" & idAnno
-				Rec = LeggeQuery(Conn, Sql, Connessione)
+				Rec = Conn.LeggeQuery(Server.MapPath("."), Sql, Connessione)
 				If TypeOf (Rec) Is String Then
 					Ritorno = Rec
 				Else
@@ -56,24 +57,24 @@ Public Class wsDirigenti
 		If Connessione = "" Then
 			Ritorno = ErroreConnessioneNonValida
 		Else
-			Dim Conn As Object = ApreDB(Connessione)
+			Dim Conn As Object = new clsGestioneDB
 
 			If TypeOf (Conn) Is String Then
 				Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
 			Else
-				Dim Rec As Object = Server.CreateObject("ADODB.Recordset")
+				Dim Rec As Object
 				Dim Sql As String = ""
 				Dim idDir As Integer = -1
 				Dim Ok As Boolean = True
 
-				Sql = "Begin transaction"
-				Ritorno = EsegueSql(Conn, Sql, Connessione)
+				Sql = iif(tipodb="SQLSERVER", "Begin transaction", "Start transaction")
+				Ritorno = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
 
 				If Not Ritorno.Contains(StringaErrore) Then
 					If idDirigente = "-1" Then
 						Try
 							Sql = "SELECT Max(idDirigente)+1 FROM Dirigenti Where idAnno=" & idAnno
-							Rec = LeggeQuery(Conn, Sql, Connessione)
+							Rec = Conn.LeggeQuery(Server.MapPath("."), Sql, Connessione)
 							If TypeOf (Rec) Is String Then
 								Ritorno = Rec
 							Else
@@ -91,7 +92,7 @@ Public Class wsDirigenti
 					Else
 						idDir = idDirigente
 						Sql = "Delete From Dirigenti Where idAnno=" & idAnno & " And idDirigente=" & idDir
-						Ritorno = EsegueSql(Conn, Sql, Connessione)
+						Ritorno = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
 						If Ritorno.Contains(StringaErrore) Then
 							Ok = False
 						End If
@@ -108,17 +109,17 @@ Public Class wsDirigenti
 							"'" & Telefono.Replace("'", "''") & "', " &
 							"'N' " &
 							")"
-						Ritorno = EsegueSql(Conn, Sql, Connessione)
+						Ritorno = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
 						If Ritorno.Contains(StringaErrore) Then
 							Ok = False
 						Else
 							If Not Ritorno.Contains(StringaErrore) Then
 								Sql = "Delete From DirigentiCategorie Where idUtente = " & idDir
-								Ritorno = EsegueSql(Conn, Sql, Connessione)
+								Ritorno = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
 							End If
 							If Not Ritorno.Contains(StringaErrore) Then
 								Sql = "Insert Into DirigentiCategorie Values (" & idDir & ", 1, " & idCategoria & ")"
-								Ritorno = EsegueSql(Conn, Sql, Connessione)
+								Ritorno = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
 							End If
 
 							If TipologiaOperazione = "INSERIMENTO" Then
@@ -127,7 +128,7 @@ Public Class wsDirigenti
 
 								If Tendina = "N" Then
 									Sql = "Select Max(idUtente) + 1 From [Generale].[dbo].[Utenti] Where idAnno=" & idAnno
-									Rec = LeggeQuery(Conn, Sql, Connessione)
+									Rec = Conn.LeggeQuery(Server.MapPath("."), Sql, Connessione)
 									If TypeOf (Rec) Is String Then
 										Ritorno = Rec
 									Else
@@ -139,11 +140,11 @@ Public Class wsDirigenti
 									End If
 								Else
 									Sql = "Select * From [Generale].[dbo].[Utenti] Where EMail='" & EMail.Replace("'", "''") & "'"
-									Rec = LeggeQuery(Conn, Sql, Connessione)
+									Rec = Conn.LeggeQuery(Server.MapPath("."), Sql, Connessione)
 									If TypeOf (Rec) Is String Then
 										Ritorno = Rec
 									Else
-										If Rec.Eof Then
+										If Rec.Eof() Then
 											Ritorno = StringaErrore & " Nessun utente rilevato"
 											Ok = False
 										Else
@@ -180,7 +181,7 @@ Public Class wsDirigenti
 										"'" & stringaWidgets & "' " &
 										")"
 								End If
-								Ritorno = EsegueSql(Conn, Sql, Connessione)
+								Ritorno = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
 								If Ritorno.Contains(StringaErrore) Then
 									Ok = False
 								Else
@@ -197,7 +198,7 @@ Public Class wsDirigenti
 											Body &= "La password valida per il solo primo accesso è: " & nuovaPass(0) & "<br /><br />"
 											Dim ChiScrive As String = "notifiche@incalcio.cloud"
 
-											Ritorno = m.SendEmail(Squadra, Mittente, Oggetto, Body, EMail, {""})
+											Ritorno = m.SendEmail(Server.MapPath("."), Squadra, Mittente, Oggetto, Body, EMail, {""})
 										End If
 									End If
 								End If
@@ -210,10 +211,10 @@ Public Class wsDirigenti
 
 				If Ok Then
 					Sql = "commit"
-					Dim Ritorno2 As String = EsegueSql(Conn, Sql, Connessione)
+					Dim Ritorno2 As String = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
 				Else
 					Sql = "rollback"
-					Dim Ritorno2 As String = EsegueSql(Conn, Sql, Connessione)
+					Dim Ritorno2 As String = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
 				End If
 
 				Conn.Close()
@@ -227,14 +228,14 @@ Public Class wsDirigenti
 		Dim Ritorno As String = ""
 		Dim Sql As String = ""
 		Dim Ok As Boolean = True
-		Dim Rec As Object = Server.CreateObject("ADODB.Recordset")
+		Dim Rec As Object
 
 		If Tendina = "S" Then
 			Sql = "Delete From DirigentiCategorie Where idUtente=" & idGenitore
-			Ritorno = EsegueSql(Conn, Sql, Connessione)
+			Ritorno = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
 
 			Sql = "Delete From PermessiUtente Where idUtente=" & idGenitore
-			Ritorno = EsegueSql(Conn, Sql, Connessione)
+			Ritorno = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
 		End If
 
 		Sql = "Insert Into DirigentiCategorie Values (" &
@@ -242,23 +243,23 @@ Public Class wsDirigenti
 				"1, " &
 				" " & idCategoria & " " &
 				")"
-		Ritorno = EsegueSql(Conn, Sql, Connessione)
+		Ritorno = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
 		If Ritorno.Contains(StringaErrore) Then
 			Ok = False
 		Else
 			Sql = "Select * From [Generale].[dbo].[Permessi_LIsta] Where NomePerCodice In ('HOME', 'CALENDARIO', 'ROSE', 'ALLENATORI', 'ALLENAMENTI', 'PARTITE', 'CAMPIONATO', 'STATISTICHE', 'CONTATTI')"
-			Rec = LeggeQuery(Conn, Sql, Connessione)
+			Rec = Conn.LeggeQuery(Server.MapPath("."), Sql, Connessione)
 			If TypeOf (Rec) Is String Then
 				Ritorno = Rec
 			Else
 				Dim idPermesso As New List(Of Integer)
 
-				Do Until Rec.Eof
+				Do Until Rec.Eof()
 					idPermesso.Add(Rec("idPermesso").Value)
 
-					Rec.MoveNext
+					Rec.MoveNext()
 				Loop
-				Rec.Close
+				Rec.Close()
 
 				Dim Progressivo As Integer = 1
 
@@ -268,7 +269,7 @@ Public Class wsDirigenti
 						" " & Progressivo & ", " &
 						" " & id & " " &
 						")"
-					Ritorno = EsegueSql(Conn, Sql, Connessione)
+					Ritorno = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
 					Progressivo += 1
 					If Ritorno.Contains(StringaErrore) Then
 						Ok = False
@@ -289,12 +290,12 @@ Public Class wsDirigenti
 		If Connessione = "" Then
 			Ritorno = ErroreConnessioneNonValida
 		Else
-			Dim Conn As Object = ApreDB(Connessione)
+			Dim Conn As Object = New clsGestioneDB
 
 			If TypeOf (Conn) Is String Then
 				Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
 			Else
-				Dim Rec As Object = Server.CreateObject("ADODB.Recordset")
+				Dim Rec As Object
 				Dim Sql As String = ""
 
 				Dim Altro As String = ""
@@ -312,15 +313,15 @@ Public Class wsDirigenti
 						"Join Dirigenti B On A.idUtente = B.idDirigente " &
 						"Left Join Categorie C On A.idCategoria = C.idCategoria " &
 						"WHere B.idAnno=" & idAnno & " " & Altro & " And B.Eliminato = 'N' Order By Cognome, Nome"
-					Rec = LeggeQuery(Conn, Sql, Connessione)
+					Rec = Conn.LeggeQuery(Server.MapPath("."), Sql, Connessione)
 					If TypeOf (Rec) Is String Then
 						Ritorno = Rec
 					Else
-						If Rec.Eof Then
+						If Rec.Eof() Then
 							Ritorno = StringaErrore & " Nessun Dirigente rilevato"
 						Else
 							Ritorno = ""
-							Do Until Rec.Eof
+							Do Until Rec.Eof()
 								Ritorno &= Rec("idDirigente").Value & ";" &
 									Rec("Cognome").Value.ToString.Trim & ";" &
 									Rec("Nome").Value.ToString.Trim & ";" &
@@ -353,7 +354,7 @@ Public Class wsDirigenti
 		If Connessione = "" Then
 			Ritorno = ErroreConnessioneNonValida & ":" & Connessione
 		Else
-			Dim Conn As Object = ApreDB(Connessione)
+			Dim Conn As Object = New clsGestioneDB
 
 			If TypeOf (Conn) Is String Then
 				Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
@@ -361,18 +362,18 @@ Public Class wsDirigenti
 				Dim Sql As String = ""
 				Dim Ok As Boolean = True
 
-				Sql = "Begin transaction"
-				Ritorno = EsegueSql(Conn, Sql, Connessione)
+				Sql = iif(tipodb="SQLSERVER", "Begin transaction", "Start transaction")
+				Ritorno = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
 
 				If Not Ritorno.Contains(StringaErrore) Then
-					Dim Rec As Object = Server.CreateObject("ADODB.Recordset")
+					Dim Rec As Object
 
 					Sql = "Select * From Dirigenti Where idAnno=" & idAnno & " And idDirigente=" & idDirigente
-					Rec = LeggeQuery(Conn, Sql, Connessione)
+					Rec = Conn.LeggeQuery(Server.MapPath("."), Sql, Connessione)
 					If TypeOf (Rec) Is String Then
 						Ritorno = Rec
 					Else
-						If Rec.Eof Then
+						If Rec.Eof() Then
 							Ritorno = StringaErrore & " Nessun Dirigente rilevato"
 						Else
 							Dim EMail As String = Rec("EMail").Value
@@ -380,7 +381,7 @@ Public Class wsDirigenti
 
 							Try
 								Sql = "Update Dirigenti Set Eliminato='S' Where idAnno=" & idAnno & " And idDirigente=" & idDirigente
-								Ritorno = EsegueSql(Conn, Sql, Connessione)
+								Ritorno = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
 								If Ritorno.Contains(StringaErrore) Then
 									Ok = False
 								End If
@@ -392,7 +393,7 @@ Public Class wsDirigenti
 							If Ok Then
 								Sql = "Update [Generale].[dbo].[Utenti] Set Eliminato='S' " &
 									"Where Utente='" & EMail.Replace("'", "''") & "'"
-								Ritorno = EsegueSql(Conn, Sql, Connessione)
+								Ritorno = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
 								If Ritorno.Contains(StringaErrore) Then
 									Ok = False
 								End If
@@ -405,10 +406,10 @@ Public Class wsDirigenti
 
 				If Ok Then
 					Sql = "commit"
-					Dim Ritorno2 As String = EsegueSql(Conn, Sql, Connessione)
+					Dim Ritorno2 As String = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
 				Else
 					Sql = "rollback"
-					Dim Ritorno2 As String = EsegueSql(Conn, Sql, Connessione)
+					Dim Ritorno2 As String = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
 				End If
 
 				Conn.Close()

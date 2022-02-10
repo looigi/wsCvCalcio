@@ -2,12 +2,13 @@
 Imports System.Web.Services.Protocols
 Imports System.ComponentModel
 Imports System.IO
+Imports ADODB
 
 <System.Web.Services.WebService(Namespace:="http://cvcalcio_mult.org/")>
-<System.Web.Services.WebServiceBinding(ConformsTo:=WsiProfiles.BasicProfile1_1)> _
-<ToolboxItem(False)> _
+<System.Web.Services.WebServiceBinding(ConformsTo:=WsiProfiles.BasicProfile1_1)>
+<ToolboxItem(False)>
 Public Class wsMultimedia
-    Inherits System.Web.Services.WebService
+	Inherits System.Web.Services.WebService
 
 	<WebMethod()>
 	Public Function EliminaImmagine(Squadra As String, Tipologia As String, NomeFile As String) As String
@@ -39,7 +40,7 @@ Public Class wsMultimedia
 
 		For Each est As String In Estensioni
 			Dim Nometto As String = Percorso & "\" & Nome & est
-			If File.Exists(Nometto) Then
+			If ControllaEsistenzaFile(Nometto) Then
 				Try
 					File.Delete(Nometto)
 					Ritorno = "*"
@@ -61,12 +62,12 @@ Public Class wsMultimedia
 
 	<WebMethod()>
 	Public Function RitornaMultimedia(Squadra As String, idAnno As String, id As String, Tipologia As String) As String
-		Return RitornaMultimediaPerTipologia(Squadra, idAnno, id, Tipologia)
+		Return RitornaMultimediaPerTipologia(Server.MapPath("."), Squadra, idAnno, id, Tipologia)
 	End Function
 
 	<WebMethod()>
-    Public Function EliminaMultimedia(Immagine As String) As String
-        Dim gf As New GestioneFilesDirectory
+	Public Function EliminaMultimedia(Immagine As String) As String
+		Dim gf As New GestioneFilesDirectory
 		Dim paths() As String = gf.LeggeFileIntero(Server.MapPath(".") & "/Impostazioni/PathAllegati.txt").Split(";")
 		Dim PathIniziale As String = paths(0).Replace(vbCrLf, "")
 		If Strings.Right(PathIniziale, 1) <> "\" Then
@@ -74,7 +75,7 @@ Public Class wsMultimedia
 		End If
 		Dim Ritorno As String = ""
 
-		If File.Exists(PathIniziale & Immagine) Then
+		If ControllaEsistenzaFile(PathIniziale & Immagine) Then
 			Ritorno = gf.EliminaFileFisico(PathIniziale & Immagine)
 		End If
 
@@ -101,13 +102,13 @@ Public Class wsMultimedia
 		If Connessione = "" Then
 			Ritorno = ErroreConnessioneNonValida
 		Else
-			Dim Conn As Object = ApreDB(Connessione)
+			Dim Conn As Object = new clsGestioneDB
 
 			If TypeOf (Conn) Is String Then
 				Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
 			Else
 				Dim Altro As String = ""
-				Dim Rec As Object = Server.CreateObject("ADODB.Recordset")
+				Dim Rec as object
 				Dim Sql As String = ""
 
 				If idCategoria <> "-1" Then
@@ -122,22 +123,22 @@ Public Class wsMultimedia
 					Sql &= "Where Partite.idAnno=" & idAnno & Altro & " "
 					Sql &= "Group By Partite.idPartita, Partite.DataOra, Partite.Casa, SquadreAvversarie.Descrizione "
 					Sql &= "Union All "
-					Sql &= "Select Partite.idPartita, Partite.DataOra, Partite.Casa, SquadreAvversarie.Descrizione, Count(*) As Goal, 0 As GoalAvversari "
+					Sql &= "Select Partite.idPartita, Partite.DataOra, Partite.Casa, SquadreAvversarie.Descrizione, " & IIf(TipoDB = "SQLSERVER", "Isnull(Count(*),0)", "COALESCE(Count(*),0)") & " As Goal, 0 As GoalAvversari "
 					Sql &= "From (Partite Left Join SquadreAvversarie On Partite.idAvversario=SquadreAvversarie.idAvversario) "
 					Sql &= "Left Join RisultatiAggiuntiviMarcatori On Partite.idPartita=RisultatiAggiuntiviMarcatori.idPartita "
 					Sql &= "Where Partite.idAnno=" & idAnno & Altro & " "
 					Sql &= "Group By Partite.idPartita, Partite.DataOra, Partite.Casa, SquadreAvversarie.Descrizione "
 					Sql &= ") As A Group By Partite.idPartita, Partite.DataOra, Partite.Casa, SquadreAvversarie.Descrizione"
 
-					Rec = LeggeQuery(Conn, Sql, Connessione)
+					Rec = Conn.LeggeQuery(Server.MapPath("."),  Sql, Connessione)
 					If TypeOf (Rec) Is String Then
 						'Ritorno = Rec
 					Else
-						If Not Rec.Eof Then
+						If Not Rec.Eof() Then
 							Dim idPartite As List(Of Integer) = New List(Of Integer)
 							Dim Desc As List(Of String) = New List(Of String)
 
-							Do Until Rec.Eof
+							Do Until Rec.Eof()
 								Dim Casa As String = ""
 								Select Case Rec("Casa").Value
 									Case "S"
@@ -184,15 +185,15 @@ Public Class wsMultimedia
 						Sql = "Select Giocatori.*, Ruoli.Descrizione From Giocatori "
 						Sql &= "Left Join [Generale].[dbo].[Ruoli] On Giocatori.idRuolo=Ruoli.idRuolo "
 						Sql &= "Where idAnno=" & idAnno & Altro
-						Rec = LeggeQuery(Conn, Sql, Connessione)
+						Rec = Conn.LeggeQuery(Server.MapPath("."),  Sql, Connessione)
 						If TypeOf (Rec) Is String Then
 							'Ritorno = Rec
 						Else
-							If Not Rec.Eof Then
+							If Not Rec.Eof() Then
 								Dim idGiocatori As List(Of Integer) = New List(Of Integer)
 								Dim Desc As List(Of String) = New List(Of String)
 
-								Do Until Rec.Eof
+								Do Until Rec.Eof()
 									idGiocatori.Add(Rec("idGiocatore").Value)
 									Desc.Add("Giocatori;" & Rec("Cognome").Value & " " & Rec("Nome").Value & ";" & Rec("Soprannome").Value & ";" & Rec("Descrizione").Value & ";" & Rec("DataDiNascita").Value & ";")
 
@@ -216,15 +217,15 @@ Public Class wsMultimedia
 						End If
 
 						Sql = "Select * From Allenatori Where idAnno=" & idAnno & Altro
-						Rec = LeggeQuery(Conn, Sql, Connessione)
+						Rec = Conn.LeggeQuery(Server.MapPath("."),  Sql, Connessione)
 						If TypeOf (Rec) Is String Then
 							'Ritorno = Rec
 						Else
-							If Not Rec.Eof Then
+							If Not Rec.Eof() Then
 								Dim idAllenatore As List(Of Integer) = New List(Of Integer)
 								Dim Desc As List(Of String) = New List(Of String)
 
-								Do Until Rec.Eof
+								Do Until Rec.Eof()
 									idAllenatore.Add(Rec("idAllenatore").Value)
 									Desc.Add("Allenatori;" & Rec("Cognome").Value & " " & Rec("Nome").Value & ";;;;")
 
@@ -240,7 +241,7 @@ Public Class wsMultimedia
 									'Dim Filetti() As String = gf.RitornaFilesRilevati
 									'Dim qFiletti As String = gf.RitornaQuantiFilesRilevati
 									'For k As Integer = 1 To qFiletti
-									If File.Exists(Path) Then
+									If ControllaEsistenzaFile(Path) Then
 										Ritorno &= Path.Replace(PathIniziale, "") & ";" & Desc.Item(Allenatore) & "§"
 									End If
 									'Next
@@ -250,15 +251,15 @@ Public Class wsMultimedia
 						End If
 
 						Sql = "Select * From Categorie Where idAnno=" & idAnno & Altro
-						Rec = LeggeQuery(Conn, Sql, Connessione)
+						Rec = Conn.LeggeQuery(Server.MapPath("."),  Sql, Connessione)
 						If TypeOf (Rec) Is String Then
 							'Ritorno = Rec
 						Else
-							If Not Rec.Eof Then
+							If Not Rec.Eof() Then
 								Dim idCategoria2 As List(Of Integer) = New List(Of Integer)
 								Dim Desc As List(Of String) = New List(Of String)
 
-								Do Until Rec.Eof
+								Do Until Rec.Eof()
 									idCategoria2.Add(Rec("idCategoria").Value)
 									Desc.Add("Categorie;" & Rec("Descrizione").Value & ";;;;")
 
@@ -274,7 +275,7 @@ Public Class wsMultimedia
 									'    Dim Filetti() As String = gf.RitornaFilesRilevati
 									'    Dim qFiletti As String = gf.RitornaQuantiFilesRilevati
 									'    For k As Integer = 1 To qFiletti
-									If File.Exists(Path) Then
+									If ControllaEsistenzaFile(Path) Then
 										Ritorno &= Path.Replace(PathIniziale, "") & ";" & Desc.Item(Categoria) & "§"
 									End If
 									'    Next
@@ -284,15 +285,15 @@ Public Class wsMultimedia
 						End If
 
 						'Sql = "Select * From Dirigenti Where idAnno=" & idAnno & Altro
-						'Rec = LeggeQuery(Conn, Sql, Connessione)
+						'Rec = Conn.LeggeQuery(Server.MapPath("."),  Sql, Connessione)
 						'If TypeOf (Rec) Is String Then
 						'    'Ritorno = Rec
 						'Else
-						'    If Not Rec.Eof Then
+						'    If Not Rec.Eof() Then
 						'        Dim idDirigente As List(Of Integer) = New List(Of Integer)
 						'        Dim Desc As List(Of String) = New List(Of String)
 
-						'        Do Until Rec.Eof
+						'        Do Until Rec.Eof()
 						'            idDirigente.Add(Rec("idDirigente").Value)
 						'            Desc.Add("Dirigenti;" & Rec("Cognome").Value & " " & Rec("Nome").Value & ";;;;")
 

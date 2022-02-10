@@ -1,6 +1,7 @@
 ﻿Imports System.Web.Services
 Imports System.Web.Services.Protocols
 Imports System.ComponentModel
+Imports ADODB
 
 <System.Web.Services.WebService(Namespace:="http://cvcalcio_stat_allti.org/")>
 <System.Web.Services.WebServiceBinding(ConformsTo:=WsiProfiles.BasicProfile1_1)>
@@ -16,12 +17,12 @@ Public Class wsStatAllenamenti
 		If Connessione = "" Then
 			Ritorno = ErroreConnessioneNonValida
 		Else
-			Dim Conn As Object = ApreDB(Connessione)
+			Dim Conn As Object = new clsGestioneDB
 
 			If TypeOf (Conn) Is String Then
 				Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
 			Else
-				Dim Rec As Object = Server.CreateObject("ADODB.Recordset")
+				Dim Rec As Object
 				Dim Sql As String = ""
 				Dim sMese As String = "/"
 
@@ -52,7 +53,12 @@ Public Class wsStatAllenamenti
 						sMese = "/12/"
 				End Select
 
-				Dim Altro As String = "And CharIndex(CONVERT(varchar(5),Allenamenti.idCategoria) + '-', Giocatori.Categorie) > 0 "
+				Dim Altro As String = ""
+				If TipoDB = "SQLSERVER" Then
+					Altro = "And CharIndex(CONVERT(varchar(5),Allenamenti.idCategoria) + '-', Giocatori.Categorie) > 0 "
+				Else
+					Altro = "And Instr(CONVERT(Allenamenti.idCategoria, varchar(5)) + '-', Giocatori.Categorie) > 0 "
+				End If
 				Dim Altro2 As String = "Allenamenti.idCategoria=" & idCategoria & " And "
 				Dim Altro3 As String = "And idCategoria=" & idCategoria & " "
 
@@ -63,21 +69,21 @@ Public Class wsStatAllenamenti
 				End If
 				Try
 					Sql = "Select B.idGiocatore, B.Cognome, B.Nome, B.Descrizione,  B.Presenze, B.Totale, (Cast(B.Presenze As Numeric) / Cast(B.Totale As Numeric)) * 100 As Perc, B.NumeroMaglia From ( " &
-						"Select A.idGiocatore, A.Cognome, A.Nome, A.Descrizione,  A.Presenze, (SELECT Count(*) From Allenamenti " &
-						"Where idAnno=" & idAnno & " " & Altro3 & " And CharIndex('" & sMese & "', Datella)>0  And Progressivo=0) As Totale, A.NumeroMaglia From ( " &
-						"SELECT Giocatori.idGiocatore, Cognome, Nome, Ruoli.Descrizione,  Count(*) As Presenze, Giocatori.NumeroMaglia " &
+						"Select A.idGiocatore, A.Cognome, A.Nome, A.Descrizione,  A.Presenze, (SELECT " & IIf(TipoDB = "SQLSERVER", "Isnull(Count(*),0)", "COALESCE(Count(*),0)") & " From Allenamenti " &
+						"Where idAnno=" & idAnno & " " & Altro3 & " And " & IIf(TipoDB = "SQLSERVER", "CharIndex('" & sMese & "', Datella)>0", "Instr(Datella, '" & sMese & "')>0") & " And Progressivo=0) As Totale, A.NumeroMaglia From ( " &
+						"SELECT Giocatori.idGiocatore, Cognome, Nome, Ruoli.Descrizione,  " & IIf(TipoDB = "SQLSERVER", "Isnull(Count(*),0)", "COALESCE(Count(*),0)") & " As Presenze, Giocatori.NumeroMaglia " &
 						"FROM Allenamenti LEFT JOIN Giocatori ON Allenamenti.idAnno = Giocatori.idAnno AND Allenamenti.idGiocatore=Giocatori.idGiocatore " & Altro & " " &
 						"LEFT Join [Generale].[dbo].[Ruoli] On Giocatori.idRuolo=Ruoli.idRuolo " &
-						"WHERE " & Altro2 & " Allenamenti.idAnno=" & idAnno & " And Giocatori.idGiocatore Is Not Null And CharIndex('" & sMese & "', Datella)>0 " &
+						"WHERE " & Altro2 & " Allenamenti.idAnno=" & idAnno & " And Giocatori.idGiocatore Is Not Null And " & IIf(TipoDB = "SQLSERVER", "CharIndex('" & sMese & "', Datella)>0", "Instr(Datella, '" & sMese & "', )>0") & " " &
 						"Group By Giocatori.idGiocatore, Cognome, Nome, Ruoli.Descrizione, Giocatori.NumeroMaglia " &
 						") A) B " &
 						"Order By 2"
 
-					Rec = LeggeQuery(Conn, Sql, Connessione)
+					Rec = Conn.LeggeQuery(Server.MapPath("."),   Sql, Connessione)
 					If TypeOf (Rec) Is String Then
 						Ritorno = Rec
 					Else
-						If Rec.Eof Then
+						If Rec.Eof() Then
 							Ritorno = StringaErrore & " Nessuna statistica di allenamento rilevata"
 						Else
 							If Stampa = "NO" Then
@@ -89,7 +95,7 @@ Public Class wsStatAllenamenti
 
 							Dim q As Integer = 0
 
-							Do Until Rec.Eof
+							Do Until Rec.Eof()
 								Dim perc As String = CInt(Rec("Perc").Value.ToString.Trim)
 
 								If Stampa = "NO" Then
@@ -180,12 +186,12 @@ Public Class wsStatAllenamenti
 		If Connessione = "" Then
 			Ritorno = ErroreConnessioneNonValida
 		Else
-			Dim Conn As Object = ApreDB(Connessione)
+			Dim Conn As Object = new clsGestioneDB
 
 			If TypeOf (Conn) Is String Then
 				Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
 			Else
-				Dim Rec As Object = Server.CreateObject("ADODB.Recordset")
+				Dim Rec as object
 				Dim Sql As String = ""
 				Dim sMese As String = "/"
 
@@ -221,12 +227,12 @@ Public Class wsStatAllenamenti
 					Dim Ok As Boolean = True
 
 					Sql = "SELECT * From Giocatori Where idGiocatore=" & idGiocatore
-					Rec = LeggeQuery(Conn, Sql, Connessione)
+					Rec = Conn.LeggeQuery(Server.MapPath("."),   Sql, Connessione)
 					If TypeOf (Rec) Is String Then
 						Ritorno = Rec
 						Ok = False
 					Else
-						If Rec.Eof Then
+						If Rec.Eof() Then
 							Ritorno = StringaErrore & " Nessun giocatore rilevato"
 							Ok = False
 						Else
@@ -238,14 +244,14 @@ Public Class wsStatAllenamenti
 					If Ok Then
 						Sql = "SELECT Allenamenti.Datella, Allenamenti.Orella " &
 							"FROM Allenamenti " &
-							"WHERE Allenamenti.idAnno=" & idAnno & " AND Allenamenti.idCategoria=" & idCategoria & " AND Allenamenti.idGiocatore=" & idGiocatore & " And CharIndex('" & sMese & "', Datella)>0 " &
+							"WHERE Allenamenti.idAnno=" & idAnno & " AND Allenamenti.idCategoria=" & idCategoria & " AND Allenamenti.idGiocatore=" & idGiocatore & " And " & IIf(TipoDB = "SQLSERVER", "CharIndex('" & sMese & "', Datella)>0", "Instr(Datella,'" & sMese & "')>0") & " " &
 							"Order By Datella, Orella"
 
-						Rec = LeggeQuery(Conn, Sql, Connessione)
+						Rec = Conn.LeggeQuery(Server.MapPath("."),   Sql, Connessione)
 						If TypeOf (Rec) Is String Then
 							Ritorno = Rec
 						Else
-							If Rec.Eof Then
+							If Rec.Eof() Then
 								Ritorno = StringaErrore & " Nessuna info di allenamento rilevata"
 							Else
 								If Stampa = "NO" Then
@@ -254,7 +260,7 @@ Public Class wsStatAllenamenti
 									Ritorno = "<table style=""width: 100%;"">"
 									Ritorno &= "<tr><th>Data</th><th>Ora</th></tr>"
 								End If
-								Do Until Rec.Eof
+								Do Until Rec.Eof()
 									If Stampa = "NO" Then
 										Ritorno &= Rec("Datella").Value.ToString & ";" &
 										Rec("Orella").Value.ToString.Trim & ";" &

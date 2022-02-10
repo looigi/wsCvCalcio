@@ -2,6 +2,7 @@
 Imports System.Web.Services.Protocols
 Imports System.ComponentModel
 Imports System.Web.Services.Description
+Imports ADODB
 
 <System.Web.Services.WebService(Namespace:="http://cvcalcio_stat.org/")>
 <System.Web.Services.WebServiceBinding(ConformsTo:=WsiProfiles.BasicProfile1_1)>
@@ -17,15 +18,15 @@ Public Class wsStatistiche
 		If Connessione = "" Then
 			Ritorno = ErroreConnessioneNonValida
 		Else
-			Dim Conn As Object = ApreDB(Connessione)
+			Dim Conn As Object = new clsGestioneDB
 
 			If TypeOf (Conn) Is String Then
 				Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
 			Else
-				Dim Rec As Object = Server.CreateObject("ADODB.Recordset")
+				Dim Rec As Object
 				Dim Sql As String
 
-				Sql = "SELECT SquadreAvversarie.idAvversario, SquadreAvversarie.Descrizione, Count(*) AS Quante "
+				Sql = "SELECT SquadreAvversarie.idAvversario, SquadreAvversarie.Descrizione, " & IIf(TipoDB = "SQLSERVER", "Isnull(Count(*),0)", "COALESCE(Count(*),0)") & " AS Quante "
 				Sql &= "FROM (Partite LEFT JOIN SquadreAvversarie ON Partite.idAvversario = SquadreAvversarie.idAvversario) "
 				Sql &= "LEFT JOIN Categorie On Partite.idAnno=Categorie.idAnno And Categorie.idCategoria=Partite.idCategoria "
 				If SoloAnno = "S" Then
@@ -37,14 +38,14 @@ Public Class wsStatistiche
 				Sql &= "ORDER BY 3 DESC"
 
 				Try
-					Rec = LeggeQuery(Conn, Sql, Connessione)
+					Rec = Conn.LeggeQuery(Server.MapPath("."),  Sql, Connessione)
 					If TypeOf (Rec) Is String Then
 						Ritorno = Rec
 					Else
-						Do Until Rec.Eof
+						Do Until Rec.Eof()
 							Ritorno &= Rec("idAvversario").Value & ";" & Rec("Descrizione").Value & ";" & Rec("Quante").Value & "§"
 
-							Rec.MoveNext
+							Rec.MoveNext()
 						Loop
 						Rec.Close()
 					End If
@@ -69,39 +70,39 @@ Public Class wsStatistiche
 		If Connessione = "" Then
 			Ritorno = ErroreConnessioneNonValida
 		Else
-			Dim Conn As Object = ApreDB(Connessione)
+			Dim Conn As Object = new clsGestioneDB
 
 			If TypeOf (Conn) Is String Then
 				Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
 			Else
-				Dim Rec As Object = Server.CreateObject("ADODB.Recordset")
+				Dim Rec As Object
 				Dim Sql As String
 
-				Sql = "SELECT Giocatori.idGiocatore, Cognome, Nome, Count(*) As Quanti, NumeroMaglia "
+				Sql = "SELECT Giocatori.idGiocatore, Cognome, Nome, " & IIf(TipoDB = "SQLSERVER", "Isnull(Count(*),0)", "COALESCE(Count(*),0)") & " As Quanti, NumeroMaglia "
 				Sql &= "FROM Giocatori INNER JOIN Partite ON Giocatori.idAnno = Partite.idAnno "
 				Sql &= "INNER JOIN Convocati ON Partite.idPartita = Convocati.idPartita And Giocatori.idGiocatore=Convocati.idGiocatore "
 				' Sql &= "INNER JOIN Categorie On Giocatori.idCategoria=Categorie.idCategoria And Giocatori.idAnno=Categorie.idAnno "
 				If SoloAnno = "S" Then
 					If idCategoria <> "-1" Then
-						Sql &= "WHERE Giocatori.idAnno= " & idAnno & " And CharIndex('" & idCategoria & "-', Giocatori.Categorie) > 0 " ' Categorie.idCategoria=" & idCategoria & " "
+						Sql &= "WHERE Giocatori.idAnno= " & idAnno & " And " & IIf(TipoDB = "SQLSERVER", "CharIndex('" & idCategoria & "-', Giocatori.Categorie) > 0", "Instr(Giocatori.Categorie,'" & idCategoria & "-') > 0") & " " ' Categorie.idCategoria=" & idCategoria & " "
 					End If
 				Else
 					If idCategoria <> "-1" Then
-						Sql &= "WHERE CharIndex('" & idCategoria & "-', Giocatori.Categorie) > 0 " ' Categorie.idCategoria=" & idCategoria & " "
+						Sql &= "WHERE " & IIf(TipoDB = "SQLSERVER", "CharIndex('" & idCategoria & "-', Giocatori.Categorie) > 0", "Instr(Giocatori.Categorie, '" & idCategoria & "-') > 0") & " " ' Categorie.idCategoria=" & idCategoria & " "
 					End If
 				End If
 				Sql &= "Group By Giocatori.idGiocatore, Cognome, Nome, NumeroMaglia "
 				Sql &= "Order By 4 Desc,2,3"
 
 				Try
-					Rec = LeggeQuery(Conn, Sql, Connessione)
+					Rec = Conn.LeggeQuery(Server.MapPath("."),  Sql, Connessione)
 					If TypeOf (Rec) Is String Then
 						Ritorno = Rec
 					Else
-						Do Until Rec.Eof
+						Do Until Rec.Eof()
 							Ritorno &= Rec("idGiocatore").Value & ";" & Rec("Cognome").Value & ";" & Rec("Nome").Value & ";" & Rec("Quanti").Value & ";" & Rec("NumeroMaglia").Value & "§"
 
-							Rec.MoveNext
+							Rec.MoveNext()
 						Loop
 						Rec.Close()
 					End If
@@ -126,16 +127,16 @@ Public Class wsStatistiche
 		If Connessione = "" Then
 			Ritorno = ErroreConnessioneNonValida
 		Else
-			Dim Conn As Object = ApreDB(Connessione)
+			Dim Conn As Object = new clsGestioneDB
 
 			If TypeOf (Conn) Is String Then
 				Ritorno = ErroreConnessioneDBNonValida & ": " & Conn
 			Else
-				Dim Rec As Object = Server.CreateObject("ADODB.Recordset")
+				Dim Rec As Object
 				Dim Sql As String = ""
 
 				Sql = "SELECT q.idGiocatore, q.Cognome, q.Nome, Sum(Goal) AS GoalFinali, q.NumeroMaglia FROM("
-				Sql &= "Select Giocatori.idGiocatore, Giocatori.Cognome, Giocatori.Nome, Count(*) AS Goal, Giocatori.NumeroMaglia "
+				Sql &= "Select Giocatori.idGiocatore, Giocatori.Cognome, Giocatori.Nome, " & IIf(TipoDB = "SQLSERVER", "Isnull(Count(*),0)", "COALESCE(Count(*),0)") & " AS Goal, Giocatori.NumeroMaglia "
 				Sql &= "FROM ((Marcatori LEFT  JOIN Partite ON Marcatori.idPartita = Partite.idPartita) "
 				Sql &= "LEFT JOIN Giocatori ON Marcatori.idGiocatore = Giocatori.idGiocatore) "
 				Sql &= "LEFT JOIN Categorie On Giocatori.idCategoria=Categorie.idCategoria And Categorie.idAnno=Giocatori.idAnno "
@@ -146,7 +147,7 @@ Public Class wsStatistiche
 				End If
 				Sql &= "GROUP BY Giocatori.idGiocatore, Giocatori.Cognome, Giocatori.Nome, Giocatori.NumeroMaglia "
 				Sql &= "Union All "
-				Sql &= "Select Giocatori.idGiocatore, Giocatori.Cognome, Giocatori.Nome, Count(*) As Goal, Giocatori.NumeroMaglia "
+				Sql &= "Select Giocatori.idGiocatore, Giocatori.Cognome, Giocatori.Nome, " & IIf(TipoDB = "SQLSERVER", "Isnull(Count(*),0)", "COALESCE(Count(*),0)") & " As Goal, Giocatori.NumeroMaglia "
 				Sql &= "FROM ((RisultatiAggiuntiviMarcatori LEFT JOIN Partite On RisultatiAggiuntiviMarcatori.idPartita = Partite.idPartita) "
 				Sql &= "LEFT JOIN Giocatori On RisultatiAggiuntiviMarcatori.idGiocatore = Giocatori.idGiocatore) "
 				Sql &= "LEFT JOIN Categorie On Giocatori.idCategoria=Categorie.idCategoria And Categorie.idAnno=Giocatori.idAnno "
@@ -163,14 +164,14 @@ Public Class wsStatistiche
 				Dim Ok As Boolean = True
 
 				Try
-					Rec = LeggeQuery(Conn, Sql, Connessione)
+					Rec = Conn.LeggeQuery(Server.MapPath("."),  Sql, Connessione)
 					If TypeOf (Rec) Is String Then
 						Ritorno = Rec
 					Else
-						Do Until Rec.Eof
+						Do Until Rec.Eof()
 							Ritorno &= Rec("idGiocatore").Value & ";" & Rec("Cognome").Value & ";" & Rec("Nome").Value & ";" & Rec("GoalFinali").Value & ";" & Rec("NumeroMaglia").Value & ";GOAL;§"
 
-							Rec.MoveNext
+							Rec.MoveNext()
 						Loop
 						Rec.Close()
 					End If
@@ -184,10 +185,10 @@ Public Class wsStatistiche
 						"From ((RigoriPropri Left Join Giocatori On RigoriPropri.idGiocatore=Giocatori.idGiocatore And RigoriPropri.idAnno = Giocatori.idAnno) Left Join [Generale].[dbo].[Ruoli] On Giocatori.idRuolo = Ruoli.idRuolo) " &
 						"Where RigoriPropri.idAnno=" & idAnno & " And Termine=1 " &
 						"Group By RigoriPropri.idGiocatore, Ruoli.Descrizione, Giocatori.Cognome, Giocatori.Nome, Giocatori.NumeroMaglia"
-					Rec = LeggeQuery(Conn, Sql, Connessione)
+					Rec = Conn.LeggeQuery(Server.MapPath("."),  Sql, Connessione)
 					If TypeOf (Rec) Is String Then
 					Else
-						Do Until Rec.Eof
+						Do Until Rec.Eof()
 							' 448;Centrocampista;Cataldi Lorenzo;;;14;-1;
 							' RigoriPropri &= Rec2("idGiocatore").Value & "!"
 							' RigoriPropri &= Rec2("Descrizione").Value & "!"
@@ -199,10 +200,10 @@ Public Class wsStatistiche
 							' RigoriPropri &= "%"
 							Ritorno &= Rec("idGiocatore").Value & ";" & Rec("Cognome").Value & ";" & Rec("Nome").Value & ";" & Rec("Rigori").Value & ";" & Rec("NumeroMaglia").Value & ";RIGORE;§"
 
-							Rec.MoveNext
+							Rec.MoveNext()
 						Loop
 					End If
-					Rec.Close
+					Rec.Close()
 				End If
 
 				Conn.Close()
@@ -222,19 +223,19 @@ Public Class wsStatistiche
 		If Connessione = "" Then
 			Ritorno = ErroreConnessioneNonValida
 		Else
-			Dim Conn As Object = ApreDB(Connessione)
+			Dim Conn As Object = new clsGestioneDB
 
 			If TypeOf (Conn) Is String Then
 				Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
 			Else
-				Dim Rec As Object = Server.CreateObject("ADODB.Recordset")
+				Dim Rec As Object
 				Dim Sql As String = ""
 
 				Sql = "Drop Table Appoggio"
-				EsegueSql(Conn, Sql, Connessione)
+				Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
 
 				Sql = "Select * Into Appoggio From ( "
-				'Sql &= "Select 1 As Descrizione, Partite.idPartita As Partita, Partite.Casa, Count(*) As Valore From (Partite Inner Join RisultatiAggiuntiviMarcatori On Partite.idPartita = RisultatiAggiuntiviMarcatori.idPartita) "
+				'Sql &= "Select 1 As Descrizione, Partite.idPartita As Partita, Partite.Casa, " & IIf(TipoDB = "SQLSERVER", "Isnull(Count(*),0)", "COALESCE(Count(*),0)") & " As Valore From (Partite Inner Join RisultatiAggiuntiviMarcatori On Partite.idPartita = RisultatiAggiuntiviMarcatori.idPartita) "
 				'If SoloAnno = "S" Then
 				'    Sql &= "Where Partite.idAnno = " & idAnno & " And Partite.Giocata ='S' And Partite.idCategoria=" & idCategoria & " "
 				'Else
@@ -243,7 +244,7 @@ Public Class wsStatistiche
 				'Sql &= "Group By Partite.idPartita, Partite.Casa "
 
 				Sql &= "Select Descrizione, Partita,Casa, Sum(Valo) As Valore From ( "
-				Sql &= "Select 1 As Descrizione, Partite.idPartita As Partita, Partite.Casa, Count(*) As Valo From (Partite Inner Join RisultatiAggiuntiviMarcatori On Partite.idPartita = RisultatiAggiuntiviMarcatori.idPartita) "
+				Sql &= "Select 1 As Descrizione, Partite.idPartita As Partita, Partite.Casa, " & IIf(TipoDB = "SQLSERVER", "Isnull(Count(*),0)", "COALESCE(Count(*),0)") & " As Valo From (Partite Inner Join RisultatiAggiuntiviMarcatori On Partite.idPartita = RisultatiAggiuntiviMarcatori.idPartita) "
 				Sql &= "Where Partite.idAnno = " & idAnno & " And Partite.Giocata ='S' And Partite.idCategoria=" & idCategoria & " "
 				Sql &= "Group By Partite.idPartita, Partite.Casa "
 				Sql &= "Union All "
@@ -260,17 +261,17 @@ Public Class wsStatistiche
 					Sql &= "Where Partite.Giocata ='S' And Partite.idCategoria=" & idCategoria & " "
 				End If
 				Sql &= "Group By Partite.idPartita, Partite.Casa)"
-				EsegueSql(Conn, Sql, Connessione)
+				Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
 
 				Try
-					Sql = "Select 'Giocate Totali:' As Descrizione, Count(*) As Valore From Partite "
+					Sql = "Select 'Giocate Totali:' As Descrizione, " & IIf(TipoDB = "SQLSERVER", "Isnull(Count(*),0)", "COALESCE(Count(*),0)") & " As Valore From Partite "
 					If SoloAnno = "S" Then
 						Sql &= "Where idAnno=" & idAnno & " And idCategoria = " & idCategoria & " "
 					Else
 						Sql &= "Where idCategoria= " & idCategoria & " "
 					End If
 					Sql &= "Union All "
-					Sql &= "Select 'Goal Fatti Totali:' As Descrizione, Count(*) As Valore From (RisultatiAggiuntiviMarcatori Left Join "
+					Sql &= "Select 'Goal Fatti Totali:' As Descrizione, " & IIf(TipoDB = "SQLSERVER", "Isnull(Count(*),0)", "COALESCE(Count(*),0)") & " As Valore From (RisultatiAggiuntiviMarcatori Left Join "
 					Sql &= "Partite On Partite.idPartita = RisultatiAggiuntiviMarcatori.idPartita) "
 					If SoloAnno = "S" Then
 						Sql &= "Where Partite.idAnno = " & idAnno & " And Partite.Giocata='S' And Partite.idCategoria = " & idCategoria & " "
@@ -286,14 +287,14 @@ Public Class wsStatistiche
 						Sql &= "Where idCategoria = " & idCategoria & " "
 					End If
 					Sql &= "Union All "
-					Sql &= "Select 'Giocate Casa:' As Descrizione, Count(*) As Valore From Partite "
+					Sql &= "Select 'Giocate Casa:' As Descrizione, " & IIf(TipoDB = "SQLSERVER", "Isnull(Count(*),0)", "COALESCE(Count(*),0)") & " As Valore From Partite "
 					If SoloAnno = "S" Then
 						Sql &= "Where idAnno=" & idAnno & " And idCategoria = " & idCategoria & " And Casa='S' "
 					Else
 						Sql &= "Where idCategoria = " & idCategoria & " And Casa='S' "
 					End If
 					Sql &= "Union All "
-					Sql &= "Select 'Goal Fatti In Casa:' As Descrizione, Count(*) As Valore From (RisultatiAggiuntiviMarcatori Left Join Partite On Partite.idPartita = RisultatiAggiuntiviMarcatori.idPartita) "
+					Sql &= "Select 'Goal Fatti In Casa:' As Descrizione, " & IIf(TipoDB = "SQLSERVER", "Isnull(Count(*),0)", "COALESCE(Count(*),0)") & " As Valore From (RisultatiAggiuntiviMarcatori Left Join Partite On Partite.idPartita = RisultatiAggiuntiviMarcatori.idPartita) "
 					If SoloAnno = "S" Then
 						Sql &= "Where Partite.idAnno = " & idAnno & " And Partite.Giocata='S' And Partite.idCategoria= " & idCategoria & " And Partite.Casa = 'S' "
 					Else
@@ -308,14 +309,14 @@ Public Class wsStatistiche
 						Sql &= "Where idCategoria = " & idCategoria & " And Partite.Casa='S' "
 					End If
 					Sql &= "Union All "
-					Sql &= "Select 'Giocate Fuori:' As Descrizione, Count(*) As Valore From Partite "
+					Sql &= "Select 'Giocate Fuori:' As Descrizione, " & IIf(TipoDB = "SQLSERVER", "Isnull(Count(*),0)", "COALESCE(Count(*),0)") & " As Valore From Partite "
 					If SoloAnno = "S" Then
 						Sql &= "Where idAnno=" & idAnno & " And idCategoria = " & idCategoria & " And Casa='N' "
 					Else
 						Sql &= "Where idCategoria = " & idCategoria & " And Casa='N' "
 					End If
 					Sql &= "Union All "
-					Sql &= "Select 'Goal Fatti Fuori Casa:' As Descrizione, Count(*) As Valore From (RisultatiAggiuntiviMarcatori Left Join Partite On Partite.idPartita = RisultatiAggiuntiviMarcatori.idPartita) "
+					Sql &= "Select 'Goal Fatti Fuori Casa:' As Descrizione, " & IIf(TipoDB = "SQLSERVER", "Isnull(Count(*),0)", "COALESCE(Count(*),0)") & " As Valore From (RisultatiAggiuntiviMarcatori Left Join Partite On Partite.idPartita = RisultatiAggiuntiviMarcatori.idPartita) "
 					If SoloAnno = "S" Then
 						Sql &= "Where Partite.idAnno = " & idAnno & " And Partite.Giocata='S' And Partite.idCategoria = " & idCategoria & " And Partite.Casa = 'N' "
 					Else
@@ -330,14 +331,14 @@ Public Class wsStatistiche
 						Sql &= "Where idCategoria = " & idCategoria & " And Partite.Casa='N' "
 					End If
 					Sql &= "Union All "
-					Sql &= "Select 'Giocate Campo Esterno:' As Descrizione, Count(*) As Valore From Partite "
+					Sql &= "Select 'Giocate Campo Esterno:' As Descrizione, " & IIf(TipoDB = "SQLSERVER", "Isnull(Count(*),0)", "COALESCE(Count(*),0)") & " As Valore From Partite "
 					If SoloAnno = "S" Then
 						Sql &= "Where idAnno=" & idAnno & " And idCategoria = " & idCategoria & " And Casa='E' "
 					Else
 						Sql &= "Where idCategoria = " & idCategoria & " And Casa='E' "
 					End If
 					Sql &= "Union All "
-					Sql &= "Select 'Goal Fatti Campo Esterno:' As Descrizione, Count(*) As Valore From (RisultatiAggiuntiviMarcatori Left Join Partite On Partite.idPartita = RisultatiAggiuntiviMarcatori.idPartita) "
+					Sql &= "Select 'Goal Fatti Campo Esterno:' As Descrizione, " & IIf(TipoDB = "SQLSERVER", "Isnull(Count(*),0)", "COALESCE(Count(*),0)") & " As Valore From (RisultatiAggiuntiviMarcatori Left Join Partite On Partite.idPartita = RisultatiAggiuntiviMarcatori.idPartita) "
 					If SoloAnno = "S" Then
 						Sql &= "Where Partite.idAnno = " & idAnno & " And Partite.Giocata='S' And Partite.idCategoria= " & idCategoria & " And Partite.Casa = 'E' "
 					Else
@@ -352,27 +353,27 @@ Public Class wsStatistiche
 						Sql &= "Where idCategoria = " & idCategoria & " And Partite.Casa='E' "
 					End If
 					Sql &= "Union All "
-					Sql &= "Select Iif(Risultato='1','Vittoria',IIf(Risultato='2','Sconfitta','Pareggio')) + ' ' + Iif(Casa='S','Casa',Iif(Casa='N','Fuori','Campo Esterno')) +':' As Descrizione, Count(*) As Valore From ( "
+					Sql &= "Select Iif(Risultato='1','Vittoria',IIf(Risultato='2','Sconfitta','Pareggio')) + ' ' + Iif(Casa='S','Casa',Iif(Casa='N','Fuori','Campo Esterno')) +':' As Descrizione, " & IIf(TipoDB = "SQLSERVER", "Isnull(Count(*),0)", "COALESCE(Count(*),0)") & " As Valore From ( "
 					Sql &= "Select A2.*, iif(Differenza>0,'1',iif(Differenza<0,'2','X')) As Risultato From ( "
 					Sql &= "Select A1.*, Propria-Altri As Differenza From ( "
 					Sql &= "Select Partita, Casa, (Select Valore From Appoggio Where Descrizione=1 And Partita=A.Partita) As Propria, (Select Valore From Appoggio Where Descrizione=2 And Partita=A.Partita) As Altri "
 					Sql &= "From Appoggio As A Where Descrizione=1) As A1) As A2 ) As A3 "
 					Sql &= "Group By Risultato, Casa "
 					Sql &= "Union All "
-					Sql &= "Select  Iif(Risultato='1','Vittoria',IIf(Risultato='2','Sconfitta','Pareggio')) + ' Totali:' As Descrizione, Count(*) As Valore From ( "
+					Sql &= "Select  Iif(Risultato='1','Vittoria',IIf(Risultato='2','Sconfitta','Pareggio')) + ' Totali:' As Descrizione, " & IIf(TipoDB = "SQLSERVER", "Isnull(Count(*),0)", "COALESCE(Count(*),0)") & " As Valore From ( "
 					Sql &= "Select A2.*, iif(Differenza>0,'1',iif(Differenza<0,'2','X')) As Risultato From ( "
 					Sql &= "Select A1.*, Propria-Altri As Differenza From ( "
 					Sql &= "Select Partita, '' As Descrizione, (Select Valore From Appoggio Where Descrizione=1 And Partita=A.Partita) As Propria, (Select Valore From Appoggio Where Descrizione=2 And Partita=A.Partita) As Altri "
 					Sql &= "From Appoggio As A Where Descrizione=1) As A1) As A2) As A3 "
 					Sql &= "Group By Risultato "
-					Rec = LeggeQuery(Conn, Sql, Connessione)
+					Rec = Conn.LeggeQuery(Server.MapPath("."),  Sql, Connessione)
 					If TypeOf (Rec) Is String Then
 						Ritorno = Rec
 					Else
-						Do Until Rec.Eof
+						Do Until Rec.Eof()
 							Ritorno &= Rec("Descrizione").Value & ";" & Rec("Valore").Value & "§"
 
-							Rec.MoveNext
+							Rec.MoveNext()
 						Loop
 						Rec.Close()
 					End If
@@ -397,12 +398,12 @@ Public Class wsStatistiche
 		If Connessione = "" Then
 			Ritorno = ErroreConnessioneNonValida
 		Else
-			Dim Conn As Object = ApreDB(Connessione)
+			Dim Conn As Object = new clsGestioneDB
 
 			If TypeOf (Conn) Is String Then
 				Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
 			Else
-				Dim Rec As Object = Server.CreateObject("ADODB.Recordset")
+				Dim Rec As Object
 				Dim Sql As String
 				Dim Ok As Boolean = True
 				Dim IndirizzoCasa As String = ""
@@ -411,7 +412,7 @@ Public Class wsStatistiche
 
 				Sql = "Select * From Anni Where idAnno=" & idAnno
 				Try
-					Rec = LeggeQuery(Conn, Sql, Connessione)
+					Rec = Conn.LeggeQuery(Server.MapPath("."),  Sql, Connessione)
 					If TypeOf (Rec) Is String Then
 						Ritorno = Rec
 					Else
@@ -438,11 +439,11 @@ Public Class wsStatistiche
 					Sql &= "Order By Partite.DataOra"
 
 					Try
-						Rec = LeggeQuery(Conn, Sql, Connessione)
+						Rec = Conn.LeggeQuery(Server.MapPath("."),  Sql, Connessione)
 						If TypeOf (Rec) Is String Then
 							Ritorno = Rec
 						Else
-							Do Until Rec.Eof
+							Do Until Rec.Eof()
 								If Rec("Casa").Value = "N" Then
 									Ritorno &= Rec("idPartita").Value & ";" & Rec("Squadra").Value & ";" & Rec("Campo").Value & ";" & Rec("Indirizzo").Value & ";" & Rec("Categoria").Value & ";" & Rec("Lat").Value & ";" & Rec("Lon").Value & ";" & Rec("idAvversario").Value & ";" & Rec("DataOra").Value & ";" & Rec("Casa").Value & "§"
 								Else
@@ -453,7 +454,7 @@ Public Class wsStatistiche
 									End If
 								End If
 
-								Rec.MoveNext
+								Rec.MoveNext()
 							Loop
 							Rec.Close()
 						End If
@@ -479,45 +480,45 @@ Public Class wsStatistiche
 		If Connessione = "" Then
 			Ritorno = ErroreConnessioneNonValida
 		Else
-			Dim Conn As Object = ApreDB(Connessione)
+			Dim Conn As Object = new clsGestioneDB
 
 			If TypeOf (Conn) Is String Then
 				Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
 			Else
-				Dim Rec As Object = Server.CreateObject("ADODB.Recordset")
+				Dim Rec As Object
 				Dim Sql As String
 
-				Sql = "SELECT RisultatiAggiuntiviMarcatori.Minuto+1 As Minuto, Count(*) As Quanti "
+				Sql = "SELECT RisultatiAggiuntiviMarcatori.Minuto+1 As Minuto, " & IIf(TipoDB = "SQLSERVER", "Isnull(Count(*),0)", "COALESCE(Count(*),0)") & " As Quanti "
 				Sql &= "FROM RisultatiAggiuntiviMarcatori Left Join Partite On RisultatiAggiuntiviMarcatori.idPartita=Partite.idPartita "
 				Sql &= "Where  Partite.idAnno=" & idAnno & " And Partite.idCategoria=" & idCategoria & " And RisultatiAggiuntiviMarcatori.Minuto Is Not Null "
 				Sql &= "Group by RisultatiAggiuntiviMarcatori.Minuto+1 Order By 1"
 
 				Try
-					Rec = LeggeQuery(Conn, Sql, Connessione)
+					Rec = Conn.LeggeQuery(Server.MapPath("."),  Sql, Connessione)
 					If TypeOf (Rec) Is String Then
 						Ritorno = Rec
 					Else
-						Do Until Rec.Eof
+						Do Until Rec.Eof()
 							Ritorno &= "1;" & Rec("Minuto").Value & ";" & Rec("Quanti").Value & "§"
 
-							Rec.MoveNext
+							Rec.MoveNext()
 						Loop
-						Rec.Close
+						Rec.Close()
 
 						Sql = "Select TempiPrimoTempo + TempiSecondoTempo + TempiTerzoTempo As MinutiSubiti From "
 						Sql &= "TempiGoalAvversari Left Join Partite On TempiGoalAvversari.idPartita=Partite.idPartita "
 						Sql &= "Where Partite.idAnno = " & idAnno & " And Partite.idCategoria = " & idCategoria & " And (TempiPrimoTempo <> '' Or TempiSecondoTempo <> '' Or TempiTerzoTempo <> '') "
 
-						Rec = LeggeQuery(Conn, Sql, Connessione)
+						Rec = Conn.LeggeQuery(Server.MapPath("."),  Sql, Connessione)
 						If TypeOf (Rec) Is String Then
 							Ritorno = Rec
 						Else
 							Dim Minuti As String = ""
 
-							Do Until Rec.Eof
+							Do Until Rec.Eof()
 								Minuti &= Rec("MinutiSubiti").Value
 
-								Rec.MoveNext
+								Rec.MoveNext()
 							Loop
 							Rec.Close()
 
@@ -589,12 +590,12 @@ Public Class wsStatistiche
 		If Connessione = "" Then
 			Ritorno = ErroreConnessioneNonValida
 		Else
-			Dim Conn As Object = ApreDB(Connessione)
+			Dim Conn As Object = new clsGestioneDB
 
 			If TypeOf (Conn) Is String Then
 				Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
 			Else
-				Dim Rec As Object = Server.CreateObject("ADODB.Recordset")
+				Dim Rec As Object
 				Dim Sql As String
 
 				Sql = "Select MeteoPartite.Gradi, MeteoPartite.Umidita, MeteoPartite.Pressione "
@@ -603,30 +604,30 @@ Public Class wsStatistiche
 				Sql &= "Order By MeteoPartite.idPartita"
 
 				Try
-					Rec = LeggeQuery(Conn, Sql, Connessione)
+					Rec = Conn.LeggeQuery(Server.MapPath("."),  Sql, Connessione)
 					If TypeOf (Rec) Is String Then
 						Ritorno = Rec
 					Else
-						Do Until Rec.Eof
+						Do Until Rec.Eof()
 							Ritorno &= "1;" & Rec("Gradi").Value & ";" & Rec("Umidita").Value & ";" & Rec("Pressione").Value & "§"
 
-							Rec.MoveNext
+							Rec.MoveNext()
 						Loop
 						Rec.Close()
 
-						Sql = "SELECT MeteoPartite.Tempo, Count(*) As Quanti "
+						Sql = "SELECT MeteoPartite.Tempo, " & IIf(TipoDB = "SQLSERVER", "Isnull(Count(*),0)", "COALESCE(Count(*),0)") & " As Quanti "
 						Sql &= "From MeteoPartite Left Join Partite On MeteoPartite.idPartita=Partite.idPartita "
 						Sql &= "Where Partite.idAnno=" & idAnno & " And idCategoria=" & idCategoria & " "
 						Sql &= "Group By Tempo "
 
-						Rec = LeggeQuery(Conn, Sql, Connessione)
+						Rec = Conn.LeggeQuery(Server.MapPath("."),  Sql, Connessione)
 						If TypeOf (Rec) Is String Then
 							Ritorno = Rec
 						Else
-							Do Until Rec.Eof
+							Do Until Rec.Eof()
 								Ritorno &= "2;" & Rec("Tempo").Value & ";" & Rec("Quanti").Value & "§"
 
-								Rec.MoveNext
+								Rec.MoveNext()
 							Loop
 							Rec.Close()
 						End If
@@ -652,29 +653,29 @@ Public Class wsStatistiche
 		If Connessione = "" Then
 			Ritorno = ErroreConnessioneNonValida
 		Else
-			Dim Conn As Object = ApreDB(Connessione)
+			Dim Conn As Object = new clsGestioneDB
 
 			If TypeOf (Conn) Is String Then
 				Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
 			Else
-				Dim Rec As Object = Server.CreateObject("ADODB.Recordset")
+				Dim Rec As Object
 				Dim Sql As String
 
-				Sql = "Select Partite.idPartita, Count(*) As Goals From "
+				Sql = "Select Partite.idPartita, " & IIf(TipoDB = "SQLSERVER", "Isnull(Count(*),0)", "COALESCE(Count(*),0)") & " As Goals From "
 				Sql &= "RisultatiAggiuntiviMarcatori Left Join Partite On Partite.idPartita=RisultatiAggiuntiviMarcatori.idPartita "
 				Sql &= "Where Partite.idAnno=" & idAnno & " And idCategoria=" & idCategoria & " "
 				Sql &= "Group By Partite.idPartita "
 				Sql &= "Order By Partite.idPartita"
 
 				Try
-					Rec = LeggeQuery(Conn, Sql, Connessione)
+					Rec = Conn.LeggeQuery(Server.MapPath("."),  Sql, Connessione)
 					If TypeOf (Rec) Is String Then
 						Ritorno = Rec
 					Else
-						Do Until Rec.Eof
+						Do Until Rec.Eof()
 							Ritorno &= "1;" & Rec("idPartita").Value & ";" & Rec("Goals").Value & "§"
 
-							Rec.MoveNext
+							Rec.MoveNext()
 						Loop
 						Rec.Close()
 
@@ -683,11 +684,11 @@ Public Class wsStatistiche
 						Sql &= "Where Partite.idAnno=" & idAnno & " And idCategoria=" & idCategoria & " "
 						Sql &= "Order By Partite.idPartita"
 
-						Rec = LeggeQuery(Conn, Sql, Connessione)
+						Rec = Conn.LeggeQuery(Server.MapPath("."),  Sql, Connessione)
 						If TypeOf (Rec) Is String Then
 							Ritorno = Rec
 						Else
-							Do Until Rec.Eof
+							Do Until Rec.Eof()
 								Dim g() As String = Rec("Risultato").Value.ToString.Split("-")
 
 								If Rec("Casa").Value = "S" Then
@@ -696,7 +697,7 @@ Public Class wsStatistiche
 									Ritorno &= "2;" & Rec("idPartita").Value & ";" & g(0) & "§"
 								End If
 
-								Rec.MoveNext
+								Rec.MoveNext()
 							Loop
 							Rec.Close()
 						End If
@@ -722,12 +723,12 @@ Public Class wsStatistiche
 		If Connessione = "" Then
 			Ritorno = ErroreConnessioneNonValida
 		Else
-			Dim Conn As Object = ApreDB(Connessione)
+			Dim Conn As Object = new clsGestioneDB
 
 			If TypeOf (Conn) Is String Then
 				Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
 			Else
-				Dim Rec As Object = Server.CreateObject("ADODB.Recordset")
+				Dim Rec As Object
 				Dim Sql As String
 
 				Sql = "Select idPartita, Casa, Sum(GoalPropri) As Goal1, Sum(GoalAvversari) As Goal2 From ("
@@ -736,7 +737,7 @@ Public Class wsStatistiche
 				Sql &= "Where Partite.idAnno=" & idAnno & " And idCategoria=" & idCategoria & " "
 				Sql &= "Group By Partite.idPartita, Partite.Casa "
 				Sql &= "Union All "
-				Sql &= "Select Partite.idPartita, Partite.Casa, Count(*) As GoalPropri, 0 As GoalAvversari "
+				Sql &= "Select Partite.idPartita, Partite.Casa, " & IIf(TipoDB = "SQLSERVER", "Isnull(Count(*),0)", "COALESCE(Count(*),0)") & " As GoalPropri, 0 As GoalAvversari "
 				Sql &= "From RisultatiAggiuntiviMarcatori Left Join Partite On Partite.idPartita=RisultatiAggiuntiviMarcatori.idPartita "
 				Sql &= "Where Partite.idAnno=" & idAnno & " And idCategoria=" & idCategoria & " "
 				Sql &= "Group By Partite.idPartita, Partite.Casa "
@@ -744,13 +745,13 @@ Public Class wsStatistiche
 
 				Dim Punti As Integer = 0
 				Try
-					Rec = LeggeQuery(Conn, Sql, Connessione)
+					Rec = Conn.LeggeQuery(Server.MapPath("."),  Sql, Connessione)
 					If TypeOf (Rec) Is String Then
 						Ritorno = Rec
 					Else
 						Ritorno &= "0;0§"
 
-						Do Until Rec.Eof
+						Do Until Rec.Eof()
 							Dim g1 As Integer = Rec("Goal1").Value
 							Dim g2 As Integer = Rec("Goal2").Value
 
@@ -778,7 +779,7 @@ Public Class wsStatistiche
 
 							Ritorno &= Rec("idPartita").Value & ";" & Punti & "§"
 
-							Rec.MoveNext
+							Rec.MoveNext()
 						Loop
 						Rec.Close()
 					End If
@@ -803,28 +804,28 @@ Public Class wsStatistiche
 		If Connessione = "" Then
 			Ritorno = ErroreConnessioneNonValida
 		Else
-			Dim Conn As Object = ApreDB(Connessione)
+			Dim Conn As Object = new clsGestioneDB
 
 			If TypeOf (Conn) Is String Then
 				Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
 			Else
-				Dim Rec As Object = Server.CreateObject("ADODB.Recordset")
+				Dim Rec As Object
 				Dim Sql As String
 
-				Sql = "SELECT TipologiePartite.Descrizione, Count(*) As Volte "
+				Sql = "SELECT TipologiePartite.Descrizione, " & IIf(TipoDB = "SQLSERVER", "Isnull(Count(*),0)", "COALESCE(Count(*),0)") & " As Volte "
 				Sql &= "FROM Partite Left Join [Generale].[dbo].[TipologiePartite] On Partite.idTipologia=TipologiePartite.idTipologia "
 				Sql &= "Where idAnno=" & idAnno & " And idCategoria= " & idCategoria & " "
 				Sql &= "Group By TipologiePartite.Descrizione"
 
 				Try
-					Rec = LeggeQuery(Conn, Sql, Connessione)
+					Rec = Conn.LeggeQuery(Server.MapPath("."),  Sql, Connessione)
 					If TypeOf (Rec) Is String Then
 						Ritorno = Rec
 					Else
-						Do Until Rec.Eof
+						Do Until Rec.Eof()
 							Ritorno &= Rec("Descrizione").Value & ";" & Rec("Volte").Value & "§"
 
-							Rec.MoveNext
+							Rec.MoveNext()
 						Loop
 						Rec.Close()
 					End If
@@ -849,28 +850,28 @@ Public Class wsStatistiche
 		If Connessione = "" Then
 			Ritorno = ErroreConnessioneNonValida
 		Else
-			Dim Conn As Object = ApreDB(Connessione)
+			Dim Conn As Object = new clsGestioneDB
 
 			If TypeOf (Conn) Is String Then
 				Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
 			Else
-				Dim Rec As Object = Server.CreateObject("ADODB.Recordset")
+				Dim Rec As Object
 				Dim Sql As String
 
-				Sql = "SELECT iif(Partite.Casa='S','In casa', iif(Partite.Casa='E','Campo esterno','Fuori casa')) As Dove, Count(*) As Volte "
+				Sql = "SELECT iif(Partite.Casa='S','In casa', iif(Partite.Casa='E','Campo esterno','Fuori casa')) As Dove, " & IIf(TipoDB = "SQLSERVER", "Isnull(Count(*),0)", "COALESCE(Count(*),0)") & " As Volte "
 				Sql &= "FROM Partite "
 				Sql &= "Where idAnno=" & idAnno & " And idCategoria= " & idCategoria & " "
 				Sql &= "Group By  iif(Partite.Casa='S','In casa', iif(Partite.Casa='E','Campo esterno','Fuori casa'))"
 
 				Try
-					Rec = LeggeQuery(Conn, Sql, Connessione)
+					Rec = Conn.LeggeQuery(Server.MapPath("."),  Sql, Connessione)
 					If TypeOf (Rec) Is String Then
 						Ritorno = Rec
 					Else
-						Do Until Rec.Eof
+						Do Until Rec.Eof()
 							Ritorno &= Rec("Dove").Value & ";" & Rec("Volte").Value & "§"
 
-							Rec.MoveNext
+							Rec.MoveNext()
 						Loop
 						Rec.Close()
 					End If
@@ -895,28 +896,28 @@ Public Class wsStatistiche
 		If Connessione = "" Then
 			Ritorno = ErroreConnessioneNonValida
 		Else
-			Dim Conn As Object = ApreDB(Connessione)
+			Dim Conn As Object = new clsGestioneDB
 
 			If TypeOf (Conn) Is String Then
 				Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
 			Else
-				Dim Rec As Object = Server.CreateObject("ADODB.Recordset")
+				Dim Rec As Object
 				Dim Sql As String
 
-				Sql = "SELECT Allenatori.Cognome, Allenatori.Nome, Count(*) As Volte "
+				Sql = "SELECT Allenatori.Cognome, Allenatori.Nome, " & IIf(TipoDB = "SQLSERVER", "Isnull(Count(*),0)", "COALESCE(Count(*),0)") & " As Volte "
 				Sql &= "FROM Partite LEFT JOIN Allenatori ON (Partite.idAnno = Allenatori.idAnno) AND (Partite.idAllenatore = Allenatori.idAllenatore) "
 				Sql &= "Where Partite.idAnno=" & idAnno & " And Partite.idCategoria= " & idCategoria & " "
 				Sql &= "Group By Allenatori.Cognome, Allenatori.Nome"
 
 				Try
-					Rec = LeggeQuery(Conn, Sql, Connessione)
+					Rec = Conn.LeggeQuery(Server.MapPath("."),  Sql, Connessione)
 					If TypeOf (Rec) Is String Then
 						Ritorno = Rec
 					Else
-						Do Until Rec.Eof
+						Do Until Rec.Eof()
 							Ritorno &= Rec("Cognome").Value & " " & Rec("Nome").Value & ";" & Rec("Volte").Value & "§"
 
-							Rec.MoveNext
+							Rec.MoveNext()
 						Loop
 						Rec.Close()
 					End If
@@ -942,13 +943,13 @@ Public Class wsStatistiche
 		If Connessione = "" Then
 			Ritorno = ErroreConnessioneNonValida
 		Else
-			Dim Conn As Object = ApreDB(Connessione)
+			Dim Conn As Object = new clsGestioneDB
 
 			If TypeOf (Conn) Is String Then
 				Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
 			Else
-				Dim Rec As Object = Server.CreateObject("ADODB.Recordset")
-				Dim Rec2 As Object = Server.CreateObject("ADODB.Recordset")
+				Dim Rec as object
+				Dim Rec2 as object
 				Dim Sql As String
 
 				Dim PartiteCampionato As New List(Of Integer)
@@ -1118,11 +1119,11 @@ Public Class wsStatistiche
 
 				Sql = "SELECT * From Anni Where idAnno=" & idAnno
 				Try
-					Rec = LeggeQuery(Conn, Sql, Connessione)
+					Rec = Conn.LeggeQuery(Server.MapPath("."),  Sql, Connessione)
 					If TypeOf (Rec) Is String Then
 						Ritorno = Rec
 					Else
-						If Not Rec.Eof Then
+						If Not Rec.Eof() Then
 							descAnno = Rec("Descrizione").Value
 							nomeSquadra = Rec("NomeSquadra").Value
 						End If
@@ -1133,19 +1134,19 @@ Public Class wsStatistiche
 					Ritorno = StringaErrore & " " & ex.Message
 				End Try
 
-				Sql = "SELECT TipologiePartite.Descrizione, Count(*) As Quante " &
+				Sql = "SELECT TipologiePartite.Descrizione, " & IIf(TipoDB = "SQLSERVER", "Isnull(Count(*),0)", "COALESCE(Count(*),0)") & " As Quante " &
 					"FROM Partite Left Join [Generale].[dbo].[TipologiePartite] On Partite.idTipologia = TipologiePartite.idTipologia " &
 					"Where Partite.idAnno = " & idAnno & " And Partite.idCategoria = " & idCategoria & "  " &
 					"Group By TipologiePartite.Descrizione"
 				Try
-					Rec = LeggeQuery(Conn, Sql, Connessione)
+					Rec = Conn.LeggeQuery(Server.MapPath("."),  Sql, Connessione)
 					If TypeOf (Rec) Is String Then
 						Ritorno = Rec
 					Else
-						Do Until Rec.Eof
+						Do Until Rec.Eof()
 							TipologiaPartitePerAnno &= Rec("Descrizione").Value & " " & Rec("Quante").Value & "§"
 
-							Rec.MoveNext
+							Rec.MoveNext()
 						Loop
 						Rec.Close()
 					End If
@@ -1158,16 +1159,16 @@ Public Class wsStatistiche
 					"WHERE Partite.idAnno=" & idAnno & " AND Partite.idCategoria=" & idCategoria & " " &
 					"And Partite.idTipologia=1"
 				Try
-					Rec = LeggeQuery(Conn, Sql, Connessione)
+					Rec = Conn.LeggeQuery(Server.MapPath("."),  Sql, Connessione)
 					If TypeOf (Rec) Is String Then
 						Ritorno = Rec
 					Else
-						Do Until Rec.Eof
+						Do Until Rec.Eof()
 							PartiteCampionato.Add(Rec("idPartita").Value)
 							PartiteCampionatoDove.Add(Rec("Casa").Value)
 							PartiteCampionatoIN += Rec("idPartita").Value.ToString & ","
 
-							Rec.MoveNext
+							Rec.MoveNext()
 						Loop
 						Rec.Close()
 					End If
@@ -1180,16 +1181,16 @@ Public Class wsStatistiche
 					"WHERE Partite.idAnno=" & idAnno & " AND Partite.idCategoria=" & idCategoria & " " &
 					"And Partite.idTipologia=2"
 				Try
-					Rec = LeggeQuery(Conn, Sql, Connessione)
+					Rec = Conn.LeggeQuery(Server.MapPath("."),  Sql, Connessione)
 					If TypeOf (Rec) Is String Then
 						Ritorno = Rec
 					Else
-						Do Until Rec.Eof
+						Do Until Rec.Eof()
 							PartiteAmichevoli.Add(Rec("idPartita").Value)
 							PartiteAmichevoliDove.Add(Rec("Casa").Value)
 							PartiteAmichevoliIN += Rec("idPartita").Value.ToString & ","
 
-							Rec.MoveNext
+							Rec.MoveNext()
 						Loop
 						Rec.Close()
 					End If
@@ -1203,16 +1204,16 @@ Public Class wsStatistiche
 					"WHERE Partite.idAnno=" & idAnno & " AND Partite.idCategoria=" & idCategoria & " " &
 					"And Partite.idTipologia=3"
 				Try
-					Rec = LeggeQuery(Conn, Sql, Connessione)
+					Rec = Conn.LeggeQuery(Server.MapPath("."),  Sql, Connessione)
 					If TypeOf (Rec) Is String Then
 						Ritorno = Rec
 					Else
-						Do Until Rec.Eof
+						Do Until Rec.Eof()
 							PartiteTornei.Add(Rec("idPartita").Value)
 							PartiteTorneiDove.Add(Rec("Casa").Value)
 							PartiteTorneiIN += Rec("idPartita").Value.ToString & ","
 
-							Rec.MoveNext
+							Rec.MoveNext()
 						Loop
 						Rec.Close()
 					End If
@@ -1222,35 +1223,35 @@ Public Class wsStatistiche
 
 				If PartiteCampionatoIN.Length > 0 Then
 					PartiteCampionatoIN = Mid(PartiteCampionatoIN, 1, PartiteCampionatoIN.Length - 1)
-					Sql = "SELECT 'GoalCampionatoCasa' As Cosa, Count(*) As GoalTotali " &
+					Sql = "SELECT 'GoalCampionatoCasa' As Cosa, " & IIf(TipoDB = "SQLSERVER", "Isnull(Count(*),0)", "COALESCE(Count(*),0)") & " As GoalTotali " &
 						"From RisultatiAggiuntiviMarcatori Left Join Partite On RisultatiAggiuntiviMarcatori.idPartita=Partite.idPartita " &
 						"Where Partite.idPartita In (" & PartiteCampionatoIN & ") And Partite.Casa = 'S' " &
 						"Union All " &
-						"SELECT 'RigoriCampionatoCasa' As Cosa, Count(*) As GoalTotali " &
+						"SELECT 'RigoriCampionatoCasa' As Cosa, " & IIf(TipoDB = "SQLSERVER", "Isnull(Count(*),0)", "COALESCE(Count(*),0)") & " As GoalTotali " &
 						"From RigoriPropri Left Join Partite On RigoriPropri.idPartita=Partite.idPartita " &
 						"Where Partite.idPartita In (" & PartiteCampionatoIN & ") And Partite.Casa = 'S' And Termine=1 " &
 						"Union All " &
-						"SELECT 'GoalCampionatoFuori' As Cosa, Count(*) As GoalTotali " &
+						"SELECT 'GoalCampionatoFuori' As Cosa, " & IIf(TipoDB = "SQLSERVER", "Isnull(Count(*),0)", "COALESCE(Count(*),0)") & " As GoalTotali " &
 						"From RisultatiAggiuntiviMarcatori Left Join Partite On RisultatiAggiuntiviMarcatori.idPartita=Partite.idPartita " &
 						"Where Partite.idPartita In (" & PartiteCampionatoIN & ") And Partite.Casa = 'N' " &
 						"Union All " &
-						"SELECT 'RigoriCampionatoFuori' As Cosa, Count(*) As GoalTotali " &
+						"SELECT 'RigoriCampionatoFuori' As Cosa, " & IIf(TipoDB = "SQLSERVER", "Isnull(Count(*),0)", "COALESCE(Count(*),0)") & " As GoalTotali " &
 						"From RigoriPropri Left Join Partite On RigoriPropri.idPartita=Partite.idPartita " &
 						"Where Partite.idPartita In (" & PartiteCampionatoIN & ") And Partite.Casa = 'N' And Termine=1 " &
 						"Union All " &
-						"SELECT 'GoalCampionatoCampoEsterno' As Cosa, Count(*) As GoalTotali " &
+						"SELECT 'GoalCampionatoCampoEsterno' As Cosa, " & IIf(TipoDB = "SQLSERVER", "Isnull(Count(*),0)", "COALESCE(Count(*),0)") & " As GoalTotali " &
 						"From RisultatiAggiuntiviMarcatori Left Join Partite On RisultatiAggiuntiviMarcatori.idPartita=Partite.idPartita " &
 						"Where Partite.idPartita In (" & PartiteCampionatoIN & ") And Partite.Casa = 'E' " &
 						"Union All " &
-						"SELECT 'RigoriCampionatoCampoEsterno' As Cosa, Count(*) As GoalTotali " &
+						"SELECT 'RigoriCampionatoCampoEsterno' As Cosa, " & IIf(TipoDB = "SQLSERVER", "Isnull(Count(*),0)", "COALESCE(Count(*),0)") & " As GoalTotali " &
 						"From RigoriPropri Left Join Partite On RigoriPropri.idPartita=Partite.idPartita " &
 						"Where Partite.idPartita In (" & PartiteCampionatoIN & ") And Partite.Casa = 'E' And Termine=1 "
 					Try
-						Rec = LeggeQuery(Conn, Sql, Connessione)
+						Rec = Conn.LeggeQuery(Server.MapPath("."),  Sql, Connessione)
 						If TypeOf (Rec) Is String Then
 							Ritorno = Rec
 						Else
-							Do Until Rec.Eof
+							Do Until Rec.Eof()
 								Select Case Rec("Cosa").Value
 									Case "GoalCampionatoCasa"
 										GoalCampionatoCasa += Rec(1).Value
@@ -1267,7 +1268,7 @@ Public Class wsStatistiche
 										GoalCampionatoCampoEsterno += Rec(1).Value
 								End Select
 
-								Rec.MoveNext
+								Rec.MoveNext()
 							Loop
 							Rec.Close()
 						End If
@@ -1278,35 +1279,35 @@ Public Class wsStatistiche
 
 				If PartiteTorneiIN.Length > 0 Then
 					PartiteTorneiIN = Mid(PartiteTorneiIN, 1, PartiteTorneiIN.Length - 1)
-					Sql = "SELECT 'GoalTorneiCasa' As Cosa, Count(*) As GoalTotali " &
+					Sql = "SELECT 'GoalTorneiCasa' As Cosa, " & IIf(TipoDB = "SQLSERVER", "Isnull(Count(*),0)", "COALESCE(Count(*),0)") & " As GoalTotali " &
 						"From RisultatiAggiuntiviMarcatori Left Join Partite On RisultatiAggiuntiviMarcatori.idPartita=Partite.idPartita " &
 						"Where Partite.idPartita In (" & PartiteTorneiIN & ") And Partite.Casa = 'S' " &
 						"Union All " &
-						"SELECT 'RigoriTorneiCasa' As Cosa, Count(*) As GoalTotali " &
+						"SELECT 'RigoriTorneiCasa' As Cosa, " & IIf(TipoDB = "SQLSERVER", "Isnull(Count(*),0)", "COALESCE(Count(*),0)") & " As GoalTotali " &
 						"From RigoriPropri Left Join Partite On RigoriPropri.idPartita=Partite.idPartita " &
 						"Where Partite.idPartita In (" & PartiteTorneiIN & ") And Partite.Casa = 'S' And Termine=1 " &
 						"Union All " &
-						"SELECT 'GoalTorneiFuori' As Cosa, Count(*) As GoalTotali " &
+						"SELECT 'GoalTorneiFuori' As Cosa, " & IIf(TipoDB = "SQLSERVER", "Isnull(Count(*),0)", "COALESCE(Count(*),0)") & " As GoalTotali " &
 						"From RisultatiAggiuntiviMarcatori Left Join Partite On RisultatiAggiuntiviMarcatori.idPartita=Partite.idPartita " &
 						"Where Partite.idPartita In (" & PartiteTorneiIN & ") And Partite.Casa = 'N' " &
 						"Union All " &
-						"SELECT 'RigoriTorneiFuori' As Cosa, Count(*) As GoalTotali " &
+						"SELECT 'RigoriTorneiFuori' As Cosa, " & IIf(TipoDB = "SQLSERVER", "Isnull(Count(*),0)", "COALESCE(Count(*),0)") & " As GoalTotali " &
 						"From RigoriPropri Left Join Partite On RigoriPropri.idPartita=Partite.idPartita " &
 						"Where Partite.idPartita In (" & PartiteTorneiIN & ") And Partite.Casa = 'N' And Termine=1 " &
 						"Union All " &
-						"SELECT 'GoalTorneiCampoEsterno' As Cosa, Count(*) As GoalTotali " &
+						"SELECT 'GoalTorneiCampoEsterno' As Cosa, " & IIf(TipoDB = "SQLSERVER", "Isnull(Count(*),0)", "COALESCE(Count(*),0)") & " As GoalTotali " &
 						"From RisultatiAggiuntiviMarcatori Left Join Partite On RisultatiAggiuntiviMarcatori.idPartita=Partite.idPartita " &
 						"Where Partite.idPartita In (" & PartiteTorneiIN & ") And Partite.Casa = 'E' " &
 						"Union All " &
-						"SELECT 'RigoriTorneiCampoEsterno' As Cosa, Count(*) As GoalTotali " &
+						"SELECT 'RigoriTorneiCampoEsterno' As Cosa, " & IIf(TipoDB = "SQLSERVER", "Isnull(Count(*),0)", "COALESCE(Count(*),0)") & " As GoalTotali " &
 						"From RigoriPropri Left Join Partite On RigoriPropri.idPartita=Partite.idPartita " &
 						"Where Partite.idPartita In (" & PartiteTorneiIN & ") And Partite.Casa = 'E' And Termine=1 "
 					Try
-						Rec = LeggeQuery(Conn, Sql, Connessione)
+						Rec = Conn.LeggeQuery(Server.MapPath("."),  Sql, Connessione)
 						If TypeOf (Rec) Is String Then
 							Ritorno = Rec
 						Else
-							Do Until Rec.Eof
+							Do Until Rec.Eof()
 								Select Case Rec("Cosa").Value
 									Case "GoalTorneiCasa"
 										GoalTorneiCasa += Rec(1).Value
@@ -1322,7 +1323,7 @@ Public Class wsStatistiche
 										GoalTorneiCampoEsterno += Rec(1).Value
 								End Select
 
-								Rec.MoveNext
+								Rec.MoveNext()
 							Loop
 							Rec.Close()
 						End If
@@ -1333,35 +1334,35 @@ Public Class wsStatistiche
 
 				If PartiteAmichevoliIN.Length > 0 Then
 					PartiteAmichevoliIN = Mid(PartiteAmichevoliIN, 1, PartiteAmichevoliIN.Length - 1)
-					Sql = "SELECT 'GoalAmichevoliCasa' As Cosa, Count(*) As GoalTotali " &
+					Sql = "SELECT 'GoalAmichevoliCasa' As Cosa, " & IIf(TipoDB = "SQLSERVER", "Isnull(Count(*),0)", "COALESCE(Count(*),0)") & " As GoalTotali " &
 						"From RisultatiAggiuntiviMarcatori Left Join Partite On RisultatiAggiuntiviMarcatori.idPartita=Partite.idPartita " &
 						"Where Partite.idPartita In (" & PartiteAmichevoliIN & ") And Partite.Casa = 'S' " &
 						"Union All " &
-						"SELECT 'RigoriAmichevoliCasa' As Cosa, Count(*) As GoalTotali " &
+						"SELECT 'RigoriAmichevoliCasa' As Cosa, " & IIf(TipoDB = "SQLSERVER", "Isnull(Count(*),0)", "COALESCE(Count(*),0)") & " As GoalTotali " &
 						"From RigoriPropri Left Join Partite On RigoriPropri.idPartita=Partite.idPartita " &
 						"Where Partite.idPartita In (" & PartiteAmichevoliIN & ") And Partite.Casa = 'S' And Termine=1 " &
 						"Union All " &
-						"SELECT 'GoalAmichevoliFuori' As Cosa, Count(*) As GoalTotali " &
+						"SELECT 'GoalAmichevoliFuori' As Cosa, " & IIf(TipoDB = "SQLSERVER", "Isnull(Count(*),0)", "COALESCE(Count(*),0)") & " As GoalTotali " &
 						"From RisultatiAggiuntiviMarcatori Left Join Partite On RisultatiAggiuntiviMarcatori.idPartita=Partite.idPartita " &
 						"Where Partite.idPartita In (" & PartiteAmichevoliIN & ") And Partite.Casa = 'N' " &
 						"Union All " &
-						"SELECT 'RigoriAmichevoliFuori' As Cosa, Count(*) As GoalTotali " &
+						"SELECT 'RigoriAmichevoliFuori' As Cosa, " & IIf(TipoDB = "SQLSERVER", "Isnull(Count(*),0)", "COALESCE(Count(*),0)") & " As GoalTotali " &
 						"From RigoriPropri Left Join Partite On RigoriPropri.idPartita=Partite.idPartita " &
 						"Where Partite.idPartita In (" & PartiteAmichevoliIN & ") And Partite.Casa = 'N' And Termine=1 " &
 						"Union All " &
-						"SELECT 'GoalAmichevoliCampoEsterno' As Cosa, Count(*) As GoalTotali " &
+						"SELECT 'GoalAmichevoliCampoEsterno' As Cosa, " & IIf(TipoDB = "SQLSERVER", "Isnull(Count(*),0)", "COALESCE(Count(*),0)") & " As GoalTotali " &
 						"From RisultatiAggiuntiviMarcatori Left Join Partite On RisultatiAggiuntiviMarcatori.idPartita=Partite.idPartita " &
 						"Where Partite.idPartita In (" & PartiteAmichevoliIN & ") And Partite.Casa = 'E' " &
 						"Union All " &
-						"SELECT 'RigoriAmichevoliCampoEsterno' As Cosa, Count(*) As GoalTotali " &
+						"SELECT 'RigoriAmichevoliCampoEsterno' As Cosa, " & IIf(TipoDB = "SQLSERVER", "Isnull(Count(*),0)", "COALESCE(Count(*),0)") & " As GoalTotali " &
 						"From RigoriPropri Left Join Partite On RigoriPropri.idPartita=Partite.idPartita " &
 						"Where Partite.idPartita In (" & PartiteAmichevoliIN & ") And Partite.Casa = 'E' And Termine=1 "
 					Try
-						Rec = LeggeQuery(Conn, Sql, Connessione)
+						Rec = Conn.LeggeQuery(Server.MapPath("."),  Sql, Connessione)
 						If TypeOf (Rec) Is String Then
 							Ritorno = Rec
 						Else
-							Do Until Rec.Eof
+							Do Until Rec.Eof()
 								Select Case Rec("Cosa").Value
 									Case "GoalAmichevoliCasa"
 										GoalAmichevoliCasa += Rec(1).Value
@@ -1378,7 +1379,7 @@ Public Class wsStatistiche
 										GoalAmichevoliCampoEsterno += Rec(1).Value
 								End Select
 
-								Rec.MoveNext
+								Rec.MoveNext()
 							Loop
 							Rec.Close()
 						End If
@@ -1388,47 +1389,47 @@ Public Class wsStatistiche
 				End If
 
 				If PartiteCampionatoIN.Length > 0 Then
-					Sql = "SELECT 'MarcatoriCasaCampionato' As Cosa, Giocatori.Cognome, Giocatori.Nome, Count(*) As Goal, Giocatori.idGiocatore " &
+					Sql = "SELECT 'MarcatoriCasaCampionato' As Cosa, Giocatori.Cognome, Giocatori.Nome, " & IIf(TipoDB = "SQLSERVER", "Isnull(Count(*),0)", "COALESCE(Count(*),0)") & " As Goal, Giocatori.idGiocatore " &
 						"FROM(RisultatiAggiuntiviMarcatori Left Join Partite On Partite.idPartita = RisultatiAggiuntiviMarcatori.idPartita) " &
 						"Left Join Giocatori On RisultatiAggiuntiviMarcatori.idGiocatore = Giocatori.idGiocatore " &
 						"Where RisultatiAggiuntiviMarcatori.idPartita In (" & PartiteCampionatoIN & ") And Partite.Casa = 'S' And Giocatori.idAnno=Partite.idAnno " &
 						"Group By Giocatori.Cognome, Giocatori.Nome, Giocatori.idGiocatore " &
 						"Union All " &
-						"Select 'RigoriCasaCampionato' As Cosa, Giocatori.Cognome, Giocatori.Nome, Count(*) As Goal, Giocatori.idGiocatore " &
+						"Select 'RigoriCasaCampionato' As Cosa, Giocatori.Cognome, Giocatori.Nome, " & IIf(TipoDB = "SQLSERVER", "Isnull(Count(*),0)", "COALESCE(Count(*),0)") & " As Goal, Giocatori.idGiocatore " &
 						"FROM(RigoriPropri Left Join Partite On Partite.idPartita = RigoriPropri.idPartita) " &
 						"Left Join Giocatori On RigoriPropri.idGiocatore = Giocatori.idGiocatore " &
 						"Where RigoriPropri.idPartita In (" & PartiteCampionatoIN & ") And Partite.Casa = 'S' And Termine=1 And Giocatori.idAnno=Partite.idAnno " &
 						"Group By Giocatori.Cognome, Giocatori.Nome, Giocatori.idGiocatore " &
 						"Union All " &
-						"Select 'MarcatoriFuoriCampionato' As Cosa, Giocatori.Cognome, Giocatori.Nome, Count(*) As Goal, Giocatori.idGiocatore " &
+						"Select 'MarcatoriFuoriCampionato' As Cosa, Giocatori.Cognome, Giocatori.Nome, " & IIf(TipoDB = "SQLSERVER", "Isnull(Count(*),0)", "COALESCE(Count(*),0)") & " As Goal, Giocatori.idGiocatore " &
 						"FROM(RisultatiAggiuntiviMarcatori Left Join Partite On Partite.idPartita = RisultatiAggiuntiviMarcatori.idPartita) " &
 						"Left Join Giocatori On RisultatiAggiuntiviMarcatori.idGiocatore = Giocatori.idGiocatore " &
 						"Where RisultatiAggiuntiviMarcatori.idPartita In (" & PartiteCampionatoIN & ") And Partite.Casa = 'N' And Giocatori.idAnno=Partite.idAnno " &
 						"Group By Giocatori.Cognome, Giocatori.Nome, Giocatori.idGiocatore " &
 						"Union All " &
-						"Select 'RigoriFuoriCampionato' As Cosa, Giocatori.Cognome, Giocatori.Nome, Count(*) As Goal, Giocatori.idGiocatore " &
+						"Select 'RigoriFuoriCampionato' As Cosa, Giocatori.Cognome, Giocatori.Nome, " & IIf(TipoDB = "SQLSERVER", "Isnull(Count(*),0)", "COALESCE(Count(*),0)") & " As Goal, Giocatori.idGiocatore " &
 						"FROM(RigoriPropri Left Join Partite On Partite.idPartita = RigoriPropri.idPartita) " &
 						"Left Join Giocatori On RigoriPropri.idGiocatore = Giocatori.idGiocatore " &
 						"Where RigoriPropri.idPartita In (" & PartiteCampionatoIN & ") And Partite.Casa = 'N' And Termine=1 And Giocatori.idAnno=Partite.idAnno " &
 						"Group By Giocatori.Cognome, Giocatori.Nome, Giocatori.idGiocatore " &
 						"Union All " &
-						"Select 'MarcatoriCampoEsternoCampionato' As Cosa, Giocatori.Cognome, Giocatori.Nome, Count(*) As Goal, Giocatori.idGiocatore " &
+						"Select 'MarcatoriCampoEsternoCampionato' As Cosa, Giocatori.Cognome, Giocatori.Nome, " & IIf(TipoDB = "SQLSERVER", "Isnull(Count(*),0)", "COALESCE(Count(*),0)") & " As Goal, Giocatori.idGiocatore " &
 						"FROM(RisultatiAggiuntiviMarcatori Left Join Partite On Partite.idPartita = RisultatiAggiuntiviMarcatori.idPartita) " &
 						"Left Join Giocatori On RisultatiAggiuntiviMarcatori.idGiocatore = Giocatori.idGiocatore " &
 						"Where RisultatiAggiuntiviMarcatori.idPartita In (" & PartiteCampionatoIN & ") And Partite.Casa = 'E' And Giocatori.idAnno=Partite.idAnno " &
 						"Group By Giocatori.Cognome, Giocatori.Nome, Giocatori.idGiocatore " &
 						"Union All " &
-						"Select 'RigoriCampoEsternoCampionato' As Cosa, Giocatori.Cognome, Giocatori.Nome, Count(*) As Goal, Giocatori.idGiocatore " &
+						"Select 'RigoriCampoEsternoCampionato' As Cosa, Giocatori.Cognome, Giocatori.Nome, " & IIf(TipoDB = "SQLSERVER", "Isnull(Count(*),0)", "COALESCE(Count(*),0)") & " As Goal, Giocatori.idGiocatore " &
 						"FROM(RigoriPropri Left Join Partite On Partite.idPartita = RigoriPropri.idPartita) " &
 						"Left Join Giocatori On RigoriPropri.idGiocatore = Giocatori.idGiocatore " &
 						"Where RigoriPropri.idPartita In (" & PartiteCampionatoIN & ") And Partite.Casa = 'E' And Termine=1 And Giocatori.idAnno=Partite.idAnno " &
 						"Group By Giocatori.Cognome, Giocatori.Nome, Giocatori.idGiocatore "
 					Try
-						Rec = LeggeQuery(Conn, Sql, Connessione)
+						Rec = Conn.LeggeQuery(Server.MapPath("."),  Sql, Connessione)
 						If TypeOf (Rec) Is String Then
 							Ritorno = Rec
 						Else
-							Do Until Rec.Eof
+							Do Until Rec.Eof()
 								Select Case Rec("Cosa").Value
 									Case "MarcatoriCasaCampionato"
 										If "" & Rec(1).Value = "" Or "" & Rec(2).Value = "" Then
@@ -1469,7 +1470,7 @@ Public Class wsStatistiche
 										MarcatoriCampionatoCampoEsterno += Rec(3).Value
 								End Select
 
-								Rec.MoveNext
+								Rec.MoveNext()
 							Loop
 							Rec.Close()
 						End If
@@ -1479,47 +1480,47 @@ Public Class wsStatistiche
 				End If
 
 				If PartiteAmichevoliIN.Length > 0 Then
-					Sql = "SELECT 'MarcatoriCasaAmichevoli' As Cosa, Giocatori.Cognome, Giocatori.Nome, Count(*) As Goal, Giocatori.idGiocatore " &
+					Sql = "SELECT 'MarcatoriCasaAmichevoli' As Cosa, Giocatori.Cognome, Giocatori.Nome, " & IIf(TipoDB = "SQLSERVER", "Isnull(Count(*),0)", "COALESCE(Count(*),0)") & " As Goal, Giocatori.idGiocatore " &
 					"FROM(RisultatiAggiuntiviMarcatori Left Join Partite On Partite.idPartita = RisultatiAggiuntiviMarcatori.idPartita) " &
 					"Left Join Giocatori On RisultatiAggiuntiviMarcatori.idGiocatore = Giocatori.idGiocatore " &
 					"Where RisultatiAggiuntiviMarcatori.idPartita In (" & PartiteAmichevoliIN & ") And Partite.Casa = 'S' " &
 					"Group By Giocatori.Cognome, Giocatori.Nome, Giocatori.idGiocatore " &
 					"Union All " &
-					"Select 'RigoriCasaAmichevoli' As Cosa, Giocatori.Cognome, Giocatori.Nome, Count(*) As Goal, Giocatori.idGiocatore " &
+					"Select 'RigoriCasaAmichevoli' As Cosa, Giocatori.Cognome, Giocatori.Nome, " & IIf(TipoDB = "SQLSERVER", "Isnull(Count(*),0)", "COALESCE(Count(*),0)") & " As Goal, Giocatori.idGiocatore " &
 					"FROM(RigoriPropri Left Join Partite On Partite.idPartita = RigoriPropri.idPartita) " &
 					"Left Join Giocatori On RigoriPropri.idGiocatore = Giocatori.idGiocatore " &
 					"Where RigoriPropri.idPartita In (" & PartiteAmichevoliIN & ") And Partite.Casa = 'S' And Termine=1 " &
 					"Group By Giocatori.Cognome, Giocatori.Nome, Giocatori.idGiocatore " &
 					"Union All " &
-					"Select 'MarcatoriFuoriAmichevoli' As Cosa, Giocatori.Cognome, Giocatori.Nome, Count(*) As Goal, Giocatori.idGiocatore " &
+					"Select 'MarcatoriFuoriAmichevoli' As Cosa, Giocatori.Cognome, Giocatori.Nome, " & IIf(TipoDB = "SQLSERVER", "Isnull(Count(*),0)", "COALESCE(Count(*),0)") & " As Goal, Giocatori.idGiocatore " &
 					"FROM(RisultatiAggiuntiviMarcatori Left Join Partite On Partite.idPartita = RisultatiAggiuntiviMarcatori.idPartita) " &
 					"Left Join Giocatori On RisultatiAggiuntiviMarcatori.idGiocatore = Giocatori.idGiocatore " &
 					"Where RisultatiAggiuntiviMarcatori.idPartita In (" & PartiteAmichevoliIN & ") And Partite.Casa = 'N' " &
 					"Group By Giocatori.Cognome, Giocatori.Nome, Giocatori.idGiocatore " &
 					"Union All " &
-					"Select 'RigoriFuoriAmichevoli' As Cosa, Giocatori.Cognome, Giocatori.Nome, Count(*) As Goal, Giocatori.idGiocatore " &
+					"Select 'RigoriFuoriAmichevoli' As Cosa, Giocatori.Cognome, Giocatori.Nome, " & IIf(TipoDB = "SQLSERVER", "Isnull(Count(*),0)", "COALESCE(Count(*),0)") & " As Goal, Giocatori.idGiocatore " &
 					"FROM(RigoriPropri Left Join Partite On Partite.idPartita = RigoriPropri.idPartita) " &
 					"Left Join Giocatori On RigoriPropri.idGiocatore = Giocatori.idGiocatore " &
 					"Where RigoriPropri.idPartita In (" & PartiteAmichevoliIN & ") And Partite.Casa = 'N' And Termine=1 " &
 					"Group By Giocatori.Cognome, Giocatori.Nome, Giocatori.idGiocatore " &
 					"Union All " &
-					"Select 'MarcatoriCampoEsternoAmichevoli' As Cosa, Giocatori.Cognome, Giocatori.Nome, Count(*) As Goal, Giocatori.idGiocatore " &
+					"Select 'MarcatoriCampoEsternoAmichevoli' As Cosa, Giocatori.Cognome, Giocatori.Nome, " & IIf(TipoDB = "SQLSERVER", "Isnull(Count(*),0)", "COALESCE(Count(*),0)") & " As Goal, Giocatori.idGiocatore " &
 					"FROM(RisultatiAggiuntiviMarcatori Left Join Partite On Partite.idPartita = RisultatiAggiuntiviMarcatori.idPartita) " &
 					"Left Join Giocatori On RisultatiAggiuntiviMarcatori.idGiocatore = Giocatori.idGiocatore " &
 					"Where RisultatiAggiuntiviMarcatori.idPartita In (" & PartiteAmichevoliIN & ") And Partite.Casa = 'E' " &
 					"Group By Giocatori.Cognome, Giocatori.Nome, Giocatori.idGiocatore " &
 					"Union All " &
-					"Select 'RigoriCampoEsternoAmichevoli' As Cosa, Giocatori.Cognome, Giocatori.Nome, Count(*) As Goal, Giocatori.idGiocatore " &
+					"Select 'RigoriCampoEsternoAmichevoli' As Cosa, Giocatori.Cognome, Giocatori.Nome, " & IIf(TipoDB = "SQLSERVER", "Isnull(Count(*),0)", "COALESCE(Count(*),0)") & " As Goal, Giocatori.idGiocatore " &
 					"FROM(RigoriPropri Left Join Partite On Partite.idPartita = RigoriPropri.idPartita) " &
 					"Left Join Giocatori On RigoriPropri.idGiocatore = Giocatori.idGiocatore " &
 					"Where RigoriPropri.idPartita In (" & PartiteAmichevoliIN & ") And Partite.Casa = 'E' And Termine=1 " &
 					"Group By Giocatori.Cognome, Giocatori.Nome, Giocatori.idGiocatore "
 					Try
-						Rec = LeggeQuery(Conn, Sql, Connessione)
+						Rec = Conn.LeggeQuery(Server.MapPath("."),  Sql, Connessione)
 						If TypeOf (Rec) Is String Then
 							Ritorno = Rec
 						Else
-							Do Until Rec.Eof
+							Do Until Rec.Eof()
 								Select Case Rec("Cosa").Value
 									Case "MarcatoriCasaAmichevoli"
 										If "" & Rec(1).Value = "" Or "" & Rec(2).Value = "" Then
@@ -1560,7 +1561,7 @@ Public Class wsStatistiche
 										MarcatoriAmichevoliCampoEsterno += Rec(3).Value
 								End Select
 
-								Rec.MoveNext
+								Rec.MoveNext()
 							Loop
 							Rec.Close()
 						End If
@@ -1570,47 +1571,47 @@ Public Class wsStatistiche
 				End If
 
 				If PartiteTorneiIN.Length > 0 Then
-					Sql = "SELECT 'MarcatoriCasaTornei' As Cosa, Giocatori.Cognome, Giocatori.Nome, Count(*) As Goal, Giocatori.idGiocatore " &
+					Sql = "SELECT 'MarcatoriCasaTornei' As Cosa, Giocatori.Cognome, Giocatori.Nome, " & IIf(TipoDB = "SQLSERVER", "Isnull(Count(*),0)", "COALESCE(Count(*),0)") & " As Goal, Giocatori.idGiocatore " &
 						"FROM(RisultatiAggiuntiviMarcatori Left Join Partite On Partite.idPartita = RisultatiAggiuntiviMarcatori.idPartita) " &
 						"Left Join Giocatori On RisultatiAggiuntiviMarcatori.idGiocatore = Giocatori.idGiocatore " &
 						"Where RisultatiAggiuntiviMarcatori.idPartita In (" & PartiteTorneiIN & ") And Partite.Casa = 'S' " &
 						"Group By Giocatori.Cognome, Giocatori.Nome, Giocatori.idGiocatore " &
 						"Union All " &
-						"Select 'RigoriCasaTornei' As Cosa, Giocatori.Cognome, Giocatori.Nome, Count(*) As Goal, Giocatori.idGiocatore " &
+						"Select 'RigoriCasaTornei' As Cosa, Giocatori.Cognome, Giocatori.Nome, " & IIf(TipoDB = "SQLSERVER", "Isnull(Count(*),0)", "COALESCE(Count(*),0)") & " As Goal, Giocatori.idGiocatore " &
 						"FROM(RigoriPropri Left Join Partite On Partite.idPartita = RigoriPropri.idPartita) " &
 						"Left Join Giocatori On RigoriPropri.idGiocatore = Giocatori.idGiocatore " &
 						"Where RigoriPropri.idPartita In (" & PartiteTorneiIN & ") And Partite.Casa = 'S' And Termine=1 And Giocatori.idAnno=Partite.idAnno " &
 						"Group By Giocatori.Cognome, Giocatori.Nome, Giocatori.idGiocatore " &
 						"Union All " &
-						"Select 'MarcatoriFuoriTornei' As Cosa, Giocatori.Cognome, Giocatori.Nome, Count(*) As Goal, Giocatori.idGiocatore " &
+						"Select 'MarcatoriFuoriTornei' As Cosa, Giocatori.Cognome, Giocatori.Nome, " & IIf(TipoDB = "SQLSERVER", "Isnull(Count(*),0)", "COALESCE(Count(*),0)") & " As Goal, Giocatori.idGiocatore " &
 						"FROM(RisultatiAggiuntiviMarcatori Left Join Partite On Partite.idPartita = RisultatiAggiuntiviMarcatori.idPartita) " &
 						"Left Join Giocatori On RisultatiAggiuntiviMarcatori.idGiocatore = Giocatori.idGiocatore " &
 						"Where RisultatiAggiuntiviMarcatori.idPartita In (" & PartiteTorneiIN & ") And Partite.Casa = 'N' " &
 						"Group By Giocatori.Cognome, Giocatori.Nome, Giocatori.idGiocatore " &
 						"Union All " &
-						"Select 'RigoriFuoriTornei' As Cosa, Giocatori.Cognome, Giocatori.Nome, Count(*) As Goal, Giocatori.idGiocatore " &
+						"Select 'RigoriFuoriTornei' As Cosa, Giocatori.Cognome, Giocatori.Nome, " & IIf(TipoDB = "SQLSERVER", "Isnull(Count(*),0)", "COALESCE(Count(*),0)") & " As Goal, Giocatori.idGiocatore " &
 						"FROM(RigoriPropri Left Join Partite On Partite.idPartita = RigoriPropri.idPartita) " &
 						"Left Join Giocatori On RigoriPropri.idGiocatore = Giocatori.idGiocatore " &
 						"Where RigoriPropri.idPartita In (" & PartiteTorneiIN & ") And Partite.Casa = 'N' And Termine=1 And Giocatori.idAnno=Partite.idAnno " &
 						"Group By Giocatori.Cognome, Giocatori.Nome, Giocatori.idGiocatore " &
 						"Union All " &
-						"Select 'MarcatoriCampoEsternoTornei' As Cosa, Giocatori.Cognome, Giocatori.Nome, Count(*) As Goal, Giocatori.idGiocatore " &
+						"Select 'MarcatoriCampoEsternoTornei' As Cosa, Giocatori.Cognome, Giocatori.Nome, " & IIf(TipoDB = "SQLSERVER", "Isnull(Count(*),0)", "COALESCE(Count(*),0)") & " As Goal, Giocatori.idGiocatore " &
 						"FROM(RisultatiAggiuntiviMarcatori Left Join Partite On Partite.idPartita = RisultatiAggiuntiviMarcatori.idPartita) " &
 						"Left Join Giocatori On RisultatiAggiuntiviMarcatori.idGiocatore = Giocatori.idGiocatore " &
 						"Where RisultatiAggiuntiviMarcatori.idPartita In (" & PartiteTorneiIN & ") And Partite.Casa = 'E' " &
 						"Group By Giocatori.Cognome, Giocatori.Nome, Giocatori.idGiocatore " &
 						"Union All " &
-						"Select 'RigoriCampoEsternoTornei' As Cosa, Giocatori.Cognome, Giocatori.Nome, Count(*) As Goal, Giocatori.idGiocatore " &
+						"Select 'RigoriCampoEsternoTornei' As Cosa, Giocatori.Cognome, Giocatori.Nome, " & IIf(TipoDB = "SQLSERVER", "Isnull(Count(*),0)", "COALESCE(Count(*),0)") & " As Goal, Giocatori.idGiocatore " &
 						"FROM(RigoriPropri Left Join Partite On Partite.idPartita = RigoriPropri.idPartita) " &
 						"Left Join Giocatori On RigoriPropri.idGiocatore = Giocatori.idGiocatore " &
 						"Where RigoriPropri.idPartita In (" & PartiteTorneiIN & ") And Partite.Casa = 'E' And Termine=1 And Giocatori.idAnno=Partite.idAnno " &
 						"Group By Giocatori.Cognome, Giocatori.Nome, Giocatori.idGiocatore "
 					Try
-						Rec = LeggeQuery(Conn, Sql, Connessione)
+						Rec = Conn.LeggeQuery(Server.MapPath("."),  Sql, Connessione)
 						If TypeOf (Rec) Is String Then
 							Ritorno = Rec
 						Else
-							Do Until Rec.Eof
+							Do Until Rec.Eof()
 								Select Case Rec("Cosa").Value
 									Case "MarcatoriCasaTornei"
 										If "" & Rec(1).Value = "" Or "" & Rec(2).Value = "" Then
@@ -1654,7 +1655,7 @@ Public Class wsStatistiche
 										MarcatoriTorneiCampoEsterno += Rec(3).Value
 								End Select
 
-								Rec.MoveNext
+								Rec.MoveNext()
 							Loop
 							Rec.Close()
 						End If
@@ -1688,11 +1689,11 @@ Public Class wsStatistiche
 						"From RigoriAvversari Left Join Partite On RigoriAvversari.idPartita = Partite.idPartita " &
 						"Where RigoriAvversari.idPartita In (" & PartiteCampionatoIN & ") And Partite.Casa = 'E' And Giocatori.idAnno=Partite.idAnno "
 					Try
-						Rec = LeggeQuery(Conn, Sql, Connessione)
+						Rec = Conn.LeggeQuery(Server.MapPath("."),  Sql, Connessione)
 						If TypeOf (Rec) Is String Then
 							Ritorno = Rec
 						Else
-							Do Until Rec.Eof
+							Do Until Rec.Eof()
 								Select Case Rec("Cosa").Value
 									Case "AvversariCasa"
 										GoalAvvCampionatoCasa1Tempo = Val("" & Rec(1).Value)
@@ -1715,7 +1716,7 @@ Public Class wsStatistiche
 										GoalAvvCampionatoCampoEsterno3Tempo += Val("" & Rec(1).Value)
 								End Select
 
-								Rec.MoveNext
+								Rec.MoveNext()
 							Loop
 							Rec.Close()
 						End If
@@ -1749,11 +1750,11 @@ Public Class wsStatistiche
 					"From RigoriAvversari Left Join Partite On RigoriAvversari.idPartita = Partite.idPartita " &
 					"Where RigoriAvversari.idPartita In (" & PartiteAmichevoliIN & ") And Partite.Casa = 'E' And Giocatori.idAnno=Partite.idAnno "
 					Try
-						Rec = LeggeQuery(Conn, Sql, Connessione)
+						Rec = Conn.LeggeQuery(Server.MapPath("."),  Sql, Connessione)
 						If TypeOf (Rec) Is String Then
 							Ritorno = Rec
 						Else
-							Do Until Rec.Eof
+							Do Until Rec.Eof()
 								Select Case Rec("Cosa").Value
 									Case "AvversariCasa"
 										GoalAvvAmichevoliCasa1Tempo = Val("" & Rec(1).Value)
@@ -1776,7 +1777,7 @@ Public Class wsStatistiche
 										GoalAvvAmichevoliCampoEsterno3Tempo += Val("" & Rec(1).Value)
 								End Select
 
-								Rec.MoveNext
+								Rec.MoveNext()
 							Loop
 							Rec.Close()
 						End If
@@ -1810,11 +1811,11 @@ Public Class wsStatistiche
 					"From RigoriAvversari Left Join Partite On RigoriAvversari.idPartita = Partite.idPartita " &
 					"Where RigoriAvversari.idPartita In (" & PartiteTorneiIN & ") And Partite.Casa = 'E' And Giocatori.idAnno=Partite.idAnno "
 					Try
-						Rec = LeggeQuery(Conn, Sql, Connessione)
+						Rec = Conn.LeggeQuery(Server.MapPath("."),  Sql, Connessione)
 						If TypeOf (Rec) Is String Then
 							Ritorno = Rec
 						Else
-							Do Until Rec.Eof
+							Do Until Rec.Eof()
 								Select Case Rec("Cosa").Value
 									Case "AvversariCasa"
 										GoalAvvTorneiCasa1Tempo = Val("" & Rec(1).Value)
@@ -1837,7 +1838,7 @@ Public Class wsStatistiche
 										GoalAvvTorneiCampoEsterno3Tempo += Val("" & Rec(1).Value)
 								End Select
 
-								Rec.MoveNext
+								Rec.MoveNext()
 							Loop
 							Rec.Close()
 						End If
@@ -1846,20 +1847,20 @@ Public Class wsStatistiche
 					End Try
 				End If
 
-				Sql = "SELECT Partite.idAvversario, Descrizione, Count(*) As Quante From " &
+				Sql = "SELECT Partite.idAvversario, Descrizione, " & IIf(TipoDB = "SQLSERVER", "Isnull(Count(*),0)", "COALESCE(Count(*),0)") & " As Quante From " &
 					"Partite Left Join SquadreAvversarie On Partite.idAvversario = SquadreAvversarie.idAvversario " &
 					"Where idAnno=" & idAnno & " And idCategoria=" & idCategoria & " " &
 					"Group By Partite.idAvversario, Descrizione " &
 					"Order By 3 Desc"
 				Try
-					Rec = LeggeQuery(Conn, Sql, Connessione)
+					Rec = Conn.LeggeQuery(Server.MapPath("."),  Sql, Connessione)
 					If TypeOf (Rec) Is String Then
 						Ritorno = Rec
 					Else
-						Do Until Rec.Eof
+						Do Until Rec.Eof()
 							SquadreIncontrate.Add(Rec("idAvversario").Value & ";" & Rec("Descrizione").Value & ";" & Rec("Quante").Value)
 
-							Rec.MoveNext
+							Rec.MoveNext()
 						Loop
 						Rec.Close()
 					End If
@@ -1868,13 +1869,13 @@ Public Class wsStatistiche
 				End Try
 
 				Sql = "Select Giocatori.idGiocatore, Giocatori.Cognome, Giocatori.Nome, Sum(Quanti2) As Quanti From (" &
-					"SELECT Giocatori.idGiocatore, Giocatori.Cognome, Giocatori.Nome, Count(*) As Quanti2 " &
+					"SELECT Giocatori.idGiocatore, Giocatori.Cognome, Giocatori.Nome, " & IIf(TipoDB = "SQLSERVER", "Isnull(Count(*),0)", "COALESCE(Count(*),0)") & " As Quanti2 " &
 					"FROM (RisultatiAggiuntiviMarcatori INNER JOIN Partite On RisultatiAggiuntiviMarcatori.idPartita = Partite.idPartita) INNER JOIN Giocatori On (RisultatiAggiuntiviMarcatori.idGiocatore = Giocatori.idGiocatore) And (Partite.idAnno = Giocatori.idAnno) " &
 					"WHERE Partite.idAnno=" & idAnno & " AND Partite.idCategoria=" & idCategoria & " " &
 					"Group By Giocatori.idGiocatore, Giocatori.Cognome, Giocatori.Nome " &
 					"Order By 4 Desc " &
 					"Union All " &
-					"Select Giocatori.idGiocatore, Giocatori.Cognome, Giocatori.Nome, Count(*) As Quanti2 " &
+					"Select Giocatori.idGiocatore, Giocatori.Cognome, Giocatori.Nome, " & IIf(TipoDB = "SQLSERVER", "Isnull(Count(*),0)", "COALESCE(Count(*),0)") & " As Quanti2 " &
 					"FROM (RigoriPropri INNER JOIN Partite On RigoriPropri.idPartita = Partite.idPartita) INNER JOIN Giocatori On (RigoriPropri.idGiocatore = Giocatori.idGiocatore) And (Partite.idAnno = Giocatori.idAnno) " &
 					"WHERE Partite.idAnno=" & idAnno & " AND Partite.idCategoria=" & idCategoria & " And RigoriPropri.Termine=1 And RigoriPropri.idAnno=" & idAnno & " And Giocatori.idAnno=" & idAnno & " " &
 					"Group By Giocatori.idGiocatore, Giocatori.Cognome, Giocatori.Nome " &
@@ -1883,18 +1884,18 @@ Public Class wsStatistiche
 					"Group By Giocatori.idGiocatore, Giocatori.Cognome, Giocatori.Nome " &
 					"Order By 4 Desc"
 				Try
-					Rec = LeggeQuery(Conn, Sql, Connessione)
+					Rec = Conn.LeggeQuery(Server.MapPath("."),  Sql, Connessione)
 					If TypeOf (Rec) Is String Then
 						Ritorno = Rec
 					Else
-						Do Until Rec.Eof
+						Do Until Rec.Eof()
 							If "" & Rec("Cognome").Value = "" Or "" & Rec("Nome").Value = "" Then
 								MarcatoriGenerali.Add(Rec("idGiocatore").Value & ";Autorete;" & Rec("Quanti").Value)
 							Else
 								MarcatoriGenerali.Add(Rec("idGiocatore").Value & ";" & Rec("Cognome").Value & " " & Rec("Nome").Value & ";" & Rec("Quanti").Value)
 							End If
 
-							Rec.MoveNext
+							Rec.MoveNext()
 						Loop
 						Rec.Close()
 					End If
@@ -1903,13 +1904,13 @@ Public Class wsStatistiche
 				End Try
 
 				Sql = "Select Giocatori.idGiocatore, Giocatori.Cognome, Giocatori.Nome, Sum(Quanti2) As Quanti From (" &
-					"SELECT Giocatori.idGiocatore, Giocatori.Cognome, Giocatori.Nome, Count(*) As Quanti2 " &
+					"SELECT Giocatori.idGiocatore, Giocatori.Cognome, Giocatori.Nome, " & IIf(TipoDB = "SQLSERVER", "Isnull(Count(*),0)", "COALESCE(Count(*),0)") & " As Quanti2 " &
 					"FROM (RisultatiAggiuntiviMarcatori INNER JOIN Partite On RisultatiAggiuntiviMarcatori.idPartita = Partite.idPartita) INNER JOIN Giocatori On (RisultatiAggiuntiviMarcatori.idGiocatore = Giocatori.idGiocatore) And (Partite.idAnno = Giocatori.idAnno) " &
 					"WHERE Partite.idAnno=" & idAnno & " " &
 					"Group By Giocatori.idGiocatore, Giocatori.Cognome, Giocatori.Nome " &
 					"Order By 4 Desc " &
 					"Union All " &
-					"Select Giocatori.idGiocatore, Giocatori.Cognome, Giocatori.Nome, Count(*) As Quanti2 " &
+					"Select Giocatori.idGiocatore, Giocatori.Cognome, Giocatori.Nome, " & IIf(TipoDB = "SQLSERVER", "Isnull(Count(*),0)", "COALESCE(Count(*),0)") & " As Quanti2 " &
 					"FROM (RigoriPropri INNER JOIN Partite On RigoriPropri.idPartita = Partite.idPartita) INNER JOIN Giocatori On (RigoriPropri.idGiocatore = Giocatori.idGiocatore) And (Partite.idAnno = Giocatori.idAnno) " &
 					"WHERE Partite.idAnno=" & idAnno & " And RigoriPropri.Termine=1 And RigoriPropri.idAnno=" & idAnno & " And Giocatori.idAnno=" & idAnno & " " &
 					"Group By Giocatori.idGiocatore, Giocatori.Cognome, Giocatori.Nome " &
@@ -1918,18 +1919,18 @@ Public Class wsStatistiche
 					"Group By Giocatori.idGiocatore, Giocatori.Cognome, Giocatori.Nome " &
 					"Order By 4 Desc"
 				Try
-					Rec = LeggeQuery(Conn, Sql, Connessione)
+					Rec = Conn.LeggeQuery(Server.MapPath("."),  Sql, Connessione)
 					If TypeOf (Rec) Is String Then
 						Ritorno = Rec
 					Else
-						Do Until Rec.Eof
+						Do Until Rec.Eof()
 							If "" & Rec("Cognome").Value = "" Or "" & Rec("Nome").Value = "" Then
 								MarcatoriTutte.Add(Rec("idGiocatore").Value & ";Autorete;" & Rec("Quanti").Value)
 							Else
 								MarcatoriTutte.Add(Rec("idGiocatore").Value & ";" & Rec("Cognome").Value & " " & Rec("Nome").Value & ";" & Rec("Quanti").Value)
 							End If
 
-							Rec.MoveNext
+							Rec.MoveNext()
 						Loop
 						Rec.Close()
 					End If
@@ -1937,20 +1938,20 @@ Public Class wsStatistiche
 					Ritorno = StringaErrore & " " & ex.Message
 				End Try
 
-				Sql = "SELECT Giocatori.idGiocatore, Giocatori.Cognome, Giocatori.Nome, Count(*) As Presenze " &
+				Sql = "SELECT Giocatori.idGiocatore, Giocatori.Cognome, Giocatori.Nome, " & IIf(TipoDB = "SQLSERVER", "Isnull(Count(*),0)", "COALESCE(Count(*),0)") & " As Presenze " &
 					"FROM (Partite LEFT JOIN Convocati ON Partite.idPartita = Convocati.idPartita) LEFT JOIN Giocatori ON Convocati.idGiocatore = Giocatori.idGiocatore " &
 					"WHERE Partite.idAnno=" & idAnno & " AND Partite.idCategoria=" & idCategoria & " And Giocatori.idAnno=" & idAnno & " " &
 					"Group By Giocatori.idGiocatore, Giocatori.Cognome, Giocatori.Nome " &
 					"Order By 4 Desc"
 				Try
-					Rec = LeggeQuery(Conn, Sql, Connessione)
+					Rec = Conn.LeggeQuery(Server.MapPath("."),  Sql, Connessione)
 					If TypeOf (Rec) Is String Then
 						Ritorno = Rec
 					Else
-						Do Until Rec.Eof
+						Do Until Rec.Eof()
 							Presenze.Add(Rec("idGiocatore").Value & ";" & Rec("Cognome").Value & " " & Rec("Nome").Value & ";" & Rec("Presenze").Value)
 
-							Rec.MoveNext
+							Rec.MoveNext()
 						Loop
 						Rec.Close()
 					End If
@@ -1958,20 +1959,20 @@ Public Class wsStatistiche
 					Ritorno = StringaErrore & " " & ex.Message
 				End Try
 
-				Sql = "SELECT Giocatori.idGiocatore, Giocatori.Cognome, Giocatori.Nome, Count(*) As Presenze " &
+				Sql = "SELECT Giocatori.idGiocatore, Giocatori.Cognome, Giocatori.Nome, " & IIf(TipoDB = "SQLSERVER", "Isnull(Count(*),0)", "COALESCE(Count(*),0)") & " As Presenze " &
 					"FROM (Partite INNER JOIN Convocati ON Partite.idPartita = Convocati.idPartita) INNER JOIN Giocatori ON (Partite.idAnno = Giocatori.idAnno) AND (Convocati.idGiocatore = Giocatori.idGiocatore) " &
 					"WHERE Partite.idAnno=" & idAnno & " " &
 					"Group By Giocatori.idGiocatore, Giocatori.Cognome, Giocatori.Nome " &
 					"Order By 4 Desc"
 				Try
-					Rec = LeggeQuery(Conn, Sql, Connessione)
+					Rec = Conn.LeggeQuery(Server.MapPath("."),  Sql, Connessione)
 					If TypeOf (Rec) Is String Then
 						Ritorno = Rec
 					Else
-						Do Until Rec.Eof
+						Do Until Rec.Eof()
 							PresenzeTutte.Add(Rec("idGiocatore").Value & ";" & Rec("Cognome").Value & " " & Rec("Nome").Value & ";" & Rec("Presenze").Value)
 
-							Rec.MoveNext
+							Rec.MoveNext()
 						Loop
 						Rec.Close()
 					End If
@@ -1979,20 +1980,20 @@ Public Class wsStatistiche
 					Ritorno = StringaErrore & " " & ex.Message
 				End Try
 
-				Sql = "SELECT Minuto, Count(*) As Quanti " &
+				Sql = "SELECT Minuto, " & IIf(TipoDB = "SQLSERVER", "Isnull(Count(*),0)", "COALESCE(Count(*),0)") & " As Quanti " &
 					"FROM RisultatiAggiuntiviMarcatori INNER JOIN Partite ON RisultatiAggiuntiviMarcatori.idPartita = Partite.idPartita " &
 					"WHERE Partite.idAnno=" & idAnno & " AND Partite.idCategoria=" & idCategoria & " " &
 					"Group By Minuto " &
 					"Order By 2 Desc"
 				Try
-					Rec = LeggeQuery(Conn, Sql, Connessione)
+					Rec = Conn.LeggeQuery(Server.MapPath("."),  Sql, Connessione)
 					If TypeOf (Rec) Is String Then
 						Ritorno = Rec
 					Else
 						Dim Stringozza As String = ""
 
 						Stringozza &= "<table cellspacing=""0"" style=""width: 100%;"">"
-						Do Until Rec.Eof
+						Do Until Rec.Eof()
 							Stringozza &= "<tr " & RitornaColoreSfondo() & ">"
 							Stringozza &= "<td style=""width: 50%; text-align: center;"">"
 							Stringozza &= "<span class=""testo nero"" style=""font-size: 16px;"">" & Rec("Minuto").Value & "°</span>"
@@ -2002,7 +2003,7 @@ Public Class wsStatistiche
 							Stringozza &= "</td>"
 							Stringozza &= "</tr>"
 
-							Rec.MoveNext
+							Rec.MoveNext()
 						Loop
 						Stringozza &= "</table>"
 
@@ -2018,7 +2019,7 @@ Public Class wsStatistiche
 					"FROM TempiGoalAvversari LEFT JOIN Partite ON TempiGoalAvversari.idPartita = Partite.idPartita " &
 					"WHERE Partite.idAnno=" & idAnno & " AND Partite.idCategoria=" & idCategoria
 				Try
-					Rec = LeggeQuery(Conn, Sql, Connessione)
+					Rec = Conn.LeggeQuery(Server.MapPath("."),  Sql, Connessione)
 					If TypeOf (Rec) Is String Then
 						Ritorno = Rec
 					Else
@@ -2026,7 +2027,7 @@ Public Class wsStatistiche
 						Dim Minuti(60) As Integer
 						Dim sMinuti(60) As String
 
-						Do Until Rec.Eof
+						Do Until Rec.Eof()
 							If "" & Rec("TempiPrimoTempo").Value <> "" Then
 								Dim t() As String = Rec("TempiPrimoTempo").Value.split("#")
 
@@ -2058,7 +2059,7 @@ Public Class wsStatistiche
 								Next
 							End If
 
-							Rec.MoveNext
+							Rec.MoveNext()
 						Loop
 
 						For i As Integer = 0 To 60
@@ -2102,14 +2103,14 @@ Public Class wsStatistiche
 				For i As Integer = 1 To 3
 					Sql = "SELECT Partite.idPartita, Partite.RisultatoATempi, Partite.DataOra, Allenatori.Cognome+ '<br />' +Allenatori.Nome As Allenatore,MeteoPartite.Tempo, MeteoPartite.Gradi, " &
 						"Partite.idCategoria, SquadreAvversarie.idAvversario, SquadreAvversarie.Descrizione, " &
-						"(Select Count(*) From RisultatiAggiuntiviMarcatori Where idPartita = Partite.idPartita) As Goal, " &
+						"(Select " & IIf(TipoDB = "SQLSERVER", "Isnull(Count(*),0)", "COALESCE(Count(*),0)") & " From RisultatiAggiuntiviMarcatori Where idPartita = Partite.idPartita) As Goal, " &
 						"(Select (iif(GoalAvvPrimoTempo>-1,GoalAvvPrimoTempo,0)+iif(GoalAvvSecondoTempo>-1,GoalAvvSecondoTempo,0)+iif(GoalAvvTerzoTempo>-1,GoalAvvTerzoTempo,0)) " &
 						"From RisultatiAggiuntivi Where idPartita = Partite.idPartita) As GoalAvv, " &
 						"RisGiochetti, Arbitri.Cognome+ '<br />'+Arbitri.Nome As Arbitro, Anni.NomeSquadra, Partite.Casa, " &
 						"RisultatiAggiuntivi.GoalAvvSecondoTempo, RisultatiAggiuntivi.GoalAvvPrimoTempo, RisultatiAggiuntivi.GoalAvvTerzoTempo, " &
-						"(SELECT Count(*) FROM RisultatiAggiuntiviMarcatori Where idPartita = Partite.idPartita And idTempo=1) As GoalPrimoTempo, " &
-						"(SELECT Count(*) FROM RisultatiAggiuntiviMarcatori Where idPartita = Partite.idPartita And idTempo=2) As GoalSecondoTempo, " &
-						"(SELECT Count(*) FROM RisultatiAggiuntiviMarcatori Where idPartita = Partite.idPartita And idTempo=3) As GoalTerzoTempo, " &
+						"(SELECT " & IIf(TipoDB = "SQLSERVER", "Isnull(Count(*),0)", "COALESCE(Count(*),0)") & " FROM RisultatiAggiuntiviMarcatori Where idPartita = Partite.idPartita And idTempo=1) As GoalPrimoTempo, " &
+						"(SELECT " & IIf(TipoDB = "SQLSERVER", "Isnull(Count(*),0)", "COALESCE(Count(*),0)") & " FROM RisultatiAggiuntiviMarcatori Where idPartita = Partite.idPartita And idTempo=2) As GoalSecondoTempo, " &
+						"(SELECT " & IIf(TipoDB = "SQLSERVER", "Isnull(Count(*),0)", "COALESCE(Count(*),0)") & " FROM RisultatiAggiuntiviMarcatori Where idPartita = Partite.idPartita And idTempo=3) As GoalTerzoTempo, " &
 						"CampiAvversari.Descrizione As Campo, CampiAvversari.Indirizzo As IndirizzoCampo, Partite.idPartita, Anni.Indirizzo As IndirizzoCasa, " &
 						"Anni.Lat As LatCasa, Anni.Lon As LonCasa " &
 						"FROM (((((((Partite LEFT JOIN Allenatori ON Partite.idAllenatore = Allenatori.idAllenatore And Allenatori.idAnno=Partite.idAnno) " &
@@ -2123,17 +2124,17 @@ Public Class wsStatistiche
 						"WHERE Partite.idAnno=" & idAnno & " And Partite.idCategoria=" & idCategoria & " And Partite.idTipologia=" & i & " And Arbitri.idAnno=Partite.idAnno " &
 						"Order By DataOra"
 					Try
-						Rec = LeggeQuery(Conn, Sql, Connessione)
+						Rec = Conn.LeggeQuery(Server.MapPath("."),  Sql, Connessione)
 						If TypeOf (Rec) Is String Then
 							Ritorno = Rec
 						Else
-							If Not Rec.Eof Then
+							If Not Rec.Eof() Then
 								Dim Stringozza As String = ""
 
 								LatCasa = Rec("LatCasa").Value
 								LonCasa = Rec("LonCasa").Value
 
-								Do Until Rec.Eof
+								Do Until Rec.Eof()
 									gf.ScansionaDirectorySingola(PathImmaginiPartite & Rec("idPartita").Value.ToString.Trim)
 									Dim qFiles As Integer = gf.RitornaQuantiFilesRilevati
 									Dim Filetti() As String = gf.RitornaFilesRilevati
@@ -2206,12 +2207,12 @@ Public Class wsStatistiche
 									Dim RigoriAvversari As Integer = 0
 
 									Try
-										Sql = "Select Count(*) As Quanti From RigoriPropri Where idPartita=" & Rec("idPartita").Value & " And Termine=1"
-										Rec2 = LeggeQuery(Conn, Sql, Connessione)
+										Sql = "Select " & IIf(TipoDB = "SQLSERVER", "Isnull(Count(*),0)", "COALESCE(Count(*),0)") & " As Quanti From RigoriPropri Where idPartita=" & Rec("idPartita").Value & " And Termine=1"
+										Rec2 = Conn.LeggeQuery(Server.MapPath("."),Sql, Connessione)
 										If TypeOf (Rec2) Is String Then
 											Ritorno = Rec2
 										Else
-											If Not Rec2.Eof Then
+											If Not Rec2.Eof() Then
 												RigoriPropri = Rec2("Quanti").Value
 											End If
 										End If
@@ -2221,11 +2222,11 @@ Public Class wsStatistiche
 
 									Try
 										Sql = "Select Segnati As Quanti From RigoriAvversari Where idPartita=" & Rec("idPartita").Value
-										Rec2 = LeggeQuery(Conn, Sql, Connessione)
+										Rec2 = Conn.LeggeQuery(Server.MapPath("."),Sql, Connessione)
 										If TypeOf (Rec2) Is String Then
 											Ritorno = Rec2
 										Else
-											If Not Rec2.Eof Then
+											If Not Rec2.Eof() Then
 												RigoriAvversari = Rec2("Quanti").Value
 											End If
 										End If
@@ -2455,11 +2456,11 @@ Public Class wsStatistiche
 
 									Sql = "Select * From Risultati Where idPartita = " & Rec("idPartita").Value
 									Try
-										Rec2 = LeggeQuery(Conn, Sql, Connessione)
+										Rec2 = Conn.LeggeQuery(Server.MapPath("."),Sql, Connessione)
 										If TypeOf (Rec2) Is String Then
 											Ritorno = Rec2
 										Else
-											If Not Rec2.Eof Then
+											If Not Rec2.Eof() Then
 												Notelle = Rec2(2).Value
 											End If
 										End If
@@ -2487,11 +2488,11 @@ Public Class wsStatistiche
 
 											Sql = "Select * From CampiEsterni Where idPartita = " & Rec("idPartita").Value
 											Try
-												Rec2 = LeggeQuery(Conn, Sql, Connessione)
+												Rec2 = Conn.LeggeQuery(Server.MapPath("."),Sql, Connessione)
 												If TypeOf (Rec2) Is String Then
 													Ritorno = Rec2
 												Else
-													If Not Rec2.Eof Then
+													If Not Rec2.Eof() Then
 														CampoEsterno = Rec2(1).Value
 													End If
 												End If
@@ -2514,11 +2515,11 @@ Public Class wsStatistiche
 									Sql = "Select * From CoordinatePartite " &
 										"Where idPartita = " & Rec("idPartita").Value
 									Try
-										Rec2 = LeggeQuery(Conn, Sql, Connessione)
+										Rec2 = Conn.LeggeQuery(Server.MapPath("."),Sql, Connessione)
 										If TypeOf (Rec2) Is String Then
 											Ritorno = Rec2
 										Else
-											If Not Rec2.Eof Then
+											If Not Rec2.Eof() Then
 												If "" & Rec2("Lat").Value <> "" And "" & Rec2("Lon").Value <> "" Then
 													Dim Descrizione As String = Rec("DataOra").Value & ": " & Casa & "-" & Fuori & " " & Punti1 & "-" & Punti2 & "<br />" & Esito & " - " & Tempo.Replace("<br />", " ") & "<br />"
 													Dim Ok As Boolean = False
@@ -2551,7 +2552,7 @@ Public Class wsStatistiche
 									Stringozza &= "</tr>"
 									Stringozza &= "</table>"
 
-									Rec.MoveNext
+									Rec.MoveNext()
 								Loop
 
 								Select Case i
@@ -2583,7 +2584,7 @@ Public Class wsStatistiche
 					"FROM RisultatiAggiuntivi INNER JOIN Partite ON RisultatiAggiuntivi.idPartita = Partite.idPartita " &
 					"WHERE Partite.idAnno=" & idAnno & " AND Partite.idCategoria=" & idCategoria
 				Try
-					Rec = LeggeQuery(Conn, Sql, Connessione)
+					Rec = Conn.LeggeQuery(Server.MapPath("."),  Sql, Connessione)
 					If TypeOf (Rec) Is String Then
 						Ritorno = Rec
 					Else
@@ -2591,7 +2592,7 @@ Public Class wsStatistiche
 						Dim MinutiTotali As Integer = 0
 						Dim OreTotali As Integer = 0
 
-						Do Until Rec.Eof
+						Do Until Rec.Eof()
 							If "" & Rec("Tempo1Tempo").Value <> "" Then
 								Dim t() As String = Rec("Tempo1Tempo").Value.split(":")
 								Dim Minuti As Integer = Val(t(0))
@@ -2641,7 +2642,7 @@ Public Class wsStatistiche
 								End While
 							End If
 
-							Rec.MoveNext
+							Rec.MoveNext()
 						Loop
 						Rec.Close()
 
@@ -2679,18 +2680,18 @@ Public Class wsStatistiche
 							"From Partite Left Join RisultatiAggiuntivi On Partite.idPartita = RisultatiAggiuntivi.idPartita " &
 							"Where Partite.idPartita = " & Partita & " " &
 							"Union All " &
-							"Select Count(*) As Goal1Tempo, 0 As Goal2Tempo, 0 As Goal3Tempo, 0 As GA1Tempo, 0 As GA2Tempo, 0 As GA3Tempo, '' As RisGiochetti From RisultatiAggiuntiviMarcatori Where idPartita = " & Partita & " And idTempo=1 " &
+							"Select " & IIf(TipoDB = "SQLSERVER", "Isnull(Count(*),0)", "COALESCE(Count(*),0)") & " As Goal1Tempo, 0 As Goal2Tempo, 0 As Goal3Tempo, 0 As GA1Tempo, 0 As GA2Tempo, 0 As GA3Tempo, '' As RisGiochetti From RisultatiAggiuntiviMarcatori Where idPartita = " & Partita & " And idTempo=1 " &
 							"Union All " &
-							"Select 0 As Goal1Tempo, Count(*) As Goal2Tempo, 0 As Goal3Tempo, 0 As GA1Tempo, 0 As GA2Tempo, 0 As GA3Tempo, '' As RisGiochetti From RisultatiAggiuntiviMarcatori Where idPartita = " & Partita & " And idTempo=2 " &
+							"Select 0 As Goal1Tempo, " & IIf(TipoDB = "SQLSERVER", "Isnull(Count(*),0)", "COALESCE(Count(*),0)") & " As Goal2Tempo, 0 As Goal3Tempo, 0 As GA1Tempo, 0 As GA2Tempo, 0 As GA3Tempo, '' As RisGiochetti From RisultatiAggiuntiviMarcatori Where idPartita = " & Partita & " And idTempo=2 " &
 							"Union All " &
-							"Select 0 As Goal1Tempo, 0 As Goal2Tempo, Count(*) As Goal3Tempo, 0 As GA1Tempo, 0 As GA2Tempo, 0 As GA3Tempo, '' As RisGiochetti From RisultatiAggiuntiviMarcatori Where idPartita = " & Partita & " And idTempo=3 " &
+							"Select 0 As Goal1Tempo, 0 As Goal2Tempo, " & IIf(TipoDB = "SQLSERVER", "Isnull(Count(*),0)", "COALESCE(Count(*),0)") & " As Goal3Tempo, 0 As GA1Tempo, 0 As GA2Tempo, 0 As GA3Tempo, '' As RisGiochetti From RisultatiAggiuntiviMarcatori Where idPartita = " & Partita & " And idTempo=3 " &
 							") As A) As B"
 						Try
-							Rec = LeggeQuery(Conn, Sql, Connessione)
+							Rec = Conn.LeggeQuery(Server.MapPath("."),  Sql, Connessione)
 							If TypeOf (Rec) Is String Then
 								Ritorno = Rec
 							Else
-								If Not Rec.Eof Then
+								If Not Rec.Eof() Then
 									Dim SommaGoal As Integer = Rec("G1Tempo").Value + Rec("G2Tempo").Value + Rec("G3Tempo").Value
 									Dim SommaGoalAvv As Integer = Rec("GoalAvv1Tempo").Value + Rec("GoalAvv2Tempo").Value + Rec("GoalAvv3Tempo").Value
 									Dim SommaTotale As Integer = SommaGoal + SommaGoalAvv
@@ -2708,22 +2709,22 @@ Public Class wsStatistiche
 									Dim RigoriPropri As Integer = 0
 									Dim RigoriAvversari As Integer = 0
 
-									Sql = "Select Count(*) As Quanti From RigoriPropri Where idPartita=" & Partita & " And Termine=1"
-									Rec2 = LeggeQuery(Conn, Sql, Connessione)
+									Sql = "Select " & IIf(TipoDB = "SQLSERVER", "Isnull(Count(*),0)", "COALESCE(Count(*),0)") & " As Quanti From RigoriPropri Where idPartita=" & Partita & " And Termine=1"
+									Rec2 = Conn.LeggeQuery(Server.MapPath("."),Sql, Connessione)
 									If TypeOf (Rec2) Is String Then
 										Ritorno = Rec2
 									Else
-										If Not Rec2.Eof Then
+										If Not Rec2.Eof() Then
 											RigoriPropri = Rec2("Quanti").Value
 										End If
 									End If
 
 									Sql = "Select Segnati As Quanti From RigoriAvversari Where idPartita=" & Partita
-									Rec2 = LeggeQuery(Conn, Sql, Connessione)
+									Rec2 = Conn.LeggeQuery(Server.MapPath("."),Sql, Connessione)
 									If TypeOf (Rec2) Is String Then
 										Ritorno = Rec2
 									Else
-										If Not Rec2.Eof Then
+										If Not Rec2.Eof() Then
 											RigoriAvversari = Rec2("Quanti").Value
 										End If
 									End If
@@ -3002,7 +3003,7 @@ Public Class wsStatistiche
 				Next
 
 				Sql = "SELECT TipologiePartite.Descrizione As Tipologia, NomeSquadra, SquadreAvversarie.Descrizione, Partite.Casa, Partite.DataOra, Tempo, Gradi, SquadreAvversarie.idAvversario, " &
-					"(Select Count(*) From RisultatiAggiuntiviMarcatori Where idPartita=" & PartitaConPiuGoal & ") As Goal, " &
+					"(Select " & IIf(TipoDB = "SQLSERVER", "Isnull(Count(*),0)", "COALESCE(Count(*),0)") & " From RisultatiAggiuntiviMarcatori Where idPartita=" & PartitaConPiuGoal & ") As Goal, " &
 					"(Select Sum(iif(GoalAvvPrimoTempo>0,GoalAvvPrimoTempo,0))+Sum(iif(GoalAvvSecondoTempo>0,GoalAvvSecondoTempo,0))+Sum(iif(GoalAvvTerzoTempo>0,GoalAvvTerzoTempo,0)) " &
 					"From RisultatiAggiuntivi Where idPartita=" & PartitaConPiuGoal & ") As GoalAvv From " &
 					 "(((Partite Left Join SquadreAvversarie On Partite.idAvversario = SquadreAvversarie.idAvversario) " &
@@ -3010,11 +3011,11 @@ Public Class wsStatistiche
 					"Left Join [Generale].[dbo].[TipologiePartite] On Partite.idTipologia = TipologiePartite.idTipologia " &
 					"Where Partite.idAnno = " & idAnno & " And Partite.idCategoria = " & idCategoria & " And Partite.idPartita = " & PartitaConPiuGoal & ""
 				Try
-					Rec = LeggeQuery(Conn, Sql, Connessione)
+					Rec = Conn.LeggeQuery(Server.MapPath("."),  Sql, Connessione)
 					If TypeOf (Rec) Is String Then
 						Ritorno = Rec
 					Else
-						If Not Rec.Eof Then
+						If Not Rec.Eof() Then
 							Dim Casa As String
 							Dim Fuori As String
 							Dim Imm1 As String = PathBaseImmagini & "/" & Squadra & "/Categorie/" & idAnno & "_" & idCategoria & ".Jpg"
@@ -3025,8 +3026,8 @@ Public Class wsStatistiche
 							If Rec("Casa").Value = "S" Then
 								Casa = Rec("NomeSquadra").Value
 								Fuori = Rec("Descrizione").Value
-								ImmCasa = "<td style ="" border: 1px solid #999; text-align: center;""><img src=""" & Imm1 & """ style=""width: 60px; height: 60px;"" onerror=""this.src='" & Pathimmagini & "Sconosciuto.png'""  /></td>"
-								ImmFuori = "<td style ="" border: 1px solid #999; text-align: center;""><img src=""" & Imm2 & """ style=""width: 60px; height: 60px;"" onerror=""this.src='" & PathImmagini & "Sconosciuto.png'""  /></td>"
+								ImmCasa = "<td style ="" border: 1px solid #999; text-align: center;""><img src=""" & Imm1 & """ style=""width: 60px; height: 60px;"" onerror=""this.src='" & pathImmagini & "Sconosciuto.png'""  /></td>"
+								ImmFuori = "<td style ="" border: 1px solid #999; text-align: center;""><img src=""" & Imm2 & """ style=""width: 60px; height: 60px;"" onerror=""this.src='" & pathImmagini & "Sconosciuto.png'""  /></td>"
 							Else
 								Fuori = Rec("NomeSquadra").Value
 								Casa = Rec("Descrizione").Value
@@ -3077,7 +3078,7 @@ Public Class wsStatistiche
 				End Try
 
 				Sql = "SELECT TipologiePartite.Descrizione As Tipologia, NomeSquadra, SquadreAvversarie.Descrizione, Partite.Casa, Partite.DataOra, Tempo, Gradi, SquadreAvversarie.idAvversario, " &
-					"(Select Count(*) From RisultatiAggiuntiviMarcatori Where idPartita=" & PartitaConMenoGoal & ") As Goal, " &
+					"(Select " & IIf(TipoDB = "SQLSERVER", "Isnull(Count(*),0)", "COALESCE(Count(*),0)") & " From RisultatiAggiuntiviMarcatori Where idPartita=" & PartitaConMenoGoal & ") As Goal, " &
 					"(Select Sum(iif(GoalAvvPrimoTempo>0,GoalAvvPrimoTempo,0))+Sum(iif(GoalAvvSecondoTempo>0,GoalAvvSecondoTempo,0))+Sum(iif(GoalAvvTerzoTempo>0,GoalAvvTerzoTempo,0)) " &
 					"From RisultatiAggiuntivi Where idPartita=" & PartitaConMenoGoal & ") As GoalAvv From " &
 					"(((Partite Left Join SquadreAvversarie On Partite.idAvversario = SquadreAvversarie.idAvversario) " &
@@ -3085,11 +3086,11 @@ Public Class wsStatistiche
 					"Left Join [Generale].[dbo].[TipologiePartite] On Partite.idTipologia = TipologiePartite.idTipologia " &
 					"Where Partite.idAnno = " & idAnno & " And Partite.idCategoria = " & idCategoria & " And Partite.idPartita = " & PartitaConMenoGoal & ""
 				Try
-					Rec = LeggeQuery(Conn, Sql, Connessione)
+					Rec = Conn.LeggeQuery(Server.MapPath("."),  Sql, Connessione)
 					If TypeOf (Rec) Is String Then
 						Ritorno = Rec
 					Else
-						If Not Rec.Eof Then
+						If Not Rec.Eof() Then
 							Dim Casa As String
 							Dim Fuori As String
 							Dim Imm1 As String = PathBaseImmagini & "/" & Squadra & "/Categorie/" & idAnno & "_" & idCategoria & ".Jpg"
@@ -3994,11 +3995,11 @@ Public Class wsStatistiche
 	End Function
 
 	Private Function RitornaColoreSfondo() As String
-        RigaPari = Not RigaPari
-        If RigaPari Then
-            Return "style=""background-color: #ccc;"""
-        Else
-            Return "style=""background-color: #aaa;"""
-        End If
-    End Function
+		RigaPari = Not RigaPari
+		If RigaPari Then
+			Return "style=""background-color: #ccc;"""
+		Else
+			Return "style=""background-color: #aaa;"""
+		End If
+	End Function
 End Class

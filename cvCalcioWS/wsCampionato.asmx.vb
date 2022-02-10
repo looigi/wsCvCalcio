@@ -1,12 +1,13 @@
 ﻿Imports System.Web.Services
 Imports System.Web.Services.Protocols
 Imports System.ComponentModel
+Imports ADODB
 
 <System.Web.Services.WebService(Namespace:="http://cvcalcio_cam.org/")>
-<System.Web.Services.WebServiceBinding(ConformsTo:=WsiProfiles.BasicProfile1_1)> _
-<ToolboxItem(False)> _
+<System.Web.Services.WebServiceBinding(ConformsTo:=WsiProfiles.BasicProfile1_1)>
+<ToolboxItem(False)>
 Public Class wsCampionato
-    Inherits System.Web.Services.WebService
+	Inherits System.Web.Services.WebService
 
 	<WebMethod()>
 	Public Function RitornaCampionatoCategoria(Squadra As String, ByVal idAnno As String, idCategoria As String, idUtente As String) As String
@@ -16,13 +17,13 @@ Public Class wsCampionato
 		If Connessione = "" Then
 			Ritorno = ErroreConnessioneNonValida
 		Else
-			Dim Conn As Object = ApreDB(Connessione)
+			Dim Conn As Object = new clsGestioneDB
 
 			If TypeOf (Conn) Is String Then
 				Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
 			Else
-				Dim Rec As Object = Server.CreateObject("ADODB.Recordset")
-				Dim Rec2 As Object = Server.CreateObject("ADODB.Recordset")
+				Dim Rec As Object
+				Dim Rec2 As Object
 				Dim Sql As String = ""
 
 				Dim idSquadre As New ArrayList
@@ -40,14 +41,14 @@ Public Class wsCampionato
 				Dim NomeSquadra As String
 
 				Sql = "Select * From Anni Where idAnno=" & idAnno
-				Rec = LeggeQuery(Conn, Sql, Connessione)
+				Rec = Conn.LeggeQuery(Server.MapPath("."),  Sql, Connessione)
 				If TypeOf (Rec) Is String Then
-					Ritorno = StringaErrore & "" & Rec
+					Ritorno = StringaErrore & "" & Rec.ToString
 					Return Ritorno
 				Else
 					NomeSquadra = Rec("NomeSquadra").Value
 				End If
-				Rec.Close
+				Rec.Close()
 
 				Try
 					' Squadre avversarie
@@ -58,9 +59,9 @@ Public Class wsCampionato
 						"Left Join AvversariCoord On SquadreAvversarie.idAvversario = AvversariCoord.idAvversario " &
 						"WHERE AvversariCalendario.idAnno=" & idAnno & " And AvversariCalendario.idCategoria=" & idCategoria & " " &
 						"ORDER BY AvversariCalendario.idProgressivo"
-					Rec = LeggeQuery(Conn, Sql, Connessione)
+					Rec = Conn.LeggeQuery(Server.MapPath("."),  Sql, Connessione)
 					If TypeOf (Rec) Is String Then
-						Ritorno = StringaErrore & "" & Rec
+						Ritorno = StringaErrore & "" & Rec.ToString
 						Return Ritorno
 					Else
 						' Aggiungo la riga per i dati della categoria
@@ -69,7 +70,7 @@ Public Class wsCampionato
 
 						Ritorno &= "£"
 
-						Do Until Rec.Eof
+						Do Until Rec.Eof()
 							idSquadre.Add(Rec("idAvv").Value)
 							Squadre.Add(Rec("Squadra").Value)
 
@@ -105,12 +106,12 @@ Public Class wsCampionato
 						"LEFT JOIN RisultatiAggiuntivi ON Partite.idPartita = RisultatiAggiuntivi.idPartita " &
 						"WHERE CalendarioPartite.idCategoria=" & idCategoria & " And CalendarioPartite.idAnno=" & idAnno & " " &
 						"ORDER BY CalendarioPartite.idGiornata, CalendarioPartite.idPartita"
-					Rec = LeggeQuery(Conn, Sql, Connessione)
+					Rec = Conn.LeggeQuery(Server.MapPath("."),  Sql, Connessione)
 					If TypeOf (Rec) Is String Then
-						Ritorno = StringaErrore & "" & Rec
+						Ritorno = StringaErrore & "" & Rec.ToString
 						Return Ritorno
 					Else
-						Do Until Rec.Eof
+						Do Until Rec.Eof()
 							Dim GoalAvv As Integer = 0
 							If Val("" & Rec("GoalAvv1").Value) > 0 Then
 								GoalAvv += ("" & Rec("GoalAvv1").Value)
@@ -147,12 +148,12 @@ Public Class wsCampionato
 							'    "FROM ((Convocati LEFT JOIN Giocatori ON Convocati.idGiocatore = Giocatori.idGiocatore) " &
 							'    "LEFT JOIN Ruoli ON Giocatori.idRuolo = Ruoli.idRuolo) " &
 							'    "WHERE Convocati.idPartita=" & Rec("PartitaUfficiale").Value & " And idAnno=" & idAnno
-							'    Rec2 = LeggeQuery(Conn, Sql, Connessione)
+							'    Rec2 = Conn.LeggeQuery(Server.MapPath("."),Sql, Connessione)
 							'    If TypeOf (Rec2) Is String Then
 							'        Ritorno = Rec2
 							'        Return Ritorno
 							'    Else
-							'        Do Until Rec2.Eof
+							'        Do Until Rec2.Eof()
 							'            Ritorno &= Rec2("idGiocatore").Value & ";"
 							'            Ritorno &= Rec2("Cognome").Value & ";"
 							'            Ritorno &= Rec2("Nome").Value & ";"
@@ -179,12 +180,12 @@ Public Class wsCampionato
 							'        "FROM Marcatori LEFT JOIN Giocatori ON Marcatori.idGiocatore = Giocatori.idGiocatore " &
 							'        "WHERE Marcatori.idPartita=" & Rec("PartitaUfficiale").Value & " And idAnno=" & idAnno & " " &
 							'        ") A Order By Minuto , Progressivo"
-							'    Rec2 = LeggeQuery(Conn, Sql, Connessione)
+							'    Rec2 = Conn.LeggeQuery(Server.MapPath("."),Sql, Connessione)
 							'    If TypeOf (Rec2) Is String Then
 							'        Ritorno = StringaErrore & "" & Rec2
 							'        Return Ritorno
 							'    Else
-							'        Do Until Rec2.Eof
+							'        Do Until Rec2.Eof()
 							'            Ritorno &= Rec2("idGiocatore").Value & ";"
 							'            Ritorno &= Rec2("Cognome").Value & ";"
 							'            Ritorno &= Rec2("Nome").Value & ";"
@@ -224,12 +225,12 @@ Public Class wsCampionato
 		If Connessione = "" Then
 			Ritorno = ErroreConnessioneNonValida
 		Else
-			Dim Conn As Object = ApreDB(Connessione)
+			Dim Conn As Object = new clsGestioneDB
 
 			If TypeOf (Conn) Is String Then
 				Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
 			Else
-				Dim Rec As Object = Server.CreateObject("ADODB.Recordset")
+				Dim Rec As Object
 				Dim Sql As String = ""
 				Dim ProgressivoSquadra As String = ""
 
@@ -254,21 +255,21 @@ Public Class wsCampionato
 				Dim NomeSquadra As String
 
 				Sql = "Select * From Anni Where idAnno=" & idAnno
-				Rec = LeggeQuery(Conn, Sql, Connessione)
+				Rec = Conn.LeggeQuery(Server.MapPath("."),  Sql, Connessione)
 				If TypeOf (Rec) Is String Then
-					Ritorno = StringaErrore & "" & Rec
+					Ritorno = StringaErrore & "" & Rec.ToString
 					Return Ritorno
 				Else
 					NomeSquadra = Rec("NomeSquadra").Value
 				End If
-				Rec.Close
+				Rec.Close()
 
 				Sql = "Select SquadreAvversarie.idAvversario, SquadreAvversarie.Descrizione, SquadreAvversarie.FuoriClassifica From (AvversariCalendario " &
 					"LEFT JOIN SquadreAvversarie As SquadreAvversarie On AvversariCalendario.idAvversario = SquadreAvversarie.idAvversario) " &
 					"Where idAnno=" & idAnno & " And idCategoria=" & idCategoria
-				Rec = LeggeQuery(Conn, Sql, Connessione)
+				Rec = Conn.LeggeQuery(Server.MapPath("."),  Sql, Connessione)
 				If TypeOf (Rec) Is String Then
-					Ritorno = StringaErrore & "" & Rec
+					Ritorno = StringaErrore & "" & Rec.ToString
 					Return Ritorno
 				Else
 					idSquadre.Add(-Val(idCategoria))
@@ -283,7 +284,7 @@ Public Class wsCampionato
 					PuntiFC.Add(0)
 					FuoriClassifica.Add(False)
 
-					Do Until Rec.Eof
+					Do Until Rec.Eof()
 						If Rec("idAvversario").Value <> 999 Then
 							idSquadre.Add(Rec("idAvversario").Value)
 							Squadre.Add(Rec("Descrizione").Value)
@@ -298,10 +299,10 @@ Public Class wsCampionato
 							PuntiFC.Add(0)
 						End If
 
-						Rec.MoveNext
+						Rec.MoveNext()
 					Loop
 				End If
-				Rec.Close
+				Rec.Close()
 
 				Sql = "SELECT 'Altri' As Tipo, CalendarioPartite.idSqCasa, CalendarioPartite.idSqFuori, CalendarioRisultati.Risultato As Risultato1, '' As RisGiochetti, '' As GoalAvv " &
 					"FROM CalendarioPartite LEFT JOIN CalendarioRisultati On CalendarioPartite.idPartitaGen = CalendarioRisultati.idPartita " &
@@ -320,12 +321,12 @@ Public Class wsCampionato
 					"Left Join Risultati On Partite.idPartita = Risultati.idPartita) " &
 					"Left Join RisultatiAggiuntivi On Partite.idPartita = RisultatiAggiuntivi.idPartita) " &
 					"WHERE CalendarioPartite.idAnno=" & idAnno & " AND CalendarioPartite.idCategoria=" & idCategoria & " And (idSqFuori<0) And idGiornata<=" & idGiornata
-				Rec = LeggeQuery(Conn, Sql, Connessione)
+				Rec = Conn.LeggeQuery(Server.MapPath("."),  Sql, Connessione)
 				If TypeOf (Rec) Is String Then
-					Ritorno = StringaErrore & "" & Rec
+					Ritorno = StringaErrore & "" & Rec.ToString
 					Return Ritorno
 				Else
-					Do Until Rec.Eof
+					Do Until Rec.Eof()
 						Dim bFuoriClassifica As Boolean = False
 
 						If "" & Rec("Risultato1").Value <> "" Then
@@ -460,7 +461,7 @@ Public Class wsCampionato
 							End If
 						End If
 
-						Rec.MoveNext
+						Rec.MoveNext()
 					Loop
 
 					For i As Integer = 0 To idSquadre.Count - 1
@@ -558,18 +559,18 @@ Public Class wsCampionato
 		If Connessione = "" Then
 			Ritorno = ErroreConnessioneNonValida
 		Else
-			Dim Conn As Object = ApreDB(Connessione)
+			Dim Conn As Object = new clsGestioneDB
 
 			If TypeOf (Conn) Is String Then
 				Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
 			Else
-				Dim Rec As Object = Server.CreateObject("ADODB.Recordset")
+				Dim Rec As Object
 				Dim Sql As String = ""
 				Dim ProgressivoSquadra As String = ""
 				Dim Ok As Boolean = True
 
-				Sql = "Begin transaction"
-				Ritorno = EsegueSql(Conn, Sql, Connessione)
+				Sql = iif(tipodb="SQLSERVER", "Begin transaction", "Start transaction")
+				Ritorno = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
 
 				If Not Ritorno.Contains(StringaErrore) Then
 					Dim idAvv() As String = {}
@@ -584,11 +585,11 @@ Public Class wsCampionato
 						If id <> "" Then
 							Try
 								Sql = "SELECT Max(idProgressivo)+1 FROM AvversariCalendario Where idAnno=" & idAnno & " And idCategoria=" & idCategoria
-								Rec = LeggeQuery(Conn, Sql, Connessione)
+								Rec = Conn.LeggeQuery(Server.MapPath("."),  Sql, Connessione)
 								If TypeOf (Rec) Is String Then
 									Ritorno = Rec
 								Else
-									If Rec.Eof Then
+									If Rec.Eof() Then
 										ProgressivoSquadra = "1"
 									Else
 										If Rec(0).Value Is DBNull.Value Then
@@ -607,7 +608,7 @@ Public Class wsCampionato
 										" " & ProgressivoSquadra & ", " &
 										" " & id & " " &
 										")"
-									Ritorno = EsegueSql(Conn, Sql, Connessione)
+									Ritorno = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
 									If Ritorno.Contains(StringaErrore) Then
 										Ok = False
 									End If
@@ -629,10 +630,10 @@ Public Class wsCampionato
 
 				If Ok Then
 					Sql = "commit"
-					Dim Ritorno2 As String = EsegueSql(Conn, Sql, Connessione)
+					Dim Ritorno2 As String = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
 				Else
 					Sql = "rollback"
-					Dim Ritorno2 As String = EsegueSql(Conn, Sql, Connessione)
+					Dim Ritorno2 As String = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
 				End If
 
 				Conn.Close()
@@ -650,22 +651,22 @@ Public Class wsCampionato
 		If Connessione = "" Then
 			Ritorno = ErroreConnessioneNonValida
 		Else
-			Dim Conn As Object = ApreDB(Connessione)
+			Dim Conn As Object = new clsGestioneDB
 
 			If TypeOf (Conn) Is String Then
 				Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
 			Else
-				Dim Rec As Object = Server.CreateObject("ADODB.Recordset")
+				Dim Rec As Object
 				Dim Sql As String = ""
 				Dim Ok As Boolean = True
 
-				Sql = "Begin transaction"
-				Ritorno = EsegueSql(Conn, Sql, Connessione)
+				Sql = iif(tipodb="SQLSERVER", "Begin transaction", "Start transaction")
+				Ritorno = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
 
 				If Not Ritorno.Contains(StringaErrore) Then
 					Try
 						Sql = "Delete From AvversariCalendario Where idAnno=" & idAnno & " And idCategoria=" & idCategoria & " And idAvversario=" & idAvversario
-						Ritorno = EsegueSql(Conn, Sql, Connessione)
+						Ritorno = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
 						If Ritorno.Contains(StringaErrore) Then
 							Ok = False
 						End If
@@ -678,10 +679,10 @@ Public Class wsCampionato
 
 				If Ok Then
 					Sql = "commit"
-					Dim Ritorno2 As String = EsegueSql(Conn, Sql, Connessione)
+					Dim Ritorno2 As String = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
 				Else
 					Sql = "rollback"
-					Dim Ritorno2 As String = EsegueSql(Conn, Sql, Connessione)
+					Dim Ritorno2 As String = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
 				End If
 
 				Conn.Close()
@@ -705,26 +706,26 @@ Public Class wsCampionato
 		If Connessione = "" Then
 			Ritorno = ErroreConnessioneNonValida
 		Else
-			Dim Conn As Object = ApreDB(Connessione)
+			Dim Conn As Object = new clsGestioneDB
 
 			If TypeOf (Conn) Is String Then
 				Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
 			Else
-				Dim Rec As Object = Server.CreateObject("ADODB.Recordset")
+				Dim Rec As Object
 				Dim Sql As String = ""
 				Dim Ok As Boolean = True
 
-				Sql = "Begin transaction"
-				Ritorno = EsegueSql(Conn, Sql, Connessione)
+				Sql = iif(tipodb="SQLSERVER", "Begin transaction", "Start transaction")
+				Ritorno = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
 
 				If Not Ritorno.Contains(StringaErrore) Then
 					Try
 						Sql = "SELECT Max(idPartita)+1 FROM Partite"
-						Rec = LeggeQuery(Conn, Sql, Connessione)
+						Rec = Conn.LeggeQuery(Server.MapPath("."),  Sql, Connessione)
 						If TypeOf (Rec) Is String Then
 							Ritorno = Rec
 						Else
-							If Rec.Eof Then
+							If Rec.Eof() Then
 								Ritorno = StringaErrore & " Nessun progressivo partita rilevato"
 							Else
 								If Rec(0).Value Is DBNull.Value Then
@@ -742,11 +743,11 @@ Public Class wsCampionato
 
 					Try
 						Sql = "SELECT Max(idPartita)+1 FROM CalendarioPartite"
-						Rec = LeggeQuery(Conn, Sql, Connessione)
+						Rec = Conn.LeggeQuery(Server.MapPath("."),  Sql, Connessione)
 						If TypeOf (Rec) Is String Then
 							Ritorno = Rec
 						Else
-							If Rec.Eof Then
+							If Rec.Eof() Then
 								Ritorno = StringaErrore & " Nessun progressivo partita rilevato"
 							Else
 								If Rec(0).Value Is DBNull.Value Then
@@ -771,11 +772,11 @@ Public Class wsCampionato
 					If Ok Then
 						Try
 							Sql = "SELECT Max(idPartita)+1 FROM CalendarioPartite Where idAnno=" & idAnno & " And idCategoria=" & idCategoria & " And idGiornata=" & idGiornata
-							Rec = LeggeQuery(Conn, Sql, Connessione)
+							Rec = Conn.LeggeQuery(Server.MapPath("."),  Sql, Connessione)
 							If TypeOf (Rec) Is String Then
 								Ritorno = Rec
 							Else
-								If Rec.Eof Then
+								If Rec.Eof() Then
 									Ritorno = StringaErrore & " Nessun progressivo rilevato"
 								Else
 									If Rec(0).Value Is DBNull.Value Then
@@ -798,11 +799,11 @@ Public Class wsCampionato
 
 						'Try
 						'	Sql = "SELECT Max(idPartitaGen)+1 FROM CalendarioPartite"
-						'	Rec = LeggeQuery(Conn, Sql, Connessione)
+						'	Rec = Conn.LeggeQuery(Server.MapPath("."),  Sql, Connessione)
 						'	If TypeOf (Rec) Is String Then
 						'		Ritorno = Rec
 						'	Else
-						'		If Rec.Eof Then
+						'		If Rec.Eof() Then
 						'			Ritorno = StringaErrore & " Nessun progressivo generale rilevato"
 						'		Else
 						'			If Rec(0).Value Is DBNull.Value Then
@@ -821,7 +822,7 @@ Public Class wsCampionato
 						If Ok Then
 							Try
 								Sql = "Insert Into CalendarioPartite Values (" & idAnno & ", " & idCategoria & ", " & idGiornata & ", " & idNuovaPartita & ", " & c(0) & ", " & f(0) & ", " & idNuovaPartita & ", 'N', '')"
-								Ritorno = EsegueSql(Conn, Sql, Connessione)
+								Ritorno = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
 								If Ritorno.Contains(StringaErrore) Then
 									Ok = False
 								End If
@@ -844,7 +845,7 @@ Public Class wsCampionato
 								Try
 									Sql = "Insert Into CalendarioDate Values (" & idAnno & ", " & idCategoria & ", " & idNuovaPartita & ", " &
 											idGiornata & ", '" & ddoo & "')"
-									Ritorno = EsegueSql(Conn, Sql, Connessione)
+									Ritorno = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
 									If Ritorno.Contains(StringaErrore) Then
 										Ok = False
 									End If
@@ -857,7 +858,7 @@ Public Class wsCampionato
 								If Ok Then
 									'Try
 									'    Sql = "Insert Into CalendarioRisultati Values (" & idNuovaPartita & ", '')"
-									'    Ritorno = EsegueSql(Conn, Sql, Connessione)
+									'    Ritorno = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
 									'Catch ex As Exception
 									'    Ritorno = StringaErrore & " " & ex.Message
 									'End Try
@@ -868,11 +869,11 @@ Public Class wsCampionato
 										If Val(c(0)) = -1 Or Val(f(0)) = -1 Or Val(c(0)) = 9999 Or Val(f(0)) = 9999 Then
 											Try
 												Sql = "SELECT AnticipoConvocazione FROM Categorie Where idAnno=" & idAnno & " And idCategoria=" & idCategoria
-												Rec = LeggeQuery(Conn, Sql, Connessione)
+												Rec = Conn.LeggeQuery(Server.MapPath("."),  Sql, Connessione)
 												If TypeOf (Rec) Is String Then
 													Ritorno = Rec
 												Else
-													If Not Rec.Eof Then
+													If Not Rec.Eof() Then
 														Anticipo = Rec(0).Value.ToString * 90
 													End If
 													Rec.Close()
@@ -901,11 +902,11 @@ Public Class wsCampionato
 
 											Try
 												Sql = "SELECT idCampo, Descrizione FROM SquadreAvversarie Where idAvversario=" & idAvversario & " And Eliminato='N'"
-												Rec = LeggeQuery(Conn, Sql, Connessione)
+												Rec = Conn.LeggeQuery(Server.MapPath("."),  Sql, Connessione)
 												If TypeOf (Rec) Is String Then
 													Ritorno = Rec
 												Else
-													If Rec.Eof Then
+													If Rec.Eof() Then
 														Ritorno = StringaErrore & " Nessun campo rilevato"
 													Else
 														idCampo = Rec(0).Value.ToString
@@ -923,11 +924,11 @@ Public Class wsCampionato
 
 												Try
 													Sql = "SELECT idAllenatore FROM Allenatori Where idAnno=" & idAnno & " And idCategoria=" & idCategoria & " And Eliminato='N'"
-													Rec = LeggeQuery(Conn, Sql, Connessione)
+													Rec = Conn.LeggeQuery(Server.MapPath("."),  Sql, Connessione)
 													If TypeOf (Rec) Is String Then
 														Ritorno = Rec
 													Else
-														If Rec.Eof Then
+														If Rec.Eof() Then
 															Ritorno = StringaErrore & " Nessun allenatore rilevato"
 														Else
 															idAllenatore = Rec(0).Value.ToString
@@ -942,7 +943,7 @@ Public Class wsCampionato
 												If Ok Then
 													Try
 														Sql = "Insert Into ArbitriPartite Values (" & idAnno & ", " & idNuovaPartita & ", 1, 3)"
-														Ritorno = EsegueSql(Conn, Sql, Connessione)
+														Ritorno = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
 														If Ritorno.Contains(StringaErrore) Then
 															Ok = False
 														End If
@@ -958,11 +959,11 @@ Public Class wsCampionato
 
 													Try
 														Sql = "Select * From CampiAvversari Where idCampo = " & idCampo
-														Rec = LeggeQuery(Conn, Sql, Connessione)
+														Rec = Conn.LeggeQuery(Server.MapPath("."),  Sql, Connessione)
 														If TypeOf (Rec) Is String Then
 															Ritorno = Rec
 														Else
-															If Rec.Eof Then
+															If Rec.Eof() Then
 																Ritorno = StringaErrore & " Nessun campo rilevato"
 															Else
 																LuogoAppuntamento = "Campo '" & Rec(1).Value.ToString & "' " & Rec(2).Value.ToString
@@ -981,7 +982,7 @@ Public Class wsCampionato
 																"'N', '" & inCasa & "', 1, " & idCampo & ", '" & OraConv & "', -1, 'N', " &
 																"'" & Data & " " & OraConv & "', '" & SistemaStringa(LuogoAppuntamento) & "', 'A', 'N', 2, 'N'" &
 																")"
-															Ritorno = EsegueSql(Conn, Sql, Connessione)
+															Ritorno = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
 															If Ritorno.Contains(StringaErrore) Then
 																Ok = False
 															End If
@@ -996,7 +997,7 @@ Public Class wsCampionato
 													If Ok Then
 														Try
 															Sql = "Select Max(idEvento) + 1 From EventiConvocazioni"
-															Rec = LeggeQuery(Conn, Sql, Connessione)
+															Rec = Conn.LeggeQuery(Server.MapPath("."),  Sql, Connessione)
 															If TypeOf (Rec) Is String Then
 																Ritorno = Rec
 															Else
@@ -1033,7 +1034,7 @@ Public Class wsCampionato
 																"'" & dor & "', '" & dor & "', 'N', '#a00', " &
 																"'#a0a', '', '', " & idNuovaPartita &
 																")"
-															Ritorno = EsegueSql(Conn, Sql, Connessione)
+															Ritorno = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
 															If Ritorno.Contains(StringaErrore) Then
 																Ok = False
 															End If
@@ -1046,27 +1047,27 @@ Public Class wsCampionato
 													If Ok Then
 														Try
 															Sql = "Select * From Giocatori Where Categorie Like '%" & idCategoria & "-%' And Eliminato = 'N'"
-															Rec = LeggeQuery(Conn, Sql, Connessione)
+															Rec = Conn.LeggeQuery(Server.MapPath("."),  Sql, Connessione)
 															If TypeOf (Rec) Is String Then
 																Ritorno = Rec
 															Else
-																If Not Rec.Eof Then
+																If Not Rec.Eof() Then
 																	Dim Progressivo As Integer = 0
 
-																	Do Until Rec.Eof
+																	Do Until Rec.Eof()
 																		Progressivo += 1
 																		Sql = "Insert Into Convocati Values (" &
 																			" " & idNuovaPartita & ", " &
 																			" " & Progressivo & ", " &
 																			" " & Rec("idGiocatore").Value & " " &
 																			")"
-																		Ritorno = EsegueSql(Conn, Sql, Connessione)
+																		Ritorno = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
 																		If Ritorno.Contains(StringaErrore) Then
 																			Ok = False
 																			Exit Do
 																		End If
 
-																		Rec.MoveNext
+																		Rec.MoveNext()
 																	Loop
 																	Rec.Close()
 																End If
@@ -1092,7 +1093,7 @@ Public Class wsCampionato
 							If ProgressivoPartita <> "" Then
 								Try
 									Sql = "Delete From CalendarioPartite Where idAnno=" & idAnno & " And idCategoria=" & idCategoria & " And idGiornata=" & idGiornata & " And idPartita=" & ProgressivoPartita
-									Ritorno = EsegueSql(Conn, Sql, Connessione)
+									Ritorno = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
 								Catch ex As Exception
 
 								End Try
@@ -1101,19 +1102,19 @@ Public Class wsCampionato
 							If idNuovaPartita <> -1 Then
 								Try
 									Sql = "Delete From CalendarioDate Where idAnno=" & idAnno & " And idCategoria=" & idCategoria & " And idGiornata=" & idGiornata & " And idPartita=" & idNuovaPartita
-									Ritorno = EsegueSql(Conn, Sql, Connessione)
+									Ritorno = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
 								Catch ex As Exception
 								End Try
 
 								Try
 									Sql = "Delete From Partite Where idAnno=" & idAnno & " And idPartita=" & idNuovaPartita & " And idCategoria=" & idCategoria & " " 'And idUnioneCalendario=" & idUnioneCalendario
-									Ritorno = EsegueSql(Conn, Sql, Connessione)
+									Ritorno = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
 								Catch ex As Exception
 								End Try
 
 								Try
 									Sql = "Delete From Convocati Where idPartita=" & idNuovaPartita
-									Ritorno = EsegueSql(Conn, Sql, Connessione)
+									Ritorno = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
 								Catch ex As Exception
 								End Try
 							End If
@@ -1127,10 +1128,10 @@ Public Class wsCampionato
 
 				If Ok Then
 					Sql = "commit"
-					Dim Ritorno2 As String = EsegueSql(Conn, Sql, Connessione)
+					Dim Ritorno2 As String = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
 				Else
 					Sql = "rollback"
-					Dim Ritorno2 As String = EsegueSql(Conn, Sql, Connessione)
+					Dim Ritorno2 As String = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
 				End If
 
 				Conn.Close()
@@ -1148,27 +1149,27 @@ Public Class wsCampionato
 		If Connessione = "" Then
 			Ritorno = ErroreConnessioneNonValida
 		Else
-			Dim Conn As Object = ApreDB(Connessione)
+			Dim Conn As Object = new clsGestioneDB
 
 			If TypeOf (Conn) Is String Then
 				Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
 			Else
-				Dim Rec As Object = Server.CreateObject("ADODB.Recordset")
+				Dim Rec As Object
 				' Dim idUnioneCalendario As Integer = -1
 				Dim Sql As String = ""
 				Dim Ok As Boolean = True
 
-				Sql = "Begin transaction"
-				Ritorno = EsegueSql(Conn, Sql, Connessione)
+				Sql = iif(tipodb="SQLSERVER", "Begin transaction", "Start transaction")
+				Ritorno = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
 
 				If Not Ritorno.Contains(StringaErrore) Then
 					'Sql = "Select * From Partite Where idAnno=" & idAnno & " And idPartita=" & idPartita
 					'Try
-					'	Rec = LeggeQuery(Conn, Sql, Connessione)
+					'	Rec = Conn.LeggeQuery(Server.MapPath("."),  Sql, Connessione)
 					'	If TypeOf (Rec) Is String Then
 					'		Ritorno = Rec
 					'	Else
-					'		If Rec.Eof Then
+					'		If Rec.Eof() Then
 					'			Ritorno = "*"
 					'		Else
 					'			' idUnioneCalendario = Rec("idUnioneCalendario").Value
@@ -1184,7 +1185,7 @@ Public Class wsCampionato
 						'If idUnioneCalendario <> -1 Then
 						Try
 							Sql = "Delete From Partite Where idAnno=" & idAnno & " And idPartita=" & idPartita
-							Ritorno = EsegueSql(Conn, Sql, Connessione)
+							Ritorno = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
 							If Ritorno.Contains(StringaErrore) Then
 								Ok = False
 							End If
@@ -1198,7 +1199,7 @@ Public Class wsCampionato
 					If Ok Then
 						Try
 							Sql = "Delete From ArbitriPartite Where idPartita=" & idPartita
-							Ritorno = EsegueSql(Conn, Sql, Connessione)
+							Ritorno = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
 							If Ritorno.Contains(StringaErrore) Then
 								Ok = False
 							End If
@@ -1211,7 +1212,7 @@ Public Class wsCampionato
 						If Ok Then
 							Try
 								Sql = "Delete From CalendarioRisultati Where idPartita=" & idPartita
-								Ritorno = EsegueSql(Conn, Sql, Connessione)
+								Ritorno = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
 								If Ritorno.Contains(StringaErrore) Then
 									Ok = False
 								End If
@@ -1225,11 +1226,11 @@ Public Class wsCampionato
 								'Dim idPartitaGiornata As Integer = -1
 								'Sql = "Select * From CalendarioPartite Where idAnno=" & idAnno & " And idPartitaGen=" & idPartita
 								'Try
-								'	Rec = LeggeQuery(Conn, Sql, Connessione)
+								'	Rec = Conn.LeggeQuery(Server.MapPath("."),  Sql, Connessione)
 								'	If TypeOf (Rec) Is String Then
 								'		Ritorno = Rec
 								'	Else
-								'		If Rec.Eof Then
+								'		If Rec.Eof() Then
 								'			Ritorno = StringaErrore & " nessun idPartita della giornata rilevato"
 								'		Else
 								'			idPartitaGiornata = Rec("idPartita").Value
@@ -1244,7 +1245,7 @@ Public Class wsCampionato
 								If Ok Then
 									Try
 										Sql = "Delete From CalendarioDate Where idAnno=" & idAnno & " And idCategoria=" & idCategoria & " And idGiornata=" & idGiornata & " And idPartita=" & idPartita
-										Ritorno = EsegueSql(Conn, Sql, Connessione)
+										Ritorno = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
 										If Ritorno.Contains(StringaErrore) Then
 											Ok = False
 										End If
@@ -1256,7 +1257,7 @@ Public Class wsCampionato
 									If Ok Then
 										Try
 											Sql = "Delete From CalendarioPartite Where idAnno=" & idAnno & " And idCategoria=" & idCategoria & " And idGiornata=" & idGiornata & " And idPartita=" & idPartita
-											Ritorno = EsegueSql(Conn, Sql, Connessione)
+											Ritorno = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
 											If Ritorno.Contains(StringaErrore) Then
 												Ok = False
 											End If
@@ -1268,7 +1269,7 @@ Public Class wsCampionato
 										If Ok Then
 											Try
 												Sql = "Delete From EventiConvocazioni Where idPartita=" & idPartita
-												Ritorno = EsegueSql(Conn, Sql, Connessione)
+												Ritorno = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
 												If Ritorno.Contains(StringaErrore) Then
 													Ok = False
 												End If
@@ -1292,10 +1293,10 @@ Public Class wsCampionato
 
 				If Ok Then
 					Sql = "commit"
-					Dim Ritorno2 As String = EsegueSql(Conn, Sql, Connessione)
+					Dim Ritorno2 As String = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
 				Else
 					Sql = "rollback"
-					Dim Ritorno2 As String = EsegueSql(Conn, Sql, Connessione)
+					Dim Ritorno2 As String = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
 				End If
 
 				Conn.Close()
@@ -1316,17 +1317,17 @@ Public Class wsCampionato
 		If Connessione = "" Then
 			Ritorno = ErroreConnessioneNonValida
 		Else
-			Dim Conn As Object = ApreDB(Connessione)
+			Dim Conn As Object = new clsGestioneDB
 
 			If TypeOf (Conn) Is String Then
 				Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
 			Else
-				Dim Rec As Object = Server.CreateObject("ADODB.Recordset")
+				Dim Rec As Object
 				Dim Sql As String = ""
 				Dim Ok As Boolean = True
 
-				Sql = "Begin transaction"
-				Ritorno = EsegueSql(Conn, Sql, Connessione)
+				Sql = iif(tipodb="SQLSERVER", "Begin transaction", "Start transaction")
+				Ritorno = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
 
 				If Not Ritorno.Contains(StringaErrore) Then
 					Dim c() As String = Casa.Split(";")
@@ -1345,7 +1346,7 @@ Public Class wsCampionato
 							"Giocata='" & Giocata & "', " &
 							"Risultato='" & Risultato & "' " &
 							"Where idPartitaGen=" & idUnioneCalendario
-						Ritorno = EsegueSql(Conn, Sql, Connessione)
+						Ritorno = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
 						If Ritorno.Contains(StringaErrore) Then
 							Ok = False
 						End If
@@ -1360,7 +1361,7 @@ Public Class wsCampionato
 							Sql = "Update CalendarioDate Set " &
 								"Datella='" & Data & " " & Ora & "' " &
 								"Where idAnno=" & idAnno & " And idCategoria=" & idCategoria & " And idGiornata=" & idGiornata & " And idPartita=" & ProgressivoPartita
-							Ritorno = EsegueSql(Conn, Sql, Connessione)
+							Ritorno = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
 							If Ritorno.Contains(StringaErrore) Then
 								Ok = False
 							End If
@@ -1375,13 +1376,13 @@ Public Class wsCampionato
 						If Risultato <> "" Then
 							Try
 								Sql = "Delete From CalendarioRisultati Where idPartita=" & idUnioneCalendario
-								Ritorno = EsegueSql(Conn, Sql, Connessione)
+								Ritorno = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
 							Catch ex As Exception
 							End Try
 
 							Try
 								Sql = "Insert Into CalendarioRisultati Values (" & idUnioneCalendario & ", '" & Risultato & "')"
-								Ritorno = EsegueSql(Conn, Sql, Connessione)
+								Ritorno = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
 								If Ritorno.Contains(StringaErrore) Then
 									Ok = False
 								End If
@@ -1402,10 +1403,10 @@ Public Class wsCampionato
 
 				If Ok Then
 					Sql = "commit"
-					Dim Ritorno2 As String = EsegueSql(Conn, Sql, Connessione)
+					Dim Ritorno2 As String = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
 				Else
 					Sql = "rollback"
-					Dim Ritorno2 As String = EsegueSql(Conn, Sql, Connessione)
+					Dim Ritorno2 As String = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
 				End If
 			End If
 
@@ -1423,20 +1424,20 @@ Public Class wsCampionato
 		If Connessione = "" Then
 			Ritorno = ErroreConnessioneNonValida
 		Else
-			Dim Conn As Object = ApreDB(Connessione)
+			Dim Conn As Object = new clsGestioneDB
 
 			If TypeOf (Conn) Is String Then
 				Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
 			Else
-				Dim Rec As Object = Server.CreateObject("ADODB.Recordset")
+				Dim Rec As Object
 				Dim Sql As String = "Select * From Partite Where idUnioneCalendario=" & idUnioneCalendario
 
 				Try
-					Rec = LeggeQuery(Conn, Sql, Connessione)
+					Rec = Conn.LeggeQuery(Server.MapPath("."),  Sql, Connessione)
 					If TypeOf (Rec) Is String Then
 						Ritorno = Rec
 					Else
-						If Rec.Eof Then
+						If Rec.Eof() Then
 							Ritorno = StringaErrore & " Nessun id partita rilevato"
 						Else
 							Ritorno = Rec("idPartita").Value
@@ -1462,22 +1463,22 @@ Public Class wsCampionato
 		If Connessione = "" Then
 			Ritorno = ErroreConnessioneNonValida
 		Else
-			Dim Conn As Object = ApreDB(Connessione)
+			Dim Conn As Object = new clsGestioneDB
 
 			If TypeOf (Conn) Is String Then
 				Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
 			Else
-				Dim Rec As Object = Server.CreateObject("ADODB.Recordset")
+				Dim Rec As Object
 				Dim Sql As String = ""
 				Dim Ok As Boolean = True
 
-				Sql = "Begin transaction"
-				Ritorno = EsegueSql(Conn, Sql, Connessione)
+				Sql = iif(tipodb="SQLSERVER", "Begin transaction", "Start transaction")
+				Ritorno = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
 
 				If Not Ritorno.Contains(StringaErrore) Then
 					Try
 						Sql = "Delete From Giornata Where idUtente=" & idUtente & " And idAnno=" & idAnno & " And idCategoria=" & idCategoria
-						Ritorno = EsegueSql(Conn, Sql, Connessione)
+						Ritorno = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
 						If Ritorno.Contains(StringaErrore) Then
 							Ok = False
 						End If
@@ -1489,7 +1490,7 @@ Public Class wsCampionato
 
 					Try
 						Sql = "Insert Into Giornata Values (" & idUtente & ", " & idAnno & ", " & idCategoria & ", " & idGiornata & ")"
-						Ritorno = EsegueSql(Conn, Sql, Connessione)
+						Ritorno = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
 						If Ritorno.Contains(StringaErrore) Then
 							Ok = False
 						End If
@@ -1504,10 +1505,10 @@ Public Class wsCampionato
 
 				If Ok Then
 					Sql = "commit"
-					Dim Ritorno2 As String = EsegueSql(Conn, Sql, Connessione)
+					Dim Ritorno2 As String = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
 				Else
 					Sql = "rollback"
-					Dim Ritorno2 As String = EsegueSql(Conn, Sql, Connessione)
+					Dim Ritorno2 As String = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
 				End If
 
 				Conn.Close()
@@ -1526,26 +1527,26 @@ Public Class wsCampionato
 		If Connessione = "" Then
 			Ritorno = ErroreConnessioneNonValida
 		Else
-			Dim Conn As Object = ApreDB(Connessione)
+			Dim Conn As Object = new clsGestioneDB
 
 			If TypeOf (Conn) Is String Then
 				Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
 			Else
-				Dim Rec As Object = Server.CreateObject("ADODB.Recordset")
+				Dim Rec As Object
 				Dim Sql As String = ""
 				Dim Ok As Boolean = True
 
 				Sql = "Select * From Giornata Where idUtente=" & idUtente & " And idAnno=" & idAnno & " And idCategoria=" & idCategoria
 				Try
-					Rec = LeggeQuery(Conn, Sql, Connessione)
+					Rec = Conn.LeggeQuery(Server.MapPath("."),  Sql, Connessione)
 					If TypeOf (Rec) Is String Then
 						Ritorno = Rec
 					Else
-						If Rec.Eof Then
+						If Rec.Eof() Then
 							idGiornata = 1
 							Try
 								Sql = "Insert Into Giornata Values (" & idUtente & ", " & idAnno & ", " & idCategoria & ", " & idGiornata & ")"
-								Ritorno = EsegueSql(Conn, Sql, Connessione)
+								Ritorno = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
 								If Ritorno.Contains(StringaErrore) Then
 									Ok = False
 								Else
@@ -1604,28 +1605,28 @@ Public Class wsCampionato
 		If Connessione = "" Then
 			Ritorno = ErroreConnessioneNonValida
 		Else
-			Dim Conn As Object = ApreDB(Connessione)
+			Dim Conn As Object = new clsGestioneDB
 
 			If TypeOf (Conn) Is String Then
 				Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
 			Else
-				Dim Rec As Object = Server.CreateObject("ADODB.Recordset")
+				Dim Rec As Object
 				Dim Sql As String = ""
 				Dim Ok As Boolean = True
 
 				Dim NomeSquadra As String = ""
 				Dim ss() As String = Squadra.Split("_")
 				Sql = "Select * From [Generale].[dbo].[Squadre] Where idSquadra = " & Val(ss(1)).ToString
-				Rec = LeggeQuery(Conn, Sql, Connessione)
+				Rec = Conn.LeggeQuery(Server.MapPath("."),  Sql, Connessione)
 				If TypeOf (Rec) Is String Then
 					Ok = False
 					Ritorno = "Problemi lettura squadra"
 				Else
-					If Rec.Eof Then
+					If Rec.Eof() Then
 					Else
 						NomeSquadra = "" & Rec("Descrizione").Value
 					End If
-					Rec.Close
+					Rec.Close()
 				End If
 
 				Dim filetto As String = gf.LeggeFileIntero(Server.MapPath(".") & "\Queries\Statistiche_Goals.txt")
@@ -1633,7 +1634,7 @@ Public Class wsCampionato
 				If Ok Then
 					Sql = "Select * From (" & filetto & ") As B Where Categorie Like '%" & idCategoria & "-%' Order By Totale Desc, GoalCampionato Desc, GoalAmichevole Desc"
 					Try
-						Rec = LeggeQuery(Conn, Sql, Connessione)
+						Rec = Conn.LeggeQuery(Server.MapPath("."),  Sql, Connessione)
 						If TypeOf (Rec) Is String Then
 							Ritorno = Rec
 						Else
@@ -1650,7 +1651,7 @@ Public Class wsCampionato
 								StampaMarcatori &= "</tr>" & vbCrLf
 							End If
 
-							Do Until Rec.Eof
+							Do Until Rec.Eof()
 								Ritorno &= Rec("Cognome").Value & ";"
 								Ritorno &= Rec("Nome").Value & ";"
 								Ritorno &= Rec("Soprannome").Value & ";"
@@ -1667,7 +1668,7 @@ Public Class wsCampionato
 									If Soprannome <> "" Then Soprannome = "'" & Soprannome & "' "
 									Dim Nominativo As String = Rec("Nome").Value & " " & Soprannome & Rec("Cognome").Value
 									Dim Path As String = PathBaseMultimedia & "/" & NomeSquadra & "/Giocatori/" & idAnno & "_" & Rec("idGiocatore").Value & ".kgb"
-									Path = DecriptaImmagine(Path)
+									Path = DecriptaImmagine(Server.MapPath("."), Path)
 
 									StampaMarcatori &= "<tr style=""background-color: " & Colore & ";"">" & vbCrLf
 									If Colore = "#ccc" Then Colore = "#fff" Else Colore = "#ccc"
@@ -1681,7 +1682,7 @@ Public Class wsCampionato
 									StampaMarcatori &= "</tr>" & vbCrLf
 								End If
 
-								Rec.MoveNext
+								Rec.MoveNext()
 							Loop
 							Rec.Close()
 
@@ -1701,7 +1702,7 @@ Public Class wsCampionato
 					filetto = gf.LeggeFileIntero(Server.MapPath(".") & "\Queries\Statistiche_Sostituzioni.txt")
 					Sql = "Select idGiocatore, Cosa, Cognome, Nome, Soprannome, Ruolo, Volte From (" & filetto & ") As B Where Categorie Like '%" & idCategoria & "-%' Order By Cosa, Volte Desc"
 					Try
-						Rec = LeggeQuery(Conn, Sql, Connessione)
+						Rec = Conn.LeggeQuery(Server.MapPath("."),  Sql, Connessione)
 						If TypeOf (Rec) Is String Then
 							Ritorno = Rec
 						Else
@@ -1716,7 +1717,7 @@ Public Class wsCampionato
 								StampaSostituzioni &= "</tr>" & vbCrLf
 							End If
 
-							Do Until Rec.Eof
+							Do Until Rec.Eof()
 								RitornoSost &= Rec("Cognome").Value & ";"
 								RitornoSost &= Rec("Nome").Value & ";"
 								RitornoSost &= Rec("Soprannome").Value & ";"
@@ -1731,7 +1732,7 @@ Public Class wsCampionato
 									If Soprannome <> "" Then Soprannome = "'" & Soprannome & "' "
 									Dim Nominativo As String = Rec("Nome").Value & " " & Soprannome & Rec("Cognome").Value
 									Dim Path As String = PathBaseMultimedia & "/" & NomeSquadra & "/Giocatori/" & idAnno & "_" & Rec("idGiocatore").Value & ".kgb"
-									Path = DecriptaImmagine(Path)
+									Path = DecriptaImmagine(Server.MapPath("."), Path)
 
 									StampaSostituzioni &= "<tr style=""background-color: " & Colore & ";"">" & vbCrLf
 									If Colore = "#ccc" Then Colore = "#fff" Else Colore = "#ccc"
@@ -1743,7 +1744,7 @@ Public Class wsCampionato
 									StampaSostituzioni &= "</tr>" & vbCrLf
 								End If
 
-								Rec.MoveNext
+								Rec.MoveNext()
 							Loop
 							Rec.Close()
 
@@ -1761,7 +1762,7 @@ Public Class wsCampionato
 					filetto = gf.LeggeFileIntero(Server.MapPath(".") & "\Queries\Statistiche_Presenze.txt")
 					Sql = "Select * From (" & filetto & ") As B Where Categorie Like '%" & idCategoria & "-%' Order By Totale Desc, PresenzeCampionato Desc, PresenzeAmichevole Desc"
 					Try
-						Rec = LeggeQuery(Conn, Sql, Connessione)
+						Rec = Conn.LeggeQuery(Server.MapPath("."),  Sql, Connessione)
 						If TypeOf (Rec) Is String Then
 							Ritorno = Rec
 						Else
@@ -1779,7 +1780,7 @@ Public Class wsCampionato
 								StampaPresenze &= "</tr>" & vbCrLf
 							End If
 
-							Do Until Rec.Eof
+							Do Until Rec.Eof()
 								Ritorno &= Rec("Cognome").Value & ";"
 								Ritorno &= Rec("Nome").Value & ";"
 								Ritorno &= Rec("Soprannome").Value & ";"
@@ -1795,7 +1796,7 @@ Public Class wsCampionato
 									If Soprannome <> "" Then Soprannome = "'" & Soprannome & "' "
 									Dim Nominativo As String = Rec("Nome").Value & " " & Soprannome & Rec("Cognome").Value
 									Dim Path As String = PathBaseMultimedia & "/" & NomeSquadra & "/Giocatori/" & idAnno & "_" & Rec("idGiocatore").Value & ".kgb"
-									Path = DecriptaImmagine(Path)
+									Path = DecriptaImmagine(Server.MapPath("."), Path)
 
 									StampaPresenze &= "<tr style=""background-color: " & Colore & ";"">" & vbCrLf
 									If Colore = "#ccc" Then Colore = "#fff" Else Colore = "#ccc"
@@ -1808,7 +1809,7 @@ Public Class wsCampionato
 									StampaPresenze &= "</tr>" & vbCrLf
 								End If
 
-								Rec.MoveNext
+								Rec.MoveNext()
 							Loop
 							Rec.Close()
 
@@ -1826,7 +1827,7 @@ Public Class wsCampionato
 					filetto = gf.LeggeFileIntero(Server.MapPath(".") & "\Queries\Statistiche_FasceGoalFatti.txt")
 					Sql = "Select * From (" & filetto & ") As B Where Categorie Like '%" & idCategoria & "-%'"
 					Try
-						Rec = LeggeQuery(Conn, Sql, Connessione)
+						Rec = Conn.LeggeQuery(Server.MapPath("."),  Sql, Connessione)
 						If TypeOf (Rec) Is String Then
 							Ritorno = Rec
 						Else
@@ -1842,7 +1843,7 @@ Public Class wsCampionato
 								StampaFgF &= "</tr>" & vbCrLf
 							End If
 
-							Do Until Rec.Eof
+							Do Until Rec.Eof()
 								Ritorno &= Rec("Tipologia").Value & ";"
 								Ritorno &= Rec("Fascia").Value & ";"
 								Ritorno &= Rec("idTempo").Value & ";"
@@ -1859,7 +1860,7 @@ Public Class wsCampionato
 									StampaFgF &= "</tr>" & vbCrLf
 								End If
 
-								Rec.MoveNext
+								Rec.MoveNext()
 							Loop
 							Rec.Close()
 
@@ -1882,7 +1883,7 @@ Public Class wsCampionato
 					"Left Join Giocatori D On E.idGiocatore = D.idGiocatore And E.idProgressivo = 1 " &
 					"Where E.idProgressivo = 1 And Categorie Like '%" & idCategoria & "-%'"
 					Try
-						Rec = LeggeQuery(Conn, Sql, Connessione)
+						Rec = Conn.LeggeQuery(Server.MapPath("."),  Sql, Connessione)
 						If TypeOf (Rec) Is String Then
 							Ritorno = Rec
 						Else
@@ -1892,7 +1893,7 @@ Public Class wsCampionato
 							Dim Fascia4(1, 2) As Integer
 							Dim Fascia5(1, 2) As Integer
 
-							Do Until Rec.Eof
+							Do Until Rec.Eof()
 								Dim Minuti() As String = Rec("Minuti").Value.split(";")
 								Dim idTempo As Integer = Val(Rec("idTempo").Value) - 1
 								Dim idTipologia As Integer = Val(Rec("idTipologia").Value) - 1
@@ -1922,7 +1923,7 @@ Public Class wsCampionato
 										End If
 									End If
 								Next
-								Rec.MoveNext
+								Rec.MoveNext()
 							Loop
 							Rec.Close()
 
@@ -2023,9 +2024,9 @@ Public Class wsCampionato
 
 				If Ok Then
 					filetto = gf.LeggeFileIntero(Server.MapPath(".") & "\Queries\Statistiche_Eventi.txt")
-					Sql = "Select Top 25 * From (" & filetto & ") As B Where Categorie Like '%" & idCategoria & "-%' Order By Quanti Desc"
+					Sql = "Select " & IIf(TipoDB = "SQLSERVER", "Top 25", "") & " * From (" & filetto & ") As B Where Categorie Like '%" & idCategoria & "-%' Order By Quanti Desc" & IIf(TipoDB = "SQLSERVER", "", " Limit 25")
 					Try
-						Rec = LeggeQuery(Conn, Sql, Connessione)
+						Rec = Conn.LeggeQuery(Server.MapPath("."),  Sql, Connessione)
 						If TypeOf (Rec) Is String Then
 							Ritorno = Rec
 						Else
@@ -2041,7 +2042,7 @@ Public Class wsCampionato
 								StampaEventi &= "</tr>" & vbCrLf
 							End If
 
-							Do Until Rec.Eof
+							Do Until Rec.Eof()
 								Ritorno &= Rec("Descrizione").Value & ";"
 								Ritorno &= Rec("Cognome").Value & ";"
 								Ritorno &= Rec("Nome").Value & ";"
@@ -2055,7 +2056,7 @@ Public Class wsCampionato
 									If Soprannome <> "" Then Soprannome = "'" & Soprannome & "' "
 									Dim Nominativo As String = Rec("Nome").Value & " " & Soprannome & Rec("Cognome").Value
 									Dim Path As String = PathBaseMultimedia & "/" & NomeSquadra & "/Giocatori/" & idAnno & "_" & Rec("idGiocatore").Value & ".kgb"
-									Path = DecriptaImmagine(Path)
+									Path = DecriptaImmagine(Server.MapPath("."), Path)
 
 									StampaEventi &= "<tr style=""background-color: " & Colore & ";"">" & vbCrLf
 									If Colore = "#ccc" Then Colore = "#fff" Else Colore = "#ccc"
@@ -2066,7 +2067,7 @@ Public Class wsCampionato
 									StampaEventi &= "</tr>" & vbCrLf
 								End If
 
-								Rec.MoveNext
+								Rec.MoveNext()
 							Loop
 							Rec.Close()
 
@@ -2084,7 +2085,7 @@ Public Class wsCampionato
 					filetto = gf.LeggeFileIntero(Server.MapPath(".") & "\Queries\Statistiche_TipologiePartite.txt")
 					Sql = "Select * From (" & filetto & ") As B Where Categorie Like '%" & idCategoria & "-%'"
 					Try
-						Rec = LeggeQuery(Conn, Sql, Connessione)
+						Rec = Conn.LeggeQuery(Server.MapPath("."),  Sql, Connessione)
 						If TypeOf (Rec) Is String Then
 							Ritorno = Rec
 						Else
@@ -2099,7 +2100,7 @@ Public Class wsCampionato
 								StampaTipoPartite &= "</tr>" & vbCrLf
 							End If
 
-							Do Until Rec.Eof
+							Do Until Rec.Eof()
 								Dim Dove As String = ""
 
 								Select Case Rec("Casa").Value
@@ -2124,7 +2125,7 @@ Public Class wsCampionato
 									StampaTipoPartite &= "</tr>" & vbCrLf
 								End If
 
-								Rec.MoveNext
+								Rec.MoveNext()
 							Loop
 							Rec.Close()
 
@@ -2143,7 +2144,7 @@ Public Class wsCampionato
 					filetto = filetto.Replace("%idCategoria%", idCategoria)
 					Sql = "Select * From (" & filetto & ") As B Where Categorie Like '%" & idCategoria & "-%'"
 					Try
-						Rec = LeggeQuery(Conn, Sql, Connessione)
+						Rec = Conn.LeggeQuery(Server.MapPath("."),  Sql, Connessione)
 						If TypeOf (Rec) Is String Then
 							Ritorno = Rec
 						Else
@@ -2178,7 +2179,7 @@ Public Class wsCampionato
 							Dim Incontrati As New List(Of Integer)
 							Dim idAvversario As New List(Of Integer)
 
-							Do Until Rec.Eof
+							Do Until Rec.Eof()
 								Dim Avversario As String = Rec("Avversario").Value
 								Dim Categoria As String = Rec("Categoria").Value
 								Dim Risultato As String = Rec("Risultato").Value
@@ -2294,7 +2295,7 @@ Public Class wsCampionato
 									MaxGoals = Totale
 								End If
 
-								Rec.MoveNext
+								Rec.MoveNext()
 							Loop
 							Rec.Close()
 
@@ -2418,7 +2419,7 @@ Public Class wsCampionato
 
 								If Stampa = "S" Then
 									Dim Imm2 As String = PathBaseMultimedia & "/" & NomeSquadra & "/Avversari/" & idAvversario.Item(iii) & ".kgb"
-									Imm2 = DecriptaImmagine(Imm2)
+									Imm2 = DecriptaImmagine(Server.MapPath("."), Imm2)
 
 									StampaAvversari &= "<tr style=""background-color: " & Colore & ";"">" & vbCrLf
 									If Colore = "#ccc" Then Colore = "#fff" Else Colore = "#ccc"
@@ -2443,7 +2444,7 @@ Public Class wsCampionato
 					filetto = gf.LeggeFileIntero(Server.MapPath(".") & "\Queries\Statistiche_Meteo.txt")
 					Sql = "Select * From (" & filetto & ") As B Where Categorie Like '%" & idCategoria & "-%' Order By Quante Desc, Tempo"
 					Try
-						Rec = LeggeQuery(Conn, Sql, Connessione)
+						Rec = Conn.LeggeQuery(Server.MapPath("."),  Sql, Connessione)
 						If TypeOf (Rec) Is String Then
 							Ritorno = Rec
 						Else
@@ -2458,7 +2459,7 @@ Public Class wsCampionato
 								StampaMeteo &= "</tr>" & vbCrLf
 							End If
 
-							Do Until Rec.Eof
+							Do Until Rec.Eof()
 								Ritorno &= Rec("Tempo").Value & ";"
 								Ritorno &= Rec("Icona").Value & ";"
 								Ritorno &= Rec("Quante").Value & ";"
@@ -2473,7 +2474,7 @@ Public Class wsCampionato
 									StampaMeteo &= "</tr>" & vbCrLf
 								End If
 
-								Rec.MoveNext
+								Rec.MoveNext()
 							Loop
 							Rec.Close()
 
@@ -2502,7 +2503,7 @@ Public Class wsCampionato
 					End If
 
 					Sql = "Select * From (" &
-						"Select Cognome, Nome, Soprannome, C.Descrizione As AmmoEspu, A.idGiocatore, B.Categorie, E.Descrizione As Tipologia, COUNT(*) As Quante From EventiPartita A " &
+						"Select Cognome, Nome, Soprannome, C.Descrizione As AmmoEspu, A.idGiocatore, B.Categorie, E.Descrizione As Tipologia, " & IIf(TipoDB = "SQLSERVER", "Isnull(Count(*),0)", "COALESCE(Count(*),0)") & " As Quante From EventiPartita A " &
 						"Left Join Giocatori B On A.idGiocatore = B.idGiocatore " &
 						"Left Join Eventi C On A.idEvento = C.idEvento " &
 						"Left Join Partite D On D.idPartita = A.idPartita " &
@@ -2511,11 +2512,11 @@ Public Class wsCampionato
 						"Group By Cognome, Nome, Soprannome, C.Descrizione, A.idGiocatore, B.Categorie, E.Descrizione" &
 						") As A Order By Tipologia, Quante Desc"
 					Try
-						Rec = LeggeQuery(Conn, Sql, Connessione)
+						Rec = Conn.LeggeQuery(Server.MapPath("."),  Sql, Connessione)
 						If TypeOf (Rec) Is String Then
 							Ritorno = Rec
 						Else
-							Do Until Rec.Eof
+							Do Until Rec.Eof()
 								AmmoEspu &= Rec("Cognome").Value & ";"
 								AmmoEspu &= Rec("Nome").Value & ";"
 								AmmoEspu &= Rec("Soprannome").Value & ";"
@@ -2526,7 +2527,7 @@ Public Class wsCampionato
 
 								If Stampa = "S" Then
 									Dim Path As String = PathBaseMultimedia & "/" & NomeSquadra & "/Giocatori/" & idAnno & "_" & Rec("idGiocatore").Value & ".kgb"
-									Path = DecriptaImmagine(Path)
+									Path = DecriptaImmagine(Server.MapPath("."), Path)
 
 									StampaAmmEsp &= "<tr style=""background-color: " & Colore & ";"">" & vbCrLf
 									If Colore = "#ccc" Then Colore = "#fff" Else Colore = "#ccc"
@@ -2538,9 +2539,9 @@ Public Class wsCampionato
 									StampaAmmEsp &= "</tr>" & vbCrLf
 								End If
 
-								Rec.MoveNext
+								Rec.MoveNext()
 							Loop
-							Rec.Close
+							Rec.Close()
 
 							If Stampa = "S" Then
 								StampaAmmEsp &= "</table>"
@@ -2624,12 +2625,12 @@ Public Class wsCampionato
 		If Connessione = "" Then
 			Ritorno = ErroreConnessioneNonValida
 		Else
-			Dim Conn As Object = ApreDB(Connessione)
+			Dim Conn As Object = new clsGestioneDB
 
 			If TypeOf (Conn) Is String Then
 				Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
 			Else
-				Dim Rec As Object = Server.CreateObject("ADODB.Recordset")
+				Dim Rec As Object
 				Dim Sql As String = ""
 				Dim Ok As Boolean = True
 				Dim Colore As String = "#ccc"
@@ -2637,16 +2638,16 @@ Public Class wsCampionato
 				Dim NomeSquadra As String = ""
 				Dim ss() As String = Squadra.Split("_")
 				Sql = "Select * From [Generale].[dbo].[Squadre] Where idSquadra = " & Val(ss(1)).ToString
-				Rec = LeggeQuery(Conn, Sql, Connessione)
+				Rec = Conn.LeggeQuery(Server.MapPath("."),  Sql, Connessione)
 				If TypeOf (Rec) Is String Then
 					Ok = False
 					Ritorno = "Problemi lettura squadra"
 				Else
-					If Rec.Eof Then
+					If Rec.Eof() Then
 					Else
 						NomeSquadra = "" & Rec("Descrizione").Value
 					End If
-					Rec.Close
+					Rec.Close()
 				End If
 
 				If Ok Then
@@ -2688,7 +2689,7 @@ Public Class wsCampionato
 							Else
 								imm = PathBaseMultimedia & "/" & NomeSquadra & "/Avversari/" & Campi(0) & ".kgb"
 							End If
-							Dim Imm1 As String = DecriptaImmagine(imm)
+							Dim Imm1 As String = DecriptaImmagine(Server.MapPath("."), imm)
 
 							Stampa &= "<td><img src=""" & Imm1 & """ width=""50"" height=""50"" /></td>" & vbCrLf
 							Stampa &= "<td>" & Campi(1) & "</td>"
@@ -2749,12 +2750,12 @@ Public Class wsCampionato
 		If Connessione = "" Then
 			Ritorno = ErroreConnessioneNonValida
 		Else
-			Dim Conn As Object = ApreDB(Connessione)
+			Dim Conn As Object = new clsGestioneDB
 
 			If TypeOf (Conn) Is String Then
 				Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
 			Else
-				Dim Rec As Object = Server.CreateObject("ADODB.Recordset")
+				Dim Rec as object
 				Dim Sql As String = ""
 				Dim Ok As Boolean = True
 				Dim Colore As String = "#ccc"
@@ -2774,31 +2775,31 @@ Public Class wsCampionato
 				Dim NomeSquadra As String = ""
 				Dim ss() As String = Squadra.Split("_")
 				Sql = "Select * From [Generale].[dbo].[Squadre] Where idSquadra = " & Val(ss(1)).ToString
-				Rec = LeggeQuery(Conn, Sql, Connessione)
+				Rec = Conn.LeggeQuery(Server.MapPath("."),  Sql, Connessione)
 				If TypeOf (Rec) Is String Then
 					Ok = False
 					Ritorno = "Problemi lettura squadra"
 				Else
-					If Rec.Eof Then
+					If Rec.Eof() Then
 					Else
 						NomeSquadra = "" & Rec("Descrizione").Value
 					End If
-					Rec.Close
+					Rec.Close()
 				End If
 
 				Dim NomeCategoria As String = ""
 				If Ok Then
 					Sql = "Select * From Categorie Where idCategoria=" & idCategoria
-					Rec = LeggeQuery(Conn, Sql, Connessione)
+					Rec = Conn.LeggeQuery(Server.MapPath("."),  Sql, Connessione)
 					If TypeOf (Rec) Is String Then
 						Ok = False
 						Ritorno = "Problemi lettura categoria"
 					Else
-						If Rec.Eof Then
+						If Rec.Eof() Then
 						Else
 							NomeCategoria = "" & Rec("Descrizione").Value & " " & Rec("AnnoCategoria").Value
 						End If
-						Rec.Close
+						Rec.Close()
 					End If
 				End If
 
@@ -2810,7 +2811,7 @@ Public Class wsCampionato
 					"left Join CalendarioRisultati F On A.idPartita = F.idPartita " &
 					"Where idGiornata = " & idGiornata & " And idCategoria = " & idCategoria & " Order By A.idPartita"
 					Try
-						Rec = LeggeQuery(Conn, Sql, Connessione)
+						Rec = Conn.LeggeQuery(Server.MapPath("."),  Sql, Connessione)
 						If TypeOf (Rec) Is String Then
 							Ritorno = Rec
 						Else
@@ -2823,7 +2824,7 @@ Public Class wsCampionato
 							Stampa &= "<th style=""text-align: right;"">Risultato</th>" & vbCrLf
 							Stampa &= "</tr>" & vbCrLf
 
-							Do Until Rec.eof
+							Do Until Rec.Eof()
 								Dim imm As String = ""
 								Dim Casa As String = "" & Rec("Casa").Value
 								Dim Fuori As String = "" & Rec("Fuori").Value
@@ -2834,7 +2835,7 @@ Public Class wsCampionato
 								Else
 									imm = PathBaseMultimedia & "/" & NomeSquadra & "/Avversari/" & Rec("idSqCasa").Value & ".kgb"
 								End If
-								Dim Imm1 As String = DecriptaImmagine(imm)
+								Dim Imm1 As String = DecriptaImmagine(Server.MapPath("."), imm)
 
 								If Rec("idSqFuori").Value = -1 Or Rec("idSqFuori").Value = 9999 Then
 									imm = PathBaseMultimedia & "/" & NomeSquadra & "/Categorie/" & idAnno & "_" & idCategoria & ".kgb"
@@ -2842,7 +2843,7 @@ Public Class wsCampionato
 								Else
 									imm = PathBaseMultimedia & "/" & NomeSquadra & "/Avversari/" & Rec("idSqFuori").Value & ".kgb"
 								End If
-								Dim Imm2 As String = DecriptaImmagine(imm)
+								Dim Imm2 As String = DecriptaImmagine(Server.MapPath("."), imm)
 
 								Stampa &= "<tr style=""background-color: " & Colore & ";"">" & vbCrLf
 								If Colore = "#ccc" Then Colore = "#fff" Else Colore = "#ccc"
@@ -2853,7 +2854,7 @@ Public Class wsCampionato
 								Stampa &= "<td style=""text-align: right;"">" & Rec("Risultato").Value & "</td>"
 								Stampa &= "</tr>"
 
-								Rec.MoveNext
+								Rec.MoveNext()
 							Loop
 							Rec.Close()
 

@@ -6,7 +6,7 @@ Imports System.Windows.Forms
 
 Module Globale
 	Public effettuaLog As Boolean = True
-	Public effettuaLogMail As Boolean = True
+	Public effettuaLogMail As Boolean = False
 
 	Public nomeFileLogGenerale As String = ""
 	Public listaLog As New List(Of String)
@@ -56,6 +56,18 @@ Module Globale
 	Public RigaPari As Boolean = False
 	Public CryptPasswordString As String = "WPippoBaudo227!"
 	Public stringaWidgets As String = "1-1-1-1-1"
+	Public TipoDB As String = "MariaDB"
+	'Public mdb(5) As clsMariaDB
+
+	Public Function LeggeTipoDB() As String
+		'If TipoDB = "" Then
+		'	Dim gf As New GestioneFilesDirectory
+
+		'	Return gf.LeggeFileIntero(MP & "\Impostazioni\TipoDB.txt")
+		'Else
+		Return TipoDB
+		'End If
+	End Function
 
 	Public Function SistemaNumero(Numero As String) As String
 		If Numero = "" Then
@@ -89,31 +101,94 @@ Module Globale
 		Return ListaNomi
 	End Function
 
-	Public Sub EliminaDatiNuovoAnnoDopoErrore(idAnno As String, Conn As Object, Connessione As String)
+	Public Sub EliminaDatiNuovoAnnoDopoErrore(MP As String, idAnno As String, Conn As Object, Connessione As String)
 		Dim Ritorno As String
 		Dim Sql As String
 
 		Sql = "delete from Anni Where idAnno=" & idAnno
-		Ritorno = EsegueSql(Conn, Sql, Connessione)
+		Ritorno = Conn.EsegueSql(MP, Sql, Connessione)
 
 		Sql = "delete from UtentiMobile Where idAnno=" & idAnno
-		Ritorno = EsegueSql(Conn, Sql, Connessione)
+		Ritorno = Conn.EsegueSql(MP, Sql, Connessione)
 
 		Sql = "delete from Categorie Where idAnno=" & idAnno
-		Ritorno = EsegueSql(Conn, Sql, Connessione)
+		Ritorno = Conn.EsegueSql(MP, Sql, Connessione)
 
 		Sql = "delete from Allenatori Where idAnno=" & idAnno
-		Ritorno = EsegueSql(Conn, Sql, Connessione)
+		Ritorno = Conn.EsegueSql(MP, Sql, Connessione)
 
 		Sql = "delete from Dirigenti Where idAnno=" & idAnno
-		Ritorno = EsegueSql(Conn, Sql, Connessione)
+		Ritorno = Conn.EsegueSql(MP, Sql, Connessione)
 
 		Sql = "delete from Giocatori Where idAnno=" & idAnno
-		Ritorno = EsegueSql(Conn, Sql, Connessione)
+		Ritorno = Conn.EsegueSql(MP, Sql, Connessione)
 
 		Sql = "delete from Arbitri Where idAnno=" & idAnno
-		Ritorno = EsegueSql(Conn, Sql, Connessione)
+		Ritorno = Conn.EsegueSql(MP, Sql, Connessione)
 	End Sub
+
+	Public Function RitornaMailDopoRichiesta(MP As String, Utente As String) As String
+		Dim Ritorno As String = ""
+		Dim Connessione As String = LeggeImpostazioniDiBase(MP, "")
+
+		If Connessione = "" Then
+			Ritorno = ErroreConnessioneNonValida
+		Else
+			Dim Conn As Object = New clsGestioneDB
+
+			If TypeOf (Conn) Is String Then
+				Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
+			Else
+				Dim Rec As Object
+				Dim Sql As String = ""
+
+				Sql = "SELECT Utenti.idAnno, idUtente, Utente, Cognome, Nome, " &
+						"Password, EMail, idCategoria, Utenti.idTipologia, Utenti.idSquadra, Descrizione As Squadra " &
+						"FROM Utenti Left Join Squadre On Utenti.idSquadra = Squadre.idSquadra " &
+						"Where Upper(Utente)='" & Utente.ToUpper.Replace("'", "''") & "'" ' And idAnno=" & idAnno
+				Rec = Conn.LeggeQuery(MP, Sql, Connessione)
+				If TypeOf (Rec) Is String Then
+					Ritorno = Rec.ToString
+				Else
+					If Rec.Eof() Then
+						Ritorno = StringaErrore & " Nessun utente rilevato"
+					Else
+						If Rec("EMail").Value = "" And Rec("Utente").Value = "" Then
+							Ritorno = StringaErrore & " Nessuna mail rilevata"
+						Else
+							Dim idUtente As Integer = Rec("idUtente").Value
+							Dim EMail As String = Rec("EMail").Value
+							If EMail = "" Then
+								EMail = Rec("Utente").Value
+							End If
+							Dim pass As String = generaPassRandom()
+							Dim nuovaPass() = pass.Split(";")
+
+							Try
+								Sql = "Update Utenti Set Password='" & nuovaPass(1).Replace("'", "''") & "', PasswordScaduta=1 " &
+									"Where idUtente=" & idUtente
+								Ritorno = Conn.EsegueSql(MP, Sql, Connessione)
+								If Not Ritorno.Contains(StringaErrore) Then
+									Dim m As New mail
+									Dim Oggetto As String = "Reset password inCalcio"
+									Dim Body As String = ""
+									Body &= "La Sua password relativa al sito inCalcio è stata modificata dietro sua richiesta. <br /><br />"
+									Body &= "La nuova password valida per il solo primo accesso è: " & nuovaPass(0) & "<br /><br />"
+									Dim ChiScrive As String = "notifiche@incalcio.cloud"
+
+									Ritorno = m.SendEmail(MP, "", "", Oggetto, Body, EMail, {""})
+								End If
+							Catch ex As Exception
+								Ritorno = StringaErrore & " " & ex.Message
+							End Try
+						End If
+					End If
+				End If
+			End If
+		End If
+
+		Return Ritorno
+	End Function
 
 	Public Function LeggeImpostazioniDiBase(Percorso As String, Squadra As String) As String
 		Dim Connessione As String = ""
@@ -128,19 +203,36 @@ Module Globale
 				Dim Provider As String = Connessioni.ProviderName
 				Dim connectionString As String = Connessioni.ConnectionString
 
-				If Nome = "SQLConnectionStringLOCALE" Then
-					Connessione = "Provider=" & Provider & ";" & connectionString
-					Connessione = Replace(Connessione, "*^*^*", Percorso & "\")
-					If Squadra <> "" Then
-						If Squadra = "DBVUOTO" Then
-							Connessione = Connessione.Replace("***NOME_DB***", "DBVuoto")
+				If TipoDB = "SQLSERVER" Then
+					If Nome = "SQLConnectionStringLOCALESS" Then
+						Connessione = "Provider=" & Provider & ";" & connectionString
+						Connessione = Replace(Connessione, "*^*^*", Percorso & "\")
+						If Squadra <> "" Then
+							If Squadra = "DBVUOTO" Then
+								Connessione = Connessione.Replace("***NOME_DB***", "DBVuoto")
+							Else
+								Connessione = Connessione.Replace("***NOME_DB***", Squadra)
+							End If
 						Else
-							Connessione = Connessione.Replace("***NOME_DB***", Squadra)
+							Connessione = Connessione.Replace("***NOME_DB***", "Generale")
 						End If
-					Else
-						Connessione = Connessione.Replace("***NOME_DB***", "Generale")
+						Exit For
 					End If
-					Exit For
+				Else
+					If Nome = "SQLConnectionStringLOCALEMD" Then
+						Connessione = connectionString
+						Connessione = Replace(Connessione, "*^*^*", Percorso & "\")
+						If Squadra <> "" Then
+							If Squadra = "DBVUOTO" Then
+								Connessione = Connessione.Replace("***NOME_DB***", "DBVuoto")
+							Else
+								Connessione = Connessione.Replace("***NOME_DB***", Squadra)
+							End If
+						Else
+							Connessione = Connessione.Replace("***NOME_DB***", "Generale")
+						End If
+						Exit For
+					End If
 				End If
 			Next
 		End If
@@ -148,10 +240,10 @@ Module Globale
 		Return Connessione
 	End Function
 
-	Public Function RitornaMultimediaPerTipologia(Squadra As String, idAnno As String, id As String, Tipologia As String) As String
+	Public Function RitornaMultimediaPerTipologia(MP As String, Squadra As String, idAnno As String, id As String, Tipologia As String) As String
 		' PercorsoSitoCV = "D:\Looigi\VB.Net\Miei\WEB\SSDCastelverdeCalcio\CVCalcio\App_Themes\Standard\Images\"
 		Dim gf As New GestioneFilesDirectory
-		Dim Righe As String = gf.LeggeFileIntero(HttpContext.Current.Server.MapPath(".") & "\Impostazioni\PathAllegati.txt")
+		Dim Righe As String = gf.LeggeFileIntero(MP & "\Impostazioni\PathAllegati.txt")
 		Dim Campi() As String = Righe.Split(";")
 		Campi(0) = Campi(0).Replace(vbCrLf, "")
 		If Strings.Right(Campi(0), 1) <> "\" Then
@@ -213,11 +305,11 @@ Module Globale
 		Return Ritorno
 	End Function
 
-	Public Function DecriptaImmagine(Nome As String) As String
+	Public Function DecriptaImmagine(MP As String, Nome As String) As String
 		Dim Ritorno As String = ""
 		Dim gf As New GestioneFilesDirectory
 
-		Dim tutto As String = gf.LeggeFileIntero(HttpContext.Current.Server.MapPath(".") & "\Impostazioni\PathAllegati.txt")
+		Dim tutto As String = gf.LeggeFileIntero(MP & "\Impostazioni\PathAllegati.txt")
 		Dim campi() As String = tutto.Split(";")
 		Dim pathFisico As String = campi(0).Replace(vbCrLf, "")
 		Dim pathUrl As String = campi(2).Replace(vbCrLf, "")
@@ -247,9 +339,9 @@ Module Globale
 		Dim c As New CriptaFiles
 		'Return pathLetturaFile1
 
-		If File.Exists(pathLetturaFile1) Then
+		If ControllaEsistenzaFile(pathLetturaFile1) Then
 			c.DecryptFile(CryptPasswordString, pathLetturaFile1, pathScritturaFile1)
-			If File.Exists(pathScritturaFile1) Then
+			If ControllaEsistenzaFile(pathScritturaFile1) Then
 				Ritorno = pathUrl1
 			Else
 				Ritorno = PathBaseImmScon
@@ -261,7 +353,7 @@ Module Globale
 		Return Ritorno
 	End Function
 
-	Public Function CreaHtmlPartita(Squadra As String, Conn As Object, Connessione As String, idAnno As String, idPartita As String) As String
+	Public Function CreaHtmlPartita(MP As String, Squadra As String, Conn As Object, Connessione As String, idAnno As String, idPartita As String) As String
 		Dim Sql As String
 		Dim Rec As Object
 		Dim Rec2 As Object
@@ -269,7 +361,7 @@ Module Globale
 		Dim Pagina As StringBuilder = New StringBuilder
 		Dim gf As New GestioneFilesDirectory
 
-		Dim paths As String = gf.LeggeFileIntero(HttpContext.Current.Server.MapPath(".") & "\Impostazioni\PathAllegati.txt")
+		Dim paths As String = gf.LeggeFileIntero(MP & "\Impostazioni\PathAllegati.txt")
 		Dim P() As String = paths.Split(";")
 		If Strings.Right(P(0), 1) <> "\" Then
 			P(0) &= "\"
@@ -283,10 +375,10 @@ Module Globale
 		Dim PathBaseImmagini As String = pathMultimedia ' "http://loppa.duckdns.org:90/MultiMedia" ' "http://looigi.no-ip.biz:90/CVCalcio/App_Themes/Standard/Images"
 		Dim PathBaseMultimedia As String = pathMultimedia.Replace("Allegati", "Multimedia") ' "http://loppa.duckdns.org:90/MultiMedia" ' "http://looigi.no-ip.biz:90/CVCalcio/App_Themes/Standard/Images"
 		Dim PathBaseImmScon As String = pathMultimedia & "Sconosciuto.png" ' "http://looigi.no-ip.biz:90/CVCalcio/App_Themes/Standard/Images/Sconosciuto.png"
-		Dim PathLog As String = HttpContext.Current.Server.MapPath(".") & "\Log\Pdf.txt"
+		Dim PathLog As String = MP & "\Log\Pdf.txt"
 		Dim Ritorno As String = "*"
 
-		Dim Filone As String = gf.LeggeFileIntero(HttpContext.Current.Server.MapPath(".") & "\Scheletri\base_partita.txt")
+		Dim Filone As String = gf.LeggeFileIntero(MP & "\Scheletri\base_partita.txt")
 		Dim sIdPartita As String = idPartita.Trim
 		For i As Integer = sIdPartita.Length - 1 To 3
 			sIdPartita = "0" & sIdPartita
@@ -360,7 +452,7 @@ Module Globale
 			"Left Join Giocatori C On C.idGiocatore = B.idEntrante " &
 			"Left Join Giocatori D On D.idGiocatore = B.idSostituito " &
 			"Where A.idPartita = " & idPartita & " And B.idPartita Is Not Null"
-		Rec = LeggeQuery(Conn, Sql, Connessione)
+		Rec = Conn.LeggeQuery(MP, Sql, Connessione)
 		If TypeOf (Rec) Is String Then
 			Ok = False
 			Ritorno = "Problemi lettura generale"
@@ -387,10 +479,10 @@ Module Globale
 
 		Sql = "Select * From Titolari " &
 			"Where idPartita=" & idPartita
-		Rec2 = LeggeQuery(Conn, Sql, Connessione)
+		Rec2 = Conn.LeggeQuery(MP, Sql, Connessione)
 		If TypeOf (Rec2) Is String Then
 		Else
-			Do Until Rec2.Eof
+			Do Until Rec2.Eof()
 				InFormazione.Add(Rec2("idGiocatore").Value)
 				Rec2.MoveNext
 			Loop
@@ -424,14 +516,14 @@ Module Globale
 			"LEFT JOIN Anni On Partite.idAnno = Anni.idAnno " &
 			"LEFT JOIN PartiteCapitani On Partite.idPartita = PartiteCapitani.idPartita " &
 			"WHERE Partite.idPartita=" & idPartita & " And Partite.idAnno=" & idAnno
-		Rec = LeggeQuery(Conn, Sql, Connessione)
+		Rec = Conn.LeggeQuery(MP, Sql, Connessione)
 		If TypeOf (Rec) Is String Then
 			Ok = False
 			Ritorno = "Problemi lettura generale"
 		Else
 			Dim idCapitano As Integer = -1
 
-			If Not Rec.Eof Then
+			If Not Rec.Eof() Then
 				If Not Rec("idCapitano").Value Is DBNull.Value Then
 					idCapitano = Rec("idCapitano").Value
 				End If
@@ -511,29 +603,29 @@ Module Globale
 				Dim NomeSquadra As String = ""
 				Dim ss() As String = Squadra.Split("_")
 				Sql = "Select * From [Generale].[dbo].[Squadre] Where idSquadra = " & Val(ss(1)).ToString
-				Rec2 = LeggeQuery(Conn, Sql, Connessione)
+				Rec2 = Conn.LeggeQuery(MP, Sql, Connessione)
 				If TypeOf (Rec2) Is String Then
 					Ok = False
 					Ritorno = "Problemi lettura squadra"
 				Else
-					If Rec2.Eof Then
+					If Rec2.Eof() Then
 					Else
 						NomeSquadra = "" & Rec2("Descrizione").Value
 					End If
 				End If
-				Rec2.Close
+				Rec2.Close()
 
 				Dim ImmAll As String = PathBaseMultimedia & "/" & NomeSquadra & "/Allenatori/" & idAnno & "_" & Rec("idAllenatore").Value & ".kgb"
-				ImmAll = DecriptaImmagine(ImmAll)
+				ImmAll = DecriptaImmagine(MP, ImmAll)
 				'Return ImmAll
 
 				Filone = Filone.Replace("***IMMAGINE ALL***", ImmAll)
 				Filone = Filone.Replace("***ALLENATORE***", "" & Rec("Allenatore").Value)
 
 				Dim Imm1 As String = PathBaseMultimedia & "/" & NomeSquadra & "/Categorie/" & idAnno & "_" & Rec("idCategoria").Value & ".kgb"
-				Imm1 = DecriptaImmagine(Imm1)
+				Imm1 = DecriptaImmagine(MP, Imm1)
 				Dim Imm2 As String = PathBaseMultimedia & "/" & NomeSquadra & "/Avversari/" & Rec("idAvversario").Value & ".kgb"
-				Imm2 = DecriptaImmagine(Imm2)
+				Imm2 = DecriptaImmagine(MP, Imm2)
 
 				If Casa = "S" Then
 					Filone = Filone.Replace("***IMMAGINE SQ1***", Imm1)
@@ -563,21 +655,21 @@ Module Globale
 
 				Dim RisultatoATempi As String = "" & Rec("RisultatoATempi").Value.ToString.Trim
 
-				Rec.Close
+				Rec.Close()
 
 				' Arbitro
 				Sql = "Select Arbitri.idArbitro, Arbitri.Cognome, Arbitri.Nome " &
 					"FROM(Partite INNER JOIN ArbitriPartite On Partite.idPartita = ArbitriPartite.idPartita) " &
 					"INNER Join Arbitri ON ArbitriPartite.idArbitro = Arbitri.idArbitro " &
 					"Where Partite.idAnno=" & idAnno & " And Partite.idPartita=" & idPartita
-				Rec = LeggeQuery(Conn, Sql, Connessione)
+				Rec = Conn.LeggeQuery(MP, Sql, Connessione)
 				If TypeOf (Rec) Is String Then
 					Ok = False
 					Ritorno = "Problemi lettura arbitro"
 				Else
-					If Not Rec.Eof Then
+					If Not Rec.Eof() Then
 						Dim PathArb As String = PathBaseImmagini & "/Arbitri/" & Rec("idArbitro").Value & ".kgb"
-						PathArb = DecriptaImmagine(PathArb)
+						PathArb = DecriptaImmagine(MP, PathArb)
 
 						Filone = Filone.Replace("***IMMAGINE ARB***", PathArb)
 						Filone = Filone.Replace("***ARBITRO***", Rec("Cognome").Value & " " & Rec("Nome").Value)
@@ -595,16 +687,16 @@ Module Globale
 				Sql = "SELECT Dirigenti.idDirigente, Dirigenti.Cognome, Dirigenti.Nome " &
 						"FROM (Partite INNER JOIN DirigentiPartite ON Partite.idPartita = DirigentiPartite.idPartita) INNER JOIN Dirigenti ON DirigentiPartite.idDirigente = Dirigenti.idDirigente " &
 						"Where Partite.idAnno=" & idAnno & " And Partite.idPartita=" & idPartita & " And Dirigenti.idAnno=" & idAnno
-				Rec = LeggeQuery(Conn, Sql, Connessione)
+				Rec = Conn.LeggeQuery(MP, Sql, Connessione)
 				If TypeOf (Rec) Is String Then
 					Ok = False
 					Ritorno = "Problemi lettura dirigenti"
 				Else
 					Dirigenti.Append("<table style=""width: 99%; text-align: center;"" cellpadding=""0"" cellspacing=""0"">")
 
-					Do Until Rec.Eof
+					Do Until Rec.Eof()
 						Dim Path As String = PathBaseImmagini & "/" & NomeSquadra & "/Dirigenti/" & idAnno & "_" & Rec("idDirigente").Value & ".kgb"
-						Path = DecriptaImmagine(Path)
+						Path = DecriptaImmagine(MP, Path)
 
 						Dirigenti.Append("<tr>")
 						Dirigenti.Append("<td>")
@@ -624,7 +716,7 @@ Module Globale
 
 				Filone = Filone.Replace("***DIRIGENTE***", Dirigenti.ToString)
 
-				Rec.Close
+				Rec.Close()
 
 				' Ammoniti / Espulsi
 				Dim Ammoniti As New List(Of AmmoEspu)
@@ -634,12 +726,12 @@ Module Globale
 					"EventiPartita " &
 					"Left Join Eventi On EventiPartita.idEvento = Eventi.idEvento " &
 					"Where idAnno = " & idAnno & " And idPartita = " & idPartita & " And (Upper(Descrizione)='AMMONITO' Or Upper(Descrizione)='ESPULSO')"
-				Rec = LeggeQuery(Conn, Sql, Connessione)
+				Rec = Conn.LeggeQuery(MP, Sql, Connessione)
 				If TypeOf (Rec) Is String Then
 					Ok = False
 					Ritorno = "Problemi lettura convocati"
 				Else
-					Do Until Rec.Eof
+					Do Until Rec.Eof()
 						Dim a As New AmmoEspu
 						a.idGiocatore = Rec("idGiocatore").Value
 						a.Minuto = Rec("Minuto").Value
@@ -664,7 +756,7 @@ Module Globale
 					"LEFT JOIN [Generale].[dbo].[Ruoli] ON Giocatori.idRuolo = Ruoli.idRuolo " &
 					"Where Partite.idAnno=" & idAnno & " And PArtite.idPartita=" & idPartita & " " &
 					"Order By Ruoli.idRuolo"
-				Rec = LeggeQuery(Conn, Sql, Connessione)
+				Rec = Conn.LeggeQuery(MP, Sql, Connessione)
 				If TypeOf (Rec) Is String Then
 					Ok = False
 					Ritorno = "Problemi lettura convocati"
@@ -676,10 +768,10 @@ Module Globale
 
 					Convocati.Append("<table style=""width: 99%; text-align: center;"" cellpadding=""0"" cellspacing=""0"">")
 
-					Do Until Rec.Eof
+					Do Until Rec.Eof()
 						Dim C As String = Rec("Cognome").Value & " " & Rec("Nome").Value & "<br />" & Rec("Ruolo").Value
 						Dim Path As String = PathBaseMultimedia & "/" & NomeSquadra & "/Giocatori/" & idAnno & "_" & Rec("idGiocatore").Value & ".kgb"
-						Path = DecriptaImmagine(Path)
+						Path = DecriptaImmagine(MP, Path)
 
 						Dim messoTit As Boolean = False
 
@@ -769,7 +861,7 @@ Module Globale
 
 						Rec.MoveNext
 					Loop
-					Rec.Close
+					Rec.Close()
 
 					Convocati.Append("</table>")
 
@@ -778,7 +870,7 @@ Module Globale
 					Dim QuantiGoal2 As Integer = 0
 
 					Sql = "Select * From RisultatiAggiuntivi Where idPartita=" & idPartita
-					Rec = LeggeQuery(Conn, Sql, Connessione)
+					Rec = Conn.LeggeQuery(MP, Sql, Connessione)
 					If TypeOf (Rec) Is String Then
 						Ok = False
 						Ritorno = "Problemi lettura rislutati aggiuntivi: " & Sql
@@ -789,7 +881,7 @@ Module Globale
 
 						QuantiGoal2 = GoalAvv1Tempi + GoalAvv2Tempi + GoalAvv3Tempi
 					End If
-					Rec.Close
+					Rec.Close()
 
 					' Marcatori
 					Sql = "Select * From (" &
@@ -818,7 +910,7 @@ Module Globale
 							"Order By idTempo, Minuto"
 					' Return Sql
 
-					Rec = LeggeQuery(Conn, Sql, Connessione)
+					Rec = Conn.LeggeQuery(MP, Sql, Connessione)
 					If TypeOf (Rec) Is String Then
 						Ok = False
 						Ritorno = "Problemi lettura marcatori: " & Sql
@@ -828,7 +920,7 @@ Module Globale
 						Dim QuantiGoal1 As Integer = 0
 						'Dim QuantiGoal2 As Integer = 0
 
-						Do Until Rec.Eof
+						Do Until Rec.Eof()
 							ReDim Preserve Marc(QuantiGoal)
 							Dim Minuto As String = "" & Rec("Minuto").Value
 							If Minuto.Length = 1 Then Minuto = "0" & Minuto
@@ -840,7 +932,7 @@ Module Globale
 
 							Rec.MoveNext
 						Loop
-						Rec.Close
+						Rec.Close()
 
 						For i As Integer = 0 To Marc.Length - 1
 							For k As Integer = 0 To Marc.Length - 1
@@ -856,7 +948,7 @@ Module Globale
 
 						'' Tempi goal avversari
 						'Sql = "Select * From RisultatiAvversariMinuti Where idPartita=" & idPartita & " Order by idTempo"
-						'Rec = LeggeQuery(Conn, Sql, Connessione)
+						'Rec = Conn.LeggeQuery(MP, Sql, Connessione)
 						'If TypeOf (Rec) Is String Then
 						'	Ok = False
 						'	Ritorno = "Problemi lettura marcatori: " & Sql
@@ -900,7 +992,7 @@ Module Globale
 
 						'		Rec.MoveNext
 						'	Loop
-						'	Rec.Close
+						'	Rec.Close()
 						'End If
 
 						Dim GoalPropri As Integer = 0
@@ -911,22 +1003,22 @@ Module Globale
 
 						If RisultatoATempi = "S" Then
 							For i As Integer = 1 To 3
-								Sql = "Select Count(*) From RisultatiAggiuntiviMarcatori Where idPartita=" & idPartita & " And idTempo=" & i
-								Rec = LeggeQuery(Conn, Sql, Connessione)
+								Sql = "Select " & IIf(TipoDB = "SQLSERVER", "Isnull(Count(*),0)", "COALESCE(Count(*),0)") & " From RisultatiAggiuntiviMarcatori Where idPartita=" & idPartita & " And idTempo=" & i
+								Rec = Conn.LeggeQuery(MP, Sql, Connessione)
 								If Rec(0).Value Is DBNull.Value Then
 									GoalPropri = 0
 								Else
 									GoalPropri = Rec(0).Value
 								End If
-								Rec.Close
+								Rec.Close()
 								Sql = "Select Sum(" & NomiCampi(i) & ") From RisultatiAggiuntivi Where idPartita=" & idPartita & " And " & NomiCampi(i) & "<>-1"
-								Rec = LeggeQuery(Conn, Sql, Connessione)
+								Rec = Conn.LeggeQuery(MP, Sql, Connessione)
 								If Rec(0).Value Is DBNull.Value Then
 									GoalAvversari = 0
 								Else
 									GoalAvversari = Rec(0).Value
 								End If
-								Rec.Close
+								Rec.Close()
 
 								If GoalPropri > GoalAvversari Then
 									RisProprio += 1
@@ -941,11 +1033,11 @@ Module Globale
 							Next
 						Else
 							Sql = "Select * From RisultatiAggiuntivi Where idPartita=" & idPartita
-							Rec = LeggeQuery(Conn, Sql, Connessione)
-							If Rec.Eof = False Then
+							Rec = Conn.LeggeQuery(MP, Sql, Connessione)
+							If Rec.Eof() = False Then
 								GoalAvversari = Val("" & Rec(NomiCampi(1)).Value) + Val("" & Rec(NomiCampi(2)).Value) + Val("" & Rec(NomiCampi(3)).Value)
 							End If
-							Rec.Close
+							Rec.Close()
 						End If
 
 						If CiSonoGiochetti Then
@@ -974,15 +1066,15 @@ Module Globale
 							"Left Join [Generale].[dbo].[Ruoli] On Giocatori.idRuolo = Ruoli.idRuolo) " &
 							"Where RigoriPropri.idAnno=" & idAnno & " And idPartita=" & idPartita & " " &
 							"Order By RigoriPropri.idRigore"
-						Rec2 = LeggeQuery(Conn, Sql, Connessione)
+						Rec2 = Conn.LeggeQuery(MP, Sql, Connessione)
 						If TypeOf (Rec2) Is String Then
 							Ok = False
 							Ritorno = "Problemi lettura rigori"
 						Else
-							If Not Rec2.Eof Then
+							If Not Rec2.Eof() Then
 								CiSonoRigori = True
 
-								Do Until Rec2.Eof
+								Do Until Rec2.Eof()
 									Dim Termine As String = ""
 									Dim Colore2 As String = ""
 
@@ -1003,16 +1095,16 @@ Module Globale
 
 									Rec2.MoveNext
 								Loop
-								Rec2.Close
+								Rec2.Close()
 							End If
 						End If
 
 						'If CiSonoRigori Then
 						'	Sql = "Select * From RigoriAvversari Where idAnno=" & idAnno & " And idPartita=" & idPartita
-						'	Rec2 = LeggeQuery(Conn, Sql, Connessione)
+						'	Rec2 = Conn.LeggeQuery(MP, Sql, Connessione)
 						'	If TypeOf (Rec2) Is String Then
 						'	Else
-						'		If Not Rec2.Eof Then
+						'		If Not Rec2.Eof() Then
 						'			RigoriSegnatiAvversari += Val(Rec2("Segnati").Value)
 						'			RigoriSbagliatiAvversari += Val(Rec2("Sbagliati").Value)
 
@@ -1158,7 +1250,7 @@ Module Globale
 										End If
 									Else
 										Path = PathBaseMultimedia & "/" & NomeSquadra & "/Giocatori/" & idAnno & "_" & Mm(2) & ".kgb"
-										Path = DecriptaImmagine(Path)
+										Path = DecriptaImmagine(MP, Path)
 									End If
 								End If
 							End If
@@ -1208,19 +1300,19 @@ Module Globale
 						Sql = "SELECT EventiPartita.idTempo, EventiPartita.Minuto, Eventi.Descrizione, iif(Giocatori.Cognome + ' ' + Giocatori.Nome is null, 'Avversario', Giocatori.Cognome + ' ' + Giocatori.Nome) As Giocatore, Giocatori.idGiocatore " &
 							"FROM (EventiPartita LEFT JOIN Giocatori ON (EventiPartita.idGiocatore = Giocatori.idGiocatore) AND (EventiPartita.idAnno = Giocatori.idAnno)) LEFT JOIN Eventi ON EventiPartita.idEvento = Eventi.idEvento " &
 							"WHERE EventiPartita.idPartita=" & idPartita & " AND EventiPartita.idAnno=" & idAnno
-						Rec2 = LeggeQuery(Conn, Sql, Connessione)
+						Rec2 = Conn.LeggeQuery(MP, Sql, Connessione)
 						If TypeOf (Rec2) Is String Then
 						Else
 							Dim tempoAtt As String = ""
 							Colore = "#aaa"
-							Do Until Rec2.Eof
+							Do Until Rec2.Eof()
 								Dim Path As String
 
 								If Rec2("Giocatore").Value.Contains("Avversario") Then
 									Path = PathBaseImmScon
 								Else
 									Path = PathBaseMultimedia & "/" & NomeSquadra & "/Giocatori/" & idAnno & "_" & Rec2("idGiocatore").Value & ".kgb"
-									Path = DecriptaImmagine(Path)
+									Path = DecriptaImmagine(MP, Path)
 								End If
 
 								If tempoAtt <> "" & Rec2("idTempo").Value Then
@@ -1306,7 +1398,7 @@ Module Globale
 
 								Rec2.MoveNext
 							Loop
-							Rec2.Close
+							Rec2.Close()
 						End If
 
 						Eventi.Append("</table>")
@@ -1478,14 +1570,14 @@ Module Globale
 		Return Ritorno
 	End Function
 
-	Public Function EliminaPartita(Squadra As String, idAnno As String, idPartita As String) As String
+	Public Function EliminaPartita(MP As String, Squadra As String, idAnno As String, idPartita As String) As String
 		Dim Ritorno As String = ""
-		Dim Connessione As String = LeggeImpostazioniDiBase(HttpContext.Current.Server.MapPath("."), Squadra)
+		Dim Connessione As String = LeggeImpostazioniDiBase(MP, Squadra)
 
 		If Connessione = "" Then
 			Ritorno = ErroreConnessioneNonValida
 		Else
-			Dim Conn As Object = ApreDB(Connessione)
+			Dim Conn As Object = New clsGestioneDB
 
 			If TypeOf (Conn) Is String Then
 				Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
@@ -1493,19 +1585,19 @@ Module Globale
 				Dim sql As String
 				Dim Ok As Boolean = True
 
-				sql = "Begin transaction"
-				Ritorno = EsegueSql(Conn, sql, Connessione)
+				sql = IIf(TipoDB = "SQLSERVER", "Begin transaction", "Start transaction")
+				Ritorno = Conn.EsegueSql(MP, sql, Connessione)
 
 				If Not Ritorno.Contains(StringaErrore) Then
 					sql = "delete from Partite Where idAnno = " & idAnno & " And idPartita = " & idPartita
-					Ritorno = EsegueSql(Conn, sql, Connessione)
+					Ritorno = Conn.EsegueSql(MP, sql, Connessione)
 					If Ritorno.Contains(StringaErrore) Then
 						Ok = False
 					End If
 
 					If Ok Then
 						sql = "delete from ArbitriPartite Where idAnno = " & idAnno & " And idPartita = " & idPartita
-						Ritorno = EsegueSql(Conn, sql, Connessione)
+						Ritorno = Conn.EsegueSql(MP, sql, Connessione)
 						If Ritorno.Contains(StringaErrore) Then
 							Ok = False
 						End If
@@ -1513,7 +1605,7 @@ Module Globale
 
 					If Ok Then
 						sql = "delete from Convocati Where idPartita = " & idPartita
-						Ritorno = EsegueSql(Conn, sql, Connessione)
+						Ritorno = Conn.EsegueSql(MP, sql, Connessione)
 						If Ritorno.Contains(StringaErrore) Then
 							Ok = False
 						End If
@@ -1521,7 +1613,7 @@ Module Globale
 
 					If Ok Then
 						sql = "delete from CoordinatePartite Where idPartita = " & idPartita
-						Ritorno = EsegueSql(Conn, sql, Connessione)
+						Ritorno = Conn.EsegueSql(MP, sql, Connessione)
 						If Ritorno.Contains(StringaErrore) Then
 							Ok = False
 						End If
@@ -1529,7 +1621,7 @@ Module Globale
 
 					If Ok Then
 						sql = "delete from EventiPartita Where idAnno = " & idAnno & " And idPartita = " & idPartita
-						Ritorno = EsegueSql(Conn, sql, Connessione)
+						Ritorno = Conn.EsegueSql(MP, sql, Connessione)
 						If Ritorno.Contains(StringaErrore) Then
 							Ok = False
 						End If
@@ -1537,7 +1629,7 @@ Module Globale
 
 					If Ok Then
 						sql = "delete from Marcatori Where idPartita = " & idPartita
-						Ritorno = EsegueSql(Conn, sql, Connessione)
+						Ritorno = Conn.EsegueSql(MP, sql, Connessione)
 						If Ritorno.Contains(StringaErrore) Then
 							Ok = False
 						End If
@@ -1545,7 +1637,7 @@ Module Globale
 
 					If Ok Then
 						sql = "delete from MeteoPartite Where idPartita = " & idPartita
-						Ritorno = EsegueSql(Conn, sql, Connessione)
+						Ritorno = Conn.EsegueSql(MP, sql, Connessione)
 						If Ritorno.Contains(StringaErrore) Then
 							Ok = False
 						End If
@@ -1553,7 +1645,7 @@ Module Globale
 
 					If Ok Then
 						sql = "delete from RigoriAvversari Where idAnno = " & idAnno & " And idPartita = " & idPartita
-						Ritorno = EsegueSql(Conn, sql, Connessione)
+						Ritorno = Conn.EsegueSql(MP, sql, Connessione)
 						If Ritorno.Contains(StringaErrore) Then
 							Ok = False
 						End If
@@ -1561,7 +1653,7 @@ Module Globale
 
 					If Ok Then
 						sql = "delete from RigoriPropri Where idAnno = " & idAnno & " And idPartita = " & idPartita
-						Ritorno = EsegueSql(Conn, sql, Connessione)
+						Ritorno = Conn.EsegueSql(MP, sql, Connessione)
 						If Ritorno.Contains(StringaErrore) Then
 							Ok = False
 						End If
@@ -1569,7 +1661,7 @@ Module Globale
 
 					If Ok Then
 						sql = "delete from Risultati Where idPartita = " & idPartita
-						Ritorno = EsegueSql(Conn, sql, Connessione)
+						Ritorno = Conn.EsegueSql(MP, sql, Connessione)
 						If Ritorno.Contains(StringaErrore) Then
 							Ok = False
 						End If
@@ -1577,7 +1669,7 @@ Module Globale
 
 					If Ok Then
 						sql = "delete from RisultatiAggiuntivi Where idPartita = " & idPartita
-						Ritorno = EsegueSql(Conn, sql, Connessione)
+						Ritorno = Conn.EsegueSql(MP, sql, Connessione)
 						If Ritorno.Contains(StringaErrore) Then
 							Ok = False
 						End If
@@ -1585,7 +1677,7 @@ Module Globale
 
 					If Ok Then
 						sql = "delete from RisultatiAggiuntiviMarcatori Where idPartita = " & idPartita
-						Ritorno = EsegueSql(Conn, sql, Connessione)
+						Ritorno = Conn.EsegueSql(MP, sql, Connessione)
 						If Ritorno.Contains(StringaErrore) Then
 							Ok = False
 						End If
@@ -1593,7 +1685,7 @@ Module Globale
 
 					If Ok Then
 						sql = "delete from TempiGoalAvversari Where idPartita = " & idPartita
-						Ritorno = EsegueSql(Conn, sql, Connessione)
+						Ritorno = Conn.EsegueSql(MP, sql, Connessione)
 						If Ritorno.Contains(StringaErrore) Then
 							Ok = False
 						End If
@@ -1601,7 +1693,7 @@ Module Globale
 
 					If Ok Then
 						sql = "delete from EventiConvocazioni Where idPartita = " & idPartita
-						Ritorno = EsegueSql(Conn, sql, Connessione)
+						Ritorno = Conn.EsegueSql(MP, sql, Connessione)
 						If Ritorno.Contains(StringaErrore) Then
 							Ok = False
 						End If
@@ -1612,10 +1704,10 @@ Module Globale
 
 				If Ok Then
 					sql = "commit"
-					Dim Ritorno2 As String = EsegueSql(Conn, sql, Connessione)
+					Dim Ritorno2 As String = Conn.EsegueSql(MP, sql, Connessione)
 				Else
 					sql = "rollback"
-					Dim Ritorno2 As String = EsegueSql(Conn, sql, Connessione)
+					Dim Ritorno2 As String = Conn.EsegueSql(MP, sql, Connessione)
 				End If
 			End If
 		End If
@@ -1812,18 +1904,18 @@ Module Globale
 		Return nuovaPass & ";" & nuovaPassCrypt
 	End Function
 
-	Public Function PulisceCartellaTemporanea() As String
+	Public Function PulisceCartellaTemporanea(MP As String) As String
 		'Dim thread As New Thread(AddressOf PulisceCartellaTempThread)
 		'thread.Start()
-		PulisceCartellaTempThread()
+		PulisceCartellaTempThread(MP)
 
 		Return "1"
 	End Function
 
-	Private Sub PulisceCartellaTempThread()
+	Private Sub PulisceCartellaTempThread(MP As String)
 		Dim Quanti As Integer = 0
 		Dim gf As New GestioneFilesDirectory
-		Dim pp As String = gf.LeggeFileIntero(HttpContext.Current.Server.MapPath(".") & "\Impostazioni\Paths.txt")
+		Dim pp As String = gf.LeggeFileIntero(MP & "\Impostazioni\Paths.txt")
 		pp = pp.Trim()
 		pp = pp.Replace(vbCrLf, "")
 		If Strings.Right(pp, 1) = "\" Then
@@ -1834,6 +1926,11 @@ Module Globale
 		Dim qFiletti As String = gf.RitornaQuantiFilesRilevati
 
 		For i As Integer = 1 To qFiletti
+			If TipoDB <> "SQLSERVER" Then
+				Filetti(i) = Filetti(i).Replace("\", "/")
+				Filetti(i) = Filetti(i).Replace("//", "/")
+			End If
+
 			Dim DataFile As DateTime = FileDateTime(Filetti(i))
 			Dim Differenza As Integer = DateAndTime.DateDiff(DateInterval.Second, DataFile, Now)
 			If Differenza > 30 Then
@@ -1845,87 +1942,24 @@ Module Globale
 		' Return Quanti
 	End Sub
 
-	Public Function RitornaMailDopoRichiesta(Utente As String) As String
-		Dim Ritorno As String = ""
-		Dim Connessione As String = LeggeImpostazioniDiBase(HttpContext.Current.Server.MapPath("."), "")
-
-		If Connessione = "" Then
-			Ritorno = ErroreConnessioneNonValida
-		Else
-			Dim Conn As Object = ApreDB(Connessione)
-
-			If TypeOf (Conn) Is String Then
-				Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
-			Else
-				Dim Rec As Object = HttpContext.Current.Server.CreateObject("ADODB.Recordset")
-				Dim Sql As String = ""
-
-				Sql = "SELECT Utenti.idAnno, idUtente, Utente, Cognome, Nome, " &
-						"Password, EMail, idCategoria, Utenti.idTipologia, Utenti.idSquadra, Descrizione As Squadra " &
-						"FROM Utenti Left Join Squadre On Utenti.idSquadra = Squadre.idSquadra " &
-						"Where Upper(Utente)='" & Utente.ToUpper.Replace("'", "''") & "'" ' And idAnno=" & idAnno
-				Rec = LeggeQuery(Conn, Sql, Connessione)
-				If TypeOf (Rec) Is String Then
-					Ritorno = Rec
-				Else
-					If Rec.Eof Then
-						Ritorno = StringaErrore & " Nessun utente rilevato"
-					Else
-						If Rec("EMail").Value = "" And Rec("Utente").Value = "" Then
-							Ritorno = StringaErrore & " Nessuna mail rilevata"
-						Else
-							Dim idUtente As Integer = Rec("idUtente").Value
-							Dim EMail As String = Rec("EMail").value
-							If EMail = "" Then
-								EMail = Rec("Utente").Value
-							End If
-							Dim pass As String = generaPassRandom()
-							Dim nuovaPass() = pass.Split(";")
-
-							Try
-								Sql = "Update Utenti Set Password='" & nuovaPass(1).Replace("'", "''") & "', PasswordScaduta=1 " &
-									"Where idUtente=" & idUtente
-								Ritorno = EsegueSql(Conn, Sql, Connessione)
-								If Not Ritorno.Contains(StringaErrore) Then
-									Dim m As New mail
-									Dim Oggetto As String = "Reset password inCalcio"
-									Dim Body As String = ""
-									Body &= "La Sua password relativa al sito inCalcio è stata modificata dietro sua richiesta. <br /><br />"
-									Body &= "La nuova password valida per il solo primo accesso è: " & nuovaPass(0) & "<br /><br />"
-									Dim ChiScrive As String = "notifiche@incalcio.cloud"
-
-									Ritorno = m.SendEmail("", "", Oggetto, Body, EMail, {""})
-								End If
-							Catch ex As Exception
-								Ritorno = StringaErrore & " " & ex.Message
-							End Try
-						End If
-					End If
-				End If
-			End If
-		End If
-
-		Return Ritorno
-	End Function
-
-	Public Function GeneraRicevutaEScontrino(Squadra As String, NomeSquadra As String, idAnno As String, idGiocatore As String, idPagamento As String, idUtente As String, vecchioID As String) As String
+	Public Function GeneraRicevutaEScontrino(MP As String, Squadra As String, NomeSquadra As String, idAnno As String, idGiocatore As String, idPagamento As String, idUtente As String, vecchioID As String) As String
 		Dim Ritorno As String = ""
 		Dim Ok As Boolean = True
 
 		Try
-			Dim Connessione As String = LeggeImpostazioniDiBase(HttpContext.Current.Server.MapPath("."), Squadra)
+			Dim Connessione As String = LeggeImpostazioniDiBase(MP, Squadra)
 
 			If Connessione = "" Then
 				Ritorno = ErroreConnessioneNonValida
 			Else
-				Dim Conn As Object = ApreDB(Connessione)
+				Dim Conn As Object = New clsGestioneDB
 
 				If TypeOf (Conn) Is String Then
 					Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
 				Else
-					Dim Rec As Object = HttpContext.Current.Server.CreateObject("ADODB.Recordset")
+					Dim Rec As Object ' = HttpContext.Current.Server.CreateObject("ADODB.Recordset")
 					Dim Sql As String = "Select * From GiocatoriPagamenti Where idGiocatore=" & idGiocatore & " And Progressivo=" & idPagamento
-					Rec = LeggeQuery(Conn, Sql, Connessione)
+					Rec = Conn.LeggeQuery(MP, Sql, Connessione)
 					If Rec.Eof() Then
 						Ritorno = StringaErrore & " Dati ricevuta non presenti"
 					Else
@@ -1941,7 +1975,7 @@ Module Globale
 						Dim idQuota As String = "" & Rec("idQuota").Value
 						Dim idModalitaPagamento As String = "" & Rec("MetodoPagamento").Value
 						Dim NumeroRicevuta As String = "" & Rec("NumeroRicevuta").Value
-						'Rec.Close
+						'Rec.Close()
 
 						Dim nomeRate As String = ""
 						Dim rr As New List(Of String)
@@ -1958,8 +1992,8 @@ Module Globale
 						For Each r As String In rr
 							If r <> "" Then
 								Sql = "Select * From QuoteRate Where idQuota=" & idQuota & " And Progressivo=" & r
-								Rec = LeggeQuery(Conn, Sql, Connessione)
-								If Not Rec.Eof Then
+								Rec = Conn.LeggeQuery(MP, Sql, Connessione)
+								If Not Rec.Eof() Then
 									nomeRate &= ("" & Rec("DescRata").Value) & "<br />"
 								End If
 							End If
@@ -1982,7 +2016,7 @@ Module Globale
 						Dim Suffisso As String = ""
 
 						Sql = "SELECT * FROM Anni"
-						Rec = LeggeQuery(Conn, Sql, Connessione)
+						Rec = Conn.LeggeQuery(MP, Sql, Connessione)
 						If Rec.Eof() Then
 							Ritorno = StringaErrore & " Nessuna squadra rilevata"
 							Ok = False
@@ -2001,7 +2035,7 @@ Module Globale
 						If Ok Then
 							If idPagatore = 3 Then
 								Sql = "SELECT * FROM Giocatori Where idGiocatore=" & idGiocatore
-								Rec = LeggeQuery(Conn, Sql, Connessione)
+								Rec = Conn.LeggeQuery(MP, Sql, Connessione)
 								If Rec.Eof() Then
 									Ritorno = StringaErrore & " Nessun giocatore rilevato"
 									Ok = False
@@ -2017,7 +2051,7 @@ Module Globale
 								Rec.Close()
 							Else
 								Sql = "SELECT * FROM Giocatori Where idGiocatore=" & idGiocatore
-								Rec = LeggeQuery(Conn, Sql, Connessione)
+								Rec = Conn.LeggeQuery(MP, Sql, Connessione)
 								If Rec.Eof() Then
 									Ritorno = StringaErrore & " Nessun giocatore rilevato"
 									Ok = False
@@ -2029,7 +2063,7 @@ Module Globale
 								Rec.Close()
 
 								Sql = "SELECT * FROM GiocatoriDettaglio Where idGiocatore=" & idGiocatore
-								Rec = LeggeQuery(Conn, Sql, Connessione)
+								Rec = Conn.LeggeQuery(MP, Sql, Connessione)
 								If Rec.Eof() Then
 									Ritorno = StringaErrore & " Nessun dettaglio giocatore rilevato"
 									Ok = False
@@ -2112,12 +2146,12 @@ Module Globale
 							End If
 							Dim NominativoRicevuta As String = CognomeIscritto & " " & NomeIscritto & "<br />" & CodFiscaleIscritto & " " & Altro & "<br />" & nomeRate
 
-							Dim gT1 As New GestioneTags
-							gT1.EsegueStampaRicevuta(Squadra, idGiocatore, idAnno, idPagamento, Dati, ssNumeroRicevuta, sDataRicevuta, Motivazione, Intero, Virgola, ImportoLettere, NominativoRicevuta, idPagatore)
+							Dim gT1 As New GestioneTags(MP)
+							gT1.EsegueStampaRicevuta(MP, Squadra, idGiocatore, idAnno, idPagamento, Dati, ssNumeroRicevuta, sDataRicevuta, Motivazione, Intero, Virgola, ImportoLettere, NominativoRicevuta, idPagatore)
 							gT1 = Nothing
 
-							Dim gT2 As New GestioneTags
-							gT2.EsegueStampaScontrino(Squadra, idGiocatore, idAnno, idPagamento, Dati, ssNumeroRicevuta, sDataRicevuta, Motivazione, Intero, Virgola, ImportoLettere, NominativoRicevuta, idPagatore)
+							Dim gT2 As New GestioneTags(MP)
+							gT2.EsegueStampaScontrino(MP, Squadra, idGiocatore, idAnno, idPagamento, Dati, ssNumeroRicevuta, sDataRicevuta, Motivazione, Intero, Virgola, ImportoLettere, NominativoRicevuta, idPagatore)
 							gT2 = Nothing
 
 							Ritorno = "*"
@@ -2127,7 +2161,7 @@ Module Globale
 
 
 							'Dim gf As New GestioneFilesDirectory
-							'Dim filePaths As String = gf.LeggeFileIntero(HttpContext.Current.Server.MapPath(".") & "\Impostazioni\PathAllegati.txt")
+							'Dim filePaths As String = gf.LeggeFileIntero(MP & "\Impostazioni\PathAllegati.txt")
 							'Dim p() As String = filePaths.Split(";")
 							'If Strings.Right(p(0), 1) <> "\" Then
 							'	p(0) &= "\"
@@ -2138,7 +2172,7 @@ Module Globale
 							'End If
 							'' Dim url As String = p(2) & NomeSquadra.Replace(" ", "_") & "/Societa/" & idAnno & "_1.jpg"
 
-							'Dim pp As String = gf.LeggeFileIntero(HttpContext.Current.Server.MapPath(".") & "\Impostazioni\Paths.txt")
+							'Dim pp As String = gf.LeggeFileIntero(MP & "\Impostazioni\Paths.txt")
 							'pp = pp.Replace(vbCrLf, "").Trim
 							'If Strings.Right(pp, 1) = "\" Then
 							'	pp = Mid(pp, 1, pp.Length - 1)
@@ -2149,15 +2183,15 @@ Module Globale
 							'Dim pathImm As String = pp & "\" & NomeSquadra.Replace(" ", "_") & "\Societa\" & idAnno & "_1.kgb"
 							'Dim nomeImmConv As String = ""
 							'Dim c As New CriptaFiles
-							'If File.Exists(pathImm) Then
+							'If ControllaEsistenzaFile(pathImm) Then
 							'	nomeImmConv = p(2) & "" & NomeSquadra.Replace(" ", "_") & "/Societa/Societa_1.png"
 							'	Dim pathImmConv As String = pp & "\" & NomeSquadra.Replace(" ", "_") & "\Societa\Societa_1.png"
 							'	c.DecryptFile(CryptPasswordString, pathImm, pathImmConv)
 							'End If
 
 							'Dim pathRicevuta As String = p(0) & Squadra & "\Scheletri\ricevuta_pagamento.txt"
-							'If Not File.Exists(pathRicevuta) Then
-							'	pathRicevuta = HttpContext.Current.Server.MapPath(".") & "\Scheletri\ricevuta_pagamento.txt"
+							'If Not ControllaEsistenzaFile(pathRicevuta) Then
+							'	pathRicevuta = MP & "\Scheletri\ricevuta_pagamento.txt"
 							'End If
 							'Dim Body As String = gf.LeggeFileIntero(pathRicevuta)
 							'Dim path As String = p(0) & "\" & Squadra & "\Ricevute\Anno" & idAnno & "\" & idGiocatore & "\"
@@ -2249,7 +2283,7 @@ Module Globale
 							'End If
 							'Body = Body.Replace("***IMPORTO LETTERE***", Cifre1 & Altro2)
 
-							'filePaths = gf.LeggeFileIntero(HttpContext.Current.Server.MapPath(".") & "\Impostazioni\Paths.txt")
+							'filePaths = gf.LeggeFileIntero(MP & "\Impostazioni\Paths.txt")
 							'filePaths = filePaths.Replace(vbCrLf, "").Trim
 							'If Strings.Right(filePaths, 1) <> "\" Then
 							'	filePaths &= "\"
@@ -2259,9 +2293,9 @@ Module Globale
 
 							'Dim pathFirma As String = filePaths & NomeSquadra.Replace(" ", "_").Trim & "\Utenti\" & idAnno & "_" & idUtente & "_Firma.kgb"
 							''Sql = "rollback"
-							''Dim Ritorno2 As String = EsegueSql(Conn, Sql, Connessione)
+							''Dim Ritorno2 As String = Conn.EsegueSql(MP, Sql, Connessione)
 							''Return pathFirma
-							'If File.Exists(pathFirma) Then
+							'If ControllaEsistenzaFile(pathFirma) Then
 							'	Dim urlFirma As String = pp & "\" & NomeSquadra.Replace(" ", "_").Trim & "\Utenti\" & idAnno & "_" & idUtente & "_Firma.kgb"
 							'	'Dim pathFirmaConv As String = p(2) & "/Appoggio/Firma_" & Esten & ".png"
 							'	Dim urlFirmaConv As String = pp & "\Appoggio\Firma_" & Esten & ".png"
@@ -2282,8 +2316,8 @@ Module Globale
 
 							'' Scontrino
 							'Dim pathScontr As String = p(0) & Squadra & "\Scheletri\ricevuta_scontrino.txt"
-							'If Not File.Exists(pathScontr) Then
-							'	pathScontr = HttpContext.Current.Server.MapPath(".") & "\Scheletri\ricevuta_scontrino.txt"
+							'If Not ControllaEsistenzaFile(pathScontr) Then
+							'	pathScontr = MP & "\Scheletri\ricevuta_scontrino.txt"
 							'End If
 							'Dim BodyScontrino As String = gf.LeggeFileIntero(pathScontr)
 							'Dim pathScontrino As String = p(0) & "\" & Squadra & "\Ricevute\Anno" & idAnno & "\" & idGiocatore & "\"
@@ -2330,7 +2364,7 @@ Module Globale
 
 							'nomeImm = p(2) & NomeSquadra.Replace(" ", "_") & "/Societa/" & idAnno & "_1.kgb"
 							'pathImm = pp & "\" & NomeSquadra.Replace(" ", "_") & "\Societa\" & idAnno & "_1.kgb"
-							'If File.Exists(pathImm) Then
+							'If ControllaEsistenzaFile(pathImm) Then
 							'	nomeImmConv = p(2) & "/" & NomeSquadra.Replace(" ", "_") & "/Societa/Societa_1.png"
 							'	Dim pathImmConv As String = pp & "\" & NomeSquadra.Replace(" ", "_") & "\Societa\Societa_1.png"
 							'	c.DecryptFile(CryptPasswordString, pathImm, pathImmConv)
@@ -2379,7 +2413,7 @@ Module Globale
 	'Dim urlImmagine As String = pp & "\" & NomeSquadra.Replace(" ", "_") & "\" & Tipologia & "\" & NomeImmagine & ".kgb"
 	'Dim pathImmagineConvertita As String = P(2) & "/Appoggio/" & NomeImmagine & "_" & Esten2 & ".png"
 	'Dim urlImmagineConvertita As String = pp & "\Appoggio\" & NomeImmagine & "_" & Esten2 & ".png"
-	'If File.Exists(urlImmagine) Then
+	'If ControllaEsistenzaFile(urlImmagine) Then
 	'	c.DecryptFile(CryptPasswordString, pathImmagine, pathImmagineConvertita)
 
 	'	Immagine = "<img src=""" & urlImmagineConvertita & """ style=""width: 50px; height: 50px;"" />"
@@ -2390,12 +2424,12 @@ Module Globale
 	'Return Immagine
 	'End Function
 
-	Public Function CreaNumeroTesseraNFC(Conn As Object, Connessione As String, Squadra As String, idGiocatore As String) As String
+	Public Function CreaNumeroTesseraNFC(MP As String, Conn As Object, Connessione As String, Squadra As String, idGiocatore As String) As String
 		Dim CodiceTessera As String = ""
-		Dim Rec As Object = HttpContext.Current.Server.CreateObject("ADODB.Recordset")
+		Dim Rec As Object ' = HttpContext.Current.Server.CreateObject("ADODB.Recordset")
 		Dim Sql As String = "Select * From [Generale].[dbo].[GiocatoriTessereNFC] Where idGiocatore=" & idGiocatore & " And CodSquadra='" & Squadra & "'"
-		Rec = LeggeQuery(Conn, Sql, Connessione)
-		If Rec.Eof Then
+		Rec = Conn.LeggeQuery(MP, Sql, Connessione)
+		If Rec.Eof() Then
 			CodiceTessera = DateTime.Now.Year & Strings.Format(DateTime.Now.Month, "00") & Strings.Format(DateTime.Now.Day, "00") & Strings.Format(DateTime.Now.Hour, "00") & Strings.Format(DateTime.Now.Minute, "00") + Strings.Format(DateTime.Now.Second, "00")
 			Dim stringaRandom As String = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"
 			Dim r As String = ""
@@ -2405,45 +2439,45 @@ Module Globale
 			Next
 			CodiceTessera &= r
 			Sql = "Insert Into [Generale].[dbo].[GiocatoriTessereNFC] Values (" & idGiocatore & ", '" & Squadra & "', '" & CodiceTessera & "')"
-			Dim Ritorno As String = EsegueSql(Conn, Sql, Connessione)
+			Dim Ritorno As String = Conn.EsegueSql(MP, Sql, Connessione)
 		End If
-		Rec.Close
+		Rec.Close()
 
 		Return CodiceTessera
 	End Function
 
-	Public Function RitornaCategorieUtente(Conn As Object, Connessione As String, Utente As String) As String
+	Public Function RitornaCategorieUtente(MP As String, Conn As Object, Connessione As String, Utente As String) As String
 		Dim Ritorno As String = ""
-		Dim Rec As Object = HttpContext.Current.Server.CreateObject("ADODB.Recordset")
+		Dim Rec As Object ' = HttpContext.Current.Server.CreateObject("ADODB.Recordset")
 		Dim Sql As String = ""
 
 		Dim idGiocatore As String = ""
 
 		Sql = "Select * From [Generale].[dbo].[Utenti] Where EMail = '" & Utente.Replace("'", "''") & "'"
-		Rec = LeggeQuery(Conn, Sql, Connessione)
+		Rec = Conn.LeggeQuery(MP, Sql, Connessione)
 		If TypeOf (Rec) Is String Then
 			Ritorno = Rec
 		Else
 			Dim idTipologia As String = ""
 
-			If Not Rec.Eof Then
+			If Not Rec.Eof() Then
 				idTipologia = Rec("idTipologia").Value
 				idGiocatore = Rec("idGiocatore").Value
 			Else
-				Rec.Close
+				Rec.Close()
 
 				' Forse è un giocatore ?
 				Sql = "Select * From Giocatori Where EMail = '" & Utente.Replace("'", "''") & "'"
-				Rec = LeggeQuery(Conn, Sql, Connessione)
+				Rec = Conn.LeggeQuery(MP, Sql, Connessione)
 				If TypeOf (Rec) Is String Then
 					Ritorno = Rec
 				Else
-					If Not Rec.Eof Then
+					If Not Rec.Eof() Then
 						idTipologia = 6
 						idGiocatore = Rec("idGiocatore").Value
 					End If
 
-					Rec.Close
+					Rec.Close()
 				End If
 			End If
 
@@ -2472,18 +2506,18 @@ Module Globale
 							Ricerca = "(" & Mid(Ricerca, 1, Ricerca.Length - 1) & ")"
 
 							Sql = "Select Categorie From Giocatori Where idGiocatore In " & Ricerca
-							Rec = LeggeQuery(Conn, Sql, Connessione)
+							Rec = Conn.LeggeQuery(MP, Sql, Connessione)
 							If TypeOf (Rec) Is String Then
 								Ritorno = Rec
 							Else
 								Dim Cat As String = ""
 
-								Do Until Rec.Eof
+								Do Until Rec.Eof()
 									Cat &= Rec("Categorie").Value
 
 									Rec.MoveNext
 								Loop
-								Rec.Close
+								Rec.Close()
 
 								If Cat <> "" Then
 									Dim Cat2() As String = Cat.Split("-")
@@ -2516,25 +2550,25 @@ Module Globale
 					Sql = "Select B.idCategoria From Dirigenti A " &
 						"Left Join DirigentiCategorie B On A.idDirigente = B.idUtente " &
 						"Where A.EMail = '" & Utente.Replace("'", "''") & "' And A.Eliminato = 'N'"
-					Rec = LeggeQuery(Conn, Sql, Connessione)
+					Rec = Conn.LeggeQuery(MP, Sql, Connessione)
 					If TypeOf (Rec) Is String Then
 						Ritorno = Rec
 					Else
-						Do Until Rec.Eof
+						Do Until Rec.Eof()
 							Ritorno &= Rec("idCategoria").Value & ";"
 
 							Rec.MoveNext
 						Loop
-						Rec.Close
+						Rec.Close()
 					End If
 				Case "6"
 					' Giocatore
 					Sql = "Select Categorie From Giocatori Where idGiocatore In " & idGiocatore
-					Rec = LeggeQuery(Conn, Sql, Connessione)
+					Rec = Conn.LeggeQuery(MP, Sql, Connessione)
 					If TypeOf (Rec) Is String Then
 						Ritorno = Rec
 					Else
-						If Not Rec.Eof Then
+						If Not Rec.Eof() Then
 							Dim Cat2() As String = Rec("Categorie").Value.Split("-")
 							Dim Cate As New List(Of String)
 
@@ -2558,27 +2592,42 @@ Module Globale
 							Next
 						End If
 
-						Rec.Close
+						Rec.Close()
 					End If
 				Case "5", "7"
 					' Allenatore
 					Sql = "Select B.idCategoria From Allenatori A " &
 						"Left Join AllenatoriCategorie B On A.idAllenatore = B.idUtente " &
 						"Where A.EMail = '" & Utente.Replace("'", "''") & "' And A.Eliminato = 'N'"
-					Rec = LeggeQuery(Conn, Sql, Connessione)
+					Rec = Conn.LeggeQuery(MP, Sql, Connessione)
 					If TypeOf (Rec) Is String Then
 						Ritorno = Rec
 					Else
-						Do Until Rec.Eof
+						Do Until Rec.Eof()
 							Ritorno &= Rec("idCategoria").Value & ";"
 
 							Rec.MoveNext
 						Loop
-						Rec.Close
+						Rec.Close()
 					End If
 			End Select
 		End If
 
 		Return Ritorno
+	End Function
+
+	Public Function ControllaEsistenzaFile(Filetto As String) As Boolean
+		Dim Ritorno As Boolean = True
+
+		If TipoDB <> "SQLSERVER" Then
+			Filetto = Filetto.Replace("\", "/")
+			Filetto = Filetto.Replace("//", "/")
+		End If
+
+		If File.Exists(Filetto) Then
+			Return True
+		Else
+			Return False
+		End If
 	End Function
 End Module

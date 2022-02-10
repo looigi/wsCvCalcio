@@ -26,27 +26,27 @@ Public Class GestioneTags
 	Dim idRata As String = ""
 	Dim idPagatore As String = ""
 
-	Public Sub New()
+	Public Sub New(MP As String)
 		Dim Ritorno As String = ""
 
-		Connessione = LeggeImpostazioniDiBase(HttpContext.Current.Server.MapPath("."), "")
+		Connessione = LeggeImpostazioniDiBase(MP, "")
 
 		If Connessione = "" Then
 			Ritorno = ErroreConnessioneNonValida
 		Else
-			Conn = ApreDB(Connessione)
+			Conn = New clsGestioneDB
 
 			If TypeOf (Conn) Is String Then
 				Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
 			Else
-				Dim pp As String = gf.LeggeFileIntero(HttpContext.Current.Server.MapPath(".") & "\Impostazioni\Paths.txt")
+				Dim pp As String = gf.LeggeFileIntero(MP & "\Impostazioni\Paths.txt")
 				PathImmagini = SistemaPercorso(pp)
-				pp = gf.LeggeFileIntero(HttpContext.Current.Server.MapPath(".") & "\Impostazioni\PathAllegati.txt")
+				pp = gf.LeggeFileIntero(MP & "\Impostazioni\PathAllegati.txt")
 				Dim paths() As String = pp.Split(";")
 				PathAllegati = SistemaPercorso(paths(0))
 				PathLog = SistemaPercorso(paths(1))
 				UrlAllegati = SistemaPercorso(paths(2))
-				Dim ppp As String = gf.LeggeFileIntero(HttpContext.Current.Server.MapPath(".") & "\Impostazioni\PercorsoSito.txt")
+				Dim ppp As String = gf.LeggeFileIntero(MP & "\Impostazioni\PercorsoSito.txt")
 				PathFirma = ppp.Replace(vbCrLf, "")
 
 				nomeFileLogMail = PathLog & "\Tags_Log.txt"
@@ -63,6 +63,7 @@ Public Class GestioneTags
 
 	Private Function SistemaPercorso(pathPassato As String) As String
 		Dim pp As String = pathPassato
+
 		pp = pp.Replace(vbCrLf, "").Trim()
 		If Strings.Right(pp, 1) = "\" Or Strings.Right(pp, 1) = "/" Then
 			pp = Mid(pp, 1, pp.Length - 1)
@@ -77,18 +78,18 @@ Public Class GestioneTags
 		ScriveLog("")
 		ScriveLog("")
 
-		ChiudeDB(True, Conn)
+		'ChiudeDB(True, Conn)
 		Connessione = ""
 	End Sub
 
-	Private Function PrendeDatiSollecito(Squadra As String, Dati As String)
+	Private Function PrendeDatiSollecito(MP As String, Squadra As String, Dati As String)
 		Dim Ritorno As String = ""
-		Dim Connessione As String = LeggeImpostazioniDiBase(HttpContext.Current.Server.MapPath("."), Squadra)
+		Dim Connessione As String = LeggeImpostazioniDiBase(MP, Squadra)
 
 		If Connessione = "" Then
 			Ritorno = ErroreConnessioneNonValida
 		Else
-			Dim Conn As Object = ApreDB(Connessione)
+			Dim Conn As Object = new clsGestioneDB
 
 			If TypeOf (Conn) Is String Then
 				Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
@@ -96,41 +97,41 @@ Public Class GestioneTags
 				Dim d() As String = Dati.Split(";")
 				' 2020-09-30;iscrizione - scuola calcio 2020/21;50;PIRANDOLA;FABIO MASS;Polisportiva_GdC_Ponte_di_Nona
 
-				Dim Rec As Object = HttpContext.Current.Server.CreateObject("ADODB.Recordset")
+				Dim Rec As Object ' = HttpContext.Current.Server.CreateObject("ADODB.Recordset")
 				Dim Sql As String = "Select * From Giocatori Where Cognome='" & d(3) & "' And Nome='" & d(4) & "'"
 
-				Rec = LeggeQuery(Conn, Sql, Connessione)
+				Rec = Conn.LeggeQuery(MP, Sql, Connessione)
 				If TypeOf (Rec) Is String Then
 					Ritorno = Rec
 				Else
 					idGiocatore = Rec("idGiocatore").Value
-					Rec.Close
+					Rec.Close()
 
 					Sql = "Select * From QuoteRate  Where DescRata = '" & d(1) & "' And DataScadenza = '" & d(0) & "' And Importo = " & d(2).Replace(",", ".").Trim
-					Rec = LeggeQuery(Conn, Sql, Connessione)
+					Rec = Conn.LeggeQuery(MP, Sql, Connessione)
 					If TypeOf (Rec) Is String Then
 						Ritorno = Rec
 					Else
-						If Rec.Eof Then
+						If Rec.Eof() Then
 							Ritorno = StringaErrore & " Nessuna quota rilevata"
 						Else
 							idQuota = Rec("idQuota").Value
 							idRata = Rec("Progressivo").Value
-							Rec.Close
+							Rec.Close()
 
 							Sql = "Select NomeSquadra, Descrizione, iscrFirmaEntrambi, idAnno From Anni Where idAnno = 1"
-							Rec = LeggeQuery(Conn, Sql, Connessione)
+							Rec = Conn.LeggeQuery(MP, Sql, Connessione)
 							If TypeOf (Rec) Is String Then
 								Ritorno = Rec
 							Else
-								If Rec.Eof Then
+								If Rec.Eof() Then
 									Ritorno = StringaErrore & " Nessuna squadra rilevata"
 								Else
 									NomeSquadra = Rec("NomeSquadra").Value
 									Anno = Rec("Descrizione").Value
 									idAnno = Rec("idAnno").Value
 									iscrFirmaEntrambi = "" & Rec("iscrFirmaEntrambi").Value
-									Rec.Close
+									Rec.Close()
 
 									Ritorno = "*"
 								End If
@@ -146,9 +147,9 @@ Public Class GestioneTags
 		Return Ritorno
 	End Function
 
-	Private Function PrendeDatiDiBase(Squadra As String, idGiocatoreP As String, idAnnoP As String)
+	Private Function PrendeDatiDiBase(MP As String, Squadra As String, idGiocatoreP As String, idAnnoP As String)
 		Dim Ritorno As String = ""
-		Dim Connessione As String = LeggeImpostazioniDiBase(HttpContext.Current.Server.MapPath("."), Squadra)
+		Dim Connessione As String = LeggeImpostazioniDiBase(MP, Squadra)
 
 		Dim c() As String = Squadra.Split("_")
 		Dim Anno2 As String = Str(Val(c(0))).Trim
@@ -159,23 +160,23 @@ Public Class GestioneTags
 		If Connessione = "" Then
 			Ritorno = ErroreConnessioneNonValida
 		Else
-			Dim Conn As Object = ApreDB(Connessione)
+			Dim Conn As Object = New clsGestioneDB
 
 			If TypeOf (Conn) Is String Then
 				Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
 			Else
-				Dim Rec As Object = HttpContext.Current.Server.CreateObject("ADODB.Recordset")
+				Dim Rec As Object ' = HttpContext.Current.Server.CreateObject("ADODB.Recordset")
 				Dim Sql As String = "Select MailGenitore1, MailGenitore2, B.Cognome + ' ' + B.Nome As Genitore3 , Genitore1, Genitore2, MailGenitore3, " &
 					"B.Maggiorenne, GenitoriSeparati, AffidamentoCongiunto, idTutore " &
 					"From GiocatoriDettaglio A " &
 					"Left Join Giocatori B On A.idGiocatore = B.idGiocatore " &
 					"Where A.idGiocatore = " & idGiocatore
 
-				Rec = LeggeQuery(Conn, Sql, Connessione)
+				Rec = Conn.LeggeQuery(MP, Sql, Connessione)
 				If TypeOf (Rec) Is String Then
 					Ritorno = Rec
 				Else
-					If Rec.Eof Then
+					If Rec.Eof() Then
 						Ritorno = StringaErrore & " Nessun dettaglio giocatore rilevato"
 					Else
 						Maggiorenne = "" & Rec("Maggiorenne").Value
@@ -187,17 +188,17 @@ Public Class GestioneTags
 						Rec.Close()
 
 						Sql = "Select NomeSquadra, Descrizione, iscrFirmaEntrambi From Anni Where idAnno = " & idAnnoP
-						Rec = LeggeQuery(Conn, Sql, Connessione)
+						Rec = Conn.LeggeQuery(MP, Sql, Connessione)
 						If TypeOf (Rec) Is String Then
 							Ritorno = Rec
 						Else
-							If Rec.Eof Then
+							If Rec.Eof() Then
 								Ritorno = StringaErrore & " Nessuna squadra rilevata"
 							Else
 								NomeSquadra = Rec("NomeSquadra").Value
 								Anno = Rec("Descrizione").Value
 								iscrFirmaEntrambi = "" & Rec("iscrFirmaEntrambi").Value
-								Rec.Close
+								Rec.Close()
 
 								Ritorno = "*"
 							End If
@@ -210,9 +211,9 @@ Public Class GestioneTags
 		Return Ritorno
 	End Function
 
-	Public Function EsegueFileAssociato(NomeSquadra As String, idGiocatore As String, idAnno As String)
+	Public Function EsegueFileAssociato(MP As String, NomeSquadra As String, idGiocatore As String, idAnno As String)
 		Dim Body As String = ""
-		Dim PrendeDati As String = PrendeDatiDiBase(NomeSquadra, idGiocatore, idAnno)
+		Dim PrendeDati As String = PrendeDatiDiBase(MP, NomeSquadra, idGiocatore, idAnno)
 		Dim Ritorno As String = ""
 
 		If PrendeDati = "*" Then
@@ -232,7 +233,7 @@ Public Class GestioneTags
 			gf.EliminaFileFisico(fileDaCopiarePDF)
 			gf.EliminaFileFisico(fileLog)
 
-			Body = EsegueFunzione("Scheletri\associato.txt", CodSquadra, NomeSquadra, idGiocatore)
+			Body = EsegueFunzione(MP, "Scheletri\associato.txt", CodSquadra, NomeSquadra, idGiocatore)
 
 			gf.EliminaFileFisico(fileDaCopiare)
 			gf.ApreFileDiTestoPerScrittura(fileDaCopiare)
@@ -254,16 +255,16 @@ Public Class GestioneTags
 		Return Ritorno
 	End Function
 
-	Public Function EsegueMailAssociato(NomeSquadra As String, idGiocatore As String, idAnno As String, GenitoreP As String, Privacy As String) As String
+	Public Function EsegueMailAssociato(MP As String, NomeSquadra As String, idGiocatore As String, idAnno As String, GenitoreP As String, Privacy As String) As String
 		Dim Body As String = ""
-		Dim PrendeDati As String = PrendeDatiDiBase(NomeSquadra, idGiocatore, idAnno)
+		Dim PrendeDati As String = PrendeDatiDiBase(MP, NomeSquadra, idGiocatore, idAnno)
 
 		If PrendeDati = "*" Then
 			ScriveLog("")
 			ScriveLog(" - MAIL ASSOCIATO")
 			ScriveLog("")
 
-			Body = EsegueFunzione("Scheletri\email_associato.txt", CodSquadra, NomeSquadra, idGiocatore)
+			Body = EsegueFunzione(MP, "Scheletri\email_associato.txt", CodSquadra, NomeSquadra, idGiocatore)
 
 			' <a href="%Percorso?firma=true&codSquadra=%Squadra&id=%idGiocatore&squadra=%NomeSquadra&anno=%Anno&genitore=%Genitore&privacy=%Privacy&tipoUtente=1">
 
@@ -287,28 +288,28 @@ Public Class GestioneTags
 		Return Body
 	End Function
 
-	Public Function EsegueMailSollecito(NomeSquadra As String, Dati As String) As String
+	Public Function EsegueMailSollecito(MP As String, NomeSquadra As String, Dati As String) As String
 		ScriveLog(" - MAIL SOLLECITO: " & Dati)
 		Dim Body As String = ""
-		Dim sPrendeDatiSollecito As String = PrendeDatiSollecito(NomeSquadra, Dati)
-		Dim PrendeDati As String = PrendeDatiDiBase(NomeSquadra, idGiocatore, idAnno)
+		Dim sPrendeDatiSollecito As String = PrendeDatiSollecito(MP, NomeSquadra, Dati)
+		Dim PrendeDati As String = PrendeDatiDiBase(MP, NomeSquadra, idGiocatore, idAnno)
 
 		If sPrendeDatiSollecito = "*" And PrendeDati = "*" Then
 			ScriveLog("")
 			ScriveLog(" - MAIL SOLLECITO")
 			ScriveLog("")
 
-			Body = EsegueFunzione("Scheletri\mail_sollecito.txt", CodSquadra, NomeSquadra, idGiocatore)
+			Body = EsegueFunzione(MP, "Scheletri\mail_sollecito.txt", CodSquadra, NomeSquadra, idGiocatore)
 		End If
 
 		Return Body
 	End Function
 
-	Public Function EsegueStampaRicevuta(NomeSquadra As String, idGiocatore As String, idAnno As String, Progressivo As String, Dati As String,
+	Public Function EsegueStampaRicevuta(MP As String, NomeSquadra As String, idGiocatore As String, idAnno As String, Progressivo As String, Dati As String,
 										 NumeroRicevuta As String, DataRicevuta As String, Motivazione As String, Intero As String, Virgola As String,
 										 ImportoLettere As String, Nominativo As String, idPagatoreP As String) As String
 		Dim Body As String = ""
-		Dim PrendeDati As String = PrendeDatiDiBase(NomeSquadra, idGiocatore, idAnno)
+		Dim PrendeDati As String = PrendeDatiDiBase(MP, NomeSquadra, idGiocatore, idAnno)
 
 		ScriveLog("")
 		ScriveLog(" - STAMPA RICEVUTA")
@@ -328,7 +329,7 @@ Public Class GestioneTags
 
 			idPagatore = idPagatoreP
 
-			Body = EsegueFunzione("Scheletri\ricevuta_pagamento.txt", CodSquadra, NomeSquadra, idGiocatore)
+			Body = EsegueFunzione(MP, "Scheletri\ricevuta_pagamento.txt", CodSquadra, NomeSquadra, idGiocatore)
 
 			Body = Body.Replace("###Dati###", Dati)
 			Body = Body.Replace("###Numero Ricevuta###", NumeroRicevuta)
@@ -358,11 +359,11 @@ Public Class GestioneTags
 		Return Body
 	End Function
 
-	Public Function EsegueStampaScontrino(NomeSquadra As String, idGiocatore As String, idAnno As String, Progressivo As String, Dati As String,
+	Public Function EsegueStampaScontrino(MP As String, NomeSquadra As String, idGiocatore As String, idAnno As String, Progressivo As String, Dati As String,
 										 NumeroRicevuta As String, DataRicevuta As String, Motivazione As String, Intero As String, Virgola As String,
 										 ImportoLettere As String, Nominativo As String, idPagatoreP As String) As String
 		Dim Body As String = ""
-		Dim PrendeDati As String = PrendeDatiDiBase(NomeSquadra, idGiocatore, idAnno)
+		Dim PrendeDati As String = PrendeDatiDiBase(MP, NomeSquadra, idGiocatore, idAnno)
 
 		ScriveLog("")
 		ScriveLog(" - STAMPA SCONTRINO")
@@ -382,7 +383,7 @@ Public Class GestioneTags
 
 			idPagatore = idPagatoreP
 
-			Body = EsegueFunzione("Scheletri\ricevuta_scontrino.txt", CodSquadra, NomeSquadra, idGiocatore)
+			Body = EsegueFunzione(MP, "Scheletri\ricevuta_scontrino.txt", CodSquadra, NomeSquadra, idGiocatore)
 
 			Body = Body.Replace("###Dati###", Dati)
 			Body = Body.Replace("###Numero Ricevuta###", NumeroRicevuta)
@@ -410,9 +411,9 @@ Public Class GestioneTags
 		Return Body
 	End Function
 
-	Public Function EsegueFileFirme(NomeSquadra As String, idGiocatore As String, idAnno As String)
+	Public Function EsegueFileFirme(MP As String, NomeSquadra As String, idGiocatore As String, idAnno As String)
 		Dim Body As String = ""
-		Dim PrendeDati As String = PrendeDatiDiBase(NomeSquadra, idGiocatore, idAnno)
+		Dim PrendeDati As String = PrendeDatiDiBase(MP, NomeSquadra, idGiocatore, idAnno)
 
 		If PrendeDati = "*" Then
 			ScriveLog("")
@@ -429,7 +430,7 @@ Public Class GestioneTags
 			gf.EliminaFileFisico(fileDaCopiarePDF)
 			gf.EliminaFileFisico(fileLog)
 
-			Body = EsegueFunzione("Scheletri\base_iscrizione_.txt", CodSquadra, NomeSquadra, idGiocatore)
+			Body = EsegueFunzione(MP, "Scheletri\base_iscrizione_.txt", CodSquadra, NomeSquadra, idGiocatore)
 
 			If Maggiorenne = "S" Then
 				Body = Body.Replace("---HEIGHT_PADRE---", "0px")
@@ -522,9 +523,9 @@ Public Class GestioneTags
 		Return Body
 	End Function
 
-	Public Function EsegueFilePrivacy(NomeSquadra As String, idGiocatore As String, idAnno As String) As String
+	Public Function EsegueFilePrivacy(MP As String, NomeSquadra As String, idGiocatore As String, idAnno As String) As String
 		Dim Body As String = ""
-		Dim PrendeDati As String = PrendeDatiDiBase(NomeSquadra, idGiocatore, idAnno)
+		Dim PrendeDati As String = PrendeDatiDiBase(MP, NomeSquadra, idGiocatore, idAnno)
 
 		If PrendeDati = "*" Then
 			ScriveLog("")
@@ -541,7 +542,7 @@ Public Class GestioneTags
 			gf.EliminaFileFisico(fileDaCopiarePDF)
 			gf.EliminaFileFisico(fileLog)
 
-			Body = EsegueFunzione("Scheletri\base_privacy.txt", CodSquadra, NomeSquadra, idGiocatore)
+			Body = EsegueFunzione(MP, "Scheletri\base_privacy.txt", CodSquadra, NomeSquadra, idGiocatore)
 
 			gf.EliminaFileFisico(fileDaCopiare)
 			gf.ApreFileDiTestoPerScrittura(fileDaCopiare)
@@ -564,10 +565,10 @@ Public Class GestioneTags
 		Return Body
 	End Function
 
-	Public Function EsegueFunzione(NomefileScheletro As String, CodSquadra As String, NomeSquadra As String, idGiocatore As String)
+	Public Function EsegueFunzione(MP As String, NomefileScheletro As String, CodSquadra As String, NomeSquadra As String, idGiocatore As String)
 		Dim fileScheletro As String = PathAllegati & "\" & CodSquadra & "\" & NomefileScheletro
-		If Not File.Exists(fileScheletro) Then
-			fileScheletro = HttpContext.Current.Server.MapPath(".") & "\" & NomefileScheletro
+		If Not ControllaEsistenzaFile(fileScheletro) Then
+			fileScheletro = MP & "\" & NomefileScheletro
 		End If
 		ScriveLog(" - File Scheletro: " & fileScheletro)
 
@@ -590,7 +591,7 @@ Public Class GestioneTags
 			Dim Parte2 As String = "***" & Mid(Body, Inizio, Altro) & "***"
 			'ScriveLog("Tag da ricercare:" & Inizio & "-" & Altro & "-" & (Inizio + Altro) & ": " & Parte2)
 
-			Body = Body.Replace(Parte2, EsegueQuery(Parte2))
+			Body = Body.Replace(Parte2, EsegueQuery(MP, Parte2))
 			'Else
 			'If Parte1 > 0 Then
 
@@ -603,18 +604,18 @@ Public Class GestioneTags
 		Return Body
 	End Function
 
-	Public Function EsegueQuery(Tag As String) As String
+	Public Function EsegueQuery(MP As String, Tag As String) As String
 		Dim Ritorno As String = ""
-		Dim Rec As Object = HttpContext.Current.Server.CreateObject("ADODB.Recordset")
+		Dim Rec As Object ' = HttpContext.Current.Server.CreateObject("ADODB.Recordset")
 		Dim Sql As String = "Select * From Tags Where Trim(Upper(Valore))='" & Tag.Trim.ToUpper & "'"
 
 		ScriveLog(" - Tag: " & Tag & " / CodSquadra:" & CodSquadra & " / Squadra: " & NomeSquadra & " / Anno: " & Anno & " / Parametro: " & idGiocatore)
 
-		Rec = LeggeQuery(Conn, Sql, Connessione)
+		Rec = Conn.LeggeQuery(MP, Sql, Connessione)
 		If TypeOf (Rec) Is String Then
 			Ritorno = Rec
 		Else
-			If Rec.Eof Then
+			If Rec.Eof() Then
 				ScriveLog(" - Errore sql: " & Sql)
 
 				Ritorno = "ERROR: Nessun tag rilevato"
@@ -656,11 +657,11 @@ Public Class GestioneTags
 							ScriveLog(" - Query: " & Query)
 
 							Sql = Query
-							Rec = LeggeQuery(Conn, Sql, Connessione)
+							Rec = Conn.LeggeQuery(MP, Sql, Connessione)
 							If TypeOf (Rec) Is String Then
 								Ritorno = Rec
 							Else
-								If Rec.Eof Then
+								If Rec.Eof() Then
 									ScriveLog(" - Nessun tag query rilevato. Ritorno -----")
 
 									Ritorno = "-----"
@@ -670,7 +671,7 @@ Public Class GestioneTags
 
 									ScriveLog(" - Ritorno: " & Ritorno)
 
-									Rec.Close
+									Rec.Close()
 								End If
 							End If
 						End If
@@ -705,7 +706,7 @@ Public Class GestioneTags
 		Dim NomeImmagine As String = Campi(5)
 		Dim Estensione As String = Campi(6)
 		Dim UrlImmagine As String = ""
-		'Dim PathIniziale As String = gf.LeggeFileIntero(HttpContext.Current.Server.MapPath(".") & "\Impostazioni\Paths.txt")
+		'Dim PathIniziale As String = gf.LeggeFileIntero(MP & "\Impostazioni\Paths.txt")
 		'PathIniziale = PathIniziale.Replace(vbCrLf, "")
 		'If Strings.Right(PathIniziale, 1) = "\" Then
 		'	PathIniziale = Mid(PathIniziale, 1, PathIniziale.Length - 1)
@@ -734,7 +735,7 @@ Public Class GestioneTags
 			' ScriveLog(" - nomeImm: " & nomeImm)
 			ScriveLog(" - pathImm: " & pathImm)
 
-			If File.Exists(pathImm) Then
+			If ControllaEsistenzaFile(pathImm) Then
 				UrlImmagine = UrlAllegati & "/Appoggio/" & NomeSquadra.Replace(" ", "_") & "_" & Esten & "." & Estensione
 				Dim pathImmConv As String = PathImmagini & "\Appoggio\" & NomeSquadra.Replace(" ", "_") & "_" & Esten & "." & Estensione
 
@@ -754,7 +755,7 @@ Public Class GestioneTags
 
 			ScriveLog(" - pathImm: " & pathImm)
 
-			If File.Exists(pathImm) Then
+			If ControllaEsistenzaFile(pathImm) Then
 				UrlImmagine = UrlAllegati & "/" & NomeSquadra.Replace(" ", "_") & "/" & Tipologia & "/" & NomeImmagine & "." & Estensione
 
 				ScriveLog(" - UrlImmagine: " & UrlImmagine)

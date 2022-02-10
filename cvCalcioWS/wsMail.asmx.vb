@@ -2,6 +2,7 @@
 Imports System.Web.Services.Protocols
 Imports System.ComponentModel
 Imports System.Diagnostics.Eventing.Reader
+Imports ADODB
 
 ' Per consentire la chiamata di questo servizio Web dallo script utilizzando ASP.NET AJAX, rimuovere il commento dalla riga seguente.
 ' <System.Web.Script.Services.ScriptService()> _
@@ -19,7 +20,7 @@ Public Class wsMail
 		If Connessione = "" Then
 			Ritorno = ErroreConnessioneNonValida
 		Else
-			Dim Conn As Object = ApreDB(Connessione)
+			Dim Conn As Object = new clsGestioneDB
 
 			If TypeOf (Conn) Is String Then
 				Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
@@ -29,8 +30,8 @@ Public Class wsMail
 				'	Dim Ritorno2 As String = m.RitornaMessaggi(Squadra, idAnno, idUtente, Folder)
 				'End If
 
-				Dim Rec As Object = Server.CreateObject("ADODB.Recordset")
-				Dim Rec2 As Object = Server.CreateObject("ADODB.Recordset")
+				Dim Rec As Object
+				Dim Rec2 As Object
 				Dim Sql As String = ""
 				Dim Altro As String = ""
 				Dim Cosa As String = "*"
@@ -50,53 +51,53 @@ Public Class wsMail
 				End If
 				If SoloNuove = "S" Then
 					Altro = " And letto = 'N' And folder = 'Inbox'"
-					Cosa = "Count(*)"
+					Cosa = "" & IIf(TipoDB = "SQLSERVER", "Isnull(Count(*),0)", "COALESCE(Count(*),0)") & ""
 				Else
 					Altro &= " Order By cast(substring(time,7,4) + substring(time,4,2) + substring(time,1,2) + substring(time,12,2) + substring(time,15,2) + substring(time,18,2) as numeric(15)) Desc"
 				End If
 
 				Sql = "SELECT " & Cosa & " From Mails " &
 					"Where Eliminata = 'N' And idUtente=" & idUtente & Altro
-				Rec = LeggeQuery(Conn, Sql, Connessione)
+				Rec = Conn.LeggeQuery(Server.MapPath("."),  Sql, Connessione)
 				If TypeOf (Rec) Is String Then
 					Ritorno = Rec
 				Else
-					If Rec.Eof Then
+					If Rec.Eof() Then
 						Ritorno = StringaErrore & " Nessuna mail ritornata"
 					Else
 						If SoloNuove = "" Or SoloNuove = "N" Then
-							Do Until Rec.Eof
+							Do Until Rec.Eof()
 								Dim idMail As Integer = Rec("idMail").Value
 								Dim Destinatari As String = ""
 								Dim AttachMents As String = ""
 								Dim Labels As String = ""
 
 								Sql = "Select * From MailsTo Where idMail=" & idMail & " Order By progressivo"
-								Rec2 = LeggeQuery(Conn, Sql, Connessione)
-								Do Until Rec2.Eof
-									Destinatari &= Rec2("idUtente").Value & "^" & Rec2("name").value & "^" & Rec2("email").value & "°"
+								Rec2 = Conn.LeggeQuery(Server.MapPath("."), Sql, Connessione)
+								Do Until Rec2.Eof()
+									Destinatari &= Rec2("idUtente").Value & "^" & Rec2("name").Value & "^" & Rec2("email").Value & "°"
 
-									Rec2.MoveNext
+									Rec2.MoveNext()
 								Loop
-								Rec2.Close
+								Rec2.Close()
 
 								Sql = "Select * From MailsAttachment Where idMail=" & idMail & " Order By progressivo"
-								Rec2 = LeggeQuery(Conn, Sql, Connessione)
-								Do Until Rec2.Eof
+								Rec2 = Conn.LeggeQuery(Server.MapPath("."), Sql, Connessione)
+								Do Until Rec2.Eof()
 									AttachMents &= Rec2("type").Value & "^" & Rec2("filename").Value & "^" & Rec2("preview").Value & "^" & Rec2("url").Value & "^" & Rec2("size").Value & "°"
 
-									Rec2.MoveNext
+									Rec2.MoveNext()
 								Loop
-								Rec2.Close
+								Rec2.Close()
 
 								Sql = "Select * From MailsLabels Where idMail=" & idMail & " Order By progressivo"
-								Rec2 = LeggeQuery(Conn, Sql, Connessione)
-								Do Until Rec2.Eof
+								Rec2 = Conn.LeggeQuery(Server.MapPath("."), Sql, Connessione)
+								Do Until Rec2.Eof()
 									Labels &= Rec2("label").Value & "°"
 
-									Rec2.MoveNext
+									Rec2.MoveNext()
 								Loop
-								Rec2.Close
+								Rec2.Close()
 
 								Ritorno &= idMail & ";"
 								Ritorno &= Rec("subject").Value.replace(";", "***PV***") & ";"
@@ -114,7 +115,7 @@ Public Class wsMail
 								Ritorno &= Rec("NomeMittente").Value & ";"
 								Ritorno &= "§"
 
-								Rec.MoveNext
+								Rec.MoveNext()
 							Loop
 						Else
 							If Rec(0).Value Is DBNull.Value Then
@@ -144,7 +145,7 @@ Public Class wsMail
 		If Connessione = "" Then
 			Ritorno = ErroreConnessioneNonValida
 		Else
-			Dim Conn As Object = ApreDB(Connessione)
+			Dim Conn As Object = New clsGestioneDB
 			Dim ma As New mail
 			Dim Mittente As String = ""
 			Dim mailMittente As String = ""
@@ -164,34 +165,34 @@ Public Class wsMail
 			If TypeOf (Conn) Is String Then
 				Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
 			Else
-				Dim Rec As Object = Server.CreateObject("ADODB.Recordset")
+				Dim Rec As Object
 				Dim Sql As String = ""
 				Dim idMail As Integer = -1
 				Dim Ok As Boolean = True
 				Dim Destinatari As String = ""
 
-				Sql = "Begin transaction"
-				Ritorno = EsegueSql(Conn, Sql, Connessione)
+				Sql = iif(tipodb="SQLSERVER", "Begin transaction", "Start transaction")
+				Ritorno = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
 
 				Sql = "SELECT Max(idMail)+1 From Mails"
-				Rec = LeggeQuery(Conn, Sql, Connessione)
+				Rec = Conn.LeggeQuery(Server.MapPath("."), Sql, Connessione)
 				If Rec(0).Value Is DBNull.Value Then
 					idMail = 1
 				Else
 					idMail = Rec(0).Value
 				End If
-				Rec.Close
+				Rec.Close()
 
 				Sql = "Select * From [Generale].[dbo].[Utenti] Where idUtente=" & idUtente
-				Rec = LeggeQuery(Conn, Sql, Connessione)
-				If Rec.Eof Then
+				Rec = Conn.LeggeQuery(Server.MapPath("."), Sql, Connessione)
+				If Rec.Eof() Then
 					Ritorno = StringaErrore & " Nessun utente rilevato"
 					Ok = False
 				Else
 					Mittente = Rec("Cognome").Value & " " & Rec("Nome").Value
 					mailMittente = Rec("EMail").Value
 				End If
-				Rec.Close
+				Rec.Close()
 
 				If Ok Then
 					Dim sTo() As String = mailsTo.Split("§")
@@ -213,7 +214,7 @@ Public Class wsMail
 						"'" & Mittente.Replace("'", "''") & "'," &
 						"'" & mailMittente.Replace("'", "''") & "'" &
 						")"
-					Ritorno = EsegueSql(Conn, Sql, Connessione)
+					Ritorno = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
 					If Ritorno.Contains(StringaErrore) Then
 						Ok = False
 					End If
@@ -238,7 +239,7 @@ Public Class wsMail
 									"'" & c2(1).Replace("'", "''") & "', " &
 									"'" & c2(2).Replace("'", "''") & "' " &
 									")"
-								Ritorno = EsegueSql(Conn, Sql, Connessione)
+								Ritorno = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
 								If Ritorno.Contains(StringaErrore) Then
 									Ok = False
 									Exit For
@@ -269,7 +270,7 @@ Public Class wsMail
 									"'" & (urlFisico & "/" & c2(0).Replace("\", "/")).Replace("'", "''") & "', " &
 									" " & Size & " " &
 									")"
-								Ritorno = EsegueSql(Conn, Sql, Connessione)
+								Ritorno = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
 								If Ritorno.Contains(StringaErrore) Then
 									Ok = False
 									Exit For
@@ -290,7 +291,7 @@ Public Class wsMail
 									" " & Progressivo & ", " &
 									"'" & t2.Replace("'", "''") & "' " &
 									")"
-								Ritorno = EsegueSql(Conn, Sql, Connessione)
+								Ritorno = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
 								If Ritorno.Contains(StringaErrore) Then
 									Ok = False
 									Exit For
@@ -314,7 +315,7 @@ Public Class wsMail
 
 					Dim attachs() As String = aa.Split(";")
 					For Each d As String In Dests
-						Ritorno = ma.SendEmail(Squadra, from, subject, message, d, attachs)
+						Ritorno = ma.SendEmail(Server.MapPath("."), Squadra, from, subject, message, d, attachs)
 						If Ritorno <> "*" Then
 							Ok = False
 							Exit For
@@ -324,10 +325,10 @@ Public Class wsMail
 
 				If Ok Then
 					Sql = "commit"
-					Dim Ritorno2 As String = EsegueSql(Conn, Sql, Connessione)
+					Dim Ritorno2 As String = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
 				Else
 					Sql = "rollback"
-					Dim Ritorno2 As String = EsegueSql(Conn, Sql, Connessione)
+					Dim Ritorno2 As String = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
 				End If
 
 				Conn.Close()
@@ -345,13 +346,13 @@ Public Class wsMail
 		If Connessione = "" Then
 			Ritorno = ErroreConnessioneNonValida
 		Else
-			Dim Conn As Object = ApreDB(Connessione)
+			Dim Conn As Object = New clsGestioneDB
 
 			If TypeOf (Conn) Is String Then
 				Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
 			Else
-				Dim Rec As Object = Server.CreateObject("ADODB.Recordset")
-				Dim Rec2 As Object = Server.CreateObject("ADODB.Recordset")
+				Dim Rec As Object
+				Dim Rec2 As Object
 				Dim Sql As String = ""
 				Dim c() As String = Squadra.Split("_")
 				Dim Anno As String = Str(Val(c(0))).Trim
@@ -359,37 +360,37 @@ Public Class wsMail
 				Dim Progressivo As Integer = 0
 
 				Sql = "Select * From Utenti Where idSquadra=" & c(1) & " And Eliminato='N' Order By Cognome, Nome"
-				Rec = LeggeQuery(Conn, Sql, Connessione)
+				Rec = Conn.LeggeQuery(Server.MapPath("."), Sql, Connessione)
 				If TypeOf (Rec) Is String Then
 					Ritorno = Rec
 				Else
-					Do Until Rec.Eof
+					Do Until Rec.Eof()
 						Progressivo += 1
 						Ritorno &= Progressivo & ";" & Rec("Cognome").Value & ";" & Rec("Nome").Value & ";" & Rec("EMail").Value & ";" & Rec("idTipologia").Value & ";-1§"
 
-						Rec.MoveNext
+						Rec.MoveNext()
 					Loop
-					Rec.Close
+					Rec.Close()
 				End If
 
 				Sql = "Select idGiocatore, Cognome, Nome, EMail, Categorie From [" & Squadra & "].[dbo].Giocatori Where Eliminato = 'N' And EMail Is Not Null And Email <> ''" ' Where CHARINDEX('" & Rec("idCategoria").Value & "-', Categorie) > 0"
-				Rec = LeggeQuery(Conn, Sql, Connessione)
-				Do Until Rec.Eof
+				Rec = Conn.LeggeQuery(Server.MapPath("."), Sql, Connessione)
+				Do Until Rec.Eof()
 					' Dim codGiocatore As String = "GIOC_" & Rec2("idGiocatore").Value & "%" & Rec2("EMail").Value
 					Progressivo += 1
 					Ritorno &= Progressivo & ";" & Rec("Cognome").Value & ";" & Rec("Nome").Value & ";" & Rec("EMail").Value & ";6;" & Rec("Categorie").Value & "§"
 
-					Rec.MoveNext
+					Rec.MoveNext()
 				Loop
-				Rec.Close
+				Rec.Close()
 
 				Sql = "Select * From [" & Squadra & "].[dbo].GiocatoriDettaglio A " &
 					"Left Join [" & Squadra & "].[dbo].Giocatori B On A.idGiocatore = B.idGiocatore " &
 					"Where (MailGenitore1 <> '' Or MailGenitore2 <> '' Or MailGenitore3 <> '') And B.Eliminato = 'N' " ' idGiocatore In " &
 				'"(Select idGiocatore From [" & Squadra & "].[dbo].Giocatori Where CHARINDEX('" & Rec("idCategoria").Value & "-', Categorie) > 0) " &
 				'"And (MailGenitore1 <> '' Or MailGenitore2 <> '' Or MailGenitore3 <> '')"
-				Rec = LeggeQuery(Conn, Sql, Connessione)
-				Do Until Rec.Eof
+				Rec = Conn.LeggeQuery(Server.MapPath("."), Sql, Connessione)
+				Do Until Rec.Eof()
 					If "" & Rec("MailGenitore1").Value <> "" Then
 						If "" & Rec("Genitore1").Value <> "" Then
 							If "" & Rec("Genitore1").Value.contains(" ") Then
@@ -423,52 +424,52 @@ Public Class wsMail
 						Ritorno &= Progressivo & ";" & Rec("Cognome").Value & ";" & Rec("Nome").Value & ";" & Rec("MailGenitore3").Value & ";6;" & Rec("Categorie").Value & "§"
 					End If
 
-					Rec.MoveNext
+					Rec.MoveNext()
 				Loop
-				Rec.Close
+				Rec.Close()
 
 				Ritorno &= "|"
 
 				Sql = "Select * From [" & Squadra & "].[dbo].[Categorie] Where Eliminato='N' Order By Descrizione"
-				Rec = LeggeQuery(Conn, Sql, Connessione)
+				Rec = Conn.LeggeQuery(Server.MapPath("."), Sql, Connessione)
 				If TypeOf (Rec) Is String Then
 					Ritorno = Rec
 				Else
-					Do Until Rec.Eof
+					Do Until Rec.Eof()
 						Dim Partecipanti As String = ""
 
 						Sql = "Select * From [" & Squadra & "].[dbo].[UtentiCategorie] Where idCategoria=" & Rec("idCategoria").Value
-						Rec2 = LeggeQuery(Conn, Sql, Connessione)
-						Do Until Rec2.Eof
+						Rec2 = Conn.LeggeQuery(Server.MapPath("."), Sql, Connessione)
+						Do Until Rec2.Eof()
 							If Not Partecipanti.Contains(Rec2("idUtente").Value & "^") Then
 								Partecipanti &= Rec2("idUtente").Value & "^"
 							End If
 
-							Rec2.MoveNext
+							Rec2.MoveNext()
 						Loop
-						Rec2.Close
+						Rec2.Close()
 
 						Sql = "Select * From [" & Squadra & "].[dbo].[AllenatoriCategorie] Where idCategoria=" & Rec("idCategoria").Value
-						Rec2 = LeggeQuery(Conn, Sql, Connessione)
-						Do Until Rec2.Eof
+						Rec2 = Conn.LeggeQuery(Server.MapPath("."), Sql, Connessione)
+						Do Until Rec2.Eof()
 							If Not Partecipanti.Contains(Rec2("idUtente").Value & "^") Then
 								Partecipanti &= Rec2("idUtente").Value & "^"
 							End If
 
-							Rec2.MoveNext
+							Rec2.MoveNext()
 						Loop
-						Rec2.Close
+						Rec2.Close()
 
 						Sql = "Select * From [" & Squadra & "].[dbo].[DirigentiCategorie] Where idCategoria=" & Rec("idCategoria").Value
-						Rec2 = LeggeQuery(Conn, Sql, Connessione)
-						Do Until Rec2.Eof
+						Rec2 = Conn.LeggeQuery(Server.MapPath("."), Sql, Connessione)
+						Do Until Rec2.Eof()
 							If Not Partecipanti.Contains(Rec2("idUtente").Value & "^") Then
 								Partecipanti &= Rec2("idUtente").Value & "^"
 							End If
 
-							Rec2.MoveNext
+							Rec2.MoveNext()
 						Loop
-						Rec2.Close
+						Rec2.Close()
 
 						If Partecipanti <> "" Then
 							Partecipanti = Mid(Partecipanti, 1, Partecipanti.Length - 1)
@@ -476,9 +477,9 @@ Public Class wsMail
 
 						Ritorno &= Rec("idCategoria").Value & ";" & Rec("Descrizione").Value & ";" & Partecipanti & ";" & Rec("AnnoCategoria").Value & "§"
 
-						Rec.MoveNext
+						Rec.MoveNext()
 					Loop
-					Rec.Close
+					Rec.Close()
 				End If
 			End If
 		End If
@@ -494,24 +495,24 @@ Public Class wsMail
 		If Connessione = "" Then
 			Ritorno = ErroreConnessioneNonValida
 		Else
-			Dim Conn As Object = ApreDB(Connessione)
+			Dim Conn As Object = new clsGestioneDB
 
 			If TypeOf (Conn) Is String Then
 				Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
 			Else
-				Dim Rec As Object = Server.CreateObject("ADODB.Recordset")
+				Dim Rec As Object
 				Dim Sql As String = ""
 
 				Sql = "Select * From Mails Where idMail=" & idMail & " And idUtente=" & idUtente
-				Rec = LeggeQuery(Conn, Sql, Connessione)
+				Rec = Conn.LeggeQuery(Server.MapPath("."),  Sql, Connessione)
 				If TypeOf (Rec) Is String Then
 					Ritorno = Rec
 				Else
-					If Rec.Eof Then
+					If Rec.Eof() Then
 						Ritorno = StringaErrore & " Nessuna mail rilevata"
 					Else
 						Dim statoAttuale As String = "" & Rec("folder").Value
-						Rec.Close
+						Rec.Close()
 
 						'If statoAttuale = "Eliminate" Then
 						Sql = "Update Mails Set Eliminata='S', folder = 'Eliminate' Where idMail=" & idMail & " And idUtente=" & idUtente
@@ -519,7 +520,7 @@ Public Class wsMail
 						'Sql = "Update Mails Set folder = 'Eliminate' Where idMail=" & idMail & " And idUtente=" & idUtente
 						'End If
 
-						Ritorno = EsegueSql(Conn, Sql, Connessione)
+						Ritorno = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
 					End If
 				End If
 			End If
@@ -536,16 +537,16 @@ Public Class wsMail
 		If Connessione = "" Then
 			Ritorno = ErroreConnessioneNonValida
 		Else
-			Dim Conn As Object = ApreDB(Connessione)
+			Dim Conn As Object = new clsGestioneDB
 
 			If TypeOf (Conn) Is String Then
 				Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
 			Else
-				Dim Rec As Object = Server.CreateObject("ADODB.Recordset")
+				Dim Rec As Object
 				Dim Sql As String = ""
 
 				Sql = "Update Mails Set Letto='S' Where idMail=" & idMail & " And idUtente=" & idUtente
-				Ritorno = EsegueSql(Conn, Sql, Connessione)
+				Ritorno = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
 			End If
 		End If
 
@@ -560,16 +561,16 @@ Public Class wsMail
 		If Connessione = "" Then
 			Ritorno = ErroreConnessioneNonValida
 		Else
-			Dim Conn As Object = ApreDB(Connessione)
+			Dim Conn As Object = new clsGestioneDB
 
 			If TypeOf (Conn) Is String Then
 				Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
 			Else
-				Dim Rec As Object = Server.CreateObject("ADODB.Recordset")
+				Dim Rec As Object
 				Dim Sql As String = ""
 
 				Sql = "Update Mails Set folder='" & Folder & "' Where idMail=" & idMail & " And idUtente=" & idUtente
-				Ritorno = EsegueSql(Conn, Sql, Connessione)
+				Ritorno = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
 			End If
 		End If
 
@@ -584,16 +585,16 @@ Public Class wsMail
 		If Connessione = "" Then
 			Ritorno = ErroreConnessioneNonValida
 		Else
-			Dim Conn As Object = ApreDB(Connessione)
+			Dim Conn As Object = new clsGestioneDB
 
 			If TypeOf (Conn) Is String Then
 				Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
 			Else
-				Dim Rec As Object = Server.CreateObject("ADODB.Recordset")
+				Dim Rec As Object
 				Dim Sql As String = ""
 
 				Sql = "Update Mails Set starred='" & Preferito & "' Where idMail=" & idMail & " And idUtente=" & idUtente
-				Ritorno = EsegueSql(Conn, Sql, Connessione)
+				Ritorno = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
 			End If
 		End If
 
@@ -608,16 +609,16 @@ Public Class wsMail
 		If Connessione = "" Then
 			Ritorno = ErroreConnessioneNonValida
 		Else
-			Dim Conn As Object = ApreDB(Connessione)
+			Dim Conn As Object = new clsGestioneDB
 
 			If TypeOf (Conn) Is String Then
 				Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
 			Else
-				Dim Rec As Object = Server.CreateObject("ADODB.Recordset")
+				Dim Rec as object
 				Dim Sql As String = ""
 
 				Sql = "Update Mails Set important='" & Importante & "' Where idMail=" & idMail & " And idUtente=" & idUtente
-				Ritorno = EsegueSql(Conn, Sql, Connessione)
+				Ritorno = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
 			End If
 		End If
 

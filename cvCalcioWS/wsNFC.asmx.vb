@@ -1,12 +1,13 @@
 ﻿Imports System.ComponentModel
 Imports System.Web.Services
 Imports System.Web.Services.Protocols
+Imports ADODB
 
 ' Per consentire la chiamata di questo servizio Web dallo script utilizzando ASP.NET AJAX, rimuovere il commento dalla riga seguente.
 ' <System.Web.Script.Services.ScriptService()> _
 <System.Web.Services.WebService(Namespace:="http://cvCalcio.nfc.org/")>
-<System.Web.Services.WebServiceBinding(ConformsTo:=WsiProfiles.BasicProfile1_1)> _
-<ToolboxItem(False)> _
+<System.Web.Services.WebServiceBinding(ConformsTo:=WsiProfiles.BasicProfile1_1)>
+<ToolboxItem(False)>
 Public Class wsNFC
 	Inherits System.Web.Services.WebService
 
@@ -18,16 +19,16 @@ Public Class wsNFC
 		If Connessione = "" Then
 			Ritorno = ErroreConnessioneNonValida
 		Else
-			Dim Conn As Object = ApreDB(Connessione)
+			Dim Conn As Object = new clsGestioneDB
 
 			If TypeOf (Conn) Is String Then
 				Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
 			Else
-				Dim Rec As Object = Server.CreateObject("ADODB.Recordset")
+				Dim Rec As Object
 				Dim Sql As String = "Select Max(Progressivo)+1 From TessereNFC Where NumeroTessera='" & NumeroTessera & "'" '  And idGiocatore=" & idGiocatore
 				Dim Progressivo As Integer = 0
 
-				Rec = LeggeQuery(Conn, Sql, Connessione)
+				Rec = Conn.LeggeQuery(Server.MapPath("."),   Sql, Connessione)
 				If TypeOf (Rec) Is String Then
 					Ritorno = Rec
 				Else
@@ -53,7 +54,7 @@ Public Class wsNFC
 					" " & sImporto & ", " &
 					"'" & DataOra & "' " &
 					")"
-				Ritorno = EsegueSql(Conn, Sql, Connessione)
+				Ritorno = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
 				If Not Ritorno.Contains(StringaErrore) Then
 					Ritorno = "*"
 				End If
@@ -71,16 +72,16 @@ Public Class wsNFC
 		If Connessione = "" Then
 			Ritorno = ErroreConnessioneNonValida
 		Else
-			Dim Conn As Object = ApreDB(Connessione)
+			Dim Conn As Object = new clsGestioneDB
 
 			If TypeOf (Conn) Is String Then
 				Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
 			Else
-				Dim Rec As Object = Server.CreateObject("ADODB.Recordset")
+				Dim Rec As Object
 				Dim Sql As String = "Select Max(idLettore)+1 From LettoriNFC"
 				Dim Progressivo As Integer = 0
 
-				Rec = LeggeQuery(Conn, Sql, Connessione)
+				Rec = Conn.LeggeQuery(Server.MapPath("."),   Sql, Connessione)
 				If TypeOf (Rec) Is String Then
 					Ritorno = Rec
 				Else
@@ -98,7 +99,7 @@ Public Class wsNFC
 					"'', " &
 					"'N' " &
 					")"
-				Ritorno = EsegueSql(Conn, Sql, Connessione)
+				Ritorno = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
 				If Not Ritorno.Contains(StringaErrore) Then
 					Ritorno = "*"
 				End If
@@ -116,21 +117,21 @@ Public Class wsNFC
 		If Connessione = "" Then
 			Ritorno = ErroreConnessioneNonValida
 		Else
-			Dim Conn As Object = ApreDB(Connessione)
+			Dim Conn As Object = new clsGestioneDB
 
 			If TypeOf (Conn) Is String Then
 				Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
 			Else
-				Dim Rec As Object = Server.CreateObject("ADODB.Recordset")
+				Dim Rec As Object
 				Dim Sql As String = "Select * From GiocatoriTessereNFC Where CodiceTessera='" & CodiceTessera & "'"
 				Dim Progressivo As Integer = 0
 
-				Rec = LeggeQuery(Conn, Sql, Connessione)
+				Rec = Conn.LeggeQuery(Server.MapPath("."),   Sql, Connessione)
 				If TypeOf (Rec) Is String Then
 					Ritorno = Rec
 				Else
 					Ritorno = Rec("CodSquadra").Value & ";" & Rec("idGiocatore").Value & ";"
-					Rec.Close
+					Rec.Close()
 				End If
 			End If
 		End If
@@ -146,7 +147,7 @@ Public Class wsNFC
 		If Connessione = "" Then
 			Ritorno = ErroreConnessioneNonValida
 		Else
-			Dim Conn As Object = ApreDB(Connessione)
+			Dim Conn As Object = new clsGestioneDB
 
 			If TypeOf (Conn) Is String Then
 				Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
@@ -157,7 +158,7 @@ Public Class wsNFC
 					"Descrizione = '" & SistemaStringa(Descrizione) & "', " &
 					"IndirizzoIP = '" & SistemaStringa(IndirizzoIP) & "' " &
 					"Where idLettore = " & idLettore
-				Ritorno = EsegueSql(Conn, Sql, Connessione)
+				Ritorno = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
 				If Not Ritorno.Contains(StringaErrore) Then
 					Ritorno = "*"
 				End If
@@ -175,7 +176,7 @@ Public Class wsNFC
 		If Connessione = "" Then
 			Ritorno = ErroreConnessioneNonValida
 		Else
-			Dim Conn As Object = ApreDB(Connessione)
+			Dim Conn As Object = new clsGestioneDB
 
 			If TypeOf (Conn) Is String Then
 				Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
@@ -185,7 +186,7 @@ Public Class wsNFC
 				Sql = "Update LettoriNFC Set " &
 					"Eliminato = 'S' " &
 					"Where idLettore = " & idLettore
-				Ritorno = EsegueSql(Conn, Sql, Connessione)
+				Ritorno = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
 				If Not Ritorno.Contains(StringaErrore) Then
 					Ritorno = "*"
 				End If
@@ -203,20 +204,20 @@ Public Class wsNFC
 		If Connessione = "" Then
 			Ritorno = "01" ' ErroreConnessioneNonValida
 		Else
-			Dim Conn As Object = ApreDB(Connessione)
+			Dim Conn As Object = new clsGestioneDB
 
 			If TypeOf (Conn) Is String Then
 				Ritorno = "01" ' ErroreConnessioneDBNonValida & ":" & Conn
 			Else
 				Dim Sql As String = ""
-				Dim Rec As Object = Server.CreateObject("ADODB.Recordset")
+				Dim Rec As Object
 
 				Sql = "Select * From LettoriNFC Where Descrizione='" & NomeLettore & "'"
-				Rec = LeggeQuery(Conn, Sql, Connessione)
+				Rec = Conn.LeggeQuery(Server.MapPath("."),   Sql, Connessione)
 				If TypeOf (Rec) Is String Then
 					Ritorno = "02" ' Rec
 				Else
-					If Rec.Eof Then
+					If Rec.Eof() Then
 						Ritorno = "03" ' "ERROR: Lettore NFC non rilevato"
 					Else
 						Dim Ora As String = Now.Year & "-" & Format(Now.Month, "00") & "-" & Format(Now.Day, "00") & " " & Format(Now.Hour, "00") & ":" & Format(Now.Minute, "00") & ":" & Format(Now.Second, "00")
@@ -224,7 +225,7 @@ Public Class wsNFC
 						Sql = "Update LettoriNFC Set " &
 							"DataUltimaLettura = '" & Ora & "' " &
 							"Where Descrizione = " & NomeLettore
-						Ritorno = EsegueSql(Conn, Sql, Connessione)
+						Ritorno = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
 						If Not Ritorno.Contains(StringaErrore) Then
 							Ritorno = "*"
 						Else
@@ -250,26 +251,26 @@ Public Class wsNFC
 		If Connessione = "" Then
 			Ritorno = ErroreConnessioneNonValida
 		Else
-			Dim Conn As Object = ApreDB(Connessione)
+			Dim Conn As Object = new clsGestioneDB
 
 			If TypeOf (Conn) Is String Then
 				Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
 			Else
 				Dim NowSpostato As DateTime = Now.AddMinutes(-30)
 				Dim Ora As String = NowSpostato.Year & "-" & Format(NowSpostato.Month, "00") & "-" & Format(NowSpostato.Day, "00") & " " & Format(NowSpostato.Hour, "00") & ":" & Format(NowSpostato.Minute, "00") & ":" & Format(NowSpostato.Second, "00")
-				Dim Rec As Object = Server.CreateObject("ADODB.Recordset")
+				Dim Rec As Object
 				Dim Sql As String = "Select * From LettoriNFC Where Eliminato='N' Order By idLettore"
 
-				Rec = LeggeQuery(Conn, Sql, Connessione)
+				Rec = Conn.LeggeQuery(Server.MapPath("."),   Sql, Connessione)
 				If TypeOf (Rec) Is String Then
 					Ritorno = Rec
 				Else
-					Do Until Rec.Eof
+					Do Until Rec.Eof()
 						Ritorno &= Rec("idLettore").Value & ";" & Rec("Descrizione").Value.replace(";", "*PV*") & ";" & Rec("IndirizzoIP").Value & ";" & Rec("DataUltimaLettura").Value & "§"
 
-						Rec.MoveNext
+						Rec.MoveNext()
 					Loop
-					Rec.CLose
+					Rec.Close()
 				End If
 
 			End If
@@ -286,26 +287,27 @@ Public Class wsNFC
 		If Connessione = "" Then
 			Ritorno = ErroreConnessioneNonValida
 		Else
-			Dim Conn As Object = ApreDB(Connessione)
+			Dim Conn As Object = new clsGestioneDB
 
 			If TypeOf (Conn) Is String Then
 				Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
 			Else
 				Dim NowSpostato As DateTime = Now.AddMinutes(-30)
 				Dim Ora As String = NowSpostato.Year & "-" & Format(NowSpostato.Month, "00") & "-" & Format(NowSpostato.Day, "00") & " " & Format(NowSpostato.Hour, "00") & ":" & Format(NowSpostato.Minute, "00") & ":" & Format(NowSpostato.Second, "00")
-				Dim Rec As Object = Server.CreateObject("ADODB.Recordset")
-				Dim Sql As String = "Select * From LettoriNFC Where Eliminato= 'N' And Convert(DateTime, DataUltimaLettura, 121) < CONVERT(DateTime, '" & Ora & "', 121)  Order By idLettore"
+				Dim Rec as Object
+				Dim Sql As String = "Select * From LettoriNFC Where Eliminato= 'N' And " &
+					" " & IIf(TipoDB = "SQLSERVER", "Convert(DateTime, DataUltimaLettura, 121)", "Convert(DataUltimaLettura, DateTime)") & " < " & IIf(TipoDB = "SQLSERVER", "CONVERT(DateTime, '" & Ora & "', 121)", "CONVERT('" & Ora & "', DateTime)") & " Order By idLettore"
 
-				Rec = LeggeQuery(Conn, Sql, Connessione)
+				Rec = Conn.LeggeQuery(Server.MapPath("."),   Sql, Connessione)
 				If TypeOf (Rec) Is String Then
 					Ritorno = Rec
 				Else
-					Do Until Rec.Eof
+					Do Until Rec.Eof()
 						Ritorno &= Rec("idLettore").Value & ";" & Rec("Descrizione").Value.replace(";", "*PV*") & ";" & Rec("IndirizzoIP").Value & ";" & Rec("DataUltimaLettura").Value & "§"
 
-						Rec.MoveNext
+						Rec.MoveNext()
 					Loop
-					Rec.CLose
+					Rec.Close()
 				End If
 
 			End If

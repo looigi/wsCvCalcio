@@ -1,12 +1,13 @@
 ﻿Imports System.Web.Services
 Imports System.Web.Services.Protocols
 Imports System.ComponentModel
+Imports ADODB
 
 <System.Web.Services.WebService(Namespace:="http://cvcalcio_cat.org/")>
 <System.Web.Services.WebServiceBinding(ConformsTo:=WsiProfiles.BasicProfile1_1)>
 <ToolboxItem(False)>
 Public Class wsCategorie
-    Inherits System.Web.Services.WebService
+	Inherits System.Web.Services.WebService
 
 	<WebMethod()>
 	Public Function RitornaNuovoID(Squadra As String, ByVal idAnno As String) As String
@@ -17,17 +18,17 @@ Public Class wsCategorie
 		If Connessione = "" Then
 			Ritorno = ErroreConnessioneNonValida
 		Else
-			Dim Conn As Object = ApreDB(Connessione)
+			Dim Conn As Object = new clsGestioneDB
 
 			If TypeOf (Conn) Is String Then
 				Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
 			Else
-				Dim Rec As Object = Server.CreateObject("ADODB.Recordset")
+				Dim Rec As Object
 				Dim Sql As String = ""
 				'Dim idUtente As String = ""
 
 				Sql = "SELECT Max(idCategoria)+1 FROM Categorie Where idAnno=" & idAnno
-				Rec = LeggeQuery(Conn, Sql, Connessione)
+				Rec = Conn.LeggeQuery(Server.MapPath("."),  Sql, Connessione)
 				If TypeOf (Rec) Is String Then
 					Ritorno = Rec
 				Else
@@ -54,15 +55,15 @@ Public Class wsCategorie
 		If Connessione = "" Then
 			Ritorno = ErroreConnessioneNonValida
 		Else
-			Dim Conn As Object = ApreDB(Connessione)
+			Dim Conn As Object = new clsGestioneDB
 
 			If TypeOf (Conn) Is String Then
 				Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
 			Else
-				Dim Rec As Object = Server.CreateObject("ADODB.Recordset")
+				Dim Rec As Object
 
-				Sql = "Begin transaction"
-				Ritorno = EsegueSql(Conn, Sql, Connessione)
+				Sql = iif(tipodb="SQLSERVER", "Begin transaction", "Start transaction")
+				Ritorno = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
 
 				Dim TipoUtente As String = ""
 				Dim NomeTabella As String = ""
@@ -70,11 +71,11 @@ Public Class wsCategorie
 				If Not Ritorno.Contains(StringaErrore) Then
 					Try
 						Sql = "Select * From [Generale].[dbo].[Utenti] Where idUtente=" & IDutente
-						Rec = LeggeQuery(Conn, Sql, Connessione)
+						Rec = Conn.LeggeQuery(Server.MapPath("."),  Sql, Connessione)
 						If TypeOf (Rec) Is String Then
 							Ritorno = Rec
 						Else
-							If Rec.Eof Then
+							If Rec.Eof() Then
 								Ritorno = StringaErrore & " Nessun utente rilevato"
 							Else
 								TipoUtente = Rec("idTipologia").Value
@@ -92,7 +93,7 @@ Public Class wsCategorie
 						End Select
 
 						Sql = "Delete From " & NomeTabella & " Where Idutente = " & IDutente
-						Ritorno = EsegueSql(Conn, Sql, Connessione)
+						Ritorno = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
 						If Ritorno.Contains(StringaErrore) Then
 							Ok = False
 						End If
@@ -116,7 +117,7 @@ Public Class wsCategorie
 											" " & Progressivo & ", " &
 											" " & p & " " &
 											")"
-										Ritorno = EsegueSql(Conn, Sql, Connessione)
+										Ritorno = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
 										If Ritorno.Contains(StringaErrore) Then
 											Ok = False
 											Exit For
@@ -136,10 +137,10 @@ Public Class wsCategorie
 
 			If Ok Then
 				Sql = "commit"
-				Dim Ritorno2 As String = EsegueSql(Conn, Sql, Connessione)
+				Dim Ritorno2 As String = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
 			Else
 				Sql = "rollback"
-				Dim Ritorno2 As String = EsegueSql(Conn, Sql, Connessione)
+				Dim Ritorno2 As String = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
 			End If
 
 			Conn.Close()
@@ -157,8 +158,8 @@ Public Class wsCategorie
 		If Connessione = "" Then
 			Ritorno = ErroreConnessioneNonValida
 		Else
-			Dim Conn As Object = ApreDB(Connessione)
-			Dim ConnU As Object = ApreDB(ConnessioneU)
+			Dim Conn As Object = new clsGestioneDB
+			Dim ConnU As Object = New clsGestioneDB
 
 			If TypeOf (Conn) Is String Then
 				Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
@@ -166,17 +167,17 @@ Public Class wsCategorie
 				If TypeOf (ConnU) Is String Then
 					Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
 				Else
-					Dim Rec As Object = Server.CreateObject("ADODB.Recordset")
+					Dim Rec As Object
 					Dim Sql As String = ""
 					Dim TipoUtente As String = ""
 
 					Try
 						Sql = "Select * From Utenti Where idUtente=" & idUtente
-						Rec = LeggeQuery(ConnU, Sql, Connessione)
+						Rec = ConnU.LeggeQuery(Server.MapPath("."), Sql, Connessione)
 						If TypeOf (Rec) Is String Then
 							Ritorno = Rec
 						Else
-							If Rec.Eof Then
+							If Rec.Eof() Then
 								Ritorno = StringaErrore & " Nessun utente rilevato"
 							Else
 								TipoUtente = Rec("idTipologia").Value
@@ -199,15 +200,15 @@ Public Class wsCategorie
 								Case Else
 									Sql = "SELECT * From Categorie Where idAnno=" & idAnno
 							End Select
-							Rec = LeggeQuery(Conn, Sql, Connessione)
+							Rec = Conn.LeggeQuery(Server.MapPath("."),  Sql, Connessione)
 							If TypeOf (Rec) Is String Then
 								Ritorno = Rec
 							Else
-								If Rec.Eof Then
+								If Rec.Eof() Then
 									' Ritorno = StringaErrore & " Nessun permesso ritornato"
 								Else
 									Ritorno = ""
-									Do Until Rec.Eof
+									Do Until Rec.Eof()
 										Ritorno &= Rec("idCategoria").Value.ToString & "§"
 
 										Rec.MoveNext()
@@ -238,21 +239,21 @@ Public Class wsCategorie
 		If Connessione = "" Then
 			Ritorno = ErroreConnessioneNonValida
 		Else
-			Dim Conn As Object = ApreDB(Connessione)
+			Dim Conn As Object = new clsGestioneDB
 
 			If TypeOf (Conn) Is String Then
 				Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
 			Else
-				Dim Rec As Object = Server.CreateObject("ADODB.Recordset")
+				Dim Rec As Object
 				Dim Sql As String = ""
 
 				Try
 					Sql = "Select * From [Generale].[dbo].Utenti Where idAnno=" & idAnno & " And idUtente=" & idUtente
-					Rec = LeggeQuery(Conn, Sql, Connessione)
+					Rec = Conn.LeggeQuery(Server.MapPath("."),  Sql, Connessione)
 					If TypeOf (Rec) Is String Then
 						Ritorno = Rec
 					Else
-						If Rec.Eof Then
+						If Rec.Eof() Then
 							Ritorno = StringaErrore & " Nessun utente rilevato"
 						Else
 							Dim idTipologia As String = Rec("idTipologia").Value
@@ -308,18 +309,18 @@ Public Class wsCategorie
 										"Where B.idAnno = " & idAnno & " And A.idUtente = " & idUtente & " And Eliminato='N' Order By Descrizione"
 							End Select
 
-							Rec = LeggeQuery(Conn, Sql, Connessione)
+							Rec = Conn.LeggeQuery(Server.MapPath("."),  Sql, Connessione)
 							If TypeOf (Rec) Is String Then
 								Ritorno = Rec
 							Else
-								If Rec.Eof Then
+								If Rec.Eof() Then
 									Ritorno = "" ' StringaErrore & " Nessuna categoria rilevata"
 								Else
 									Ritorno = ""
 									If idTipologia = "1" Or idTipologia = "0" Then
 										Ritorno &= "-1;Tutte le categorie;0§"
 									End If
-									Do Until Rec.Eof
+									Do Until Rec.Eof()
 										Ritorno &= Rec("idCategoria").Value.ToString & ";" & Rec("Descrizione").Value.ToString & ";" &
 											Rec("AnticipoConvocazione").Value & ";" & Rec("RisultatoATempi").Value & ";" &
 											Rec("GiornoAllenamento1").Value & ";" & Rec("OraInizio1").Value & ";" & Rec("OraFine1").Value & ";" &
@@ -355,25 +356,25 @@ Public Class wsCategorie
 		If Connessione = "" Then
 			Ritorno = ErroreConnessioneNonValida
 		Else
-			Dim Conn As Object = ApreDB(Connessione)
+			Dim Conn As Object = new clsGestioneDB
 
 			If TypeOf (Conn) Is String Then
 				Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
 			Else
-				Dim Rec As Object = Server.CreateObject("ADODB.Recordset")
+				Dim Rec As Object
 				Dim Sql As String = ""
 
 				Try
 					Sql = "SELECT * FROM Categorie Where idAnno=" & idAnno & " And Eliminato='N' Order By Descrizione"
-					Rec = LeggeQuery(Conn, Sql, Connessione)
+					Rec = Conn.LeggeQuery(Server.MapPath("."),  Sql, Connessione)
 					If TypeOf (Rec) Is String Then
 						Ritorno = Rec
 					Else
-						If Rec.Eof Then
+						If Rec.Eof() Then
 							Ritorno = "" ' StringaErrore & " Nessuna categoria rilevata"
 						Else
 							Ritorno = ""
-							Do Until Rec.Eof
+							Do Until Rec.Eof()
 								Ritorno &= Rec("idCategoria").Value.ToString & ";" & Rec("Descrizione").Value.ToString & ";" & Rec("AnticipoConvocazione").Value & ";" & Rec("RisultatoATempi").Value & ";" & Rec("AnnoCategoria").Value & ";" & Rec("TempoGioco").Value & "§"
 
 								Rec.MoveNext()
@@ -403,7 +404,7 @@ Public Class wsCategorie
 		If Connessione = "" Then
 			Ritorno = ErroreConnessioneNonValida & ":" & Connessione
 		Else
-			Dim Conn As Object = ApreDB(Connessione)
+			Dim Conn As Object = new clsGestioneDB
 
 			If TypeOf (Conn) Is String Then
 				Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
@@ -411,16 +412,16 @@ Public Class wsCategorie
 				Dim Sql As String = ""
 				Dim Ok As Boolean = True
 
-				Sql = "Begin transaction"
-				Ritorno = EsegueSql(Conn, Sql, Connessione)
+				Sql = iif(tipodb="SQLSERVER", "Begin transaction", "Start transaction")
+				Ritorno = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
 
 				If Not Ritorno.Contains(StringaErrore) Then
 					If idCategoria = -1 Then
-						Dim Rec As Object = Server.CreateObject("ADODB.Recordset")
+						Dim Rec As Object
 
 						Try
 							Sql = "Select Max(idCategoria)+1 From Categorie Where idAnno=" & idAnno
-							Rec = LeggeQuery(Conn, Sql, Connessione)
+							Rec = Conn.LeggeQuery(Server.MapPath("."),  Sql, Connessione)
 							If TypeOf (Rec) Is String Then
 								Ritorno = Rec
 							Else
@@ -437,7 +438,7 @@ Public Class wsCategorie
 					Else
 						Try
 							Sql = "Delete From Categorie Where idAnno=" & idAnno & " And idCategoria=" & idCategoria
-							Ritorno = EsegueSql(Conn, Sql, Connessione)
+							Ritorno = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
 							If Ritorno.Contains(StringaErrore) Then
 								Ok = False
 							End If
@@ -474,7 +475,7 @@ Public Class wsCategorie
 								" " & Tempi & ", " &
 								" " & TempoGioco & " " &
 								")"
-							Ritorno = EsegueSql(Conn, Sql, Connessione)
+							Ritorno = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
 							If Ritorno.Contains(StringaErrore) Then
 								Ok = False
 							End If
@@ -489,10 +490,10 @@ Public Class wsCategorie
 
 				If Ok Then
 					Sql = "commit"
-					Dim Ritorno2 As String = EsegueSql(Conn, Sql, Connessione)
+					Dim Ritorno2 As String = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
 				Else
 					Sql = "rollback"
-					Dim Ritorno2 As String = EsegueSql(Conn, Sql, Connessione)
+					Dim Ritorno2 As String = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
 				End If
 
 				Conn.Close()
@@ -510,7 +511,7 @@ Public Class wsCategorie
 		If Connessione = "" Then
 			Ritorno = ErroreConnessioneNonValida & ":" & Connessione
 		Else
-			Dim Conn As Object = ApreDB(Connessione)
+			Dim Conn As Object = new clsGestioneDB
 
 			If TypeOf (Conn) Is String Then
 				Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
@@ -520,7 +521,7 @@ Public Class wsCategorie
 
 				Try
 					Sql = "Update Categorie Set Eliminato='S' Where idAnno=" & idAnno & " And idCategoria=" & idCategoria
-					Ritorno = EsegueSql(Conn, Sql, Connessione)
+					Ritorno = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
 				Catch ex As Exception
 					Ritorno = StringaErrore & " " & ex.Message
 					Ok = False

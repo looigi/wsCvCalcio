@@ -1,12 +1,13 @@
 ﻿Imports System.Web.Services
 Imports System.Web.Services.Protocols
 Imports System.ComponentModel
+Imports ADODB
 
 ' Per consentire la chiamata di questo servizio Web dallo script utilizzando ASP.NET AJAX, rimuovere il commento dalla riga seguente.
 ' <System.Web.Script.Services.ScriptService()> _
 <System.Web.Services.WebService(Namespace:="http://risposte.org/")>
-<System.Web.Services.WebServiceBinding(ConformsTo:=WsiProfiles.BasicProfile1_1)> _
-<ToolboxItem(False)> _
+<System.Web.Services.WebServiceBinding(ConformsTo:=WsiProfiles.BasicProfile1_1)>
+<ToolboxItem(False)>
 Public Class wsRisposte
 	Inherits System.Web.Services.WebService
 
@@ -18,30 +19,30 @@ Public Class wsRisposte
 		If Connessione = "" Then
 			Ritorno = ErroreConnessioneNonValida
 		Else
-			Dim Conn As Object = ApreDB(Connessione)
+			Dim Conn As Object = new clsGestioneDB
 
 			If TypeOf (Conn) Is String Then
 				Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
 			Else
-				Dim Rec As Object = Server.CreateObject("ADODB.Recordset")
+				Dim Rec as object
 				Dim Sql As String = ""
 				Dim Ok As Boolean = True
 				Dim Altro As String = ""
 
-				Sql = "Begin transaction"
-				Ritorno = EsegueSql(Conn, Sql, Connessione)
+				Sql = iif(tipodb="SQLSERVER", "Begin transaction", "Start transaction")
+				Ritorno = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
 
 				Sql = "Select * From ConvocatiPartiteRisposte Where idPartita=" & idPartita & " And idGiocatore=" & idGiocatore
-				Rec = LeggeQuery(Conn, Sql, Connessione)
+				Rec = Conn.LeggeQuery(Server.MapPath("."),   Sql, Connessione)
 				If TypeOf (Rec) Is String Then
 					Ritorno = Rec
 					Ok = False
 				Else
-					If Rec.Eof Then
+					If Rec.Eof() Then
 						Rec.Close()
 
 						Sql = "Insert Into ConvocatiPartiteRisposte Values (" & idPartita & ", " & idGiocatore & ", '" & Mid(Risposta, 1, 1) & "')"
-						Ritorno = EsegueSql(Conn, Sql, Connessione)
+						Ritorno = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
 						If Ritorno = "*" Then
 							Sql = "Select A.DataOra, Casa, C.Descrizione As Squadra1, D.Descrizione As Squadra2, B.EMail, E.Descrizione As Campo, E.Indirizzo, F.Lat, F.Lon, " &
 								"A.DataOraAppuntamento, A.LuogoAppuntamento, A.Mezzotrasporto " &
@@ -52,17 +53,17 @@ Public Class wsRisposte
 								"Left Join CampiAvversari E On D.idCampo = E.idCampo " &
 								"Left Join AvversariCoord F On F.idAvversario = D.idAvversario " &
 								"Where idPartita =" & idPartita
-							Rec = LeggeQuery(Conn, Sql, Connessione)
+							Rec = Conn.LeggeQuery(Server.MapPath("."),   Sql, Connessione)
 							If TypeOf (Rec) Is String Then
 								Ritorno = Rec
 								Ok = False
 							Else
-								If Not Rec.Eof Then
+								If Not Rec.Eof() Then
 									Dim EMAilAllenatore As String = "" & Rec("EMail").Value
 									Dim Casa As String = "" & Rec("Casa").Value
 									Dim DataOra As String = "" & Rec("DataOra").Value
 									Dim Campo As String = "" & Rec("Campo").Value
-									Dim Indirizzo As String = "" & Rec("Indirizzo").value
+									Dim Indirizzo As String = "" & Rec("Indirizzo").Value
 									Dim Sq1 As String = "" & Rec("Squadra1").Value
 									Dim Sq2 As String = "" & Rec("Squadra2").Value
 									Dim LatLon As String = "" & Rec("Lat").Value & "," & Rec("Lon").Value
@@ -87,12 +88,12 @@ Public Class wsRisposte
 									Rec.Close()
 
 									Sql = "Select * From Giocatori Where idGiocatore=" & idGiocatore
-									Rec = LeggeQuery(Conn, Sql, Connessione)
+									Rec = Conn.LeggeQuery(Server.MapPath("."),   Sql, Connessione)
 									If TypeOf (Rec) Is String Then
 										Ritorno = Rec
 										Ok = False
 									Else
-										If Not Rec.Eof Then
+										If Not Rec.Eof() Then
 											Dim Cognome As String = "" & Rec("Cognome").Value
 											Dim Nome As String = "" & Rec("Nome").Value
 											Rec.Close()
@@ -114,7 +115,7 @@ Public Class wsRisposte
 											End If
 											Dim url2 As String = "https://www.google.it/maps/place/" & LuogoApp
 											Body &= "<br /><br />Appuntamento: " & FormatDateTime(DataOraApp, DateFormat.LongDate) & " " & FormatDateTime(DataOraApp, DateFormat.ShortTime) & " <a href=""" & url2 & """>" & LuogoApp & "</a> tramite " & Mezzo
-											Ritorno = ma.SendEmail(Squadra, "", Oggetto, Body, EMAilAllenatore, {""})
+											Ritorno = ma.SendEmail(Server.MapPath("."), Squadra, "", Oggetto, Body, EMAilAllenatore, {""})
 										End If
 									End If
 								Else
@@ -127,11 +128,11 @@ Public Class wsRisposte
 
 					If Ok Then
 						Sql = "commit"
-						Dim Ritorno2 As String = EsegueSql(Conn, Sql, Connessione)
-						Ritorno = "Risposta " & altro & " inviata"
+						Dim Ritorno2 As String = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
+						Ritorno = "Risposta " & Altro & " inviata"
 					Else
 						Sql = "rollback"
-						Dim Ritorno2 As String = EsegueSql(Conn, Sql, Connessione)
+						Dim Ritorno2 As String = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
 					End If
 				End If
 			End If

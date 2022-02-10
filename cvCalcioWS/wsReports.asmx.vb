@@ -3,6 +3,7 @@ Imports System.Web.Services.Protocols
 Imports System.ComponentModel
 Imports System.IO
 Imports System.Data.Common
+Imports ADODB
 
 ' Per consentire la chiamata di questo servizio Web dallo script utilizzando ASP.NET AJAX, rimuovere il commento dalla riga seguente.
 ' <System.Web.Script.Services.ScriptService()> _
@@ -20,25 +21,25 @@ Public Class wsReports
 		If Connessione = "" Then
 			Ritorno = ErroreConnessioneNonValida
 		Else
-			Dim Conn As Object = ApreDB(Connessione)
-			Dim Rec As Object = Server.CreateObject("ADODB.Recordset")
+			Dim Conn As Object = new clsGestioneDB
+			Dim Rec As Object
 
 			If TypeOf (Conn) Is String Then
 				Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
 			Else
-				Dim Sql As String = "Select Distinct YEAR(Convert(DateTime, DataDiNascita, 121)) As Anno From Giocatori Where Eliminato='N' Order By 1"
-				Rec = LeggeQuery(Conn, Sql, Connessione)
+				Dim Sql As String = "Select Distinct YEAR(" & IIf(TipoDB = "SQLSERVER", "Convert(DateTime, DataDiNascita, 121)", "Convert(DataDiNascita, DateTime)") & ") As Anno From Giocatori Where Eliminato='N' Order By 1"
+				Rec = Conn.LeggeQuery(Server.MapPath("."),  Sql, Connessione)
 				If TypeOf (Rec) Is String Then
 					Ritorno = Rec
 				Else
-					If Not Rec.Eof Then
-						Do Until Rec.Eof
+					If Not Rec.Eof() Then
+						Do Until Rec.Eof()
 							Ritorno &= Rec("Anno").Value & "§"
 
 							Rec.MoveNext()
 						Loop
 					End If
-					Rec.Close
+					Rec.Close()
 				End If
 
 			End If
@@ -55,9 +56,9 @@ Public Class wsReports
 		If Connessione = "" Then
 			Ritorno = ErroreConnessioneNonValida
 		Else
-			Dim Conn As Object = ApreDB(Connessione)
-			Dim Rec As Object = Server.CreateObject("ADODB.Recordset")
-			Dim Rec2 As Object = Server.CreateObject("ADODB.Recordset")
+			Dim Conn As Object = new clsGestioneDB
+			Dim Rec As Object
+			Dim Rec2 As Object
 
 			If TypeOf (Conn) Is String Then
 				Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
@@ -79,13 +80,14 @@ Public Class wsReports
 
 				Sql = "Select * From  ( " &
 					"Select *, TotaleDaPagare - TotalePagato As Differenza From ( " &
-					"Select 'Validato S' As Cosa, A.idGiocatore, Cognome, Nome, C.Descrizione As DescrizioneQuota, IsNull(C.Importo, 0) As Importo, IsNull(Sconto, 0) As Sconto, IsNull(C.Importo, 0) - IsNull(Sconto, 0) As TotaleDaPagare,  " &
+					"Select 'Validato S' As Cosa, A.idGiocatore, Cognome, Nome, C.Descrizione As DescrizioneQuota, C.Importo, 0) As Importo, " & If(TipoDB = "SQLSERVER", "IsNull(Sconto, 0)", "COALESCE(Sconto, 0)") & " As Sconto, " &
+					" " & IIf(TipoDB = "SQLSERVER", "IsNull(C.Importo, 0)", "COALESCE(C.Importo, 0)") & " - " & IIf(TipoDB = "SQLSERVER", "IsNull(Sconto, 0)", "COALESCE(Sconto, 0)") & " As TotaleDaPagare,  " &
 					"Validato, Pagamento, idTipoPagamento, " &
 					"CASE idTipoPagamento " &
 					"     WHEN 1 THEN 'Rata' " &
 					"     ELSE 'Altro' " &
 					"END As TipoPagamento , A.NumeroRicevuta,  " &
-					"(Select IsNull(Sum(Pagamento),0) From GiocatoriPagamenti Where idGiocatore=A.idGiocatore And Eliminato='N' And idTipoPagamento = 1 And Validato='S') As TotalePagato, " &
+					"(Select " & IIf(TipoDB = "SQLSERVER", "IsNull(Sum(Pagamento),0)", "COALESCE(Sum(Pagamento),0)") & " From GiocatoriPagamenti Where idGiocatore=A.idGiocatore And Eliminato='N' And idTipoPagamento = 1 And Validato='S') As TotalePagato, " &
 					"A.DataPagamento, E.MetodoPagamento, A.Note " &
 					"From  " &
 					"GiocatoriPagamenti A " &
@@ -97,13 +99,14 @@ Public Class wsReports
 					") As A  " &
 					"Union All " &
 					"Select *, TotaleDaPagare - TotalePagato As Differenza From ( " &
-					"Select 'Validato N' As Cosa, A.idGiocatore, Cognome, Nome, C.Descrizione As DescrizioneQuota, IsNull(C.Importo, 0) As Importo, IsNull(Sconto, 0) As Sconto, IsNull(C.Importo, 0) - IsNull(Sconto, 0) As TotaleDaPagare,  " &
+					"Select 'Validato N' As Cosa, A.idGiocatore, Cognome, Nome, C.Descrizione As DescrizioneQuota, " & IIf(TipoDB = "SQLSERVER", "IsNull(C.Importo, 0)", "COALESCE(C.Importo, 0)") & " As Importo, " &
+					" " & IIf(TipoDB = "SQLSERVER", "IsNull(Sconto, 0)", "COALESCE(Sconto, 0)") & " As Sconto, " & IIf(TipoDB = "SQLSERVER", "IsNull(C.Importo, 0) - IsNull(Sconto, 0)", "COALESCE(C.Importo, 0) - COALESCE(Sconto, 0)") & " As TotaleDaPagare,  " &
 					"Validato, Pagamento, idTipoPagamento, " &
 					"CASE idTipoPagamento " &
 					"     WHEN 1 THEN 'Rata' " &
 					"     ELSE 'Altro' " &
 					"END As TipoPagamento , A.NumeroRicevuta,  " &
-					"(Select IsNull(Sum(Pagamento),0) From GiocatoriPagamenti Where idGiocatore=A.idGiocatore And Eliminato='N' And idTipoPagamento = 1 And Validato='S') As TotalePagato, " &
+					"(Select " & IIf(TipoDB = "SQLSERVER", "IsNull(Sum(Pagamento),0)", "COALESCE(Sum(Pagamento),0)") & " From GiocatoriPagamenti Where idGiocatore=A.idGiocatore And Eliminato='N' And idTipoPagamento = 1 And Validato='S') As TotalePagato, " &
 					"A.DataPagamento, E.MetodoPagamento, A.Note " &
 					"From  " &
 					"GiocatoriPagamenti A " &
@@ -117,7 +120,7 @@ Public Class wsReports
 					" " & Altro & " " &
 					"Order By Cognome, Nome, Validato"
 
-				Rec = LeggeQuery(Conn, Sql, Connessione)
+				Rec = Conn.LeggeQuery(Server.MapPath("."),  Sql, Connessione)
 				If TypeOf (Rec) Is String Then
 					Ritorno = Rec
 					Ok = False
@@ -177,7 +180,7 @@ Public Class wsReports
 						Output.Append(vbCrLf)
 					End If
 
-					Do Until Rec.Eof
+					Do Until Rec.Eof()
 						If Modalita = "PDF" Then
 							Dim Immagine As String = ""
 							Dim Esten2 As String = Format(Now.Second, "00") & "_" & Now.Millisecond & RitornaValoreRandom(55)
@@ -185,7 +188,7 @@ Public Class wsReports
 							Dim pathImmagine As String = pp & "\" & NomeSquadra.Replace(" ", "_") & "\Giocatori\" & idAnno & "_" & Rec("idGiocatore").Value & ".kgb"
 							Dim urlImmagineConvertita As String = P(2) & "/Appoggio/" & Rec("idGiocatore").Value & "_" & Esten2 & ".png"
 							Dim pathImmagineConvertita As String = pp & "\Appoggio\" & Rec("idGiocatore").Value & "_" & Esten2 & ".png"
-							If File.Exists(pathImmagine) Then
+							If ControllaEsistenzaFile(pathImmagine) Then
 								c.DecryptFile(CryptPasswordString, pathImmagine, pathImmagineConvertita)
 
 								Immagine = "<img src=""" & urlImmagineConvertita & """ style=""width: 50px; height: 50px;"" />"
@@ -226,8 +229,8 @@ Public Class wsReports
 							Dim Riga As String = "" & Rec("Cognome").Value & ";" & "" & Rec("Nome").Value & ";"
 							Dim RigaDaScrivere As String = "" & Rec("Cognome").Value & ";" & "" & Rec("Nome").Value & ";" & "" & Rec("Importo").Value & ";" & "" & Rec("Sconto").Value & ";" & "" & Rec("Differenza").Value & ";" & "" & Rec("DescrizioneQuota").Value & ";"
 
-							If Riga <> vecchia Then
-								vecchia = Riga
+							If Riga <> Vecchia Then
+								Vecchia = Riga
 								'Output.Append("" & Rec("Cognome").Value & ";")
 								'Output.Append("" & Rec("Nome").Value & ";")
 								'' Output.Append(Rec("Descrizione").Value & ";")
@@ -257,9 +260,9 @@ Public Class wsReports
 						'totPagatoManuale += Val(("" & Rec("ImportoManuale").Value))
 						'totDifferenza += Val(("" & Rec("Differenza").Value))
 
-						Rec.MoveNext
+						Rec.MoveNext()
 					Loop
-					Rec.Close
+					Rec.Close()
 
 					Dim filePaths As String = gf.LeggeFileIntero(HttpContext.Current.Server.MapPath(".") & "\Impostazioni\Paths.txt")
 					filePaths = filePaths.Replace(vbCrLf, "")
@@ -310,7 +313,7 @@ Public Class wsReports
 						End If
 
 						Dim pathLogo As String = filePaths & NomeSquadra.Replace(" ", "_") & "\Societa\1_1.kgb"
-						If File.Exists(pathLogo) Then
+						If ControllaEsistenzaFile(pathLogo) Then
 							Dim pathLogoConv As String = filePaths & "Appoggio\" & Esten & ".jpg"
 							c.DecryptFile(CryptPasswordString, pathLogo, pathLogoConv)
 
@@ -365,8 +368,8 @@ Public Class wsReports
 		If Connessione = "" Then
 			Ritorno = ErroreConnessioneNonValida
 		Else
-			Dim Conn As Object = ApreDB(Connessione)
-			Dim Rec As Object = Server.CreateObject("ADODB.Recordset")
+			Dim Conn As Object = new clsGestioneDB
+			Dim Rec As Object
 			Dim Sql As String = ""
 			Dim Altro As String = ""
 
@@ -384,15 +387,15 @@ Public Class wsReports
 					"Order By Cognome, Nome"
 			Else
 				Sql = "Select Cognome, Nome, DataDiNascita, Descrizione, DaPagare, Sconto, TotalePagato, (DaPagare - Sconto) - TotalePagato As Differenza From ( " &
-					"Select Cognome, Nome, DataDiNascita, C.Descrizione, IsNull(C.Importo, 0) As DaPagare, IsNull(B.Sconto, 0) As Sconto, " &
-					"(Select IsNull(Sum(Pagamento),0) From GiocatoriPagamenti Where idGiocatore=A.idGiocatore And Eliminato='N' And idTipoPagamento = 1 And Validato='S') As TotalePagato " &
+					"Select Cognome, Nome, DataDiNascita, C.Descrizione, " & IIf(TipoDB = "SQLSERVER", "IsNull(C.Importo, 0)", "COALESCE(C.Importo, 0)") & " As DaPagare, " & IIf(TipoDB = "SQLSERVER", "IsNull(B.Sconto, 0)", "COALESCE(B.Sconto, 0)") & " As Sconto, " &
+					"(Select " & IIf(TipoDB = "SQLSERVER", "IsNull(Sum(Pagamento),0)", "COALESCE(Sum(Pagamento),0)") & " From GiocatoriPagamenti Where idGiocatore=A.idGiocatore And Eliminato='N' And idTipoPagamento = 1 And Validato='S') As TotalePagato " &
 					"From Giocatori A " &
 					"Left Join GiocatoriDettaglio B On A.idGiocatore = B.idGiocatore " &
 					"Left Join Quote C On B.idQuota = C.idQuota " &
 					"Where A.Eliminato='N' And C.Eliminato='N' " & Altro & " " &
 					") As A Order By Cognome, Nome"
 			End If
-			Rec = LeggeQuery(Conn, Sql, Connessione)
+			Rec = Conn.LeggeQuery(Server.MapPath("."),  Sql, Connessione)
 			If TypeOf (Rec) Is String Then
 				Ritorno = Rec
 			Else
@@ -416,7 +419,7 @@ Public Class wsReports
 				Output.Append("Cognome;Nome;Data Di Nascita;Quota;Da Pagare;Sconto;Pagato;Differenza;")
 				Output.Append(vbCrLf)
 
-				Do Until Rec.Eof
+				Do Until Rec.Eof()
 					Output.Append("" & Rec("Cognome").Value & ";")
 					Output.Append("" & Rec("Nome").Value & ";")
 					Output.Append("" & Rec("DataDiNascita").Value & ";")
@@ -427,9 +430,9 @@ Public Class wsReports
 					Output.Append("" & Rec("Differenza").Value & ";")
 					Output.Append(vbCrLf)
 
-					Rec.MoveNext
+					Rec.MoveNext()
 				Loop
-				Rec.Close
+				Rec.Close()
 
 				Dim filePaths As String = gf.LeggeFileIntero(HttpContext.Current.Server.MapPath(".") & "\Impostazioni\Paths.txt")
 				filePaths = filePaths.Replace(vbCrLf, "")
@@ -455,9 +458,9 @@ Public Class wsReports
 		If Connessione = "" Then
 			Ritorno = ErroreConnessioneNonValida
 		Else
-			Dim Conn As Object = ApreDB(Connessione)
-			Dim Rec As Object = Server.CreateObject("ADODB.Recordset")
-			Dim Rec2 As Object = Server.CreateObject("ADODB.Recordset")
+			Dim Conn As Object = new clsGestioneDB
+			Dim Rec as object
+			Dim Rec2 as object
 
 			If TypeOf (Conn) Is String Then
 				Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
@@ -473,12 +476,12 @@ Public Class wsReports
 				Dim c As New CriptaFiles
 
 				Sql = "Select * From Anni"
-				Rec = LeggeQuery(Conn, Sql, Connessione)
+				Rec = Conn.LeggeQuery(Server.MapPath("."),  Sql, Connessione)
 				If TypeOf (Rec) Is String Then
 					Ritorno = Rec
 					Ok = False
 				Else
-					If Rec.Eof = False Then
+					If Rec.Eof() = False Then
 						IscrFirmaEntrambi = "" & Rec("iscrFirmaEntrambi").Value
 					Else
 						Ritorno = StringaErrore & " Nessun dato societario rilevato"
@@ -488,12 +491,12 @@ Public Class wsReports
 
 				If Ok Then
 					Sql = "Select * From [Generale].[dbo].[Squadre] Where idSquadra = " & idSquadra
-					Rec = LeggeQuery(Conn, Sql, Connessione)
+					Rec = Conn.LeggeQuery(Server.MapPath("."),  Sql, Connessione)
 					If TypeOf (Rec) Is String Then
 						Ritorno = Rec
 						Ok = False
 					Else
-						If Rec.Eof = False Then
+						If Rec.Eof() = False Then
 							AnnoAttivazione = "" & Rec("AnnoAttivazione").Value
 							NomeSquadra = "" & Rec("Descrizione").Value
 						Else
@@ -514,7 +517,7 @@ Public Class wsReports
 					If Tipologia = "1" Then
 						' Stampa per anno
 						If Dato <> "-1" Then
-							Sql &= "YEAR(Convert(DateTime, DataDiNascita, 121)) = " & Dato
+							Sql &= "YEAR(" & IIf(TipoDB = "SQLSERVER", "Convert(DateTime, DataDiNascita, 121)", "Convert(DataDiNascita, DateTime)") & ") = " & Dato
 							Altro &= "per anno"
 						Else
 							Sql &= " 1=1"
@@ -523,11 +526,12 @@ Public Class wsReports
 					Else
 						If Dato = "1" Then
 							' Stampa per scuola calcio
-							Sql &= "YEAR(Convert(DateTime, DataDiNascita ,121)) >= Year(CURRENT_TIMESTAMP) - 12"
+							Sql &= "YEAR(" & IIf(TipoDB = "SQLSERVER", "Convert(DateTime, DataDiNascita ,121)", "Convert(DataDiNascita ,DateTime)") & ") >= Year(CURRENT_TIMESTAMP) - 12"
 							Altro &= "per scuola calcio"
 						Else
 							' Stampa per agonistica
-							Sql &= "YEAR(Convert(DateTime, DataDiNascita ,121)) < Year(CURRENT_TIMESTAMP) - 12 And YEAR(Convert(DateTime, DataDiNascita ,121)) >= Year(CURRENT_TIMESTAMP) - 25"
+							Sql &= "YEAR(" & IIf(TipoDB = "SQLSERVER", "Convert(DateTime, DataDiNascita ,121)", "Convert(DataDiNascita ,DateTime)") & ") < Year(CURRENT_TIMESTAMP) - 12 And " &
+												 "YEAR(" & IIf(TipoDB = "SQLSERVER", "Convert(DateTime, DataDiNascita ,121)", "Convert(DataDiNascita ,DateTime)") & ") >= Year(CURRENT_TIMESTAMP) - 25"
 							Altro &= "per agonistica"
 						End If
 					End If
@@ -535,11 +539,11 @@ Public Class wsReports
 					Select Case Certificato
 						Case "1"
 							' Scaduto
-							Sql &= " And (B.ScadenzaCertificatoMedico Is Not Null And B.ScadenzaCertificatoMedico <> '' And Convert(DateTime, B.ScadenzaCertificatoMedico ,121) <= CURRENT_TIMESTAMP And B.CertificatoMedico = 'S')" ' And (Convert(DateTime, B.ScadenzaCertificatoMedico ,121) > DateAdd(Day, -30, CURRENT_TIMESTAMP) And B.CertificatoMedico = 'S')"
+							Sql &= " And (B.ScadenzaCertificatoMedico Is Not Null And B.ScadenzaCertificatoMedico <> '' And " & IIf(TipoDB = "SQLSERVER", "DateTime, B.ScadenzaCertificatoMedico ,121)", "Convert(B.ScadenzaCertificatoMedico ,DateTime)") & " <= CURRENT_TIMESTAMP And B.CertificatoMedico = 'S')" ' And (Convert(DateTime, B.ScadenzaCertificatoMedico ,121) > DateAdd(Day, -30, CURRENT_TIMESTAMP) And B.CertificatoMedico = 'S')"
 							Altro &= ", certificato medico scaduto"
 						Case "2"
 							' Presente
-							Sql &= " And B.CertificatoMedico = 'S'  And Convert(DateTime, B.ScadenzaCertificatoMedico ,121) > CURRENT_TIMESTAMP"
+							Sql &= " And B.CertificatoMedico = 'S'  And " & IIf(TipoDB = "SQLSERVER", "Convert(DateTime, B.ScadenzaCertificatoMedico ,121)", "Convert(B.ScadenzaCertificatoMedico ,DateTime)") & " > CURRENT_TIMESTAMP"
 							Altro &= ", certificato medico presente"
 						Case "3"
 							' Assente
@@ -547,13 +551,14 @@ Public Class wsReports
 							Altro &= ", certificato medico assente"
 						Case "4"
 							' In scadenza
-							Sql &= " And (Convert(DateTime, B.ScadenzaCertificatoMedico ,121) > CURRENT_TIMESTAMP) And (Convert(DateTime, B.ScadenzaCertificatoMedico ,121) <= DateAdd(Day, 30, CURRENT_TIMESTAMP) And B.CertificatoMedico = 'S')"
+							Sql &= " And (" & IIf(TipoDB = "SQLSERVER", "Convert(DateTime, B.ScadenzaCertificatoMedico ,121)", "Convert(B.ScadenzaCertificatoMedico ,DateTime)") & " > CURRENT_TIMESTAMP) And " &
+								"(" & IIf(TipoDB = "SQLSERVER", "Convert(DateTime, B.ScadenzaCertificatoMedico ,121)", "Convert(B.ScadenzaCertificatoMedico ,DateTime)") & " <= " & IIf(TipoDB = "SQLSERVER", "DateAdd(Day, 30, CURRENT_TIMESTAMP)", "ADDDATE(CURRENT_TIMESTAMP, 30)") & " And B.CertificatoMedico = 'S')"
 							Altro &= ", certificato medico in scadenza"
 					End Select
 
 					Sql &= " And A.Eliminato = 'N' Order By Cognome, Nome"
 
-					Rec = LeggeQuery(Conn, Sql, Connessione)
+					Rec = Conn.LeggeQuery(Server.MapPath("."),  Sql, Connessione)
 					If TypeOf (Rec) Is String Then
 						Ritorno = Rec
 					Else
@@ -616,7 +621,7 @@ Public Class wsReports
 
 						Dim Quanti As Integer = 0
 
-						Do Until Rec.Eof
+						Do Until Rec.Eof()
 							Dim Stampa As Boolean = True
 
 							If FirmePresenti <> "0" Then
@@ -634,7 +639,7 @@ Public Class wsReports
 								If "" & Rec("Maggiorenne").Value = "S" Then
 									If "" & Rec("AbilitaFirmaGenitore3").Value = "S" Then
 										urlFirma = pp & "\" & NomeSquadra.Replace(" ", "_") & "\Firme\" & idAnno & "_" & Rec("idGiocatore").Value & "_3.kgb"
-										If Not File.Exists(urlFirma) Then
+										If Not ControllaEsistenzaFile(urlFirma) Then
 											CiSonoFirme = False
 										End If
 									Else
@@ -647,7 +652,7 @@ Public Class wsReports
 										If "" & Rec("AffidamentoCongiunto").Value = "S" Then
 											If "" & Rec("AbilitaFirmaGenitore1").Value = "S" Then
 												urlFirma = pp & "\" & NomeSquadra.Replace(" ", "_") & "\Firme\" & idAnno & "_" & Rec("idGiocatore").Value & "_1.kgb"
-												If Not File.Exists(urlFirma) Then
+												If Not ControllaEsistenzaFile(urlFirma) Then
 													CiSonoFirme = False
 												End If
 											Else
@@ -659,7 +664,7 @@ Public Class wsReports
 											If Stampa Then
 												If "" & Rec("AbilitaFirmaGenitore2").Value = "S" Then
 													urlFirma = pp & "\" & NomeSquadra.Replace(" ", "_") & "\Firme\" & idAnno & "_" & Rec("idGiocatore").Value & "_2.kgb"
-													If Not File.Exists(urlFirma) Then
+													If Not ControllaEsistenzaFile(urlFirma) Then
 														CiSonoFirme = False
 													End If
 												Else
@@ -672,7 +677,7 @@ Public Class wsReports
 											If "" & Rec("idTutore").Value = "1" Then
 												If "" & Rec("AbilitaFirmaGenitore1").Value = "S" Then
 													urlFirma = pp & "\" & NomeSquadra.Replace(" ", "_") & "\Firme\" & idAnno & "_" & Rec("idGiocatore").Value & "_1.kgb"
-													If Not File.Exists(urlFirma) Then
+													If Not ControllaEsistenzaFile(urlFirma) Then
 														CiSonoFirme = False
 													End If
 												Else
@@ -683,7 +688,7 @@ Public Class wsReports
 											Else
 												If "" & Rec("AbilitaFirmaGenitore2").Value = "S" Then
 													urlFirma = pp & "\" & NomeSquadra.Replace(" ", "_") & "\Firme\" & idAnno & "_" & Rec("idGiocatore").Value & "_2.kgb"
-													If Not File.Exists(urlFirma) Then
+													If Not ControllaEsistenzaFile(urlFirma) Then
 														CiSonoFirme = False
 													End If
 												Else
@@ -697,7 +702,7 @@ Public Class wsReports
 										If IscrFirmaEntrambi = "S" Then
 											If "" & Rec("AbilitaFirmaGenitore1").Value = "S" Then
 												urlFirma = pp & "\" & NomeSquadra.Replace(" ", "_") & "\Firme\" & idAnno & "_" & Rec("idGiocatore").Value & "_1.kgb"
-												If Not File.Exists(urlFirma) Then
+												If Not ControllaEsistenzaFile(urlFirma) Then
 													CiSonoFirme = False
 												End If
 											Else
@@ -709,7 +714,7 @@ Public Class wsReports
 											If Stampa Then
 												If "" & Rec("AbilitaFirmaGenitore2").Value = "S" Then
 													urlFirma = pp & "\" & NomeSquadra.Replace(" ", "_") & "\Firme\" & idAnno & "_" & Rec("idGiocatore").Value & "_2.kgb"
-													If Not File.Exists(urlFirma) Then
+													If Not ControllaEsistenzaFile(urlFirma) Then
 														CiSonoFirme = False
 													End If
 												Else
@@ -722,7 +727,7 @@ Public Class wsReports
 											If "" & Rec("Genitore1").Value <> "" Then
 												If "" & Rec("AbilitaFirmaGenitore1").Value = "S" Then
 													urlFirma = pp & "\" & NomeSquadra.Replace(" ", "_") & "\Firme\" & idAnno & "_" & Rec("idGiocatore").Value & "_1.kgb"
-													If Not File.Exists(urlFirma) Then
+													If Not ControllaEsistenzaFile(urlFirma) Then
 														CiSonoFirme = False
 													End If
 												Else
@@ -733,7 +738,7 @@ Public Class wsReports
 											Else
 												If "" & Rec("AbilitaFirmaGenitore2").Value = "S" Then
 													urlFirma = pp & "\" & NomeSquadra.Replace(" ", "_") & "\Firme\" & idAnno & "_" & Rec("idGiocatore").Value & "_2.kgb"
-													If Not File.Exists(urlFirma) Then
+													If Not ControllaEsistenzaFile(urlFirma) Then
 														CiSonoFirme = False
 													End If
 												Else
@@ -771,7 +776,7 @@ Public Class wsReports
 										"Left Join Taglie F On E.idTaglia = F.idTaglia " &
 										"Left Join KitElementi G On G.idElemento = C.idElemento " &
 										"Where B.idGiocatore = " & Rec("idGiocatore").Value & " And C.Eliminato='N' And A.Eliminato='N' And D.Eliminato='N' And E.Eliminato='N' And G.Eliminato='N'"
-									Rec2 = LeggeQuery(Conn, Sql, Connessione)
+									Rec2 = Conn.LeggeQuery(Server.MapPath("."),Sql, Connessione)
 									If TypeOf (Rec2) Is String Then
 										Ritorno = Rec2
 										Ok = False
@@ -779,7 +784,7 @@ Public Class wsReports
 										Dim Tutto As Boolean = True
 										Dim Qualcosa As Boolean = False
 
-										If Rec2.eof Then
+										If Rec2.Eof() Then
 											Tutto = False
 										Else
 											Do Until Rec2.Eof()
@@ -790,9 +795,9 @@ Public Class wsReports
 
 												'If Val(Rec2("QuantitaConsegnata").Value) > 0 Then
 												Qualcosa = True
-													If Val(Rec2("QuantitaConsegnata").Value) < Val(Rec2("Quantita").Value) Then
-														Tutto = False
-													End If
+												If Val(Rec2("QuantitaConsegnata").Value) < Val(Rec2("Quantita").Value) Then
+													Tutto = False
+												End If
 												'Else
 												'	Tutto = False
 												'End If
@@ -836,7 +841,7 @@ Public Class wsReports
 							End If
 
 							If Stampa Then
-								Dim ddn As String = "" & Rec("DataDiNascita").value
+								Dim ddn As String = "" & Rec("DataDiNascita").Value
 								If ddn <> "" Then
 									Dim d() As String = ddn.Split("-")
 									ddn = d(2) & "/" & d(1) & "/" & d(0)
@@ -848,7 +853,7 @@ Public Class wsReports
 								'Dim pathImmagine As String = pp & "\" & NomeSquadra.Replace(" ", "_") & "\Giocatori\" & idAnno & "_" & Rec("idGiocatore").Value & ".kgb"
 								'Dim urlImmagineConvertita As String = P(2) & "/Appoggio/" & Rec("idGiocatore").Value & "_" & Esten2 & ".png"
 								'Dim pathImmagineConvertita As String = pp & "\Appoggio\" & Rec("idGiocatore").Value & "_" & Esten2 & ".png"
-								'If File.Exists(pathImmagine) Then
+								'If ControllaEsistenzaFile(pathImmagine) Then
 								'	c.DecryptFile(CryptPasswordString, pathImmagine, pathImmagineConvertita)
 
 								'	Immagine = "<img src=""" & urlImmagineConvertita & """ style=""width: 50px; height: 50px;"" />"
@@ -913,7 +918,7 @@ Public Class wsReports
 						End If
 						Dim Esten As String = Format(Now.Second, "00") & "_" & Now.Millisecond & RitornaValoreRandom(55)
 						Dim pathLogo As String = filePaths & NomeSquadra.Replace(" ", "_") & "\Societa\1_1.kgb"
-						If File.Exists(pathLogo) Then
+						If ControllaEsistenzaFile(pathLogo) Then
 							Dim pathLogoConv As String = filePaths & "Appoggio\" & Esten & ".jpg"
 							c.DecryptFile(CryptPasswordString, pathLogo, pathLogoConv)
 

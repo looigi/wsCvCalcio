@@ -1,5 +1,5 @@
 ﻿Public Class CodiceFiscale
-    Public Function CreaCodiceFiscale(tCognome As String, tNome As String,
+    Public Function CreaCodiceFiscale(MP As String, tCognome As String, tNome As String,
                                       tDataNascita As String, tLuogoNascita As String, Maschio As Boolean) As String
         Dim StringaMese As String = "ABCDEHLMPRST"
         Dim Cognome As String = tCognome
@@ -29,7 +29,7 @@
         Dim Comune As String = tLuogoNascita
         Dim CodComune As String = ""
         If Comune <> "" Then
-            CodComune = PrendeCodiceComuneperCF(Comune)
+            CodComune = PrendeCodiceComuneperCF(MP, Comune)
         End If
 
         Dim Cf As String = CognNome & Anno & Mese & Giorno & CodComune
@@ -168,25 +168,25 @@
         Return (Cf & CodControllo).ToUpper
     End Function
 
-    Public Function PrendeCodiceComuneperCF(Quale As String) As String
+    Public Function PrendeCodiceComunePerCF(MP As String, Quale As String) As String
         'Dim Ritorno As String = ""
         'Dim DB As New GestioneACCESS
 
         'If DB.LeggeImpostazioniDiBase("ConnDB") = True Then
         '    Dim ConnSQL As Object = DB.ApreDB()
-        '    Dim Rec As Object = CreateObject("ADODB.Recordset")
+        '    Dim Rec As Object ' = CreateObject("ADODB.Recordset")
         '    Dim Sql As String
 
         '    Sql = "Select * From tListaComuniPerCF Where LTrim(Rtrim(Upper(Comune)))='" & Quale.Replace("'", "''") & "'"
         '    Rec = DB.LeggeQuery(ConnSQL, Sql)
-        '    If Rec.Eof = True Then
+        '    If Rec.Eof() = True Then
         '        Ritorno = ""
         '    Else
         '        Ritorno = Rec("CodFisco").Value
         '    End If
         '    Rec.Close()
 
-        '    ConnSQL.close()
+        '    ConnSQL.Close()
         '    ConnSQL = Nothing
         'End If
 
@@ -195,25 +195,26 @@
         'Return Ritorno
 
         Dim Ritorno As String = ""
-        Dim Connessione As String = LeggeImpostazioniDiBase(HttpContext.Current.Server.MapPath("."), "")
+
+        Dim Connessione As String = LeggeImpostazioniDiBase(MP, "")
 
         If Connessione = "" Then
             Ritorno = ErroreConnessioneNonValida
         Else
-            Dim Conn As Object = ApreDB(Connessione)
+            Dim Conn As Object = new clsGestioneDB
 
             If TypeOf (Conn) Is String Then
                 Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
             Else
-                Dim Rec As Object = CreateObject("ADODB.Recordset")
+                Dim Rec As Object ' = CreateObject("ADODB.Recordset")
                 Dim Sql As String = ""
 
                 Sql = "Select * From ComuniItaliani Where Ltrim(Rtrim(Upper(Comune))) = '" & Quale.ToUpper.Trim & "'"
-                Rec = LeggeQuery(Conn, Sql, Connessione)
+                Rec = Conn.LeggeQuery(MP, Sql, Connessione)
                 If TypeOf (Rec) Is String Then
                     Ritorno = Rec
                 Else
-                    If Rec.Eof Then
+                    If Rec.Eof() Then
                         Ritorno = "-----"
                     Else
                         Ritorno = Rec("CodiceCatastale").Value

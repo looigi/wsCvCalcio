@@ -1,10 +1,11 @@
 ﻿Imports System.Web.Services
 Imports System.Web.Services.Protocols
 Imports System.ComponentModel
+Imports ADODB
 
 <System.Web.Services.WebService(Namespace:="http://cvKit.org/")>
-<System.Web.Services.WebServiceBinding(ConformsTo:=WsiProfiles.BasicProfile1_1)> _
-<ToolboxItem(False)> _
+<System.Web.Services.WebServiceBinding(ConformsTo:=WsiProfiles.BasicProfile1_1)>
+<ToolboxItem(False)>
 Public Class wsKit
 	Inherits System.Web.Services.WebService
 
@@ -16,27 +17,27 @@ Public Class wsKit
 		If Connessione = "" Then
 			Ritorno = ErroreConnessioneNonValida
 		Else
-			Dim Conn As Object = ApreDB(Connessione)
+			Dim Conn As Object = new clsGestioneDB
 
 			If TypeOf (Conn) Is String Then
 				Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
 			Else
-				Dim Rec As Object = Server.CreateObject("ADODB.Recordset")
+				Dim Rec As Object
 				Dim Sql As String = ""
 
 				Try
 					Sql = "SELECT * FROM KitElementi Where Eliminato='N'"
-					Rec = LeggeQuery(Conn, Sql, Connessione)
+					Rec = Conn.LeggeQuery(Server.MapPath("."),   Sql, Connessione)
 					If TypeOf (Rec) Is String Then
 						Ritorno = Rec
 					Else
-						If Rec.Eof Then
+						If Rec.Eof() Then
 							' Ritorno = "ERROR: Nessun elemento rilevato"
 						Else
-							Do Until Rec.Eof
+							Do Until Rec.Eof()
 								Ritorno &= Rec("idElemento").Value & ";" & Rec("Descrizione").Value & "§"
 
-								Rec.MoveNext
+								Rec.MoveNext()
 							Loop
 						End If
 						Rec.Close()
@@ -61,23 +62,23 @@ Public Class wsKit
 		If Connessione = "" Then
 			Ritorno = ErroreConnessioneNonValida
 		Else
-			Dim Conn As Object = ApreDB(Connessione)
+			Dim Conn As Object = new clsGestioneDB
 
 			If TypeOf (Conn) Is String Then
 				Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
 			Else
-				Dim Rec As Object = Server.CreateObject("ADODB.Recordset")
+				Dim Rec As Object
 				Dim Sql As String = ""
 				Dim Ok As Boolean = True
 
-				Sql = "Begin transaction"
-				Ritorno = EsegueSql(Conn, Sql, Connessione)
+				Sql = iif(tipodb="SQLSERVER", "Begin transaction", "Start transaction")
+				Ritorno = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
 
 				If Not Ritorno.Contains(StringaErrore) Then
 					Try
 						Sql = "Update KitElementi Set Eliminato='S' " &
 							"Where idElemento=" & idElemento
-						Ritorno = EsegueSql(Conn, Sql, Connessione)
+						Ritorno = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
 						If Ritorno.Contains(StringaErrore) Then
 							Ok = False
 						End If
@@ -90,10 +91,10 @@ Public Class wsKit
 
 				If Ok Then
 					Sql = "commit"
-					Dim Ritorno2 As String = EsegueSql(Conn, Sql, Connessione)
+					Dim Ritorno2 As String = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
 				Else
 					Sql = "rollback"
-					Dim Ritorno2 As String = EsegueSql(Conn, Sql, Connessione)
+					Dim Ritorno2 As String = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
 				End If
 			End If
 
@@ -112,23 +113,23 @@ Public Class wsKit
 		If Connessione = "" Then
 			Ritorno = ErroreConnessioneNonValida
 		Else
-			Dim Conn As Object = ApreDB(Connessione)
+			Dim Conn As Object = new clsGestioneDB
 
 			If TypeOf (Conn) Is String Then
 				Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
 			Else
-				Dim Rec As Object = Server.CreateObject("ADODB.Recordset")
+				Dim Rec As Object
 				Dim Sql As String = ""
 				Dim Ok As Boolean = True
 
-				Sql = "Begin transaction"
-				Ritorno = EsegueSql(Conn, Sql, Connessione)
+				Sql = iif(tipodb="SQLSERVER", "Begin transaction", "Start transaction")
+				Ritorno = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
 
 				If Not Ritorno.Contains(StringaErrore) Then
 					Try
 						Sql = "Update KitElementi Set Descrizione='" & Descrizione.Replace("'", "''") & "' " &
 							"Where idElemento=" & idElemento
-						Ritorno = EsegueSql(Conn, Sql, Connessione)
+						Ritorno = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
 						If Ritorno.Contains(StringaErrore) Then
 							Ok = False
 						End If
@@ -141,10 +142,10 @@ Public Class wsKit
 
 				If Ok Then
 					Sql = "commit"
-					Dim Ritorno2 As String = EsegueSql(Conn, Sql, Connessione)
+					Dim Ritorno2 As String = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
 				Else
 					Sql = "rollback"
-					Dim Ritorno2 As String = EsegueSql(Conn, Sql, Connessione)
+					Dim Ritorno2 As String = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
 				End If
 			End If
 
@@ -163,24 +164,24 @@ Public Class wsKit
 		If Connessione = "" Then
 			Ritorno = ErroreConnessioneNonValida
 		Else
-			Dim Conn As Object = ApreDB(Connessione)
+			Dim Conn As Object = new clsGestioneDB
 
 			If TypeOf (Conn) Is String Then
 				Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
 			Else
-				Dim Rec As Object = Server.CreateObject("ADODB.Recordset")
+				Dim Rec As Object
 				Dim Sql As String = ""
 				Dim Ok As Boolean = True
 
-				Sql = "Begin transaction"
-				Ritorno = EsegueSql(Conn, Sql, Connessione)
+				Sql = iif(tipodb="SQLSERVER", "Begin transaction", "Start transaction")
+				Ritorno = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
 
 				Dim idElemento As Integer = -1
 
 				If Not Ritorno.Contains(StringaErrore) Then
 					Try
 						Sql = "SELECT Max(idElemento)+1 FROM KitElementi"
-						Rec = LeggeQuery(Conn, Sql, Connessione)
+						Rec = Conn.LeggeQuery(Server.MapPath("."),   Sql, Connessione)
 						If TypeOf (Rec) Is String Then
 							Ritorno = Rec
 						Else
@@ -199,12 +200,12 @@ Public Class wsKit
 					If Ok Then
 						Try
 							Sql = "Insert Into KitElementi Values (" & idElemento & ", '" & Descrizione.Replace("'", "''") & "', 'N')"
-							Ritorno = EsegueSql(Conn, Sql, Connessione)
+							Ritorno = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
 							If Ritorno.Contains(StringaErrore) Then
 								Ok = False
 							Else
 								Sql = "Select * From KitElementi Where Descrizione='" & Descrizione.Replace("'", "''") & "'"
-								Rec = LeggeQuery(Conn, Sql, Connessione)
+								Rec = Conn.LeggeQuery(Server.MapPath("."),   Sql, Connessione)
 								If TypeOf (Rec) Is String Then
 									Ritorno = Rec
 								Else
@@ -221,10 +222,10 @@ Public Class wsKit
 
 				If Ok Then
 					Sql = "commit"
-					Dim Ritorno2 As String = EsegueSql(Conn, Sql, Connessione)
+					Dim Ritorno2 As String = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
 				Else
 					Sql = "rollback"
-					Dim Ritorno2 As String = EsegueSql(Conn, Sql, Connessione)
+					Dim Ritorno2 As String = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
 				End If
 			End If
 
@@ -242,27 +243,27 @@ Public Class wsKit
 		If Connessione = "" Then
 			Ritorno = ErroreConnessioneNonValida
 		Else
-			Dim Conn As Object = ApreDB(Connessione)
+			Dim Conn As Object = new clsGestioneDB
 
 			If TypeOf (Conn) Is String Then
 				Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
 			Else
-				Dim Rec As Object = Server.CreateObject("ADODB.Recordset")
+				Dim Rec As Object
 				Dim Sql As String = ""
 
 				Try
 					Sql = "SELECT * FROM KitTipologie Where Eliminato='N'"
-					Rec = LeggeQuery(Conn, Sql, Connessione)
+					Rec = Conn.LeggeQuery(Server.MapPath("."),   Sql, Connessione)
 					If TypeOf (Rec) Is String Then
 						Ritorno = Rec
 					Else
 						If Rec.Eof() Then
 							Ritorno = "ERROR: Nessun elemento rilevato"
 						Else
-							Do Until Rec.Eof
+							Do Until Rec.Eof()
 								Ritorno &= Rec("idTipoKit").Value & ";" & Rec("Descrizione").Value & ";" & Rec("Descrizione2").Value & "§"
 
-								Rec.MoveNext
+								Rec.MoveNext()
 							Loop
 						End If
 						Rec.Close()
@@ -287,25 +288,25 @@ Public Class wsKit
 		If Connessione = "" Then
 			Ritorno = ErroreConnessioneNonValida
 		Else
-			Dim Conn As Object = ApreDB(Connessione)
+			Dim Conn As Object = new clsGestioneDB
 
 			If TypeOf (Conn) Is String Then
 				Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
 			Else
-				Dim Rec As Object = Server.CreateObject("ADODB.Recordset")
+				Dim Rec As Object
 				Dim Sql As String = ""
 				Dim Ok As Boolean = True
 
-				Sql = "Begin transaction"
-				Ritorno = EsegueSql(Conn, Sql, Connessione)
+				Sql = iif(tipodb="SQLSERVER", "Begin transaction", "Start transaction")
+				Ritorno = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
 
 				If Not Ritorno.Contains(StringaErrore) Then
 					Sql = "Select * From KitGiocatori Where idTipoKit = " & idTipoKit
-					Rec = LeggeQuery(Conn, Sql, Connessione)
+					Rec = Conn.LeggeQuery(Server.MapPath("."),   Sql, Connessione)
 					If TypeOf (Rec) Is String Then
 						Ritorno = Rec
 					Else
-						If Not Rec.Eof Then
+						If Not Rec.Eof() Then
 							Ritorno = StringaErrore & " Il Kit è utilizzato"
 							Ok = False
 						End If
@@ -316,7 +317,7 @@ Public Class wsKit
 						Try
 							Sql = "Update KitTipologie Set Eliminato='S' " &
 								"Where idTipoKit=" & idTipoKit
-							Ritorno = EsegueSql(Conn, Sql, Connessione)
+							Ritorno = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
 							If Ritorno.Contains(StringaErrore) Then
 								Ok = False
 							End If
@@ -330,10 +331,10 @@ Public Class wsKit
 
 				If Ok Then
 					Sql = "commit"
-					Dim Ritorno2 As String = EsegueSql(Conn, Sql, Connessione)
+					Dim Ritorno2 As String = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
 				Else
 					Sql = "rollback"
-					Dim Ritorno2 As String = EsegueSql(Conn, Sql, Connessione)
+					Dim Ritorno2 As String = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
 				End If
 			End If
 
@@ -352,24 +353,24 @@ Public Class wsKit
 		If Connessione = "" Then
 			Ritorno = ErroreConnessioneNonValida
 		Else
-			Dim Conn As Object = ApreDB(Connessione)
+			Dim Conn As Object = new clsGestioneDB
 
 			If TypeOf (Conn) Is String Then
 				Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
 			Else
-				Dim Rec As Object = Server.CreateObject("ADODB.Recordset")
+				Dim Rec As Object
 				Dim Sql As String = ""
 				Dim Ok As Boolean = True
 
-				Sql = "Begin transaction"
-				Ritorno = EsegueSql(Conn, Sql, Connessione)
+				Sql = iif(tipodb="SQLSERVER", "Begin transaction", "Start transaction")
+				Ritorno = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
 
 				Dim idElemento As Integer = -1
 
 				If Not Ritorno.Contains(StringaErrore) Then
 					Try
 						Sql = "SELECT Max(idTipoKit)+1 FROM KitTipologie"
-						Rec = LeggeQuery(Conn, Sql, Connessione)
+						Rec = Conn.LeggeQuery(Server.MapPath("."),   Sql, Connessione)
 						If TypeOf (Rec) Is String Then
 							Ritorno = Rec
 						Else
@@ -388,12 +389,12 @@ Public Class wsKit
 					If Ok Then
 						Try
 							Sql = "Insert Into KitTipologie Values (" & idElemento & ",  '" & Nome.Replace("'", "''") & "', 'N', '" & Descrizione.Replace("'", "''") & "')"
-							Ritorno = EsegueSql(Conn, Sql, Connessione)
+							Ritorno = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
 							If Ritorno.Contains(StringaErrore) Then
 								Ok = False
 							Else
 								Sql = "Select * From KitTipologie Where Descrizione='" & Nome.Replace("'", "''") & "' And Descrizione2='" & Descrizione.Replace("'", "''") & "'"
-								Rec = LeggeQuery(Conn, Sql, Connessione)
+								Rec = Conn.LeggeQuery(Server.MapPath("."),   Sql, Connessione)
 								If TypeOf (Rec) Is String Then
 									Ritorno = Rec
 								Else
@@ -410,10 +411,10 @@ Public Class wsKit
 
 				If Ok Then
 					Sql = "commit"
-					Dim Ritorno2 As String = EsegueSql(Conn, Sql, Connessione)
+					Dim Ritorno2 As String = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
 				Else
 					Sql = "rollback"
-					Dim Ritorno2 As String = EsegueSql(Conn, Sql, Connessione)
+					Dim Ritorno2 As String = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
 				End If
 			End If
 
@@ -432,23 +433,23 @@ Public Class wsKit
 		If Connessione = "" Then
 			Ritorno = ErroreConnessioneNonValida
 		Else
-			Dim Conn As Object = ApreDB(Connessione)
+			Dim Conn As Object = new clsGestioneDB
 
 			If TypeOf (Conn) Is String Then
 				Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
 			Else
-				Dim Rec As Object = Server.CreateObject("ADODB.Recordset")
+				Dim Rec As Object
 				Dim Sql As String = ""
 				Dim Ok As Boolean = True
 
-				Sql = "Begin transaction"
-				Ritorno = EsegueSql(Conn, Sql, Connessione)
+				Sql = iif(tipodb="SQLSERVER", "Begin transaction", "Start transaction")
+				Ritorno = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
 
 				If Not Ritorno.Contains(StringaErrore) Then
 					Try
 						Sql = "Update KitTipologie Set Descrizione = '" & Nome.Replace("'", "''") & "', Descrizione2='" & Descrizione.Replace("'", "''") & "' " &
 							"Where idTipoKit=" & idElemento
-						Ritorno = EsegueSql(Conn, Sql, Connessione)
+						Ritorno = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
 						If Ritorno.Contains(StringaErrore) Then
 							Ok = False
 						End If
@@ -461,10 +462,10 @@ Public Class wsKit
 
 				If Ok Then
 					Sql = "commit"
-					Dim Ritorno2 As String = EsegueSql(Conn, Sql, Connessione)
+					Dim Ritorno2 As String = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
 				Else
 					Sql = "rollback"
-					Dim Ritorno2 As String = EsegueSql(Conn, Sql, Connessione)
+					Dim Ritorno2 As String = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
 				End If
 			End If
 
@@ -482,12 +483,12 @@ Public Class wsKit
 		If Connessione = "" Then
 			Ritorno = ErroreConnessioneNonValida
 		Else
-			Dim Conn As Object = ApreDB(Connessione)
+			Dim Conn As Object = new clsGestioneDB
 
 			If TypeOf (Conn) Is String Then
 				Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
 			Else
-				Dim Rec As Object = Server.CreateObject("ADODB.Recordset")
+				Dim Rec As Object
 				Dim Sql As String = ""
 
 				Try
@@ -495,17 +496,17 @@ Public Class wsKit
 						"Left Join KitElementi B On A.idElemento = B.idElemento " &
 						"Where idAnno=" & idAnno & " And idTipoKit=" & idTipoKit & " And A.Eliminato='N' " &
 						"Order By Progressivo"
-					Rec = LeggeQuery(Conn, Sql, Connessione)
+					Rec = Conn.LeggeQuery(Server.MapPath("."),   Sql, Connessione)
 					If TypeOf (Rec) Is String Then
 						Ritorno = Rec
 					Else
-						If Rec.Eof Then
+						If Rec.Eof() Then
 							Ritorno = "ERROR: Nessun elemento rilevato"
 						Else
-							Do Until Rec.Eof
+							Do Until Rec.Eof()
 								Ritorno &= Rec("Progressivo").Value & ";" & Rec("idElemento").Value & ";" & Rec("Descrizione").Value & ";" & Rec("Quantita").Value & "§"
 
-								Rec.MoveNext
+								Rec.MoveNext()
 							Loop
 						End If
 						Rec.Close()
@@ -530,23 +531,23 @@ Public Class wsKit
 		If Connessione = "" Then
 			Ritorno = ErroreConnessioneNonValida
 		Else
-			Dim Conn As Object = ApreDB(Connessione)
+			Dim Conn As Object = new clsGestioneDB
 
 			If TypeOf (Conn) Is String Then
 				Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
 			Else
-				Dim Rec As Object = Server.CreateObject("ADODB.Recordset")
+				Dim Rec As Object
 				Dim Sql As String = ""
 				Dim Ok As Boolean = True
 
-				Sql = "Begin transaction"
-				Ritorno = EsegueSql(Conn, Sql, Connessione)
+				Sql = iif(tipodb="SQLSERVER", "Begin transaction", "Start transaction")
+				Ritorno = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
 
 				Dim Progressivo As Integer = -1
 				If Not Ritorno.Contains(StringaErrore) Then
 					Try
 						Sql = "SELECT Max(Progressivo)+1 FROM KitComposizione Where idAnno=" & idAnno & " And idTipoKit=" & idTipoKit
-						Rec = LeggeQuery(Conn, Sql, Connessione)
+						Rec = Conn.LeggeQuery(Server.MapPath("."),   Sql, Connessione)
 						If TypeOf (Rec) Is String Then
 							Ritorno = Rec
 						Else
@@ -565,7 +566,7 @@ Public Class wsKit
 					If Ok Then
 						Try
 							Sql = "Insert Into KitComposizione Values (" & idAnno & ", " & idTipoKit & ", " & Progressivo & ", " & idElemento & ", " & Quantita & ", 'N')"
-							Ritorno = EsegueSql(Conn, Sql, Connessione)
+							Ritorno = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
 							If Ritorno.Contains(StringaErrore) Then
 								Ok = False
 							End If
@@ -579,10 +580,10 @@ Public Class wsKit
 
 				If Ok Then
 					Sql = "commit"
-					Dim Ritorno2 As String = EsegueSql(Conn, Sql, Connessione)
+					Dim Ritorno2 As String = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
 				Else
 					Sql = "rollback"
-					Dim Ritorno2 As String = EsegueSql(Conn, Sql, Connessione)
+					Dim Ritorno2 As String = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
 				End If
 			End If
 
@@ -601,17 +602,17 @@ Public Class wsKit
 		If Connessione = "" Then
 			Ritorno = ErroreConnessioneNonValida
 		Else
-			Dim Conn As Object = ApreDB(Connessione)
+			Dim Conn As Object = new clsGestioneDB
 
 			If TypeOf (Conn) Is String Then
 				Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
 			Else
-				Dim Rec As Object = Server.CreateObject("ADODB.Recordset")
+				Dim Rec As Object
 				Dim Sql As String = ""
 				Dim Ok As Boolean = True
 
-				Sql = "Begin transaction"
-				Ritorno = EsegueSql(Conn, Sql, Connessione)
+				Sql = iif(tipodb="SQLSERVER", "Begin transaction", "Start transaction")
+				Ritorno = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
 
 				If Not Ritorno.Contains(StringaErrore) Then
 					Try
@@ -619,22 +620,22 @@ Public Class wsKit
 							"idElemento=" & idElemento & ", " &
 							"Quantita=" & Quantita & " " &
 							"Where idAnno=" & idAnno & " And idTipoKit=" & idTipoKit & " And Progressivo=" & Progressivo
-						Ritorno = EsegueSql(Conn, Sql, Connessione)
+						Ritorno = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
 						If Ritorno.Contains(StringaErrore) Then
 							Ok = False
 						End If
 					Catch ex As Exception
 						Ritorno = StringaErrore & " " & ex.Message
-							Ok = False
-						End Try
-					End If
+						Ok = False
+					End Try
+				End If
 
 				If Ok Then
 					Sql = "commit"
-					Dim Ritorno2 As String = EsegueSql(Conn, Sql, Connessione)
+					Dim Ritorno2 As String = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
 				Else
 					Sql = "rollback"
-					Dim Ritorno2 As String = EsegueSql(Conn, Sql, Connessione)
+					Dim Ritorno2 As String = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
 				End If
 			End If
 
@@ -653,24 +654,24 @@ Public Class wsKit
 		If Connessione = "" Then
 			Ritorno = ErroreConnessioneNonValida
 		Else
-			Dim Conn As Object = ApreDB(Connessione)
+			Dim Conn As Object = new clsGestioneDB
 
 			If TypeOf (Conn) Is String Then
 				Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
 			Else
-				Dim Rec As Object = Server.CreateObject("ADODB.Recordset")
+				Dim Rec As Object
 				Dim Sql As String = ""
 				Dim Ok As Boolean = True
 
-				Sql = "Begin transaction"
-				Ritorno = EsegueSql(Conn, Sql, Connessione)
+				Sql = iif(tipodb="SQLSERVER", "Begin transaction", "Start transaction")
+				Ritorno = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
 
 				If Not Ritorno.Contains(StringaErrore) Then
 					Try
 						Sql = "Update KitComposizione Set " &
 							"Eliminato='S' " &
 							"Where idAnno=" & idAnno & " And idTipoKit=" & idTipoKit & " And Progressivo=" & Progressivo
-						Ritorno = EsegueSql(Conn, Sql, Connessione)
+						Ritorno = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
 						If Ritorno.Contains(StringaErrore) Then
 							Ok = False
 						End If
@@ -682,10 +683,10 @@ Public Class wsKit
 
 				If Ok Then
 					Sql = "commit"
-					Dim Ritorno2 As String = EsegueSql(Conn, Sql, Connessione)
+					Dim Ritorno2 As String = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
 				Else
 					Sql = "rollback"
-					Dim Ritorno2 As String = EsegueSql(Conn, Sql, Connessione)
+					Dim Ritorno2 As String = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
 				End If
 			End If
 
@@ -703,33 +704,33 @@ Public Class wsKit
 		If Connessione = "" Then
 			Ritorno = ErroreConnessioneNonValida
 		Else
-			Dim Conn As Object = ApreDB(Connessione)
+			Dim Conn As Object = new clsGestioneDB
 
 			If TypeOf (Conn) Is String Then
 				Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
 			Else
-				Dim Rec As Object = Server.CreateObject("ADODB.Recordset")
+				Dim Rec As Object
 				Dim Sql As String = ""
 				Dim Ok As Boolean = True
 
-				Sql = "Begin transaction"
-				Ritorno = EsegueSql(Conn, Sql, Connessione)
+				Sql = iif(tipodb="SQLSERVER", "Begin transaction", "Start transaction")
+				Ritorno = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
 
 				If Not Ritorno.Contains(StringaErrore) Then
 					Try
 						Sql = "Delete From KitGiocatori Where idGiocatore=" & idGiocatore
-						Ritorno = EsegueSql(Conn, Sql, Connessione)
+						Ritorno = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
 						If Ritorno.Contains(StringaErrore) Then
 							Sql = "rollback"
-							Dim Ritorno2 As String = EsegueSql(Conn, Sql, Connessione)
+							Dim Ritorno2 As String = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
 
 							Ok = False
 						Else
 							Sql = "commit"
-							Dim Ritorno2 As String = EsegueSql(Conn, Sql, Connessione)
+							Dim Ritorno2 As String = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
 
-							Sql = "Begin transaction"
-							Ritorno2 = EsegueSql(Conn, Sql, Connessione)
+							Sql = iif(tipodb="SQLSERVER", "Begin transaction", "Start transaction")
+							Ritorno2 = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
 						End If
 					Catch ex As Exception
 						Ritorno = StringaErrore & " " & ex.Message
@@ -741,14 +742,14 @@ Public Class wsKit
 							Sql = "Select Progressivo, idElemento From KitComposizione " &
 								"Where idAnno=" & idAnno & " And idTipoKit=" & idTipoKit & " And Eliminato='N' " &
 								"Order By Progressivo"
-							Rec = LeggeQuery(Conn, Sql, Connessione)
+							Rec = Conn.LeggeQuery(Server.MapPath("."),   Sql, Connessione)
 							If TypeOf (Rec) Is String Then
 								Ritorno = Rec
 							Else
 								If Rec.Eof() Then
 									Ritorno = "ERROR: Nessun elemento rilevato"
 								Else
-									Do Until Rec.Eof
+									Do Until Rec.Eof()
 										Sql = "Insert Into KitGiocatori Values (" &
 											" " & idGiocatore & ", " &
 											" " & idTipoKit & ", " &
@@ -756,13 +757,13 @@ Public Class wsKit
 											" " & Rec("idElemento").Value & ", " &
 											"0 " &
 											")"
-										Ritorno = EsegueSql(Conn, Sql, Connessione)
+										Ritorno = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
 										If Ritorno.Contains(StringaErrore) Then
 											Ok = False
 											Exit Do
 										End If
 
-										Rec.MoveNext
+										Rec.MoveNext()
 									Loop
 								End If
 								Rec.Close()
@@ -776,10 +777,10 @@ Public Class wsKit
 
 				If Ok Then
 					Sql = "commit"
-					Dim Ritorno2 As String = EsegueSql(Conn, Sql, Connessione)
+					Dim Ritorno2 As String = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
 				Else
 					Sql = "rollback"
-					Dim Ritorno2 As String = EsegueSql(Conn, Sql, Connessione)
+					Dim Ritorno2 As String = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
 				End If
 
 				Conn.Close()
@@ -797,12 +798,12 @@ Public Class wsKit
 		If Connessione = "" Then
 			Ritorno = ErroreConnessioneNonValida
 		Else
-			Dim Conn As Object = ApreDB(Connessione)
+			Dim Conn As Object = new clsGestioneDB
 
 			If TypeOf (Conn) Is String Then
 				Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
 			Else
-				Dim Rec As Object = Server.CreateObject("ADODB.Recordset")
+				Dim Rec As Object
 				Dim Sql As String = ""
 
 				Try
@@ -811,17 +812,17 @@ Public Class wsKit
 						"Left Join KitElementi C On B.idElemento = C.idElemento " &
 						"Where idGiocatore=" & idGiocatore & " " &
 						"Order By A.Progressivo"
-					Rec = LeggeQuery(Conn, Sql, Connessione)
+					Rec = Conn.LeggeQuery(Server.MapPath("."),   Sql, Connessione)
 					If TypeOf (Rec) Is String Then
 						Ritorno = Rec
 					Else
-						If Rec.Eof Then
+						If Rec.Eof() Then
 							Ritorno = "ERROR: Nessun elemento rilevato"
 						Else
-							Do Until Rec.Eof
+							Do Until Rec.Eof()
 								Ritorno &= Rec("Progressivo").Value & ";" & Rec("idElemento").Value & ";" & Rec("Descrizione").Value & ";" & Rec("Quantita").Value & ";" & Rec("QuantitaConsegnata").Value & "§"
 
-								Rec.MoveNext
+								Rec.MoveNext()
 							Loop
 						End If
 						Rec.Close()
@@ -845,27 +846,27 @@ Public Class wsKit
 		If Connessione = "" Then
 			Ritorno = ErroreConnessioneNonValida
 		Else
-			Dim Conn As Object = ApreDB(Connessione)
+			Dim Conn As Object = new clsGestioneDB
 
 			If TypeOf (Conn) Is String Then
 				Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
 			Else
-				Dim Rec As Object = Server.CreateObject("ADODB.Recordset")
+				Dim Rec As Object
 				Dim Sql As String = ""
 
 				Try
 					Sql = "Select Distinct idTipoKit From KitGiocatori Where idGiocatore=" & idGiocatore
-					Rec = LeggeQuery(Conn, Sql, Connessione)
+					Rec = Conn.LeggeQuery(Server.MapPath("."),   Sql, Connessione)
 					If TypeOf (Rec) Is String Then
 						Ritorno = Rec
 					Else
-						If Rec.Eof Then
+						If Rec.Eof() Then
 							Ritorno = -1
 						Else
-							Do Until Rec.Eof
+							Do Until Rec.Eof()
 								Ritorno &= Rec("idTipoKit").Value & "§"
 
-								Rec.MoveNext
+								Rec.MoveNext()
 							Loop
 						End If
 						Rec.Close()
@@ -889,17 +890,17 @@ Public Class wsKit
 		If Connessione = "" Then
 			Ritorno = ErroreConnessioneNonValida
 		Else
-			Dim Conn As Object = ApreDB(Connessione)
+			Dim Conn As Object = new clsGestioneDB
 
 			If TypeOf (Conn) Is String Then
 				Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
 			Else
-				Dim Rec As Object = Server.CreateObject("ADODB.Recordset")
+				Dim Rec As Object
 				Dim Sql As String = ""
 				Dim Ok As Boolean = True
 
-				Sql = "Begin transaction"
-				Ritorno = EsegueSql(Conn, Sql, Connessione)
+				Sql = iif(tipodb="SQLSERVER", "Begin transaction", "Start transaction")
+				Ritorno = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
 
 				If Not Ritorno.Contains(StringaErrore) Then
 					Try
@@ -912,7 +913,7 @@ Public Class wsKit
 								Sql = "Update kitGiocatori Set " &
 									"QuantitaConsegnata=" & campi(2) & " " &
 									"Where idGiocatore=" & idGiocatore & " And Progressivo=" & campi(0) & " And idElemento=" & campi(1)
-								Ritorno = EsegueSql(Conn, Sql, Connessione)
+								Ritorno = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
 								If Ritorno.Contains(StringaErrore) Then
 									Ok = False
 									Exit For
@@ -927,11 +928,11 @@ Public Class wsKit
 
 				If Ok Then
 					Sql = "commit"
-					Dim Ritorno2 As String = EsegueSql(Conn, Sql, Connessione)
+					Dim Ritorno2 As String = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
 					Ritorno = "*"
 				Else
 					Sql = "rollback"
-					Dim Ritorno2 As String = EsegueSql(Conn, Sql, Connessione)
+					Dim Ritorno2 As String = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
 				End If
 
 				Conn.Close()
@@ -949,34 +950,34 @@ Public Class wsKit
 		If Connessione = "" Then
 			Ritorno = ErroreConnessioneNonValida
 		Else
-			Dim Conn As Object = ApreDB(Connessione)
+			Dim Conn As Object = new clsGestioneDB
 
 			If TypeOf (Conn) Is String Then
 				Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
 			Else
-				Dim Rec As Object = Server.CreateObject("ADODB.Recordset")
-				Dim Rec2 As Object = Server.CreateObject("ADODB.Recordset")
+				Dim Rec as object
+				Dim Rec2 as object
 				Dim Sql As String = ""
 				Dim Ok As Boolean = True
 
-				Sql = "Begin transaction"
-				Ritorno = EsegueSql(Conn, Sql, Connessione)
+				Sql = iif(tipodb="SQLSERVER", "Begin transaction", "Start transaction")
+				Ritorno = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
 
 				If Not Ritorno.Contains(StringaErrore) Then
 					Try
 						Sql = "Select * From KitComposizione Where idTipoKit = 1 And Eliminato = 'N' And " &
 							"idElemento Not In (Select idElemento From KitGiocatori Where idGiocatore = " & idGiocatore & " And idTipoKit = " & idTipoKit & ")"
-						Rec = LeggeQuery(Conn, Sql, Connessione)
+						Rec = Conn.LeggeQuery(Server.MapPath("."),   Sql, Connessione)
 						If TypeOf (Rec) Is String Then
 							Ritorno = Rec
 						Else
-							If Rec.Eof Then
+							If Rec.Eof() Then
 								Ritorno = "*"
 							Else
 								Dim Progressivo As Integer = -1
 
 								Sql = "Select Max(Progressivo)+1 From KitGiocatori Where idTipoKit = " & idTipoKit & " And idGiocatore=" & idGiocatore
-								Rec2 = LeggeQuery(Conn, Sql, Connessione)
+								Rec2 = Conn.LeggeQuery(Server.MapPath("."), Sql, Connessione)
 								If TypeOf (Rec2) Is String Then
 									Ritorno = Rec2
 									Ok = False
@@ -987,9 +988,9 @@ Public Class wsKit
 										Progressivo = Rec2(0).Value
 									End If
 								End If
-								Rec2.Close
+								Rec2.Close()
 
-								Do Until Rec.Eof
+								Do Until Rec.Eof()
 									Sql = "Insert Into KitGiocatori Values (" &
 												" " & idGiocatore & ", " &
 												" " & idTipoKit & ", " &
@@ -997,14 +998,14 @@ Public Class wsKit
 												" " & Rec("idElemento").Value & ", " &
 												"0 " &
 												")"
-									Ritorno = EsegueSql(Conn, Sql, Connessione)
+									Ritorno = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
 									If Ritorno.Contains(StringaErrore) Then
 										Ok = False
 										Exit Do
 									End If
 									Progressivo += 1
 
-									Rec.MoveNext
+									Rec.MoveNext()
 								Loop
 							End If
 							Rec.Close()
@@ -1016,31 +1017,31 @@ Public Class wsKit
 
 					If Ok Then
 						Sql = "commit"
-						Dim Ritorno2 As String = EsegueSql(Conn, Sql, Connessione)
+						Dim Ritorno2 As String = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
 
-						Sql = "Begin transaction"
-						Ritorno = EsegueSql(Conn, Sql, Connessione)
+						Sql = iif(tipodb="SQLSERVER", "Begin transaction", "Start transaction")
+						Ritorno = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
 
 						Try
 							Sql = "Select Progressivo From KitGiocatori Where idTipoKit = " & idTipoKit & " And idGiocatore=" & idGiocatore & " And " &
 								"idElemento Not In (Select idElemento From KitComposizione Where idTipoKit = " & idTipoKit & ")"
-							Rec = LeggeQuery(Conn, Sql, Connessione)
+							Rec = Conn.LeggeQuery(Server.MapPath("."),   Sql, Connessione)
 							If TypeOf (Rec) Is String Then
 								Ritorno = Rec
 								Ok = False
 							Else
-								If Rec.Eof Then
+								If Rec.Eof() Then
 									Ritorno = "*"
 								Else
-									Do Until Rec.Eof
+									Do Until Rec.Eof()
 										Sql = "Delete From KitGiocatori Where idGiocatore=" & idGiocatore & " And idTipoKit=" & idTipoKit & " And Progressivo=" & Rec("Progressivo").Value
-										Ritorno = EsegueSql(Conn, Sql, Connessione)
+										Ritorno = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
 										If Ritorno.Contains(StringaErrore) Then
 											Ok = False
 											Exit Do
 										End If
 
-										Rec.MoveNext
+										Rec.MoveNext()
 									Loop
 								End If
 								Rec.Close()
@@ -1054,11 +1055,11 @@ Public Class wsKit
 
 				If Ok Then
 					Sql = "commit"
-					Dim Ritorno2 As String = EsegueSql(Conn, Sql, Connessione)
+					Dim Ritorno2 As String = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
 					Ritorno = "*"
 				Else
 					Sql = "rollback"
-					Dim Ritorno2 As String = EsegueSql(Conn, Sql, Connessione)
+					Dim Ritorno2 As String = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
 				End If
 
 				Conn.Close()

@@ -4,7 +4,7 @@ Imports System.Net.Mime
 Imports System.Timers
 
 Public Class mail
-	Public Function SendEmail(Squadra As String, Mittente As String, ByVal oggetto As String, ByVal newBody As String, ByVal ricevente As String, ByVal Allegato() As String,
+	Public Function SendEmail(pathMail As String, Squadra As String, Mittente As String, ByVal oggetto As String, ByVal newBody As String, ByVal ricevente As String, ByVal Allegato() As String,
 							  Optional AllegatoOMultimedia As String = "", Optional NuovaSocieta As String = "") As String
 		Dim Ritorno As String = "*"
 		Dim s As New strutturaMail
@@ -17,7 +17,7 @@ Public Class mail
 		s.AllegatoOMultimedia = AllegatoOMultimedia
 		s.NuovaSocieta = NuovaSocieta
 
-		pathMail = HttpContext.Current.Server.MapPath(".")
+		' pathMail = HttpContext.Current.Server.MapPath(".")
 
 		listaMails.Add(s)
 
@@ -294,7 +294,7 @@ Public Class mail
 				p(0) &= "\"
 			End If
 			Dim pathFilePosta As String = p(0) & Squadra & "\Scheletri\base_mail.txt"
-			If Not File.Exists(pathFilePosta) Then
+			If Not ControllaEsistenzaFile(pathFilePosta) Then
 				pathFilePosta = pathMail & "\Scheletri\base_mail.txt"
 			End If
 			Dim Corpo As String = gf.LeggeFileIntero(pathFilePosta)

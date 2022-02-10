@@ -1,12 +1,13 @@
 ﻿Imports System.Web.Services
 Imports System.Web.Services.Protocols
 Imports System.ComponentModel
+Imports ADODB
 
 ' Per consentire la chiamata di questo servizio Web dallo script utilizzando ASP.NET AJAX, rimuovere il commento dalla riga seguente.
 ' <System.Web.Script.Services.ScriptService()> _
 <System.Web.Services.WebService(Namespace:="http://genitori.org/")>
-<System.Web.Services.WebServiceBinding(ConformsTo:=WsiProfiles.BasicProfile1_1)> _
-<ToolboxItem(False)> _
+<System.Web.Services.WebServiceBinding(ConformsTo:=WsiProfiles.BasicProfile1_1)>
+<ToolboxItem(False)>
 Public Class wsGenitori
 	Inherits System.Web.Services.WebService
 
@@ -18,17 +19,17 @@ Public Class wsGenitori
 		If Connessione = "" Then
 			Ritorno = ErroreConnessioneNonValida
 		Else
-			Dim Conn As Object = ApreDB(Connessione)
+			Dim Conn As Object = new clsGestioneDB
 
 			If TypeOf (Conn) Is String Then
 				Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
 			Else
-				Dim Rec As Object = Server.CreateObject("ADODB.Recordset")
+				Dim Rec As Object
 				Dim Sql As String = "Select * From [Generale].[dbo].[Utenti] Where idUtente=" & idUtente
 				Dim idGiocatore As String = ""
 				Dim Ok As Boolean = True
 
-				Rec = LeggeQuery(Conn, Sql, Connessione)
+				Rec = Conn.LeggeQuery(Server.MapPath("."),   Sql, Connessione)
 				If TypeOf (Rec) Is String Then
 					Ritorno = Rec
 					Ok = False
@@ -53,7 +54,7 @@ Public Class wsGenitori
 								Sql = "Select A.*, B.Descrizione From Giocatori A " &
 									"Left Join [Generale].[dbo].[Ruoli] B On A.idRuolo = B.idRuolo " &
 									"Where A.idGiocatore=" & id
-								Rec = LeggeQuery(Conn, Sql, Connessione)
+								Rec = Conn.LeggeQuery(Server.MapPath("."),   Sql, Connessione)
 								If TypeOf (Rec) Is String Then
 									Ritorno = Rec
 									Ok = False
@@ -91,17 +92,17 @@ Public Class wsGenitori
 		If Connessione = "" Then
 			Ritorno = ErroreConnessioneNonValida
 		Else
-			Dim Conn As Object = ApreDB(Connessione)
+			Dim Conn As Object = new clsGestioneDB
 
 			If TypeOf (Conn) Is String Then
 				Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
 			Else
-				Dim Rec As Object = Server.CreateObject("ADODB.Recordset")
+				Dim Rec As Object
 				Dim Sql As String = "Select * From [Generale].[dbo].[Utenti] Where idUtente=" & idUtente
 				Dim idGiocatore As String = ""
 				Dim Ok As Boolean = True
 
-				Rec = LeggeQuery(Conn, Sql, Connessione)
+				Rec = Conn.LeggeQuery(Server.MapPath("."),   Sql, Connessione)
 				If TypeOf (Rec) Is String Then
 					Ritorno = Rec
 					Ok = False
@@ -141,7 +142,7 @@ Public Class wsGenitori
 							Ritorno &= "§"
 						Next
 					End If
-					Rec.Close
+					Rec.Close()
 				End If
 			End If
 		End If
@@ -157,17 +158,17 @@ Public Class wsGenitori
 		If Connessione = "" Then
 			Ritorno = ErroreConnessioneNonValida
 		Else
-			Dim Conn As Object = ApreDB(Connessione)
+			Dim Conn As Object = new clsGestioneDB
 
 			If TypeOf (Conn) Is String Then
 				Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
 			Else
-				Dim Rec As Object = Server.CreateObject("ADODB.Recordset")
+				Dim Rec As Object
 				Dim Sql As String = "Select * From [Generale].[dbo].[Utenti] Where idUtente=" & idUtente
 				Dim idGiocatore As String = ""
 				Dim Ok As Boolean = True
 
-				Rec = LeggeQuery(Conn, Sql, Connessione)
+				Rec = Conn.LeggeQuery(Server.MapPath("."),   Sql, Connessione)
 				If TypeOf (Rec) Is String Then
 					Ritorno = Rec
 					Ok = False
@@ -232,17 +233,17 @@ Public Class wsGenitori
 		If Connessione = "" Then
 			Ritorno = ErroreConnessioneNonValida
 		Else
-			Dim Conn As Object = ApreDB(Connessione)
+			Dim Conn As Object = new clsGestioneDB
 
 			If TypeOf (Conn) Is String Then
 				Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
 			Else
-				Dim Rec As Object = Server.CreateObject("ADODB.Recordset")
+				Dim Rec As Object
 				Dim Sql As String = "Select * From [Generale].[dbo].[Utenti] Where idUtente=" & idUtente
 				Dim idGiocatore As String = ""
 				Dim Ok As Boolean = True
 
-				Rec = LeggeQuery(Conn, Sql, Connessione)
+				Rec = Conn.LeggeQuery(Server.MapPath("."),   Sql, Connessione)
 				If TypeOf (Rec) Is String Then
 					Ritorno = Rec
 					Ok = False
@@ -253,7 +254,7 @@ Public Class wsGenitori
 					Else
 						idGiocatore = Rec("idGiocatore").Value
 					End If
-					Rec.Close
+					Rec.Close()
 				End If
 
 				If Ok Then
@@ -270,7 +271,7 @@ Public Class wsGenitori
 							Sql = "Select A.*, B.Cognome + ' ' + B.Nome As Giocatore From GiocatoriDettaglio A " &
 								"Left Join Giocatori B On A.idGiocatore = B.idGiocatore " &
 								"Where A.idGiocatore=" & id
-							Rec = LeggeQuery(Conn, Sql, Connessione)
+							Rec = Conn.LeggeQuery(Server.MapPath("."),   Sql, Connessione)
 							If TypeOf (Rec) Is String Then
 								Ritorno = Rec
 								Ok = False
@@ -285,7 +286,7 @@ Public Class wsGenitori
 									Dim mail1 As String = "" & Rec("MailGenitore1").Value
 									Dim mail2 As String = "" & Rec("MailGenitore2").Value
 									Dim mail3 As String = "" & Rec("MailGenitore3").Value
-									Rec.Close
+									Rec.Close()
 
 									Dim Attiva1 As String = ""
 									Dim Attiva2 As String = ""
@@ -293,7 +294,7 @@ Public Class wsGenitori
 
 									For i As Integer = 1 To 3
 										Sql = "Select * From GiocatoriMails Where idGiocatore=" & id & " And Progressivo=" & i
-										Rec = LeggeQuery(Conn, Sql, Connessione)
+										Rec = Conn.LeggeQuery(Server.MapPath("."),   Sql, Connessione)
 										If TypeOf (Rec) Is String Then
 											Ritorno = Rec
 											Ok = False
@@ -305,7 +306,7 @@ Public Class wsGenitori
 													"'', " &
 													"'N' " &
 													")"
-												Ritorno = EsegueSql(Conn, Sql, Connessione)
+												Ritorno = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
 												If Ritorno.Contains(StringaErrore) Then
 													Ok = False
 												End If
@@ -315,13 +316,13 @@ Public Class wsGenitori
 									Next
 
 									Sql = "Select * From GiocatoriMails Where idGiocatore=" & id
-									Rec = LeggeQuery(Conn, Sql, Connessione)
+									Rec = Conn.LeggeQuery(Server.MapPath("."),   Sql, Connessione)
 									If TypeOf (Rec) Is String Then
 										Ritorno = Rec
 										Ok = False
 									Else
 										If Not Rec.Eof() Then
-											Do Until Rec.Eof
+											Do Until Rec.Eof()
 												Select Case Val(Rec("Progressivo").Value)
 													Case 1
 														Attiva1 = "" & Rec("Attiva").Value
@@ -331,9 +332,9 @@ Public Class wsGenitori
 														Attiva3 = "" & Rec("Attiva").Value
 												End Select
 
-												Rec.MoveNext
+												Rec.MoveNext()
 											Loop
-											Rec.Close
+											Rec.Close()
 
 											Ritorno &= Genitore1 & ";" & mail1 & ";" & Attiva1 & ";"
 											Ritorno &= Genitore2 & ";" & mail2 & ";" & Attiva2 & ";"
@@ -360,17 +361,17 @@ Public Class wsGenitori
 		If Connessione = "" Then
 			Ritorno = ErroreConnessioneNonValida
 		Else
-			Dim Conn As Object = ApreDB(Connessione)
+			Dim Conn As Object = new clsGestioneDB
 
 			If TypeOf (Conn) Is String Then
 				Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
 			Else
-				Dim Rec As Object = Server.CreateObject("ADODB.Recordset")
+				Dim Rec as object
 				Dim Sql As String = "Select * From [Generale].[dbo].[Utenti] Where idUtente=" & idUtente
 				Dim idGiocatore As String = ""
 				Dim Ok As Boolean = True
 
-				Rec = LeggeQuery(Conn, Sql, Connessione)
+				Rec = Conn.LeggeQuery(Server.MapPath("."),   Sql, Connessione)
 				If TypeOf (Rec) Is String Then
 					Ritorno = Rec
 					Ok = False
@@ -381,7 +382,7 @@ Public Class wsGenitori
 					Else
 						idGiocatore = Rec("idGiocatore").Value
 					End If
-					Rec.Close
+					Rec.Close()
 				End If
 
 				If Ok Then
@@ -402,7 +403,7 @@ Public Class wsGenitori
 						For Each id As String In idGioc
 							If Ok Then
 								Sql = "Update GiocatoriMails Set Attiva = '" & sAttiva1(q) & "' Where idGiocatore=" & id & " And Progressivo = 1"
-								Ritorno = EsegueSql(Conn, Sql, Connessione)
+								Ritorno = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
 								If Ritorno.Contains(StringaErrore) Then
 									Ok = False
 								End If
@@ -410,7 +411,7 @@ Public Class wsGenitori
 
 							If Ok Then
 								Sql = "Update GiocatoriMails Set Attiva = '" & sAttiva2(q) & "' Where idGiocatore=" & id & " And Progressivo = 2"
-								Ritorno = EsegueSql(Conn, Sql, Connessione)
+								Ritorno = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
 								If Ritorno.Contains(StringaErrore) Then
 									Ok = False
 								End If
@@ -418,7 +419,7 @@ Public Class wsGenitori
 
 							If Ok Then
 								Sql = "Update GiocatoriMails Set Attiva = '" & sAttiva3(q) & "' Where idGiocatore=" & id & " And Progressivo = 3"
-								Ritorno = EsegueSql(Conn, Sql, Connessione)
+								Ritorno = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
 								If Ritorno.Contains(StringaErrore) Then
 									Ok = False
 								End If

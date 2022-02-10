@@ -21,7 +21,7 @@ Public Class wsTemplates
 		End If
 		Dim pathFilePosta As String = p(0) & Squadra & "\Scheletri\associato.txt"
 		Dim Ritorno As String = "*"
-		If File.Exists(pathFilePosta) Then
+		If ControllaEsistenzaFile(pathFilePosta) Then
 			File.Delete(pathFilePosta)
 		End If
 
@@ -38,7 +38,7 @@ Public Class wsTemplates
 		End If
 		Dim pathFilePosta As String = p(0) & Squadra & "\Scheletri\mail_associato.txt"
 		Dim Ritorno As String = "*"
-		If File.Exists(pathFilePosta) Then
+		If ControllaEsistenzaFile(pathFilePosta) Then
 			File.Delete(pathFilePosta)
 		End If
 
@@ -55,7 +55,7 @@ Public Class wsTemplates
 		End If
 		Dim pathFilePosta As String = p(0) & Squadra & "\Scheletri\mail_sollecito.txt"
 		Dim Ritorno As String = "*"
-		If File.Exists(pathFilePosta) Then
+		If ControllaEsistenzaFile(pathFilePosta) Then
 			File.Delete(pathFilePosta)
 		End If
 
@@ -72,7 +72,7 @@ Public Class wsTemplates
 		End If
 		Dim pathFilePosta As String = p(0) & Squadra & "\Scheletri\base_mail.txt"
 		Dim Ritorno As String = "*"
-		If File.Exists(pathFilePosta) Then
+		If ControllaEsistenzaFile(pathFilePosta) Then
 			File.Delete(pathFilePosta)
 		End If
 
@@ -89,7 +89,7 @@ Public Class wsTemplates
 		End If
 		Dim pathFilePosta As String = p(0) & Squadra & "\Scheletri\base_iscrizione_.txt"
 		Dim Ritorno As String = "*"
-		If File.Exists(pathFilePosta) Then
+		If ControllaEsistenzaFile(pathFilePosta) Then
 			File.Delete(pathFilePosta)
 		End If
 
@@ -106,7 +106,7 @@ Public Class wsTemplates
 		End If
 		Dim pathFilePosta As String = p(0) & Squadra & "\Scheletri\nuova_partita.txt"
 		Dim Ritorno As String = "*"
-		If File.Exists(pathFilePosta) Then
+		If ControllaEsistenzaFile(pathFilePosta) Then
 			File.Delete(pathFilePosta)
 		End If
 
@@ -123,7 +123,7 @@ Public Class wsTemplates
 		End If
 		Dim pathFilePosta As String = p(0) & Squadra & "\Scheletri\base_privacy.txt"
 		Dim Ritorno As String = "*"
-		If File.Exists(pathFilePosta) Then
+		If ControllaEsistenzaFile(pathFilePosta) Then
 			File.Delete(pathFilePosta)
 		End If
 
@@ -140,7 +140,7 @@ Public Class wsTemplates
 		End If
 		Dim pathFilePosta As String = p(0) & Squadra & "\Scheletri\base_firma.txt"
 		Dim Ritorno As String = "*"
-		If File.Exists(pathFilePosta) Then
+		If ControllaEsistenzaFile(pathFilePosta) Then
 			File.Delete(pathFilePosta)
 		End If
 
@@ -157,7 +157,7 @@ Public Class wsTemplates
 		End If
 		Dim pathFilePosta As String = p(0) & Squadra & "\Scheletri\ricevuta_pagamento.txt"
 		Dim Ritorno As String = "*"
-		If File.Exists(pathFilePosta) Then
+		If ControllaEsistenzaFile(pathFilePosta) Then
 			File.Delete(pathFilePosta)
 		End If
 
@@ -174,7 +174,7 @@ Public Class wsTemplates
 		End If
 		Dim pathFilePosta As String = p(0) & Squadra & "\Scheletri\ricevuta_scontrino.txt"
 		Dim Ritorno As String = "*"
-		If File.Exists(pathFilePosta) Then
+		If ControllaEsistenzaFile(pathFilePosta) Then
 			File.Delete(pathFilePosta)
 		End If
 
@@ -191,7 +191,7 @@ Public Class wsTemplates
 		End If
 		Dim pathFilePosta As String = p(0) & Squadra & "\Scheletri\testo_convocazioni.txt"
 		Dim Ritorno As String = "*"
-		If File.Exists(pathFilePosta) Then
+		If ControllaEsistenzaFile(pathFilePosta) Then
 			File.Delete(pathFilePosta)
 		End If
 
@@ -208,7 +208,7 @@ Public Class wsTemplates
 		End If
 		Dim pathFilePosta As String = p(0) & Squadra & "\Scheletri\associato.txt"
 		Dim Ritorno As String = "MODIFICATO"
-		If Not File.Exists(pathFilePosta) Then
+		If Not ControllaEsistenzaFile(pathFilePosta) Then
 			pathFilePosta = HttpContext.Current.Server.MapPath(".") & "\Scheletri\associato.txt"
 			Ritorno = "ORIGINALE"
 		End If
@@ -226,7 +226,7 @@ Public Class wsTemplates
 		End If
 		Dim pathFilePosta As String = p(0) & Squadra & "\Scheletri\testo_convocazioni.txt"
 		Dim Ritorno As String = "MODIFICATO"
-		If Not File.Exists(pathFilePosta) Then
+		If Not ControllaEsistenzaFile(pathFilePosta) Then
 			pathFilePosta = HttpContext.Current.Server.MapPath(".") & "\Scheletri\testo_convocazioni.txt"
 			Ritorno = "ORIGINALE"
 		End If
@@ -244,7 +244,7 @@ Public Class wsTemplates
 		End If
 		Dim pathFilePosta As String = p(0) & Squadra & "\Scheletri\mail_associato.txt"
 		Dim Ritorno As String = "MODIFICATO"
-		If Not File.Exists(pathFilePosta) Then
+		If Not ControllaEsistenzaFile(pathFilePosta) Then
 			pathFilePosta = HttpContext.Current.Server.MapPath(".") & "\Scheletri\mail_associato.txt"
 			Ritorno = "ORIGINALE"
 		End If
@@ -262,7 +262,7 @@ Public Class wsTemplates
 		End If
 		Dim pathFilePosta As String = p(0) & Squadra & "\Scheletri\ricevuta_scontrino.txt"
 		Dim Ritorno As String = "MODIFICATO"
-		If Not File.Exists(pathFilePosta) Then
+		If Not ControllaEsistenzaFile(pathFilePosta) Then
 			pathFilePosta = HttpContext.Current.Server.MapPath(".") & "\Scheletri\ricevuta_scontrino.txt"
 			Ritorno = "ORIGINALE"
 		End If
@@ -280,7 +280,7 @@ Public Class wsTemplates
 		End If
 		Dim pathFilePosta As String = p(0) & Squadra & "\Scheletri\ricevuta_pagamento.txt"
 		Dim Ritorno As String = "MODIFICATO"
-		If Not File.Exists(pathFilePosta) Then
+		If Not ControllaEsistenzaFile(pathFilePosta) Then
 			pathFilePosta = HttpContext.Current.Server.MapPath(".") & "\Scheletri\ricevuta_pagamento.txt"
 			Ritorno = "ORIGINALE"
 		End If
@@ -298,7 +298,7 @@ Public Class wsTemplates
 		End If
 		Dim pathFilePosta As String = p(0) & Squadra & "\Scheletri\base_firma.txt"
 		Dim Ritorno As String = "MODIFICATO"
-		If Not File.Exists(pathFilePosta) Then
+		If Not ControllaEsistenzaFile(pathFilePosta) Then
 			pathFilePosta = HttpContext.Current.Server.MapPath(".") & "\Scheletri\base_firma.txt"
 			Ritorno = "ORIGINALE"
 		End If
@@ -316,7 +316,7 @@ Public Class wsTemplates
 		End If
 		Dim pathFilePosta As String = p(0) & Squadra & "\Scheletri\nuova_partita.txt"
 		Dim Ritorno As String = "MODIFICATO"
-		If Not File.Exists(pathFilePosta) Then
+		If Not ControllaEsistenzaFile(pathFilePosta) Then
 			pathFilePosta = HttpContext.Current.Server.MapPath(".") & "\Scheletri\nuova_partita.txt"
 			Ritorno = "ORIGINALE"
 		End If
@@ -334,7 +334,7 @@ Public Class wsTemplates
 		End If
 		Dim pathFilePosta As String = p(0) & Squadra & "\Scheletri\mail_sollecito.txt"
 		Dim Ritorno As String = "MODIFICATO"
-		If Not File.Exists(pathFilePosta) Then
+		If Not ControllaEsistenzaFile(pathFilePosta) Then
 			pathFilePosta = HttpContext.Current.Server.MapPath(".") & "\Scheletri\mail_sollecito.txt"
 			Ritorno = "ORIGINALE"
 		End If
@@ -352,7 +352,7 @@ Public Class wsTemplates
 		End If
 		Dim pathFilePosta As String = p(0) & Squadra & "\Scheletri\base_mail.txt"
 		Dim Ritorno As String = "MODIFICATO"
-		If Not File.Exists(pathFilePosta) Then
+		If Not ControllaEsistenzaFile(pathFilePosta) Then
 			pathFilePosta = HttpContext.Current.Server.MapPath(".") & "\Scheletri\base_mail.txt"
 			Ritorno = "ORIGINALE"
 		End If
@@ -370,7 +370,7 @@ Public Class wsTemplates
 		End If
 		Dim pathFilePosta As String = p(0) & Squadra & "\Scheletri\base_iscrizione_.txt"
 		Dim Ritorno As String = "MODIFICATO"
-		If Not File.Exists(pathFilePosta) Then
+		If Not ControllaEsistenzaFile(pathFilePosta) Then
 			pathFilePosta = HttpContext.Current.Server.MapPath(".") & "\Scheletri\base_iscrizione_.txt"
 			Ritorno = "ORIGINALE"
 		End If
@@ -388,7 +388,7 @@ Public Class wsTemplates
 		End If
 		Dim pathFilePosta As String = p(0) & Squadra & "\Scheletri\base_privacy.txt"
 		Dim Ritorno As String = "MODIFICATO"
-		If Not File.Exists(pathFilePosta) Then
+		If Not ControllaEsistenzaFile(pathFilePosta) Then
 			pathFilePosta = HttpContext.Current.Server.MapPath(".") & "\Scheletri\base_privacy.txt"
 			Ritorno = "ORIGINALE"
 		End If

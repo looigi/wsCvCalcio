@@ -1,12 +1,13 @@
 ﻿Imports System.Web.Services
 Imports System.Web.Services.Protocols
 Imports System.ComponentModel
+Imports ADODB
 
 ' Per consentire la chiamata di questo servizio Web dallo script utilizzando ASP.NET AJAX, rimuovere il commento dalla riga seguente.
 ' <System.Web.Script.Services.ScriptService()> _
 <System.Web.Services.WebService(Namespace:="http://quote.org/")>
-<System.Web.Services.WebServiceBinding(ConformsTo:=WsiProfiles.BasicProfile1_1)> _
-<ToolboxItem(False)> _
+<System.Web.Services.WebServiceBinding(ConformsTo:=WsiProfiles.BasicProfile1_1)>
+<ToolboxItem(False)>
 Public Class wsQuote
 	Inherits System.Web.Services.WebService
 
@@ -18,12 +19,12 @@ Public Class wsQuote
 		If Connessione = "" Then
 			Ritorno = ErroreConnessioneNonValida
 		Else
-			Dim Conn As Object = ApreDB(Connessione)
+			Dim Conn As Object = new clsGestioneDB
 
 			If TypeOf (Conn) Is String Then
 				Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
 			Else
-				Dim Rec As Object = Server.CreateObject("ADODB.Recordset")
+				Dim Rec As Object
 				Dim Sql As String = ""
 
 				Sql = "Select A.idGiocatore, Progressivo, Pagamento, DataPagamento, B.Cognome, B.Nome, A.Validato, Case A.idTipoPagamento When 1 Then 'Rata' When 2 Then 'Altro' Else '' End As TipoPagamento, " &
@@ -34,11 +35,11 @@ Public Class wsQuote
 						"Left Join [Generale].[dbo].[Utenti] D On A.idUtenteRegistratore = D.idUtente " &
 						"Where A.Eliminato = 'N' And DataPagamento Between '" & DataInizio & "' And '" & DataFine & "' " &
 						"Order By A.NumeroRicevuta Desc"
-				Rec = LeggeQuery(Conn, Sql, Connessione)
+				Rec = Conn.LeggeQuery(Server.MapPath("."),  Sql, Connessione)
 				If TypeOf (Rec) Is String Then
 					Ritorno = Rec
 				Else
-					If Rec.Eof Then
+					If Rec.Eof() Then
 						Ritorno = StringaErrore & " Nessuna ricevuta rilevata"
 					Else
 						Ritorno = "<table style=""width: 100%;"" cellpadding=""0"" cellspacing=""0"">"
@@ -49,7 +50,7 @@ Public Class wsQuote
 						Dim metodi As New List(Of String)
 						Dim totMetodi As New List(Of Single)
 
-						Do Until Rec.Eof
+						Do Until Rec.Eof()
 							Dim Stato As String = ""
 							Dim TipoPag As String = ""
 
@@ -111,7 +112,7 @@ Public Class wsQuote
 
 							totale += Val(pag)
 
-							Rec.MoveNext
+							Rec.MoveNext()
 						Loop
 						Dim qm As Integer = 0
 						For Each m As String In metodi
@@ -126,7 +127,7 @@ Public Class wsQuote
 
 						'Ritorno &= "<hr /><div style=""text-algin: center; width: 100%;"">Stampato tramite InCalcio – www.incalcio.it – info@incalcio.it</div>"
 
-						Rec.Close
+						Rec.Close()
 
 						Dim gf As New GestioneFilesDirectory
 						Dim filetto As String = gf.LeggeFileIntero(HttpContext.Current.Server.MapPath(".") & "\Scheletri\base_lista_ricevute.txt")
@@ -182,36 +183,36 @@ Public Class wsQuote
 		If Connessione = "" Then
 			Ritorno = ErroreConnessioneNonValida
 		Else
-			Dim Conn As Object = ApreDB(Connessione)
+			Dim Conn As Object = new clsGestioneDB
 
 			If TypeOf (Conn) Is String Then
 				Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
 			Else
-				Dim Rec As Object = Server.CreateObject("ADODB.Recordset")
-				Dim Rec2 As Object = Server.CreateObject("ADODB.Recordset")
+				Dim Rec As Object
+				Dim Rec2 As Object
 				Dim Sql As String = ""
 				Dim Ok As Boolean = True
 
 				Try
 					Sql = "Select A.idQuota, Progressivo, Attiva, DescRata, DataScadenza, B.Descrizione, A.Importo From QuoteRate A Left Join Quote B On A.idQuota = B.idQuota " &
-						"Where DataScadenza <> '' And DataScadenza Is Not Null And Convert(DateTime, DataScadenza ,121) <= getdate() And Attiva = 'S' " &
-						"Order By Convert(DateTime, DataScadenza ,121)"
-					Rec = LeggeQuery(Conn, Sql, Connessione)
+						"Where DataScadenza <> '' And DataScadenza Is Not Null And " & IIf(TipoDB = "SQLSERVER", "Convert(DateTime, DataScadenza ,121) <= getdate()", "Convert(DataScadenza ,DateTime) <= CURRENT_DATE()") & " And Attiva = 'S' " &
+						"Order By " & IIf(TipoDB = "SQLSERVER", "Convert(DateTime, DataScadenza ,121)", "Convert(DataScadenza ,DateTime)")
+					Rec = Conn.LeggeQuery(Server.MapPath("."),  Sql, Connessione)
 					If TypeOf (Rec) Is String Then
 						Ritorno = Rec
 					Else
-						If Rec.Eof Then
+						If Rec.Eof() Then
 							Ritorno = StringaErrore & " Nessuna rata quota rilevata"
 						Else
 							Dim quote As New List(Of String)
 
 							Ritorno = ""
-							Do Until Rec.Eof
+							Do Until Rec.Eof()
 								quote.Add(Rec("idQuota").Value & ";" & Rec("Progressivo").Value & ";" & Rec("DescRata").Value & ";" & Rec("Descrizione").Value & ";" & Rec("Importo").Value & ";" & Rec("DataScadenza").Value)
 
-								Rec.MoveNext
+								Rec.MoveNext()
 							Loop
-							Rec.Close
+							Rec.Close()
 
 							For Each q As String In quote
 								Dim qq() As String = q.Split(";")
@@ -230,11 +231,11 @@ Public Class wsQuote
 									"(C.Progressivo Is Null Or (C.Progressivo In (" & qq(1) & ") And (C.NumeroRicevuta = 'Bozza' Or C.NumeroRicevuta Is Null))) " &
 									"And D.Attiva = 'S' And D.Mail <> '' And D.Mail Is Not Null " &
 									"Order By A.idGiocatore, D.Progressivo"
-								Rec2 = LeggeQuery(Conn, Sql, Connessione)
+								Rec2 = Conn.LeggeQuery(Server.MapPath("."),Sql, Connessione)
 								If TypeOf (Rec2) Is String Then
 									Ritorno = Rec2
 								Else
-									Do Until Rec2.Eof
+									Do Until Rec2.Eof()
 										If Rec2("Maggiorenne").Value = "S" Then
 											If Rec2("Progressivo").Value = 3 Then
 												If Rec2("Attiva").Value = "S" Then
@@ -269,9 +270,9 @@ Public Class wsQuote
 											End If
 										End If
 
-										Rec2.MoveNext
+										Rec2.MoveNext()
 									Loop
-									'Rec2.Close
+									'Rec2.Close()
 								End If
 							Next
 						End If
@@ -296,13 +297,13 @@ Public Class wsQuote
 		If Connessione = "" Then
 			Ritorno = ErroreConnessioneNonValida
 		Else
-			Dim Conn As Object = ApreDB(Connessione)
+			Dim Conn As Object = new clsGestioneDB
 
 			If TypeOf (Conn) Is String Then
 				Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
 			Else
-				Dim Rec As Object = Server.CreateObject("ADODB.Recordset")
-				Dim Rec2 As Object = Server.CreateObject("ADODB.Recordset")
+				Dim Rec As Object
+				Dim Rec2 As Object
 				Dim Sql As String = ""
 				Dim Ok As Boolean = True
 
@@ -316,15 +317,15 @@ Public Class wsQuote
 						"Left Join [Generale].[dbo].[Utenti] D On A.idUtenteRegistratore = D.idUtente " &
 						"Where A.Eliminato = 'N' And B.Eliminato = 'N' " &
 						"Order By NumeroRicevuta Desc" ' DataPagamento Desc, Progressivo Desc"
-					Rec = LeggeQuery(Conn, Sql, Connessione)
+					Rec = Conn.LeggeQuery(Server.MapPath("."),  Sql, Connessione)
 					If TypeOf (Rec) Is String Then
 						Ritorno = Rec
 					Else
-						If Rec.Eof Then
+						If Rec.Eof() Then
 							Ritorno = StringaErrore & " Nessuna ricevuta rilevata"
 						Else
 							Ritorno = ""
-							Do Until Rec.Eof
+							Do Until Rec.Eof()
 								Dim nn As String = ("" & Rec("Note").Value).replace(";", "*PV*")
 								Ritorno &= Rec("idGiocatore").Value & ";" & Rec("Progressivo").Value & ";" & Rec("Pagamento").Value & ";" &
 									Rec("DataPagamento").Value & ";" & Rec("Cognome").Value & ";" & Rec("Nome").Value & ";" & Rec("Validato").Value & ";" &
@@ -333,9 +334,9 @@ Public Class wsQuote
 									Rec("NumeroRicevuta").Value & ";" & Rec("idMetodoPagamento").Value & ";" & Rec("Nominativo").Value & ";" &
 									Rec("MetodoPagamento").Value & "§"
 
-								Rec.MoveNext
+								Rec.MoveNext()
 							Loop
-							Rec.Close
+							Rec.Close()
 						End If
 					End If
 				Catch ex As Exception
@@ -356,27 +357,27 @@ Public Class wsQuote
 		If Connessione = "" Then
 			Ritorno = ErroreConnessioneNonValida
 		Else
-			Dim Conn As Object = ApreDB(Connessione)
+			Dim Conn As Object = new clsGestioneDB
 
 			If TypeOf (Conn) Is String Then
 				Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
 			Else
-				Dim Rec As Object = Server.CreateObject("ADODB.Recordset")
-				Dim Rec2 As Object = Server.CreateObject("ADODB.Recordset")
+				Dim Rec As Object
+				Dim Rec2 As Object
 				Dim Sql As String = ""
 				Dim Ok As Boolean = True
 
 				Try
 					Sql = "SELECT * FROM Quote Where Eliminato='N' Order By Descrizione"
-					Rec = LeggeQuery(Conn, Sql, Connessione)
+					Rec = Conn.LeggeQuery(Server.MapPath("."),  Sql, Connessione)
 					If TypeOf (Rec) Is String Then
 						Ritorno = Rec
 					Else
-						If Rec.Eof Then
+						If Rec.Eof() Then
 							Ritorno = StringaErrore & " Nessuna quota rilevata"
 						Else
 							Ritorno = ""
-							Do Until Rec.Eof
+							Do Until Rec.Eof()
 								Ritorno &= Rec("idQuota").Value.ToString & ";"
 								Ritorno &= Rec("Descrizione").Value.ToString & ";"
 								Ritorno &= Rec("Importo").Value & ";"
@@ -384,7 +385,7 @@ Public Class wsQuote
 								Ritorno &= Rec("QuotaManuale").Value & ";"
 
 								Sql = "Select * From QuoteRate Where idQuota=" & Rec("idQuota").Value & " And Eliminato='N' Order By Progressivo"
-								Rec2 = LeggeQuery(Conn, Sql, Connessione)
+								Rec2 = Conn.LeggeQuery(Server.MapPath("."),Sql, Connessione)
 								If TypeOf (Rec2) Is String Then
 									Ritorno = Rec2
 
@@ -399,14 +400,14 @@ Public Class wsQuote
 								Else
 									Dim q As Integer = 0
 
-									Do Until Rec2.Eof
+									Do Until Rec2.Eof()
 										Ritorno &= Rec2("Attiva").Value & ";"
 										Ritorno &= Rec2("DescRata").Value & ";"
 										Ritorno &= Rec2("DataScadenza").Value & ";"
 										Ritorno &= Rec2("Importo").Value & ";"
 										q += 1
 
-										Rec2.MoVeNext
+										Rec2.MoveNext()
 									Loop
 									Rec2.Close()
 
@@ -416,7 +417,7 @@ Public Class wsQuote
 								End If
 
 								Sql = "Select * From GiocatoriPagamenti Where idQuota = " & Rec("idQuota").Value & " And Eliminato='N'"
-								Rec2 = LeggeQuery(Conn, Sql, Connessione)
+								Rec2 = Conn.LeggeQuery(Server.MapPath("."),Sql, Connessione)
 								If TypeOf (Rec2) Is String Then
 									Ritorno = Rec2
 
@@ -461,23 +462,23 @@ Public Class wsQuote
 		If Connessione = "" Then
 			Ritorno = ErroreConnessioneNonValida
 		Else
-			Dim Conn As Object = ApreDB(Connessione)
+			Dim Conn As Object = new clsGestioneDB
 
 			If TypeOf (Conn) Is String Then
 				Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
 			Else
-				Dim Rec As Object = Server.CreateObject("ADODB.Recordset")
+				Dim Rec As Object
 				Dim Sql As String = ""
 				Dim Ok As Boolean = True
 
-				Sql = "Begin transaction"
-				Ritorno = EsegueSql(Conn, Sql, Connessione)
+				Sql = iif(tipodb="SQLSERVER", "Begin transaction", "Start transaction")
+				Ritorno = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
 
 				If Not Ritorno.Contains(StringaErrore) Then
 					Try
 						Sql = "Update Quote Set Eliminato='S' " &
 								"Where idQuota=" & idQuota
-						Ritorno = EsegueSql(Conn, Sql, Connessione)
+						Ritorno = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
 						If Ritorno.Contains(StringaErrore) Then
 							Ok = False
 						End If
@@ -489,10 +490,10 @@ Public Class wsQuote
 
 				If Ok Then
 					Sql = "commit"
-					Dim Ritorno2 As String = EsegueSql(Conn, Sql, Connessione)
+					Dim Ritorno2 As String = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
 				Else
 					Sql = "rollback"
-					Dim Ritorno2 As String = EsegueSql(Conn, Sql, Connessione)
+					Dim Ritorno2 As String = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
 				End If
 			End If
 
@@ -517,17 +518,17 @@ Public Class wsQuote
 		If Connessione = "" Then
 			Ritorno = ErroreConnessioneNonValida
 		Else
-			Dim Conn As Object = ApreDB(Connessione)
+			Dim Conn As Object = new clsGestioneDB
 
 			If TypeOf (Conn) Is String Then
 				Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
 			Else
-				Dim Rec As Object = Server.CreateObject("ADODB.Recordset")
+				Dim Rec As Object
 				Dim Sql As String = ""
 				Dim Ok As Boolean = True
 
-				Sql = "Begin transaction"
-				Ritorno = EsegueSql(Conn, Sql, Connessione)
+				Sql = iif(tipodb="SQLSERVER", "Begin transaction", "Start transaction")
+				Ritorno = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
 
 				If Not Ritorno.Contains(StringaErrore) Then
 					Try
@@ -537,7 +538,7 @@ Public Class wsQuote
 							"Deducibilita='" & Deducibilita & "', " &
 							"QuotaManuale='" & QuotaManuale & "' " &
 							"Where idQuota=" & idQuota
-						Ritorno = EsegueSql(Conn, Sql, Connessione)
+						Ritorno = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
 						If Ritorno.Contains(StringaErrore) Then
 							Ok = False
 						Else
@@ -547,7 +548,7 @@ Public Class wsQuote
 								"DataScadenza='" & DataScadenzaR1 & "', " &
 								"Importo=" & ImportoR1 & " " &
 								"Where idQuota=" & idQuota & " And Progressivo=1"
-							Ritorno = EsegueSql(Conn, Sql, Connessione)
+							Ritorno = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
 							If Ritorno.Contains(StringaErrore) Then
 								Ok = False
 							Else
@@ -557,7 +558,7 @@ Public Class wsQuote
 									"DataScadenza='" & DataScadenzaR2 & "', " &
 									"Importo=" & ImportoR2 & " " &
 									"Where idQuota=" & idQuota & " And Progressivo=2"
-								Ritorno = EsegueSql(Conn, Sql, Connessione)
+								Ritorno = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
 								If Ritorno.Contains(StringaErrore) Then
 									Ok = False
 								Else
@@ -567,7 +568,7 @@ Public Class wsQuote
 										"DataScadenza='" & DataScadenzaR3 & "', " &
 										"Importo=" & ImportoR3 & " " &
 										"Where idQuota=" & idQuota & " And Progressivo=3"
-									Ritorno = EsegueSql(Conn, Sql, Connessione)
+									Ritorno = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
 									If Ritorno.Contains(StringaErrore) Then
 										Ok = False
 									Else
@@ -577,7 +578,7 @@ Public Class wsQuote
 											"DataScadenza='" & DataScadenzaR4 & "', " &
 											"Importo=" & ImportoR4 & " " &
 											"Where idQuota=" & idQuota & " And Progressivo=4"
-										Ritorno = EsegueSql(Conn, Sql, Connessione)
+										Ritorno = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
 										If Ritorno.Contains(StringaErrore) Then
 											Ok = False
 										Else
@@ -587,7 +588,7 @@ Public Class wsQuote
 												"DataScadenza='" & DataScadenzaR5 & "', " &
 												"Importo=" & ImportoR5 & " " &
 												"Where idQuota=" & idQuota & " And Progressivo=5"
-											Ritorno = EsegueSql(Conn, Sql, Connessione)
+											Ritorno = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
 											If Ritorno.Contains(StringaErrore) Then
 												Ok = False
 											End If
@@ -604,10 +605,10 @@ Public Class wsQuote
 
 				If Ok Then
 					Sql = "commit"
-					Dim Ritorno2 As String = EsegueSql(Conn, Sql, Connessione)
+					Dim Ritorno2 As String = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
 				Else
 					Sql = "rollback"
-					Dim Ritorno2 As String = EsegueSql(Conn, Sql, Connessione)
+					Dim Ritorno2 As String = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
 				End If
 			End If
 
@@ -632,24 +633,24 @@ Public Class wsQuote
 		If Connessione = "" Then
 			Ritorno = ErroreConnessioneNonValida
 		Else
-			Dim Conn As Object = ApreDB(Connessione)
+			Dim Conn As Object = new clsGestioneDB
 
 			If TypeOf (Conn) Is String Then
 				Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
 			Else
-				Dim Rec As Object = Server.CreateObject("ADODB.Recordset")
+				Dim Rec as object
 				Dim Sql As String = ""
 				Dim Ok As Boolean = True
 
-				Sql = "Begin transaction"
-				Ritorno = EsegueSql(Conn, Sql, Connessione)
+				Sql = iif(tipodb="SQLSERVER", "Begin transaction", "Start transaction")
+				Ritorno = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
 
 				Dim idQuota As Integer = -1
 
 				If Not Ritorno.Contains(StringaErrore) Then
 					Try
 						Sql = "SELECT Max(idQuota)+1 FROM Quote"
-						Rec = LeggeQuery(Conn, Sql, Connessione)
+						Rec = Conn.LeggeQuery(Server.MapPath("."),  Sql, Connessione)
 						If TypeOf (Rec) Is String Then
 							Ritorno = Rec
 						Else
@@ -668,7 +669,7 @@ Public Class wsQuote
 					If Ok Then
 						Try
 							Sql = "Insert Into Quote Values (" & idQuota & ", '" & Descrizione.Replace("'", "''") & "', " & Importo & ", 'N', '" & Deducibilita & "', '" & QuotaManuale & "')"
-							Ritorno = EsegueSql(Conn, Sql, Connessione)
+							Ritorno = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
 							If Ritorno.Contains(StringaErrore) Then
 								Ok = False
 							Else
@@ -681,7 +682,7 @@ Public Class wsQuote
 									" " & ImportoR1 & ", " &
 									"'N' " &
 									")"
-								Ritorno = EsegueSql(Conn, Sql, Connessione)
+								Ritorno = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
 								If Ritorno.Contains(StringaErrore) Then
 									Ok = False
 								Else
@@ -694,7 +695,7 @@ Public Class wsQuote
 										" " & ImportoR2 & ", " &
 										"'N' " &
 										")"
-									Ritorno = EsegueSql(Conn, Sql, Connessione)
+									Ritorno = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
 									If Ritorno.Contains(StringaErrore) Then
 										Ok = False
 									Else
@@ -707,7 +708,7 @@ Public Class wsQuote
 											" " & ImportoR3 & ", " &
 											"'N' " &
 											")"
-										Ritorno = EsegueSql(Conn, Sql, Connessione)
+										Ritorno = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
 										If Ritorno.Contains(StringaErrore) Then
 											Ok = False
 										Else
@@ -720,7 +721,7 @@ Public Class wsQuote
 												" " & ImportoR4 & ", " &
 												"'N' " &
 												")"
-											Ritorno = EsegueSql(Conn, Sql, Connessione)
+											Ritorno = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
 											If Ritorno.Contains(StringaErrore) Then
 												Ok = False
 											Else
@@ -733,7 +734,7 @@ Public Class wsQuote
 													" " & ImportoR5 & ", " &
 													"'N' " &
 													")"
-												Ritorno = EsegueSql(Conn, Sql, Connessione)
+												Ritorno = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
 												If Ritorno.Contains(StringaErrore) Then
 													Ok = False
 												End If
@@ -751,10 +752,10 @@ Public Class wsQuote
 
 				If Ok Then
 					Sql = "commit"
-					Dim Ritorno2 As String = EsegueSql(Conn, Sql, Connessione)
+					Dim Ritorno2 As String = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
 				Else
 					Sql = "rollback"
-					Dim Ritorno2 As String = EsegueSql(Conn, Sql, Connessione)
+					Dim Ritorno2 As String = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
 				End If
 			End If
 
