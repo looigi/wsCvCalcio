@@ -607,7 +607,7 @@ Public Class GestioneTags
 	Public Function EsegueQuery(MP As String, Tag As String) As String
 		Dim Ritorno As String = ""
 		Dim Rec As Object ' = HttpContext.Current.Server.CreateObject("ADODB.Recordset")
-		Dim Sql As String = "Select * From Tags Where Trim(Upper(Valore))='" & Tag.Trim.ToUpper & "'"
+		Dim Sql As String = "Select idTag, Descrizione, Valore, " & IIf(TipoDB = "SQLSERVER", "IsNull(Query,'')", "Coalesce(Query,'')") & " As Query From Tags Where Trim(Upper(Valore))='" & Tag.Trim.ToUpper & "'"
 
 		ScriveLog(" - Tag: " & Tag & " / CodSquadra:" & CodSquadra & " / Squadra: " & NomeSquadra & " / Anno: " & Anno & " / Parametro: " & idGiocatore)
 
@@ -620,7 +620,7 @@ Public Class GestioneTags
 
 				Ritorno = "ERROR: Nessun tag rilevato"
 			Else
-				If Not Rec("Query").Value Is DBNull.Value And "" & Rec("Query").Value <> "" Then
+				If Rec("Query").Value <> "" Then
 					Dim Query As String = "" & Rec("Query").Value
 
 					Rec.Close()

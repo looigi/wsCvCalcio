@@ -27,16 +27,20 @@ Public Class wsArbitri
 				Dim Sql As String = ""
 				'Dim idUtente As String = ""
 
-				Sql = "SELECT Max(idArbitro)+1 FROM Arbitri Where idAnno=" & idAnno
+				If TipoDB = "SQLSERVER" Then
+					Sql = "SELECT IsNull(Max(idArbitro),0)+1 FROM Arbitri Where idAnno=" & idAnno
+				Else
+					Sql = "SELECT Coalesce(Max(idArbitro),0)+1 FROM Arbitri Where idAnno=" & idAnno
+				End If
 				Rec = Conn.LeggeQuery(Server.MapPath("."), Sql, Connessione)
 				If TypeOf (Rec) Is String Then
 					Ritorno = Rec
 				Else
-					If Rec(0).Value Is DBNull.Value Then
-						idArbitro = "1"
-					Else
-						idArbitro = Rec(0).Value.ToString
-					End If
+					'If Rec(0).Value Is DBNull.Value Then
+					'	idArbitro = "1"
+					'Else
+					idArbitro = Rec(0).Value.ToString
+					'End If
 				End If
 				Rec.Close()
 			End If
@@ -70,19 +74,20 @@ Public Class wsArbitri
 				If Not Ritorno.Contains(StringaErrore) Then
 					If idArbitro = "-1" Then
 						Try
-							Sql = "SELECT Max(idArbitro)+1 FROM Arbitri Where idAnno=" & idAnno
+							Sql = "SELECT " & IIf(TipoDB = "SQLSERVER", "IsNull(Max(idArbitro),0)+1", "Coalesce(Max(idArbitro),0)+1") & " FROM Arbitri Where idAnno=" & idAnno
 							Rec = Conn.LeggeQuery(Server.MapPath("."), Sql, Connessione)
 							If TypeOf (Rec) Is String Then
 								Ritorno = Rec
 							Else
-								If Rec(0).Value Is DBNull.Value Then
-									idDir = 1
-								Else
-									idDir = Rec(0).Value
-								End If
+								'If Rec(0).Value Is DBNull.Value Then
+								'	idDir = 1
+								'Else
+								idDir = Rec(0).Value
+								'End If
 								Rec.Close()
 							End If
 						Catch ex As Exception
+							Ok = False
 							Ritorno = StringaErrore & " " & ex.Message
 						End Try
 					Else
@@ -92,7 +97,6 @@ Public Class wsArbitri
 						If Ritorno.Contains(StringaErrore) Then
 							Ok = False
 						End If
-
 					End If
 
 					If Ok Then

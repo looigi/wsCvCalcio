@@ -341,19 +341,23 @@ Public Class wsUtenti
 							Ritorno = Rec
 						Else
 							If Rec.Eof() Then
-								Sql = "SELECT Max(idUtente)+1 FROM UtentiMobile" ' Where idAnno=" & idAnno
-								Rec = Conn.LeggeQuery(Server.MapPath("."),  Sql, Connessione)
+								If TipoDB = "SQLSERVER" Then
+									Sql = "SELECT IsNull(Max(idUtente),0)+1 FROM UtentiMobile" ' Where idAnno=" & idAnno
+								Else
+									Sql = "SELECT Coalesce(Max(idUtente),0)+1 FROM UtentiMobile" ' Where idAnno=" & idAnno
+								End If
+								Rec = Conn.LeggeQuery(Server.MapPath("."), Sql, Connessione)
 								If TypeOf (Rec) Is String Then
 									Ritorno = Rec
 								Else
 									If Rec.Eof() Then
 										Ritorno = StringaErrore & " Nessun utente rilevato"
 									Else
-										If Rec(0).Value Is DBNull.Value Then
-											idUtente = "1"
-										Else
-											idUtente = Rec(0).Value.ToString
-										End If
+										'If Rec(0).Value Is DBNull.Value Then
+										'	idUtente = "1"
+										'Else
+										idUtente = Rec(0).Value.ToString
+										'End If
 									End If
 									Rec.Close()
 								End If

@@ -29,16 +29,20 @@ Public Class wsEventiReminder
 				Dim Sql As String = ""
 				'Dim idUtente As String = ""
 
-				Sql = "SELECT Max(idEvento)+1 FROM EventiReminder"
-				Rec = Conn.LeggeQuery(Server.MapPath("."),   Sql, Connessione)
+				If TipoDB = "SQLSERVER" Then
+					Sql = "SELECT IsNull(Max(idEvento),0)+1 FROM EventiReminder"
+				Else
+					Sql = "SELECT Coalesce(Max(idEvento),0)+1 FROM EventiReminder"
+				End If
+				Rec = Conn.LeggeQuery(Server.MapPath("."), Sql, Connessione)
 				If TypeOf (Rec) Is String Then
 					Ritorno = Rec
 				Else
-					If Rec(0).Value Is DBNull.Value Then
-						idEvento = "1"
-					Else
-						idEvento = Rec(0).Value.ToString
-					End If
+					'If Rec(0).Value Is DBNull.Value Then
+					'	idEvento = "1"
+					'Else
+					idEvento = Rec(0).Value.ToString
+					'End If
 				End If
 				Rec.Close()
 			End If
@@ -136,7 +140,7 @@ Public Class wsEventiReminder
 					"'" & idPartita & "' " &
 					")"
 				Ritorno = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
-				'If Ritorno <> "*" Then
+				'If Ritorno<> "OK" Then
 				'	Ritorno = Sql
 				'End If
 			End If
@@ -163,8 +167,9 @@ Public Class wsEventiReminder
 				Dim Rec As Object
 				Dim ritEliminazione As String = ""
 
-				Sql = "Select * From EventiReminder Where idEvento = " & idEvento
-				Rec = Conn.LeggeQuery(Server.MapPath("."),   Sql, Connessione)
+				'Sql = "Select * From EventiReminder Where idEvento = " & idEvento
+				Sql = "Select idTipologia, " & IIf(TipoDB = "SQLSERVER", "IsNull(idPartita,-1)", "Coalesce(idPartita, -1)") & " As idPartita From EventiReminder Where idEvento = " & idEvento
+				Rec = Conn.LeggeQuery(Server.MapPath("."), Sql, Connessione)
 				If TypeOf (Rec) Is String Then
 					Ritorno = Rec
 				Else
@@ -172,7 +177,7 @@ Public Class wsEventiReminder
 						If Val(Rec("idTipologia").Value) = 1 Then
 							Dim idPartita As String = Rec("idPartita").Value
 
-							If idPartita Is DBNull.Value Then
+							If idPartita = -1 Then
 								ritEliminazione = "*"
 							Else
 								ritEliminazione = EliminaPartita(Server.MapPath("."), Squadra, idAnno, idPartita)

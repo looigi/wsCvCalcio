@@ -27,16 +27,20 @@ Public Class wsCategorie
 				Dim Sql As String = ""
 				'Dim idUtente As String = ""
 
-				Sql = "SELECT Max(idCategoria)+1 FROM Categorie Where idAnno=" & idAnno
-				Rec = Conn.LeggeQuery(Server.MapPath("."),  Sql, Connessione)
+				If TipoDB = "SQLSERVER" Then
+					Sql = "SELECT IsNull(Max(idCategoria),0)+1 FROM Categorie Where idAnno=" & idAnno
+				Else
+					Sql = "SELECT Coalesce(Max(idCategoria),0)+1 FROM Categorie Where idAnno=" & idAnno
+				End If
+				Rec = Conn.LeggeQuery(Server.MapPath("."), Sql, Connessione)
 				If TypeOf (Rec) Is String Then
 					Ritorno = Rec
 				Else
-					If Rec(0).Value Is DBNull.Value Then
-						idCategoria = "1"
-					Else
-						idCategoria = Rec(0).Value.ToString
-					End If
+					'If Rec(0).Value Is DBNull.Value Then
+					'	idCategoria = "1"
+					'Else
+					idCategoria = Rec(0).Value.ToString
+					'End If
 				End If
 				Rec.Close()
 			End If
@@ -420,16 +424,20 @@ Public Class wsCategorie
 						Dim Rec As Object
 
 						Try
-							Sql = "Select Max(idCategoria)+1 From Categorie Where idAnno=" & idAnno
-							Rec = Conn.LeggeQuery(Server.MapPath("."),  Sql, Connessione)
+							If TipoDB = "SQLSERVER" Then
+								Sql = "Select IsNull(Max(idCategoria),0)+1 From Categorie Where idAnno=" & idAnno
+							Else
+								Sql = "Select Coalesce(Max(idCategoria),0)+1 From Categorie Where idAnno=" & idAnno
+							End If
+							Rec = Conn.LeggeQuery(Server.MapPath("."), Sql, Connessione)
 							If TypeOf (Rec) Is String Then
 								Ritorno = Rec
 							Else
-								If Rec(0).Value Is DBNull.Value Then
-									idCategoria = 1
-								Else
-									idCategoria = Rec(0).Value
-								End If
+								'If Rec(0).Value Is DBNull.Value Then
+								'	idCategoria = 1
+								'Else
+								idCategoria = Rec(0).Value
+								'End If
 							End If
 						Catch ex As Exception
 							Ritorno = StringaErrore & " " & ex.Message

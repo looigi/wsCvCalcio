@@ -39,7 +39,7 @@ Public Class wsGiocatori
 
 				'Sql = iif(tipodb="SQLSERVER", "Begin transaction", "Start transaction")
 				'Ritorno = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
-				'If Ritorno <> "*" Then
+				'If Ritorno<> "OK" Then
 				'	Ok = False
 				'End If
 
@@ -141,16 +141,20 @@ Public Class wsGiocatori
 
 										If Ok Then
 											If Not GenitoreGiaEsisteComeUtente Then
-												Sql = "Select Max(idUtente) + 1 From [Generale].[dbo].[Utenti] Where idAnno=" & idAnno
+												If TipoDB = "SQLSERVER" Then
+													Sql = "Select IsNull(Max(idUtente),0) + 1 From [Generale].[dbo].[Utenti] Where idAnno=" & idAnno
+												Else
+													Sql = "Select Coalesce(Max(idUtente) + 1 From [Generale].[dbo].[Utenti] Where idAnno=" & idAnno
+												End If
 												Rec = Conn.LeggeQuery(Server.MapPath("."), Sql, Connessione)
 												If TypeOf (Rec) Is String Then
 													Ritorno = Rec
 												Else
-													If Rec(0).Value Is DBNull.Value Then
-														idGenitoreLetto = 1
-													Else
-														idGenitoreLetto = Rec(0).Value
-													End If
+													'If Rec(0).Value Is DBNull.Value Then
+													'	idGenitoreLetto = 1
+													'Else
+													idGenitoreLetto = Rec(0).Value
+													'End If
 												End If
 											End If
 
@@ -409,7 +413,7 @@ Public Class wsGiocatori
 					If Not Rec.Eof() Then
 						Dim Datella As String = Rec("DataFirma").Value
 
-						If Not Datella Is DBNull.Value And Trim(Datella) <> "" Then
+						If Trim(Datella) <> "" Then
 							If Genitore <> 3 Then
 								Ritorno = StringaErrore & " Una firma è già stata inserita per il giocatore ed il genitore in data " & Datella & ";"
 							Else
@@ -495,7 +499,7 @@ Public Class wsGiocatori
 
 				'Sql = "Delete From GiocatoriFirme Where idGiocatore=" & idGiocatore & " And idGenitore=" & Genitore
 				'Ritorno = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
-				'If Ritorno <> "*" Then
+				'If Ritorno<> "OK" Then
 				'	Sql = "rollback"
 				'	Dim Ritorno2 As String = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
 
@@ -1310,7 +1314,7 @@ Public Class wsGiocatori
 					Sql = "SELECT Giocatori.idGiocatore, Ruoli.idRuolo As idR, Cognome, Nome, Ruoli.Descrizione, EMail, Telefono, Soprannome, DataDiNascita, Indirizzo, " &
 						"CodFiscale, Maschio, Citta, Matricola, NumeroMaglia, Giocatori.idCategoria, idCategoria2, Categorie.Descrizione As Categoria2, idCategoria3, Cat3.Descrizione As Categoria3, Cat1.Descrizione As Categoria1, " &
 						"Giocatori.Categorie, Giocatori.RapportoCompleto, Giocatori.Cap, Giocatori.CittaNascita, Giocatori.Maggiorenne, " &
-						"Cat4.ScadenzaCertificatoMedico, Cat4.CertificatoMedico, CodiceTessera " &
+						"  " & IIf(TipoDB = "SQLSERVER", "IsNull(Cat4.ScadenzaCertificatoMedico,'')", "Coalesce(Cat4.ScadenzaCertificatoMedico,'')") & " As ScadenzaCertificatoMedico, Cat4.CertificatoMedico, CodiceTessera " &
 						"FROM Giocatori " &
 						"Left Join [Generale].[dbo].[Ruoli] On Giocatori.idRuolo=Ruoli.idRuolo " &
 						"Left Join Categorie On Categorie.idCategoria=Giocatori.idCategoria2 And Categorie.idAnno=Giocatori.idAnno " &
@@ -1334,7 +1338,7 @@ Public Class wsGiocatori
 								Dim dat As Date = Nothing
 								Dim Scaduto As String = "S"
 
-								If Not Rec("ScadenzaCertificatoMedico").Value Is DBNull.Value And Rec("ScadenzaCertificatoMedico").Value <> "" Then
+								If Rec("ScadenzaCertificatoMedico").Value <> "" Then
 									dat = Convert.ToDateTime(Rec("ScadenzaCertificatoMedico").Value)
 									Dim days As Long = DateDiff(DateInterval.Day, dat, Now)
 									If days < 0 Then
@@ -1613,9 +1617,14 @@ Public Class wsGiocatori
 							"CodFiscale, Maschio, Citta, Matricola, NumeroMaglia, Giocatori.idCategoria, Giocatori.idCategoria2 As idCategoria2, Categorie2.Descrizione As Categoria2, " &
 							"Giocatori.idCategoria3 As idCategoria3, Categorie3.Descrizione As Categoria3, Categorie.Descrizione As Categoria1, Giocatori.Categorie, " &
 							"Giocatori.RapportoCompleto, Giocatori.idTaglia, Min(KitGiocatori.idTipoKit) As idTipologiaKit, Giocatori.Cap, Giocatori.CittaNascita, Giocatori.Maggiorenne, " &
-							"GiocatoriSemafori.Semaforo1, GiocatoriSemafori.Titolo1, GiocatoriSemafori.Semaforo2, GiocatoriSemafori.Titolo2, GiocatoriSemafori.Smeaforo3, GiocatoriSemafori.Titolo3, " &
-							"GiocatoriSemafori.Semaforo4, GiocatoriSemafori.Titolo4, GiocatoriSemafori.Semaforo5, GiocatoriSemafori.Titolo5, CodiceTessera, " &
-							"GiocatoriDettaglio.MailGenitore1, GiocatoriDettaglio.MailGenitore2, UtentiPadre.idGiocatore As AmministratiPadre, UtentiMadre.idGiocatore As AmministratiMadre " &
+							" " & IIf(TipoDB = "SQLSERVER", "IsNull(GiocatoriSemafori.Semaforo1,'')", "Coalesce(GiocatoriSemafori.Semaforo1,'')") & " As Semaforo1, GiocatoriSemafori.Titolo1, " &
+							" " & IIf(TipoDB = "SQLSERVER", "IsNull(GiocatoriSemafori.Semaforo2,'')", "Coalesce(GiocatoriSemafori.Semaforo2,'')") & " As Semaforo2, GiocatoriSemafori.Titolo2, " &
+							" " & IIf(TipoDB = "SQLSERVER", "IsNull(GiocatoriSemafori.Smeaforo3,'')", "Coalesce(GiocatoriSemafori.Smeaforo3,'')") & " As Semaforo3, GiocatoriSemafori.Titolo3, " &
+							" " & IIf(TipoDB = "SQLSERVER", "IsNull(GiocatoriSemafori.Semaforo4,'')", "Coalesce(GiocatoriSemafori.Semaforo4,'')") & " As Semaforo4, GiocatoriSemafori.Titolo4, " &
+							" " & IIf(TipoDB = "SQLSERVER", "IsNull(GiocatoriSemafori.Semaforo5,'')", "Coalesce(GiocatoriSemafori.Semaforo5,'')") & " As Semaforo5, GiocatoriSemafori.Titolo5, CodiceTessera, " &
+							" " & IIf(TipoDB = "SQLSERVER", "IsNull(GiocatoriDettaglio.MailGenitore1,'')", "Coalesce(GiocatoriDettaglio.MailGenitore1,'')") & " As MailGenitore1, " &
+							" " & IIf(TipoDB = "SQLSERVER", "IsNull(GiocatoriDettaglio.MailGenitore2,'')", "Coalesce(GiocatoriDettaglio.MailGenitore2,'')") & " As MailGenitore2, " &
+							"UtentiPadre.idGiocatore As AmministratiPadre, UtentiMadre.idGiocatore As AmministratiMadre " &
 							"FROM Giocatori " &
 							"Left Join KitGiocatori On Giocatori.idGiocatore=KitGiocatori.idGiocatore " &
 							"Left Join [Generale].[dbo].[Ruoli] On Giocatori.idRuolo=Ruoli.idRuolo " &
@@ -1651,7 +1660,7 @@ Public Class wsGiocatori
 										Dim Semaforo4 As String = ""
 										Dim Semaforo5 As String = ""
 
-										If Rec("Semaforo1").Value Is DBNull.Value Or "" & Rec("Semaforo1").Value = "" Then
+										If Rec("Semaforo1").Value = "" Then
 											Semaforo1 = "rosso" & "*" & "Giocatore non iscritto;"
 										Else
 											Semaforo1 = Rec("Semaforo1").Value & "*" & Rec("Titolo1").Value & ";"
@@ -1662,17 +1671,17 @@ Public Class wsGiocatori
 										'Semaforo2 = Rec("Semaforo2").Value & "*" & Rec("Titolo2").Value & ";"
 										'End If
 										Semaforo2 = "*;"
-										If Rec("Smeaforo3").Value Is DBNull.Value Or "" & Rec("Smeaforo3").Value = "" Then
+										If Rec("Semaforo3").Value = "" Then
 											Semaforo3 = "rosso" & "*" & "Nessuna firma validata;"
 										Else
-											Semaforo3 = Rec("Smeaforo3").Value & "*" & Rec("Titolo3").Value & ";"
+											Semaforo3 = Rec("Semaforo3").Value & "*" & Rec("Titolo3").Value & ";"
 										End If
-										If Rec("Semaforo4").Value Is DBNull.Value Or "" & Rec("Semaforo4").Value = "" Then
+										If Rec("Semaforo4").Value = "" Then
 											Semaforo4 = "rosso" & "*" & "Flag certificato non impostato;"
 										Else
 											Semaforo4 = Rec("Semaforo4").Value & "*" & Rec("Titolo4").Value & ";"
 										End If
-										If Rec("Semaforo5").Value Is DBNull.Value Or "" & Rec("Semaforo5").Value = "" Then
+										If Rec("Semaforo5").Value = "" Then
 											Semaforo5 = "rosso" & "*" & "Nessun elemento kit consegnato;"
 										Else
 											Semaforo5 = Rec("Semaforo5").Value & "*" & Rec("Titolo5").Value & ";"
@@ -1681,33 +1690,29 @@ Public Class wsGiocatori
 										Dim UtenteGenitore1 As String = ""
 										Dim UtenteGenitore2 As String = ""
 
-										If Not Rec("MailGenitore1").Value Is DBNull.Value Then
-											If Rec("MailGenitore1").Value <> "" Then
-												Sql = "Select * From [Generale].[dbo].[Utenti] Where Utente='" & Rec("MailGenitore1").Value.replace("'", "''") & "'"
-												Rec2 = Conn.LeggeQuery(Server.MapPath("."), Sql, Connessione)
-												If TypeOf (Rec2) Is String Then
-													Ritorno = Rec2
-												Else
-													If Not Rec2.Eof() Then
-														UtenteGenitore1 = Rec2("Utente").Value
-													End If
-													'Rec2.Close()
+										If Rec("MailGenitore1").Value <> "" Then
+											Sql = "Select * From [Generale].[dbo].[Utenti] Where Utente='" & Rec("MailGenitore1").Value.replace("'", "''") & "'"
+											Rec2 = Conn.LeggeQuery(Server.MapPath("."), Sql, Connessione)
+											If TypeOf (Rec2) Is String Then
+												Ritorno = Rec2
+											Else
+												If Not Rec2.Eof() Then
+													UtenteGenitore1 = Rec2("Utente").Value
 												End If
+												'Rec2.Close()
 											End If
 										End If
 
-										If Not Rec("MailGenitore2").Value Is DBNull.Value Then
-											If Rec("MailGenitore2").Value <> "" Then
-												Sql = "Select * From [Generale].[dbo].[Utenti] Where Utente='" & Rec("MailGenitore2").Value.replace("'", "''") & "'"
-												Rec2 = Conn.LeggeQuery(Server.MapPath("."), Sql, Connessione)
-												If TypeOf (Rec2) Is String Then
-													Ritorno = Rec2
-												Else
-													If Not Rec2.Eof() Then
-														UtenteGenitore2 = Rec2("Utente").Value
-													End If
-													'Rec2.Close()
+										If Rec("MailGenitore2").Value <> "" Then
+											Sql = "Select * From [Generale].[dbo].[Utenti] Where Utente='" & Rec("MailGenitore2").Value.replace("'", "''") & "'"
+											Rec2 = Conn.LeggeQuery(Server.MapPath("."), Sql, Connessione)
+											If TypeOf (Rec2) Is String Then
+												Ritorno = Rec2
+											Else
+												If Not Rec2.Eof() Then
+													UtenteGenitore2 = Rec2("Utente").Value
 												End If
+												'Rec2.Close()
 											End If
 										End If
 
@@ -1906,7 +1911,7 @@ Public Class wsGiocatori
 
 				Sql = "Delete From GreenPassDati Where idGiocatore=" & idGiocatore
 				Ritorno = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
-				If Ritorno <> "*" Then
+				If Ritorno<> "OK" Then
 					Ok = False
 				End If
 
@@ -1916,7 +1921,7 @@ Public Class wsGiocatori
 						"'" & StringaGP & "'" &
 						")"
 					Ritorno = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
-					If Ritorno <> "*" Then
+					If Ritorno<> "OK" Then
 						Ok = False
 					End If
 				End If
@@ -1956,7 +1961,7 @@ Public Class wsGiocatori
 
 				Sql = "Delete From GreenPassDati Where idGiocatore=" & idGiocatore
 				Ritorno = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
-				If Ritorno <> "*" Then
+				If Ritorno<> "OK" Then
 					Ok = False
 				End If
 
@@ -1994,7 +1999,7 @@ Public Class wsGiocatori
 				Ritorno = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
 
 				Ritorno = CalcolaSemafori(Conn, Connessione, Squadra, idGiocatore)
-				If Ritorno <> "*" Then
+				If Ritorno<> "OK" Then
 					Ok = False
 				End If
 
@@ -2324,8 +2329,13 @@ Public Class wsGiocatori
 		End If
 
 		'Semaforo 4: Certificato
-		Sql = "Select CertificatoMedico, ScadenzaCertificatoMedico From GiocatoriDettaglio " &
+		If TipoDB = "SQLSERVER" Then
+			Sql = "Select CertificatoMedico, IsNull(ScadenzaCertificatoMedico,'') From GiocatoriDettaglio " &
 				"Where idGiocatore = " & idGiocatore
+		Else
+			Sql = "Select CertificatoMedico, Coalesce(ScadenzaCertificatoMedico, '') From GiocatoriDettaglio " &
+				"Where idGiocatore = " & idGiocatore
+		End If
 		Rec2 = Conn.LeggeQuery(Server.MapPath("."), Sql, Connessione)
 		If TypeOf (Rec2) Is String Then
 			Ritorno = Rec2
@@ -2336,7 +2346,7 @@ Public Class wsGiocatori
 					Semaforo4 = "rosso"
 					Titolo4 = "Flag certificato non impostato"
 				Else
-					If Rec2("ScadenzaCertificatoMedico").Value Is DBNull.Value Then
+					If Rec2("ScadenzaCertificatoMedico").Value = "" Then
 						If "" & Rec2("CertificatoMedico").Value = "S" Then
 							Semaforo4 = "giallo"
 							Titolo4 = "Certificato presente, Scadenza no"
@@ -2435,7 +2445,7 @@ Public Class wsGiocatori
 
 		Sql = "Delete From GiocatoriSemafori Where idGiocatore=" & idGiocatore
 		Ritorno = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
-		If Ritorno <> "*" Then
+		If Ritorno<> "OK" Then
 			Return Ritorno
 		End If
 
@@ -2830,18 +2840,22 @@ Public Class wsGiocatori
 
 								Ritorno &= Categorie & ";"
 
-								Sql = "Select Sum(Importo) From [Generale].[dbo].[TessereNFC] Where NumeroTessera='" & NumeroTessera & "'" ' CodSquadra='" & Squadra & "' And idGiocatore=" & idGiocatore
+								If TipoDB = "SQLSERVER" Then
+									Sql = "Select IsNull(Sum(Importo),0) From [Generale].[dbo].[TessereNFC] Where NumeroTessera='" & NumeroTessera & "'" ' CodSquadra='" & Squadra & "' And idGiocatore=" & idGiocatore
+								Else
+									Sql = "Select Coalesce(Sum(Importo),0) From [Generale].[dbo].[TessereNFC] Where NumeroTessera='" & NumeroTessera & "'" ' CodSquadra='" & Squadra & "' And idGiocatore=" & idGiocatore
+								End If
 								Rec = Conn.LeggeQuery(Server.MapPath("."), Sql, Connessione)
 								If TypeOf (Rec) Is String Then
 									Ritorno = Rec
 								Else
 									Dim Saldo As String = ""
 
-									If Rec(0).Value Is DBNull.Value Then
-										Saldo = "€ 0"
-									Else
-										Saldo = "€ " & Rec(0).Value
-									End If
+									'If Rec(0).Value Is DBNull.Value Then
+									'	Saldo = "€ 0"
+									'Else
+									Saldo = "€ " & Rec(0).Value
+									'End If
 
 									Ritorno &= Saldo & ";"
 
@@ -2970,17 +2984,21 @@ Public Class wsGiocatori
 
 								Dim totPagamento As String = "0"
 
-								Sql = "Select * From Anni"
+								If TipoDB = "SQLSERVER" Then
+									Sql = "Select IsNull(CostoScuolaCalcio,0) As CostoScuolaCalcio From Anni"
+								Else
+									Sql = "Select Coalesce(CostoScuolaCalcio,0) As CostoScuolaCalcio From Anni"
+								End If
 								Rec = Conn.LeggeQuery(Server.MapPath("."), Sql, Connessione)
 								If TypeOf (Rec) Is String Then
 									Ritorno = Rec
 								Else
 									If Not Rec.Eof() Then
-										If Not Rec("CostoScuolaCalcio").Value Is DBNull.Value Then
-											totPagamento = Rec("CostoScuolaCalcio").Value '.replace(",", ".")
-										Else
-											totPagamento = 0
-										End If
+										'If Not Rec("CostoScuolaCalcio").Value Is DBNull.Value Then
+										totPagamento = Rec("CostoScuolaCalcio").Value '.replace(",", ".")
+										'Else
+										'	totPagamento = 0
+										'End If
 									End If
 									Rec.Close()
 								End If
@@ -3100,23 +3118,27 @@ Public Class wsGiocatori
 
 											Ritorno &= importiManuali & ";"
 
-											Sql = "Select Max(Progressivo) From QuoteRate Where Attiva='S' And Importo > 0 And idQuota = " & Rec("idQuota").Value
-											Rec2 = Conn.LeggeQuery(Server.MapPath("."), Sql, Connessione)
-											If Rec2(0).Value Is DBNull.Value Then
-												Ritorno &= "-1;"
+											If TipoDB = "SQLSERVER" Then
+												Sql = "Select IsNull(Max(Progressivo),-1) From QuoteRate Where Attiva='S' And Importo > 0 And idQuota = " & Rec("idQuota").Value
 											Else
-												Ritorno &= Rec2(0).Value & ";"
+												Sql = "Select Coalesce(Max(Progressivo),-1) From QuoteRate Where Attiva='S' And Importo > 0 And idQuota = " & Rec("idQuota").Value
 											End If
+											Rec2 = Conn.LeggeQuery(Server.MapPath("."), Sql, Connessione)
+											'If Rec2(0).Value Is DBNull.Value Then
+											'	Ritorno &= "-1;"
+											'Else
+											Ritorno &= Rec2(0).Value & ";"
+											'End If
 											Rec2.Close()
 
 											Sql = "Select " & IIf(TipoDB = "SQLSERVER", "ISNULL(Sum(Pagamento),0)", "COALESCE(Sum(Pagamento),0)") & " From GiocatoriPagamenti " &
 												"Where idGiocatore = " & Rec("idGiocatore").Value & " And Eliminato = 'N' And Validato = 'S' And idTipoPagamento = 1"
 											Rec2 = Conn.LeggeQuery(Server.MapPath("."), Sql, Connessione)
-											If Rec2(0).Value Is DBNull.Value Then
-												Ritorno &= "0;"
-											Else
-												Ritorno &= Rec2(0).Value & ";"
-											End If
+											'If Rec2(0).Value Is DBNull.Value Then
+											'	Ritorno &= "0;"
+											'Else
+											Ritorno &= Rec2(0).Value & ";"
+											'End If
 											Rec2.Close()
 
 										End If
@@ -3253,7 +3275,8 @@ Public Class wsGiocatori
 								Ritorno &= n.Replace(";", "***PV***") & ";"
 								Ritorno &= Rec("Sconto").Value & ";"
 
-								If Rec("idQuota").Value Is DBNull.Value Then
+								' If Rec("idQuota").Value Is DBNull.Value Then ***NULL DA SISTEMARE***
+								If Rec("idQuota").Value = "<NULL>" Then
 									Ritorno &= "Quota non impostata;"
 									Ritorno &= "0;"
 								Else
@@ -3280,31 +3303,41 @@ Public Class wsGiocatori
 
 								Ritorno &= importiManuali & ";"
 
-								If Rec("idQuota").Value Is DBNull.Value Then
+								'If Rec("idQuota").Value Is DBNull.Value Then ***NULL DA SISTEMARE***
+								If Rec("idQuota").Value = "<NULL>" Then
 									Ritorno &= "-1;"
 								Else
 									If "" & Rec("idQuota").Value = "" Then
 										Ritorno &= "-1;"
 									Else
-										Sql = "Select Max(Progressivo) From QuoteRate Where Attiva='S' And Importo > 0 And idQuota = " & Rec("idQuota").Value
-										Rec2 = Conn.LeggeQuery(Server.MapPath("."), Sql, Connessione)
-										If Rec2(0).Value Is DBNull.Value Or Rec2(0).Value = "" Then
-											Ritorno &= "-1;"
+										If TipoDB = "SQLSERVER" Then
+											Sql = "Select Isnull(Max(Progressivo),-1) From QuoteRate Where Attiva='S' And Importo > 0 And idQuota = " & Rec("idQuota").Value
 										Else
-											Ritorno &= Rec2(0).Value & ";"
+											Sql = "Select Coalesce(Max(Progressivo),-1) From QuoteRate Where Attiva='S' And Importo > 0 And idQuota = " & Rec("idQuota").Value
 										End If
+										Rec2 = Conn.LeggeQuery(Server.MapPath("."), Sql, Connessione)
+										'If Rec2(0).Value Is DBNull.Value Or Rec2(0).Value = "" Then
+										'	Ritorno &= "-1;"
+										'Else
+										Ritorno &= Rec2(0).Value & ";"
+										'End If
 										Rec2.Close()
 									End If
 								End If
 
-								Sql = "Select Sum(Pagamento) From GiocatoriPagamenti " &
+								If TipoDB = "SQLSERVER" Then
+									Sql = "Select isnull(Sum(Pagamento),0) From GiocatoriPagamenti " &
 												"Where idGiocatore = " & idGiocatore & " And Eliminato = 'N' And Validato = 'S' And idTipoPagamento = 1"
-								Rec2 = Conn.LeggeQuery(Server.MapPath("."), Sql, Connessione)
-								If Rec2(0).Value Is DBNull.Value Then
-									Ritorno &= "0;"
 								Else
-									Ritorno &= Rec2(0).Value & ";"
+									Sql = "Select Coalesce(Sum(Pagamento),0) From GiocatoriPagamenti " &
+												"Where idGiocatore = " & idGiocatore & " And Eliminato = 'N' And Validato = 'S' And idTipoPagamento = 1"
 								End If
+								Rec2 = Conn.LeggeQuery(Server.MapPath("."), Sql, Connessione)
+								'If Rec2(0).Value Is DBNull.Value Then
+								'	Ritorno &= "0;"
+								'Else
+								Ritorno &= Rec2(0).Value & ";"
+								'End If
 								Rec2.Close()
 
 								Rec.Close()
@@ -3336,16 +3369,20 @@ Public Class wsGiocatori
 				Dim Rec As Object
 				Dim Sql As String = ""
 				Try
-					Sql = "SELECT Max(idGiocatore)+1 FROM Giocatori"
+					If TipoDB = "SQLSERVER" Then
+						Sql = "SELECT IsNull(Max(idGiocatore),0)+1 FROM Giocatori"
+					Else
+						Sql = "SELECT Coalesce(Max(idGiocatore),0)+1 FROM Giocatori"
+					End If
 					Rec = Conn.LeggeQuery(Server.MapPath("."), Sql, Connessione)
 					If TypeOf (Rec) Is String Then
 						Ritorno = Rec
 					Else
-						If Rec(0).Value Is DBNull.Value Then
-							idGioc = 1
-						Else
-							idGioc = Rec(0).Value
-						End If
+						'If Rec(0).Value Is DBNull.Value Then
+						'	idGioc = 1
+						'Else
+						idGioc = Rec(0).Value
+						'End If
 						Rec.Close()
 
 						Ritorno = idGioc
@@ -3410,16 +3447,20 @@ Public Class wsGiocatori
 							' Creo utente separato in quanto il giocatore è maggiorenne
 							Dim idUtente As Integer = -1
 
-							Sql = "Select Max(idUtente) + 1 From [Generale].[dbo].[Utenti] Where idAnno=" & idAnno
+							If TipoDB = "SQLSERVER" Then
+								Sql = "Select IsNull(Max(idUtente),0) + 1 From [Generale].[dbo].[Utenti] Where idAnno=" & idAnno
+							Else
+								Sql = "Select Coalesce(Max(idUtente),0) + 1 From [Generale].[dbo].[Utenti] Where idAnno=" & idAnno
+							End If
 							Rec = Conn.LeggeQuery(Server.MapPath("."), Sql, Connessione)
 							If TypeOf (Rec) Is String Then
 								Ritorno = Rec
 							Else
-								If Rec(0).Value Is DBNull.Value Then
-									idUtente = 1
-								Else
-									idUtente = Rec(0).Value
-								End If
+								'If Rec(0).Value Is DBNull.Value Then
+								'	idUtente = 1
+								'Else
+								idUtente = Rec(0).Value
+								'End If
 							End If
 
 							Dim pass As String = generaPassRandom()
@@ -3939,15 +3980,23 @@ Public Class wsGiocatori
 									NumeroRicevuta = sNumeroRicevuta
 								Else
 									If Validato = "S" Then
-										Sql = "SELECT Max(Progressivo)+1 FROM DatiFattura Where Anno=" & Now.Year
+										If TipoDB = "SQLSERVER" Then
+											Sql = "SELECT IsNull(Max(Progressivo),0)+1 FROM DatiFattura Where Anno=" & Now.Year
+										Else
+											Sql = "SELECT Coalesce(Max(Progressivo),0)+1 FROM DatiFattura Where Anno=" & Now.Year
+										End If
 										Rec = Conn.LeggeQuery(Server.MapPath("."), Sql, Connessione)
-										If Rec(0).Value Is DBNull.Value Then
-											ProgressivoGenerale = 1
+										'If Rec(0).Value Is DBNull.Value Then
+										'	ProgressivoGenerale = 1
+										'	Sql = "Insert Into DatiFattura Values(" & Now.Year & ", 1)"
+										'Else
+										ProgressivoGenerale = Rec(0).Value
+										If ProgressivoGenerale = 1 Then
 											Sql = "Insert Into DatiFattura Values(" & Now.Year & ", 1)"
 										Else
-											ProgressivoGenerale = Rec(0).Value
 											Sql = "Update DatiFattura Set Progressivo = " & ProgressivoGenerale & " Where Anno=" & Now.Year
 										End If
+										'End If
 										Rec.Close()
 
 										If Suffisso <> "" Then
@@ -3966,13 +4015,17 @@ Public Class wsGiocatori
 								End If
 
 								If Ok Then
-									Sql = "SELECT Max(Progressivo)+1 FROM GiocatoriPagamenti Where idAnno=" & idAnno & " And idGiocatore=" & idGiocatore
-									Rec = Conn.LeggeQuery(Server.MapPath("."), Sql, Connessione)
-									If Rec(0).Value Is DBNull.Value Then
-										Progressivo = 1
+									If TipoDB = "SQLSERVER" Then
+										Sql = "SELECT IsNull(Max(Progressivo),0)+1 FROM GiocatoriPagamenti Where idAnno=" & idAnno & " And idGiocatore=" & idGiocatore
 									Else
-										Progressivo = Rec(0).Value
+										Sql = "SELECT Coalesce(Max(Progressivo),0)+1 FROM GiocatoriPagamenti Where idAnno=" & idAnno & " And idGiocatore=" & idGiocatore
 									End If
+									Rec = Conn.LeggeQuery(Server.MapPath("."), Sql, Connessione)
+									'If Rec(0).Value Is DBNull.Value Then
+									'	Progressivo = 1
+									'Else
+									Progressivo = Rec(0).Value
+									'End If
 									Rec.Close()
 
 									Sql = "Insert Into GiocatoriPagamenti Values (" &
@@ -4141,10 +4194,10 @@ Public Class wsGiocatori
 					'		Dim pp2 As New pdfGest
 					'		Ritorno = pp2.ConverteHTMLInPDF(fileAppoggio, fileFinale, "")
 					'		Dim Ritorno2 As String = pp2.ConverteHTMLInPDF(fileAppoggioScontrino, fileFinaleScontrino, "")
-					'		If Ritorno <> "*" And Ritorno2 <> "*" Then
+					'		If Ritorno<> "OK" And Ritorno2<> "OK" Then
 					'			Ok = False
 					'		Else
-					'			If Ritorno2 <> "*" Then
+					'			If Ritorno2<> "OK" Then
 					'				Ritorno = Ritorno2
 					'			End If
 					'		End If
@@ -4296,9 +4349,14 @@ Public Class wsGiocatori
 
 									If NumeroRicevuta = "" Then
 										If Validato = "S" Then
-											Sql = "SELECT Max(Progressivo)+1 FROM DatiFattura Where Anno=" & Now.Year
+											If TipoDB = "SQLSERVER" Then
+												Sql = "SELECT IsNull(Max(Progressivo),0)+1 FROM DatiFattura Where Anno=" & Now.Year
+											Else
+												Sql = "SELECT Coalesce(Max(Progressivo),0)+1 FROM DatiFattura Where Anno=" & Now.Year
+											End If
 											Rec = Conn.LeggeQuery(Server.MapPath("."), Sql, Connessione)
-											If Rec(0).Value Is DBNull.Value Then
+											' If Rec(0).Value Is DBNull.Value Then
+											If Rec(0).Value = 1 Then
 												ProgressivoGenerale = 1
 												Sql = "Insert Into DatiFattura Values(" & Now.Year & ", 1)"
 											Else
@@ -4352,13 +4410,17 @@ Public Class wsGiocatori
 									'		" " & idModalitaPagamento & " " &
 									'		")"
 
-									Sql = "SELECT Max(Progressivo) + 1 FROM GiocatoriPagamenti Where idGiocatore=" & idGiocatore
-									Rec = Conn.LeggeQuery(Server.MapPath("."), Sql, Connessione)
-									If Rec(0).Value Is DBNull.Value Then
-										nuovoIdPagamento = 1
+									If TipoDB = "SQLSERVER" Then
+										Sql = "SELECT IsNull(Max(Progressivo),0) + 1 FROM GiocatoriPagamenti Where idGiocatore=" & idGiocatore
 									Else
-										nuovoIdPagamento = Rec(0).Value
+										Sql = "SELECT Coalesce(Max(Progressivo),0) + 1 FROM GiocatoriPagamenti Where idGiocatore=" & idGiocatore
 									End If
+									Rec = Conn.LeggeQuery(Server.MapPath("."), Sql, Connessione)
+									'If Rec(0).Value Is DBNull.Value Then
+									'	nuovoIdPagamento = 1
+									'Else
+									nuovoIdPagamento = Rec(0).Value
+									'End If
 									'Rec.Close()
 
 									Sql = "Update GiocatoriPagamenti Set " &
@@ -4499,7 +4561,7 @@ Public Class wsGiocatori
 		If Connessione = "" Then
 			Ritorno = ErroreConnessioneNonValida
 		Else
-			Dim Conn As Object = new clsGestioneDB
+			Dim Conn As Object = New clsGestioneDB
 
 			If TypeOf (Conn) Is String Then
 				Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
@@ -4508,21 +4570,25 @@ Public Class wsGiocatori
 				Dim Sql As String = ""
 				Dim TotPag As Single = 0
 
-				Sql = "Select * From GiocatoriDettaglio Where idAnno=" & idAnno & " And idGiocatore=" & idGiocatore
-				Rec = Conn.LeggeQuery(Server.MapPath("."),  Sql, Connessione)
+				If TipoDB = "SQLSERVER" Then
+					Sql = "Select IsNull(TotalePagamento,0) As TotalePagamento From GiocatoriDettaglio Where idAnno=" & idAnno & " And idGiocatore=" & idGiocatore
+				Else
+					Sql = "Select Coalesce(TotalePagamento,0) As TotalePagamento From GiocatoriDettaglio Where idAnno=" & idAnno & " And idGiocatore=" & idGiocatore
+				End If
+				Rec = Conn.LeggeQuery(Server.MapPath("."), Sql, Connessione)
 				If TypeOf (Rec) Is String Then
 					Ritorno = Rec
 				Else
 					If Not Rec.Eof() Then
-						If Not Rec("TotalePagamento").Value Is DBNull.Value Then
-							TotPag = Rec("TotalePagamento").Value
-						Else
-							TotPag = 0
-						End If
+						'If Not Rec("TotalePagamento").Value Is DBNull.Value Then
+						TotPag = Rec("TotalePagamento").Value
+						'Else
+						'	TotPag = 0
+						'End If
 						Rec.Close()
 
 						Sql = "Select * From GiocatoriPagamenti Where idAnno=" & idAnno & " And idGiocatore=" & idGiocatore & " And Eliminato='N' Order By Progressivo"
-						Rec = Conn.LeggeQuery(Server.MapPath("."),  Sql, Connessione)
+						Rec = Conn.LeggeQuery(Server.MapPath("."), Sql, Connessione)
 						If TypeOf (Rec) Is String Then
 							Ritorno = Rec
 						Else
@@ -4989,17 +5055,21 @@ Public Class wsGiocatori
 				Dim Rec As Object
 				Dim Sql As String = ""
 
-				Sql = "Select Max(idUtente) + 1 From [Generale].[dbo].[Utenti]"
-				Rec = Conn.LeggeQuery(Server.MapPath("."),  Sql, Connessione)
+				If TipoDB = "SQLSERVER" Then
+					Sql = "Select IsNull(Max(idUtente),0) + 1 From [Generale].[dbo].[Utenti]"
+				Else
+					Sql = "Select Coalesce(Max(idUtente),0) + 1 From [Generale].[dbo].[Utenti]"
+				End If
+				Rec = Conn.LeggeQuery(Server.MapPath("."), Sql, Connessione)
 				If TypeOf (Rec) Is String Then
 					Ritorno = Rec
 				Else
 					Dim idUtente As String = 1
 
-					If Rec(0).Value Is DBNull.Value Then
-					Else
-						idUtente = Rec(0).Value
-					End If
+					'If Rec(0).Value Is DBNull.Value Then
+					'Else
+					idUtente = Rec(0).Value
+					'End If
 					Rec.Close()
 
 					Dim Ok As Boolean = True

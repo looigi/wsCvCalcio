@@ -27,12 +27,17 @@ Public Class wsUtentiLocali
 				Dim idEve As Integer
 
 				If Errore = "S" Then
-					Sql = "SELECT Max(Contatore)+1 FROM ErroriLogin Where idUtente=" & idUtente
-					Rec = Conn.LeggeQuery(Server.MapPath("."),   Sql, Connessione)
+					If TipoDB = "SQLSERVER" Then
+						Sql = "SELECT IsNull(Max(Contatore),0)+1 FROM ErroriLogin Where idUtente=" & idUtente
+					Else
+						Sql = "SELECT Coalesce(Max(Contatore),0)+1 FROM ErroriLogin Where idUtente=" & idUtente
+					End If
+					Rec = Conn.LeggeQuery(Server.MapPath("."), Sql, Connessione)
 					If TypeOf (Rec) Is String Then
 						Ritorno = Rec
 					Else
-						If Rec(0).Value Is DBNull.Value Then
+						'If Rec(0).Value Is DBNull.Value Then
+						If Rec(0).Value = 1 Then
 							idEve = 1
 							Sql = "Insert Into ErroriLogin Values (" & idUtente & ", " & idEve & ")"
 						Else
@@ -45,7 +50,7 @@ Public Class wsUtentiLocali
 					If idEve > 3 Then
 						' Troppi errori. Faccio scadere la login
 						Sql = "SELECT * FROM Utenti Where idUtente=" & idUtente
-						Rec = Conn.LeggeQuery(Server.MapPath("."),   Sql, Connessione)
+						Rec = Conn.LeggeQuery(Server.MapPath("."), Sql, Connessione)
 						If TypeOf (Rec) Is String Then
 							Ritorno = Rec
 						Else
@@ -97,16 +102,20 @@ Public Class wsUtentiLocali
 				Dim Sql As String = ""
 				Dim idEve As Integer
 
-				Sql = "SELECT Max(Progressivo)+1 As Quanti FROM LogAccessi"
-				Rec = Conn.LeggeQuery(Server.MapPath("."),   Sql, Connessione)
+				If TipoDB = "SQLSERVER" Then
+					Sql = "SELECT IsNull(Max(Progressivo),0)+1 As Quanti FROM LogAccessi"
+				Else
+					Sql = "SELECT Coalesce(Max(Progressivo),0)+1 As Quanti FROM LogAccessi"
+				End If
+				Rec = Conn.LeggeQuery(Server.MapPath("."), Sql, Connessione)
 				If TypeOf (Rec) Is String Then
 					Ritorno = Rec
 				Else
-					If Rec(0).Value Is DBNull.Value Then
-						idEve = 1
-					Else
-						idEve = Rec(0).Value
-					End If
+					'If Rec(0).Value Is DBNull.Value Then
+					'	idEve = 1
+					'Else
+					idEve = Rec(0).Value
+					'End If
 					Rec.Close()
 				End If
 
@@ -266,7 +275,7 @@ Public Class wsUtentiLocali
 				Try
 					Sql = "SELECT A.idAnno, A.idUtente, Utente, Cognome, Nome, " &
 						"Password, EMail, idCategoria, A.idTipologia As idTipologia, A.idSquadra, Descrizione As Squadra, PasswordScaduta, Telefono, " &
-						"B.Eliminata, B.idTipologia As idTipo2, B.idLicenza, A.idSquadra, A.AmmOriginale, C.Mail, C.PwdMail, D.AggiornaWidgets As AggiornaWidget " &
+						"COALESCE(B.Eliminata, 'N'), B.idTipologia As idTipo2, B.idLicenza, A.idSquadra, A.AmmOriginale, C.Mail, C.PwdMail, D.AggiornaWidgets As AggiornaWidget " &
 						"FROM Utenti A Left Join Squadre B On A.idSquadra = B.idSquadra " &
 						"Left Join UtentiMails C On A.idUtente = C.idUtente " &
 						"Left Join AggiornamentoWidgets D On A.idSquadra = D.idSquadra " &
@@ -295,18 +304,18 @@ Public Class wsUtentiLocali
 								'AggiornaWidgets = IIf(("" & Rec("AggiornaWidget").Value) = "S", True, False)
 								Dim Ok As Boolean = False
 
-								If Not Rec("Eliminata").Value Is DBNull.Value Then
-									If Rec("Eliminata").Value = "N" Then
-										Ok = True
-									End If
-								Else
-									Ok = True
-								End If
+								'If Not Rec("Eliminata").Value Is DBNull.Value Then
+								'	If Rec("Eliminata").Value = "N" Then
+								'		Ok = True
+								'	End If
+								'Else
+								'	Ok = True
+								'End If
 
-								If Ok = True Then
-									Dim ok2 As Boolean = True
+								'If Ok = True Then
+								Dim ok2 As Boolean = True
 
-									If Rec("idTipologia").Value = "0" Then
+									If Rec("idTipologia").Value = 0 Or Rec("idTipologia").Value = "0" Then
 										idLicenza = 1
 										idSquadra = 1
 										idAnno = 1
@@ -373,7 +382,7 @@ Public Class wsUtentiLocali
 										Squadra = "" & Rec("Squadra").Value
 										UtenteDaSalvare = Ritorno
 									End If
-								End If
+								'End If
 
 								Rec.MoveNext()
 							Loop
@@ -804,16 +813,20 @@ Public Class wsUtentiLocali
 				Dim Sql As String = ""
 				'Dim idUtente As String = ""
 
-				Sql = "SELECT Max(idUtente)+1 FROM Utenti Where idAnno=" & idAnno
-				Rec = Conn.LeggeQuery(Server.MapPath("."),   Sql, Connessione)
+				If TipoDB = "SQLSERVER" Then
+					Sql = "SELECT IsNull(Max(idUtente),0)+1 FROM Utenti Where idAnno=" & idAnno
+				Else
+					Sql = "SELECT Coalesce(Max(idUtente),0)+1 FROM Utenti Where idAnno=" & idAnno
+				End If
+				Rec = Conn.LeggeQuery(Server.MapPath("."), Sql, Connessione)
 				If TypeOf (Rec) Is String Then
 					Ritorno = Rec
 				Else
-					If Rec(0).Value Is DBNull.Value Then
-						idUtente = "1"
-					Else
-						idUtente = Rec(0).Value.ToString
-					End If
+					'If Rec(0).Value Is DBNull.Value Then
+					'	idUtente = "1"
+					'Else
+					idUtente = Rec(0).Value.ToString
+					'End If
 				End If
 				Rec.Close()
 			End If
@@ -940,7 +953,7 @@ Public Class wsUtentiLocali
 								'				")"
 								'			Ritorno2 = EsegueSql(Conn2, Sql2, Connessione2)
 
-								'			If Ritorno2 <> "*" Then
+								'			If Ritorno2<> "OK" Then
 								'				Ritorno = Ritorno2
 								'			End If
 								'		End If

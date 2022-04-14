@@ -1,6 +1,6 @@
 SELECT        Categorie, idGiocatore, Cognome, Nome, Soprannome, Ruolo, SUM(PresenzaAmichevole) AS PresenzeAmichevole, SUM(PresenzaCampionato) AS PresenzeCampionato, SUM(PresenzaAmichevole) + SUM(PresenzaCampionato) 
                          AS Totale
-FROM            (SELECT        C.Categorie, C.idGiocatore, C.Cognome, C.Nome, C.Soprannome, E.Descrizione AS Ruolo, " & IIf(TipoDB = "SQLSERVER", "Isnull(Count(*),0)", "COALESCE(Count(*),0)") & " AS PresenzaAmichevole, 0 AS PresenzaCampionato
+FROM            (SELECT        C.Categorie, C.idGiocatore, C.Cognome, C.Nome, C.Soprannome, E.Descrizione AS Ruolo, COALESCE(Count(*),0) AS PresenzaAmichevole, 0 AS PresenzaCampionato
                           FROM            dbo.Convocati AS A LEFT OUTER JOIN
                                                     dbo.Partite AS B ON A.idPartita = B.idPartita LEFT OUTER JOIN
                                                     dbo.Giocatori AS C ON A.idGiocatore = C.idGiocatore LEFT OUTER JOIN
@@ -9,7 +9,7 @@ FROM            (SELECT        C.Categorie, C.idGiocatore, C.Cognome, C.Nome, C.
                           WHERE        (D.idTipologia = 1) And Giocata = 'S'
                           GROUP BY C.Categorie, C.idGiocatore, C.Cognome, C.Nome, C.Soprannome, E.Descrizione
                           UNION ALL
-                          SELECT        C.Categorie, C.idGiocatore, C.Cognome, C.Nome, C.Soprannome, E.Descrizione AS Ruolo, 0 AS PresenzAmichevole, " & IIf(TipoDB = "SQLSERVER", "Isnull(Count(*),0)", "COALESCE(Count(*),0)") & " AS PresenzaCampionato
+                          SELECT        C.Categorie, C.idGiocatore, C.Cognome, C.Nome, C.Soprannome, E.Descrizione AS Ruolo, 0 AS PresenzAmichevole, COALESCE(Count(*),0) AS PresenzaCampionato
                           FROM            dbo.Convocati AS A LEFT OUTER JOIN
                                                    dbo.Partite AS B ON A.idPartita = B.idPartita LEFT OUTER JOIN
                                                    dbo.Giocatori AS C ON A.idGiocatore = C.idGiocatore LEFT OUTER JOIN

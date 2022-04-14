@@ -36,16 +36,20 @@ Public Class wsMetodiPagamento
 				If Not Ritorno.Contains(StringaErrore) Then
 					If idMetodoPagamento = -1 Then
 						Try
-							Sql = "SELECT Max(idMetodoPagamento)+1 FROM MetodiPagamento"
-							Rec = Conn.LeggeQuery(Server.MapPath("."),   Sql, Connessione)
+							If TipoDB = "SQLSERVER" Then
+								Sql = "SELECT isNull(Max(idMetodoPagamento),0)+1 FROM MetodiPagamento"
+							Else
+								Sql = "SELECT Coalesce(Max(idMetodoPagamento),0)+1 FROM MetodiPagamento"
+							End If
+							Rec = Conn.LeggeQuery(Server.MapPath("."), Sql, Connessione)
 							If TypeOf (Rec) Is String Then
 								Ritorno = Rec
 							Else
-								If Rec(0).Value Is DBNull.Value Then
-									idEve = 1
-								Else
-									idEve = Rec(0).Value
-								End If
+								'If Rec(0).Value Is DBNull.Value Then
+								'	idEve = 1
+								'Else
+								idEve = Rec(0).Value
+								'End If
 								Rec.Close()
 							End If
 						Catch ex As Exception

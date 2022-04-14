@@ -260,33 +260,39 @@ Public Class wsAllenamenti
 																		Dim RangeAttualeOra As Integer = ((DataAttuale.Hour) * 60 + DataAttuale.Minute)
 
 																		If RangeAttualeOra >= RangeInizioOra And RangeAttualeOra <= RangeFineOra Then
-																			Sql = "Select Max(Progressivo)+1 From Allenamenti Where idAnno=" & idAnno & " And idGiocatore=" & idGiocatore & " " &
-																				"And Datella=" & DataAllenamentiGiorno & " And Orella=" & OraAllenamentiGiorno
-																			Rec = Conn.LeggeQuery(Server.MapPath("."),  Sql, Connessione)
-																			If Rec(0).Value Is DBNull.Value Then
-																				Progressivo = 1
+																			If TipoDB = " ThenSQLSERVER" Then
+																				Sql = "Select IsNull(Max(Progressivo),0)+1 From Allenamenti Where idAnno=" & idAnno & " And idGiocatore=" & idGiocatore & " " &
+																					"And Datella=" & DataAllenamentiGiorno & " And Orella=" & OraAllenamentiGiorno
 																			Else
-																				Progressivo = Rec(0).Value
+																				Sql = "Select Coalesce(Max(Progressivo),0)+1 From Allenamenti Where idAnno=" & idAnno & " And idGiocatore=" & idGiocatore & " " &
+																					"And Datella=" & DataAllenamentiGiorno & " And Orella=" & OraAllenamentiGiorno
 																			End If
+
+																			Rec = Conn.LeggeQuery(Server.MapPath("."), Sql, Connessione)
+																			'If Rec(0).Value Is DBNull.Value Then
+																			'		Progressivo = 1
+																			'	Else
+																			Progressivo = Rec(0).Value
+																			'	End If
 
 																			Sql = "Insert Into Allenamenti Values (" &
 																				" " & idAnno & ", " &
-																				" " & idCategoria & ", " &
-																				"'" & DataAllenamentiGiorno & "', " &
-																				"'" & OraAllenamentiGiorno & "', " &
-																				" " & Progressivo & ", " &
-																				" " & idGiocatore & ", " &
-																				"'" & OraAllenamentiFine & "', " &
-																				" " & idLettore & " " &
-																				")"
+																					" " & idCategoria & ", " &
+																					"'" & DataAllenamentiGiorno & "', " &
+																					"'" & OraAllenamentiGiorno & "', " &
+																					" " & Progressivo & ", " &
+																					" " & idGiocatore & ", " &
+																					"'" & OraAllenamentiFine & "', " &
+																					" " & idLettore & " " &
+																					")"
 																			Ritorno = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
-																			If Ritorno.Contains(StringaErrore) Then
-																				Ritorno = "12" ' "Errore nella insert"
-																				Sql = "rollback"
-																				Dim Ritorno3 As String = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
-																			End If
-																		Else
-																			Ritorno = "11" ' StringaErrore & " Orario attuale non in fascia con la categoria del giocatore"
+																				If Ritorno.Contains(StringaErrore) Then
+																					Ritorno = "12" ' "Errore nella insert"
+																					Sql = "rollback"
+																					Dim Ritorno3 As String = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
+																				End If
+																			Else
+																				Ritorno = "11" ' StringaErrore & " Orario attuale non in fascia con la categoria del giocatore"
 																		End If
 																	End If
 																End If

@@ -56,6 +56,7 @@ Public Class GestioneFilesDirectory
         If TipoDB <> "SQLSERVER" Then
             NomeFile = NomeFile.Replace("\", "/")
             NomeFile = NomeFile.Replace("//", "/")
+            NomeFile = NomeFile.Replace("/\", "/")
         End If
 
         If File.Exists(NomeFile) Then
@@ -98,6 +99,7 @@ Public Class GestioneFilesDirectory
         If TipoDB <> "SQLSERVER" Then
             NomeFinale = NomeFinale.Replace("\", "/")
             NomeFinale = NomeFinale.Replace("//", "/")
+            NomeFinale = NomeFinale.Replace("/\", "/")
         End If
 
         Do While File.Exists(NomeFinale) = True
@@ -115,6 +117,7 @@ Public Class GestioneFilesDirectory
         If TipoDB <> "SQLSERVER" Then
             NomeFile = NomeFile.Replace("\", "/")
             NomeFile = NomeFile.Replace("//", "/")
+            NomeFile = NomeFile.Replace("/\", "/")
         End If
 
         If File.Exists(NomeFile) Then
@@ -142,6 +145,7 @@ Public Class GestioneFilesDirectory
         If TipoDB <> "SQLSERVER" Then
             NomeFile = NomeFile.Replace("\", "/")
             NomeFile = NomeFile.Replace("//", "/")
+            NomeFile = NomeFile.Replace("/\", "/")
         End If
 
         If File.Exists(NomeFile) Then
@@ -158,6 +162,7 @@ Public Class GestioneFilesDirectory
         If TipoDB <> "SQLSERVER" Then
             Filetto = Filetto.Replace("\", "/")
             Filetto = Filetto.Replace("//", "/")
+            Filetto = Filetto.Replace("/\", "/")
         End If
 
         If File.Exists(Filetto) Then
@@ -171,9 +176,11 @@ Public Class GestioneFilesDirectory
         If TipoDB <> "SQLSERVER" Then
             NomeFileOrigine = NomeFileOrigine.Replace("\", "/")
             NomeFileOrigine = NomeFileOrigine.Replace("//", "/")
+            NomeFileOrigine = NomeFileOrigine.Replace("/\", "/")
 
             NomeFileDestinazione = NomeFileDestinazione.Replace("\", "/")
             NomeFileDestinazione = NomeFileDestinazione.Replace("//", "/")
+            NomeFileDestinazione = NomeFileDestinazione.Replace("/\", "/")
         End If
 
         If File.Exists(NomeFileOrigine) Then
@@ -222,9 +229,17 @@ Public Class GestioneFilesDirectory
 
     Public Function TornaNomeFileDaPath(Percorso As String) As String
         Dim Ritorno As String = ""
+        Dim Barra As String = "\"
+
+        If TipoDB <> "SQLSERVER" Then
+            Percorso = Percorso.Replace("\", "/")
+            Percorso = Percorso.Replace("//", "/")
+            Percorso = Percorso.Replace("/\", "/")
+            Barra = "/"
+        End If
 
         For i As Integer = Percorso.Length To 1 Step -1
-            If Mid(Percorso, i, 1) = "/" Or Mid(Percorso, i, 1) = barra Then
+            If Mid(Percorso, i, 1) = Barra Then
                 Ritorno = Mid(Percorso, i + 1, Percorso.Length)
                 Exit For
             End If
@@ -235,6 +250,14 @@ Public Class GestioneFilesDirectory
 
     Public Function TornaEstensioneFileDaPath(Percorso As String) As String
         Dim Ritorno As String = ""
+        Dim Barra As String = "\"
+
+        If TipoDB <> "SQLSERVER" Then
+            Percorso = Percorso.Replace("\", "/")
+            Percorso = Percorso.Replace("//", "/")
+            Percorso = Percorso.Replace("/\", "/")
+            Barra = "/"
+        End If
 
         For i As Integer = Percorso.Length To 1 Step -1
             If Mid(Percorso, i, 1) = "." Then
@@ -251,9 +274,17 @@ Public Class GestioneFilesDirectory
 
     Public Function TornaNomeDirectoryDaPath(Percorso As String) As String
         Dim Ritorno As String = ""
+        Dim Barra As String = "\"
+
+        If TipoDB <> "SQLSERVER" Then
+            Percorso = Percorso.Replace("\", "/")
+            Percorso = Percorso.Replace("//", "/")
+            Percorso = Percorso.Replace("/\", "/")
+            Barra = "/"
+        End If
 
         For i As Integer = Percorso.Length To 1 Step -1
-            If Mid(Percorso, i, 1) = "/" Or Mid(Percorso, i, 1) = barra Then
+            If Mid(Percorso, i, 1) = Barra Then
                 Ritorno = Mid(Percorso, 1, i - 1)
                 Exit For
             End If
@@ -264,18 +295,16 @@ Public Class GestioneFilesDirectory
 
     Public Function CreaAggiornaFile(NomeFile As String, Cosa As String) As String
         Dim Ritorno As String = ""
+        Dim Barra As String = "\"
+
+        If TipoDB <> "SQLSERVER" Then
+            NomeFile = NomeFile.Replace("\", "/")
+            NomeFile = NomeFile.Replace("//", "/")
+            NomeFile = NomeFile.Replace("/\", "/")
+            Barra = "/"
+        End If
 
         Try
-            Dim path As String
-
-            If Percorso <> "" Then
-                path = Percorso & barra & NomeFile
-            Else
-                path = NomeFile
-            End If
-
-            path = path.Replace(barra & barra, barra)
-
             ' Create or overwrite the file.
             'Dim fs As FileStream = File.Create(path)
 
@@ -285,7 +314,7 @@ Public Class GestioneFilesDirectory
             'fs.Close()
 
             ' Using fs As FileStream = File.Create(path)
-            Using fs As New FileStream(path, IO.FileMode.Create, IO.FileAccess.ReadWrite, FileShare.ReadWrite)
+            Using fs As New FileStream(NomeFile, IO.FileMode.Create, IO.FileAccess.ReadWrite, FileShare.ReadWrite)
                 Dim info As Byte() = New UTF8Encoding(True).GetBytes(Cosa)
                 fs.Write(info, 0, info.Length)
                 fs.Flush()
@@ -310,6 +339,15 @@ Public Class GestioneFilesDirectory
     Private objReader As StreamReader
 
     Public Sub ApreFilePerLettura(NomeFile As String)
+        Dim Barra As String = "\"
+
+        If TipoDB <> "SQLSERVER" Then
+            NomeFile = NomeFile.Replace("\", "/")
+            NomeFile = NomeFile.Replace("//", "/")
+            NomeFile = NomeFile.Replace("/\", "/")
+            Barra = "/"
+        End If
+
         objReader = New StreamReader(NomeFile)
     End Sub
 
@@ -325,6 +363,7 @@ Public Class GestioneFilesDirectory
         If TipoDB <> "SQLSERVER" Then
             NomeFile = NomeFile.Replace("\", "/")
             NomeFile = NomeFile.Replace("//", "/")
+            NomeFile = NomeFile.Replace("/\", "/")
         End If
 
         If File.Exists(NomeFile) Then
@@ -348,6 +387,7 @@ Public Class GestioneFilesDirectory
         If TipoDB <> "SQLSERVER" Then
             NomeFile = NomeFile.Replace("\", "/")
             NomeFile = NomeFile.Replace("//", "/")
+            NomeFile = NomeFile.Replace("/\", "/")
         End If
 
         If File.Exists(NomeFile) Then
@@ -386,6 +426,7 @@ Public Class GestioneFilesDirectory
         If TipoDB <> "SQLSERVER" Then
             Percorso = Percorso.Replace("\", "/")
             Percorso = Percorso.Replace("//", "/")
+            Percorso = Percorso.Replace("/\", "/")
         End If
 
         If Directory.Exists(Percorso) Then
@@ -436,6 +477,7 @@ Public Class GestioneFilesDirectory
         If TipoDB <> "SQLSERVER" Then
             Percorso = Percorso.Replace("\", "/")
             Percorso = Percorso.Replace("//", "/")
+            Percorso = Percorso.Replace("/\", "/")
         End If
 
         If Directory.Exists(Percorso) Then
@@ -477,6 +519,7 @@ Public Class GestioneFilesDirectory
         If TipoDB <> "SQLSERVER" Then
             Ritorno = Ritorno.Replace("\", "/")
             Ritorno = Ritorno.Replace("//", "/")
+            Ritorno = Ritorno.Replace("/\", "/")
 
             barra = "/"
         Else
@@ -560,6 +603,7 @@ Public Class GestioneFilesDirectory
         If TipoDB <> "SQLSERVER" Then
             NomeFile = NomeFile.Replace("\", "/")
             NomeFile = NomeFile.Replace("//", "/")
+            NomeFile = NomeFile.Replace("/\", "/")
         End If
 
         If File.Exists(NomeFile) Then
@@ -574,6 +618,7 @@ Public Class GestioneFilesDirectory
         If TipoDB <> "SQLSERVER" Then
             NomeFile = NomeFile.Replace("\", "/")
             NomeFile = NomeFile.Replace("//", "/")
+            NomeFile = NomeFile.Replace("/\", "/")
         End If
 
         If File.Exists(NomeFile) Then
@@ -588,6 +633,7 @@ Public Class GestioneFilesDirectory
         If TipoDB <> "SQLSERVER" Then
             NomeFile = NomeFile.Replace("\", "/")
             NomeFile = NomeFile.Replace("//", "/")
+            NomeFile = NomeFile.Replace("/\", "/")
         End If
 
         If File.Exists(NomeFile) Then
@@ -604,6 +650,7 @@ Public Class GestioneFilesDirectory
         If TipoDB <> "SQLSERVER" Then
             Percorso = Percorso.Replace("\", "/")
             Percorso = Percorso.Replace("//", "/")
+            Percorso = Percorso.Replace("/\", "/")
         End If
 
         outputFile = New StreamWriter(Percorso, True)

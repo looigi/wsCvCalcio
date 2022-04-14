@@ -25,18 +25,18 @@ Public Class wsNFC
 				Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
 			Else
 				Dim Rec As Object
-				Dim Sql As String = "Select Max(Progressivo)+1 From TessereNFC Where NumeroTessera='" & NumeroTessera & "'" '  And idGiocatore=" & idGiocatore
+				Dim Sql As String = "Select " & IIf(TipoDB = "SQLSERVER", "IsNull(Max(Progressivo),0)+1", "Coalesce(Max(Progressivo),0)+1") & " From TessereNFC Where NumeroTessera='" & NumeroTessera & "'" '  And idGiocatore=" & idGiocatore
 				Dim Progressivo As Integer = 0
 
 				Rec = Conn.LeggeQuery(Server.MapPath("."),   Sql, Connessione)
 				If TypeOf (Rec) Is String Then
 					Ritorno = Rec
 				Else
-					If Rec(0).Value Is DBNull.Value Then
-						Progressivo = 1
-					Else
-						Progressivo = Rec(0).Value
-					End If
+					'If Rec(0).Value Is DBNull.Value Then
+					'	Progressivo = 1
+					'Else
+					Progressivo = Rec(0).Value
+					'End If
 				End If
 
 				Dim sImporto As String = Importo
@@ -78,18 +78,18 @@ Public Class wsNFC
 				Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
 			Else
 				Dim Rec As Object
-				Dim Sql As String = "Select Max(idLettore)+1 From LettoriNFC"
+				Dim Sql As String = "Select " & IIf(TipoDB = "SQLSERVER", "IsNull(Max(idLettore),0)+1", "Coalesce(Max(idLettore),0)+1") & " From LettoriNFC"
 				Dim Progressivo As Integer = 0
 
 				Rec = Conn.LeggeQuery(Server.MapPath("."),   Sql, Connessione)
 				If TypeOf (Rec) Is String Then
 					Ritorno = Rec
 				Else
-					If Rec(0).Value Is DBNull.Value Then
-						Progressivo = 1
-					Else
-						Progressivo = Rec(0).Value
-					End If
+					'If Rec(0).Value Is DBNull.Value Then
+					'	Progressivo = 1
+					'Else
+					Progressivo = Rec(0).Value
+					'End If
 				End If
 
 				Sql = "Insert Into LettoriNFC Values (" &

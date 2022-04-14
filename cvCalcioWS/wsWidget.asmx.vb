@@ -407,22 +407,22 @@ Public Class wsWidget
 				Dim idCategorie As New List(Of String)
 				Dim Ok As Boolean = True
 
-				Dim Sql As String = "Delete From WidgetIscritti1"
+				Dim Sql As String = "Delete From widgetiscritti1"
 				Ritorno = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
 
 				Dim Tutti As Integer = 0
-				Sql = "Insert Into WidgetIscritti1 Select " & IIf(TipoDB = "SQLSERVER", "Isnull(Count(*),0)", "COALESCE(Count(*),0)") & " From Giocatori Where Eliminato='N'" '  And RapportoCompleto='S'"
-				Ritorno = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
+				Sql = "Insert Into widgetiscritti1 Select " & IIf(TipoDB = "SQLSERVER", "Isnull(Count(*),0)", "COALESCE(Count(*),0)") & " From gGiocatori Where Eliminato='N'" '  And RapportoCompleto='S'"
+				Ritorno = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione, False)
 
 				If Ok Then
-					Sql = "Delete From WidgetIscritti2"
+					Sql = "Delete From widgetiscritti2"
 					Ritorno = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
 
-					Sql = "Insert Into WidgetIscritti2 Select YEAR(" & IIf(TipoDB = "SQLSERVER", "CONVERT(Date, DataDiNascita)", "CONVERT(DataDiNascita, Date)") & ") As Anno, " & IIf(TipoDB = "SQLSERVER", "Isnull(Count(*),0)", "COALESCE(Count(*),0)") & " As Quanti From Giocatori " &
+					Sql = "Insert Into widgetiscritti2 Select YEAR(" & IIf(TipoDB = "SQLSERVER", "CONVERT(Date, DataDiNascita)", "CONVERT(DataDiNascita, Date)") & ") As Anno, " & IIf(TipoDB = "SQLSERVER", "Isnull(Count(*),0)", "COALESCE(Count(*),0)") & " As Quanti From giocatori " &
 						"Where Eliminato = 'N' " & ' And RapportoCompleto='S' " &
 						"Group By YEAR(" & IIf(TipoDB = "SQLSERVER", "CONVERT(date, DataDiNascita)", "CONVERT(DataDiNascita, date)") & ") " &
 						"Order By 1"
-					Ritorno = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
+					Ritorno = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione, False)
 				End If
 			End If
 
@@ -547,7 +547,7 @@ Public Class wsWidget
 
 				Dim Totalone As String = "0"
 
-				Sql = "Select Sum(DaPagare) - Sum(Sconto) From ( " &
+				Sql = "Select " & IIf(TipoDB = "SQLSERVER", "IsNull(Sum(DaPagare),0) - IsNull(Sum(Sconto),0)", "Coalesce(Sum(DaPagare),0) - Coalesce(Sum(Sconto),0)") & " From ( " &
 					"Select Cognome, Nome, DataDiNascita, Descrizione, DaPagare, Sconto, TotalePagato, (DaPagare - Sconto) - TotalePagato As Differenza From (  " &
 					"Select Cognome, Nome, DataDiNascita, C.Descrizione, " & IIf(TipoDB = "SQLSERVER", "IsNull(C.Importo, 0)", "COALESCE(C.Importo, 0)") & " As DaPagare, " & IIf(TipoDB = "SQLSERVER", "IsNull(B.Sconto, 0)", "COALESCE(B.Sconto, 0)") & " As Sconto, " &
 					"(Select " & IIf(TipoDB = "SQLSERVER", "IsNull(Sum(Pagamento),0)", "COALESCE(Sum(Pagamento),0)") & " From GiocatoriPagamenti Where idGiocatore=A.idGiocatore And Eliminato='N' And idTipoPagamento = 1 And Validato='S') As TotalePagato " &
@@ -561,11 +561,11 @@ Public Class wsWidget
 					Ritorno = Rec
 					Ok = False
 				Else
-					If Rec(0).Value Is DBNull.Value Then
-						Totalone = 0
-					Else
-						Totalone = Rec(0).Value
-					End If
+					'If Rec(0).Value Is DBNull.Value Then
+					'	Totalone = 0
+					'Else
+					Totalone = Rec(0).Value
+					'End If
 				End If
 
 				Sql = "Insert Into WidgetTotaleQuote Values (" & Totalone.Replace(",", ".") & ")"
@@ -601,18 +601,22 @@ Public Class wsWidget
 								Dim TotalePagamento As Single = Val(s) - Val(s2)
 								Dim Pagato As Single = 0
 
-								Sql = "Select Sum(Pagamento) From GiocatoriPagamenti Where idGiocatore=" & Rec2("idGiocatore").Value & " And Eliminato='N' And idTipoPagamento=1 And Validato='S'"
+								If TipoDB = "SQLSERVER" Then
+									Sql = "Select IsNull(Sum(Pagamento),0) From GiocatoriPagamenti Where idGiocatore=" & Rec2("idGiocatore").Value & " And Eliminato='N' And idTipoPagamento=1 And Validato='S'"
+								Else
+									Sql = "Select Coalesce(Sum(Pagamento),0) From GiocatoriPagamenti Where idGiocatore=" & Rec2("idGiocatore").Value & " And Eliminato='N' And idTipoPagamento=1 And Validato='S'"
+								End If
 								Rec3 = Conn.LeggeQuery(Server.MapPath("."), Sql, Connessione)
 								If TypeOf (Rec3) Is String Then
 									Ritorno = Rec3
 									Ok = False
 								Else
-									If Rec3(0).Value Is DBNull.Value Then
-										Pagato = 0
-									Else
-										Dim p As String = ("" & Rec3(0).Value).replace(",", ".")
-										Pagato = Val(p)
-									End If
+									'If Rec3(0).Value Is DBNull.Value Then
+									'	Pagato = 0
+									'Else
+									Dim p As String = ("" & Rec3(0).Value).replace(",", ".")
+									Pagato = Val(p)
+									'End If
 									Rec3.Close()
 								End If
 								Differenza += (TotalePagamento - Pagato)
@@ -873,11 +877,11 @@ Public Class wsWidget
 					Ritorno = Rec
 					Return Ritorno
 				Else
-					If Rec(0).Value Is DBNull.Value Then
-						SenzaQuota = 0
-					Else
-						SenzaQuota = "" & Rec(0).Value
-					End If
+					'If Rec(0).Value Is DBNull.Value Then
+					'	SenzaQuota = 0
+					'Else
+					SenzaQuota = "" & Rec(0).Value
+					'End If
 					Rec.Close()
 				End If
 
@@ -892,11 +896,11 @@ Public Class wsWidget
 					Ritorno = Rec
 					Return Ritorno
 				Else
-					If Rec(0).Value Is DBNull.Value Then
-						CertificatoScadutoAssente = 0
-					Else
-						CertificatoScadutoAssente = "" & Rec(0).Value
-					End If
+					'If Rec(0).Value Is DBNull.Value Then
+					'	CertificatoScadutoAssente = 0
+					'Else
+					CertificatoScadutoAssente = "" & Rec(0).Value
+					'End If
 					Rec.Close()
 				End If
 

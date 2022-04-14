@@ -27,16 +27,20 @@ Public Class wsAllenatori
 				Dim Sql As String = ""
 				'Dim idUtente As String = ""
 
-				Sql = "SELECT Max(idAllenatore)+1 FROM Allenatori Where idAnno=" & idAnno
+				If TipoDB = "SQLSERVER" Then
+					Sql = "SELECT IsNull(Max(idAllenatore),0)+1 FROM Allenatori Where idAnno=" & idAnno
+				Else
+					Sql = "SELECT Coalesce(Max(idAllenatore),0)+1 FROM Allenatori Where idAnno=" & idAnno
+				End If
 				Rec = Conn.LeggeQuery(Server.MapPath("."), Sql, Connessione)
 				If TypeOf (Rec) Is String Then
 					Ritorno = Rec
 				Else
-					If Rec(0).Value Is DBNull.Value Then
-						idAllenatore = "1"
-					Else
-						idAllenatore = Rec(0).Value.ToString
-					End If
+					'If Rec(0).Value Is DBNull.Value Then
+					'	idAllenatore = "1"
+					'Else
+					idAllenatore = Rec(0).Value.ToString
+					'End If
 				End If
 				Rec.Close()
 			End If
@@ -71,16 +75,20 @@ Public Class wsAllenatori
 				If Not Ritorno.Contains(StringaErrore) Then
 					If idAllenatore = "-1" Then
 						Try
-							Sql = "SELECT Max(idAllenatore)+1 FROM Allenatori Where idAnno=" & idAnno
+							If TipoDB = "SQLSERVER" Then
+								Sql = "SELECT Isnull(Max(idAllenatore),0)+1 FROM Allenatori Where idAnno=" & idAnno
+							Else
+								Sql = "SELECT Coalesce(Max(idAllenatore),0)+1 FROM Allenatori Where idAnno=" & idAnno
+							End If
 							Rec = Conn.LeggeQuery(Server.MapPath("."), Sql, Connessione)
 							If TypeOf (Rec) Is String Then
 								Ritorno = Rec
 							Else
-								If Rec(0).Value Is DBNull.Value Then
-									idAll = 1
-								Else
-									idAll = Rec(0).Value
-								End If
+								'If Rec(0).Value Is DBNull.Value Then
+								'	idAll = 1
+								'Else
+								idAll = Rec(0).Value
+								'End If
 								Rec.Close()
 							End If
 						Catch ex As Exception
@@ -126,16 +134,20 @@ Public Class wsAllenatori
 									Dim idGenitore As Integer = -1
 
 									If Tendina = "N" Then
-										Sql = "Select Max(idUtente) + 1 From [Generale].[dbo].[Utenti] Where idAnno=" & idAnno
+										If TipoDB = "SQLSERVER" Then
+											Sql = "Select IsNull(Max(idUtente),0) + 1 From [Generale].[dbo].[Utenti] Where idAnno=" & idAnno
+										Else
+											Sql = "Select Coalesce(Max(idUtente),0) + 1 From [Generale].[dbo].[Utenti] Where idAnno=" & idAnno
+										End If
 										Rec = Conn.LeggeQuery(Server.MapPath("."), Sql, Connessione)
 										If TypeOf (Rec) Is String Then
 											Ritorno = Rec
 										Else
-											If Rec(0).Value Is DBNull.Value Then
-												idGenitore = 1
-											Else
-												idGenitore = Rec(0).Value
-											End If
+											'If Rec(0).Value Is DBNull.Value Then
+											'	idGenitore = 1
+											'Else
+											idGenitore = Rec(0).Value
+											'End If
 										End If
 									Else
 										Sql = "Select * From [Generale].[dbo].[Utenti] Where EMail='" & EMail.Replace("'", "''") & "'"

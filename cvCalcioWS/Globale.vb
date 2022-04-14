@@ -8,11 +8,7 @@ Module Globale
 	Public effettuaLog As Boolean = True
 	Public effettuaLogMail As Boolean = False
 
-	Public nomeFileLogGenerale As String = ""
-	Public listaLog As New List(Of String)
-	Public timerLog As Timers.Timer = Nothing
-
-	Public nomeFileLogmail As String = ""
+	Public nomeFileLogMail As String = ""
 
 	Public quanteConversioni As Integer = 0
 
@@ -289,10 +285,16 @@ Module Globale
 				End If
 			Next
 			If Ok2 Then
+				Dim Barra As String = "\"
+
+				If TipoDB <> "SQLSERVER" Then
+					Barra = "/"
+				End If
+
 				Dim Dimensioni As Long = FileLen(Filetti(i))
 				Dim DataUltimaModifica As String = gf.TornaDataDiUltimaModifica(Filetti(i))
-				Dim NomeUrl As String = IndirizzoURL & Filetti(i).Replace(Percorso & "\", "").Replace("\", "/")
-				Dim NomeFile As String = gf.TornaNomeFileDaPath(NomeUrl.Replace("/", "\"))
+				Dim NomeUrl As String = Filetti(i).Replace(Percorso & Barra, "")
+				Dim NomeFile As String = gf.TornaNomeFileDaPath(NomeUrl)
 
 				Ritorno &= NomeUrl & ";" & NomeFile & ";" & Dimensioni.ToString & ";" & DataUltimaModifica & ";" & Codice & "§"
 			End If
@@ -308,19 +310,29 @@ Module Globale
 	Public Function DecriptaImmagine(MP As String, Nome As String) As String
 		Dim Ritorno As String = ""
 		Dim gf As New GestioneFilesDirectory
+		Dim Barra As String = "\"
+		Dim ControBarra As String = "/"
+
+		If TipoDB <> "SQLSERVER" Then Barra = "/"
 
 		Dim tutto As String = gf.LeggeFileIntero(MP & "\Impostazioni\PathAllegati.txt")
 		Dim campi() As String = tutto.Split(";")
 		Dim pathFisico As String = campi(0).Replace(vbCrLf, "")
-		Dim pathUrl As String = campi(2).Replace(vbCrLf, "")
-		If Strings.Right(pathFisico, 1) <> "\" Then pathFisico &= "\"
-		If Strings.Right(pathUrl, 1) <> "/" Then pathUrl &= "/"
-		pathFisico = pathFisico.Replace("Allegati", "CalcioImages")
+		Dim pathUrl As String = campi(5).Replace(vbCrLf, "")
+
+		If Strings.Right(pathFisico, 1) <> Barra Then pathFisico &= Barra
+		If Strings.Right(pathUrl, 1) <> ControBarra Then pathUrl &= ControBarra
+		'If TipoDB = "SQLSERVER" Then
+		'	pathFisico = pathFisico.Replace("Allegati", "CalcioImages")
+		'Else
+		'	pathUrl = pathUrl.Replace("Multimedia/allegati", "Multimedia/multimedia")
+		'End If
 
 		Dim pathLetturaFile1 As String = Nome.Replace(pathUrl, "")
-		pathLetturaFile1 = pathLetturaFile1.Replace("/", "\")
-		pathLetturaFile1 = pathFisico & pathLetturaFile1
-		pathLetturaFile1 = pathLetturaFile1.Replace("\\", "\")
+
+		pathLetturaFile1 = pathLetturaFile1.Replace(ControBarra, Barra)
+		'pathLetturaFile1 = pathFisico & pathLetturaFile1
+		pathLetturaFile1 = pathLetturaFile1.Replace(Barra & Barra, Barra)
 		pathLetturaFile1 = pathLetturaFile1.Replace(" ", "_")
 
 		Dim pathAppoggio As String = pathFisico & "Appoggio"
@@ -331,13 +343,19 @@ Module Globale
 			r &= Mid(stringaRandom, p, 1)
 		Next
 		Dim NomeFile As String = r & "_" & Now.Year & Format(Now.Month, "00") & Format(Now.Day, "00") & Format(Now.Hour, "00") & Format(Now.Minute & "00") & Format(Now.Second, "00") & ".jpg"
-		Dim pathScritturaFile1 As String = pathAppoggio & "\" & NomeFile
-		Dim pathUrl1 As String = pathUrl & "Appoggio/" & NomeFile
+		Dim pathScritturaFile1 As String = pathAppoggio & Barra & NomeFile
+		Dim pathUrl1 As String = pathUrl & "Appoggio" & Barra & NomeFile
 
 		Dim PathBaseImmScon As String = pathUrl & "Sconosciuto.png"
 
 		Dim c As New CriptaFiles
-		'Return pathLetturaFile1
+
+		If TipoDB <> "SQLSERVER" Then
+			pathLetturaFile1 = pathLetturaFile1.Replace("Multimedia/allegati", "Multimedia/multimedia")
+			pathScritturaFile1 = pathScritturaFile1.Replace("Multimedia/allegati", "Multimedia/multimedia")
+		End If
+
+		'Return pathLetturaFile1 & " - " & pathScritturaFile1 & " - " & pathUrl1 & PathBaseImmScon
 
 		If ControllaEsistenzaFile(pathLetturaFile1) Then
 			c.DecryptFile(CryptPasswordString, pathLetturaFile1, pathScritturaFile1)
@@ -360,21 +378,36 @@ Module Globale
 		Dim Ok As Boolean = True
 		Dim Pagina As StringBuilder = New StringBuilder
 		Dim gf As New GestioneFilesDirectory
+		Dim Barra As String = "\"
+
+		If TipoDB <> "SQLSERVER" Then
+			Barra = "/"
+		End If
 
 		Dim paths As String = gf.LeggeFileIntero(MP & "\Impostazioni\PathAllegati.txt")
 		Dim P() As String = paths.Split(";")
-		If Strings.Right(P(0), 1) <> "\" Then
-			P(0) &= "\"
+		P(0) = P(0).Trim.Replace(vbCrLf, "")
+		If Strings.Right(P(0), 1) <> Barra Then
+			P(0) &= Barra
 		End If
 		Dim pathAllegati As String = P(0).Replace(vbCrLf, "")
-		If Strings.Right(P(2), 1) <> "/" Then
-			P(2) &= "/"
-		End If
-		Dim pathMultimedia As String = P(2).Replace(vbCrLf, "")
 
-		Dim PathBaseImmagini As String = pathMultimedia ' "http://loppa.duckdns.org:90/MultiMedia" ' "http://looigi.no-ip.biz:90/CVCalcio/App_Themes/Standard/Images"
-		Dim PathBaseMultimedia As String = pathMultimedia.Replace("Allegati", "Multimedia") ' "http://loppa.duckdns.org:90/MultiMedia" ' "http://looigi.no-ip.biz:90/CVCalcio/App_Themes/Standard/Images"
-		Dim PathBaseImmScon As String = pathMultimedia & "Sconosciuto.png" ' "http://looigi.no-ip.biz:90/CVCalcio/App_Themes/Standard/Images/Sconosciuto.png"
+		P(2) = P(2).Trim.Replace(vbCrLf, "")
+		If Strings.Right(P(2), 1) <> Barra Then
+			P(2) &= Barra
+		End If
+
+		Dim pathMultimedia As String = P(0).Replace(vbCrLf, "")
+
+		P(4) = P(4).Trim.Replace(vbCrLf, "")
+		If Strings.Right(P(4), 1) <> Barra Then
+			P(4) &= Barra
+		End If
+		Dim urlAllegati As String = P(4)
+
+		Dim PathBaseImmagini As String = pathMultimedia
+		Dim PathBaseMultimedia As String = pathMultimedia.Replace("Allegati", "Multimedia")
+		Dim PathBaseImmScon As String = pathMultimedia & "Sconosciuto.png"
 		Dim PathLog As String = MP & "\Log\Pdf.txt"
 		Dim Ritorno As String = "*"
 
@@ -395,18 +428,26 @@ Module Globale
 		gf.EliminaFileFisico(NomeFileFinale)
 		gf.EliminaFileFisico(NomeFileFinalePDF)
 
-		gf.ApreFileDiTestoPerScrittura(NomeFileFinalePDF)
-		gf.ScriveTestoSuFileAperto("ppp")
-		gf.ChiudeFileDiTestoDopoScrittura()
+		'gf.ApreFileDiTestoPerScrittura(NomeFileFinalePDF)
+		'gf.ScriveTestoSuFileAperto("ppp")
+		'gf.ChiudeFileDiTestoDopoScrittura()
 
-		' Multimedia
+		If TipoDB <> "SQLSERVER" Then
+			PathPerMultimedia = PathPerMultimedia.Replace("\", "/")
+			PathPerMultimedia = PathPerMultimedia.Replace("//", "/")
+
+			PathBaseImmagini = PathBaseImmagini.Replace("Multimedia/allegati", "Multimedia/multimedia")
+		End If
+
+		'Return PathBaseImmagini
+
 		gf.ScansionaDirectorySingola(PathPerMultimedia)
 		Dim Multimedia() As String = gf.RitornaFilesRilevati
 		Dim qMultimedia As Integer = gf.RitornaQuantiFilesRilevati
 		Dim mmu As String = ""
 		For i As Integer = 1 To qMultimedia
 			Dim este As String = gf.TornaEstensioneFileDaPath(Multimedia(i)).ToUpper.Trim.Replace(".", "")
-			Dim PathEsternoMM As String = Multimedia(i).Replace(pathAllegati, pathMultimedia).Replace("Multimedia", "Allegati").Replace("\", "/")
+			Dim PathEsternoMM As String = Multimedia(i).Replace(pathAllegati, pathMultimedia) ' .Replace("Multimedia", "Allegati").Replace("\", "/")
 			Dim Nome As String = gf.TornaNomeFileDaPath(Multimedia(i))
 			Dim e As String = gf.TornaEstensioneFileDaPath(Nome)
 
@@ -414,6 +455,7 @@ Module Globale
 			If Nome.Length > 14 Then
 				Nome = Mid(Nome, 1, 6) & "..." & Mid(Nome, Nome.Length - 6, 6)
 			End If
+
 			If este = "JPG" Or este = "JPEG" Or este = "JFIF" Or este = "BMP" Or este = "GIF" Or este = "PNG" Then
 				' Immagine
 				mmu &= "<div class=""multimedia""><a href=""" & PathEsternoMM & """ target=""_blank""><img src=""" & PathEsternoMM & """ width=""100%"" height=""100%""><br /><span class=""testo nero"" style=""font-size: 10px; white-space: nowrap;"">" & Nome & "</span></a></div>" & vbCrLf
@@ -493,13 +535,15 @@ Module Globale
 			"Partite.idUnioneCalendario, Partite.DataOra, Partite.Giocata, Partite.OraConv, Risultati.Risultato, Risultati.Note, " &
 			"RisultatiAggiuntivi.RisGiochetti, RisultatiAggiuntivi.GoalAvvPrimoTempo, RisultatiAggiuntivi.GoalAvvSecondoTempo, " &
 			"RisultatiAggiuntivi.GoalAvvTerzoTempo, SquadreAvversarie.Descrizione AS Avversario, CampiAvversari.Descrizione AS CampoA, " &
-			"TipologiePartite.Descrizione AS Tipologia, Allenatori.Cognome+' '+Allenatori.Nome AS Allenatore, Categorie.AnnoCategoria + '-' + Categorie.Descrizione As Categoria, " &
+			"TipologiePartite.Descrizione AS Tipologia, " & IIf(TipoDB = "SQLSERVER", "Allenatori.Cognome+' '+Allenatori.Nome", "Concat(Allenatori.Cognome,' ',Allenatori.Nome)") & " AS Allenatore, " &
+			" " & IIf(TipoDB = "SQLSERVER", "Categorie.AnnoCategoria + '-' + Categorie.Descrizione", "Concat(Categorie.AnnoCategoria, '-', Categorie.Descrizione)") & " As Categoria, " &
 			"CampiAvversari.Indirizzo as CampoIndirizzo, Partite.Casa, Allenatori.idAllenatore, CampiEsterni.Descrizione As CampoEsterno, " &
 			"RisultatiAggiuntivi.Tempo1Tempo, RisultatiAggiuntivi.Tempo2Tempo, RisultatiAggiuntivi.Tempo3Tempo, " &
 			"CoordinatePartite.Lat, CoordinatePartite.Lon, TempiGoalAvversari.TempiPrimoTempo, TempiGoalAvversari.TempiSecondoTempo, TempiGoalAvversari.TempiTerzoTempo, " &
-			"MeteoPartite.Tempo, MeteoPartite.Gradi, MeteoPartite.Umidita, MeteoPartite.Pressione, MeteoPartite.Icona, ArbitriPartite.idArbitro, Arbitri.Cognome + ' ' + Arbitri.Nome As Arbitro, " &
+			"MeteoPartite.Tempo, MeteoPartite.Gradi, MeteoPartite.Umidita, MeteoPartite.Pressione, MeteoPartite.Icona, ArbitriPartite.idArbitro, " &
+			" " & IIf(TipoDB = "SQLSERVER", "Arbitri.Cognome + ' ' + Arbitri.Nome", "Concat(Arbitri.Cognome, ' ', Arbitri.Nome)") & " As Arbitro, " &
 			"Partite.RisultatoATempi, Partite.DataOraAppuntamento, Partite.LuogoAppuntamento, Partite.MezzoTrasporto, Categorie.AnticipoConvocazione, Anni.Indirizzo, Anni.Lat, Anni.Lon, " &
-			"Anni.CampoSquadra, Anni.NomePolisportiva, Partite.ShootOut, Partite.Tempi, Partite.PartitaConRigori, PartiteCapitani.idCapitano " &
+			"Anni.CampoSquadra, Anni.NomePolisportiva, Partite.ShootOut, Partite.Tempi, Partite.PartitaConRigori, " & IIf(TipoDB = "SQLSERVER", "IsNull(PartiteCapitani.idCapitano,0)", "Coalesce(PartiteCapitani.idCapitano,0)") & " As idCapitano " &
 			"FROM Partite LEFT JOIN Risultati ON Partite.idPartita = Risultati.idPartita " &
 			"LEFT JOIN RisultatiAggiuntivi ON Partite.idPartita = RisultatiAggiuntivi.idPartita " &
 			"LEFT JOIN SquadreAvversarie ON Partite.idAvversario = SquadreAvversarie.idAvversario " &
@@ -524,9 +568,9 @@ Module Globale
 			Dim idCapitano As Integer = -1
 
 			If Not Rec.Eof() Then
-				If Not Rec("idCapitano").Value Is DBNull.Value Then
-					idCapitano = Rec("idCapitano").Value
-				End If
+				'If Not Rec("idCapitano").Value Is DBNull.Value Then
+				idCapitano = Rec("idCapitano").Value
+				'End If
 
 				Dim immMeteo As String = "<img src=""" & Rec("Icona").Value & """ style=""width: 50px; height: 50px;"" onerror=""this.src='http://192.168.0.227:92/MultiMedia/Sconosciuto.png'""  />"
 				Dim sMeteo As String = " '" & MetteMaiuscoleDopoOgniSpazio("" & Rec("Tempo").Value) & "'<br />Gradi: " & Rec("Gradi").Value & " Umidità: " & Rec("Umidita").Value & " Pressione: " & Rec("Pressione").Value
@@ -884,7 +928,8 @@ Module Globale
 					Rec.Close()
 
 					' Marcatori
-					Sql = "Select * From (" &
+					If TipoDB = "SQLSERVER" Then
+						Sql = "Select * From (" &
 							"SELECT RisultatiAggiuntiviMarcatori.Minuto, Giocatori.NumeroMaglia, Giocatori.idGiocatore, Giocatori.Cognome, Giocatori.Nome, Ruoli.Descrizione As Ruolo, RisultatiAggiuntiviMarcatori.idTempo, RisultatiAggiuntiviMarcatori.Rigore " &
 							"FROM ((Partite INNER JOIN RisultatiAggiuntiviMarcatori ON Partite.idPartita = RisultatiAggiuntiviMarcatori.idPartita) " &
 							"INNER JOIN Giocatori ON (Partite.idAnno = Giocatori.idAnno) And (RisultatiAggiuntiviMarcatori.idGiocatore = Giocatori.idGiocatore)) " &
@@ -908,6 +953,56 @@ Module Globale
 							"Where idPartita = " & idPartita & " And idTempo = 3 And value <> '' " &
 							") A " &
 							"Order By idTempo, Minuto"
+					Else
+						Sql = "Delete From RisAvvMin"
+						Ritorno = Conn.EsegueSql(MP, Sql, Connessione)
+						If Ritorno <> "OK" Then
+							Return Ritorno
+						End If
+
+						Dim Rec22 As Object
+
+						For i As Integer = 1 To 3
+							Sql = "Select * From RisultatiAvversariMinuti Where idPartita = " & idPartita & " And idTempo = " & i
+							Rec22 = Conn.LeggeQuery(MP, Sql, Connessione)
+							If TypeOf (Rec22) Is String Then
+								Ritorno = Rec22
+								Return Ritorno
+							Else
+								If Not Rec22.Eof() Then
+									Dim minuti() As String = Rec22("Minuti").Value.split(";")
+									For Each m As String In minuti
+										If m <> "" Then
+											Sql = "Insert Into RisAvvMin Values (" & i & ", " & m & ")"
+											Ritorno = Conn.EsegueSql(MP, Sql, Connessione)
+											If Ritorno <> "OK" Then
+												Return Ritorno
+											End If
+										End If
+									Next
+								End If
+							End If
+						Next
+
+						Sql = "Select * From (" &
+							"SELECT RisultatiAggiuntiviMarcatori.Minuto, Giocatori.NumeroMaglia, Giocatori.idGiocatore, Giocatori.Cognome, Giocatori.Nome, Ruoli.Descrizione As Ruolo, RisultatiAggiuntiviMarcatori.idTempo, RisultatiAggiuntiviMarcatori.Rigore " &
+							"FROM ((Partite INNER JOIN RisultatiAggiuntiviMarcatori ON Partite.idPartita = RisultatiAggiuntiviMarcatori.idPartita) " &
+							"INNER JOIN Giocatori ON (Partite.idAnno = Giocatori.idAnno) And (RisultatiAggiuntiviMarcatori.idGiocatore = Giocatori.idGiocatore)) " &
+							"INNER JOIN [Generale].[dbo].[Ruoli] ON Giocatori.idRuolo = Ruoli.idRuolo " &
+							"Where Partite.idAnno=" & idAnno & " And Partite.idPartita=" & idPartita & " " &
+							"Union ALL " &
+							"SELECT RisultatiAggiuntiviMarcatori.Minuto, '', -1, 'Autorete', '', '' As Ruolo, RisultatiAggiuntiviMarcatori.idTempo, RisultatiAggiuntiviMarcatori.Rigore " &
+							"FROM Partite INNER JOIN RisultatiAggiuntiviMarcatori ON Partite.idPartita = RisultatiAggiuntiviMarcatori.idPartita " &
+							"Where Partite.idAnno = " & idAnno & " And Partite.idPartita = " & idPartita & " And IdGiocatore = -1 " &
+							"Union All " &
+							"Select Minuto, '', -2, 'Avversario', '', '' As Ruolo, idTempo, 'N' As Rigore From RisAvvMin Where idTempo = 1 " &
+							"Union All " &
+							"Select Minuto, '', -2, 'Avversario', '', '' As Ruolo, idTempo, 'N' As Rigore From RisAvvMin Where idTempo = 2 " &
+							"Union All " &
+							"Select Minuto, '', -2, 'Avversario', '', '' As Ruolo, idTempo, 'N' As Rigore From RisAvvMin Where idTempo = 3 " &
+							") A " &
+							"Order By idTempo, Minuto"
+					End If
 					' Return Sql
 
 					Rec = Conn.LeggeQuery(MP, Sql, Connessione)
@@ -1005,19 +1100,19 @@ Module Globale
 							For i As Integer = 1 To 3
 								Sql = "Select " & IIf(TipoDB = "SQLSERVER", "Isnull(Count(*),0)", "COALESCE(Count(*),0)") & " From RisultatiAggiuntiviMarcatori Where idPartita=" & idPartita & " And idTempo=" & i
 								Rec = Conn.LeggeQuery(MP, Sql, Connessione)
-								If Rec(0).Value Is DBNull.Value Then
-									GoalPropri = 0
-								Else
-									GoalPropri = Rec(0).Value
-								End If
+								'If Rec(0).Value Is DBNull.Value Then
+								'	GoalPropri = 0
+								'Else
+								GoalPropri = Rec(0).Value
+								'End If
 								Rec.Close()
-								Sql = "Select Sum(" & NomiCampi(i) & ") From RisultatiAggiuntivi Where idPartita=" & idPartita & " And " & NomiCampi(i) & "<>-1"
+								Sql = "Select " & IIf(TipoDB = "SQLSERVER", "Isnull(Sum(" & NomiCampi(i) & "),0)", "Colaesce(Sum(" & NomiCampi(i) & "),0)") & " From RisultatiAggiuntivi Where idPartita=" & idPartita & " And " & NomiCampi(i) & "<>-1"
 								Rec = Conn.LeggeQuery(MP, Sql, Connessione)
-								If Rec(0).Value Is DBNull.Value Then
-									GoalAvversari = 0
-								Else
-									GoalAvversari = Rec(0).Value
-								End If
+								'If Rec(0).Value Is DBNull.Value Then
+								'	GoalAvversari = 0
+								'Else
+								GoalAvversari = Rec(0).Value
+								'End If
 								Rec.Close()
 
 								If GoalPropri > GoalAvversari Then
@@ -1060,7 +1155,7 @@ Module Globale
 						Dim RigoriSegnatiAvversari As Integer = 0
 						Dim RigoriSbagliatiAvversari As Integer = 0
 
-						Sql = "SELECT RigoriPropri.idGiocatore, RigoriPropri.idRigore, Ruoli.Descrizione, Giocatori.Cognome + ' ' + Giocatori.Nome As Giocatore, " &
+						Sql = "SELECT RigoriPropri.idGiocatore, RigoriPropri.idRigore, Ruoli.Descrizione, " & IIf(TipoDB = "SQLSERVER", "Giocatori.Cognome + ' ' + Giocatori.Nome", "Concat(Giocatori.Cognome, ' ', Giocatori.Nome)") & " As Giocatore, " &
 							"Giocatori.NumeroMaglia, RigoriPropri.Termine From ((RigoriPropri " &
 							"Left Join Giocatori On RigoriPropri.idGiocatore=Giocatori.idGiocatore And RigoriPropri.idAnno = Giocatori.idAnno) " &
 							"Left Join [Generale].[dbo].[Ruoli] On Giocatori.idRuolo = Ruoli.idRuolo) " &
@@ -1297,15 +1392,31 @@ Module Globale
 						Eventi.Append("<table style=""width: 99%; text-align: center;"" cellpadding=""0"" cellspacing=""0"">")
 						Eventi.Append(vbCrLf)
 
-						Sql = "SELECT EventiPartita.idTempo, EventiPartita.Minuto, Eventi.Descrizione, iif(Giocatori.Cognome + ' ' + Giocatori.Nome is null, 'Avversario', Giocatori.Cognome + ' ' + Giocatori.Nome) As Giocatore, Giocatori.idGiocatore " &
-							"FROM (EventiPartita LEFT JOIN Giocatori ON (EventiPartita.idGiocatore = Giocatori.idGiocatore) AND (EventiPartita.idAnno = Giocatori.idAnno)) LEFT JOIN Eventi ON EventiPartita.idEvento = Eventi.idEvento " &
-							"WHERE EventiPartita.idPartita=" & idPartita & " AND EventiPartita.idAnno=" & idAnno
+						If TipoDB = "SQLSERVER" Then
+							Sql = "SELECT EventiPartita.idTempo, EventiPartita.Minuto, Eventi.Descrizione, " &
+								"IIf(IsNull(Giocatori.Cognome + ' ' + Giocatori.Nome, '') = '', 'Avversario', IsNull(Giocatori.Cognome + ' ' + Giocatori.Nome, '')" & " As Giocatore, " &
+								"Giocatori.idGiocatore " &
+								"FROM EventiPartita " &
+								"LEFT JOIN Giocatori ON EventiPartita.idGiocatore = Giocatori.idGiocatore And EventiPartita.idAnno = Giocatori.idAnno " &
+								"LEFT JOIN Eventi ON EventiPartita.idEvento = Eventi.idEvento " &
+								"WHERE EventiPartita.idPartita=" & idPartita & " And EventiPartita.idAnno=" & idAnno
+						Else
+							Sql = "SELECT EventiPartita.idTempo, EventiPartita.Minuto, Eventi.Descrizione, " &
+								"If(Trim(Concat(Coalesce(Giocatori.Cognome, ''), ' ', Coalesce(Giocatori.Nome,''))) = '', 'Avversario', Concat(Giocatori.Cognome, ' ', Giocatori.Nome))" & " As Giocatore, " &
+								"Giocatori.idGiocatore " &
+								"FROM EventiPartita " &
+								"LEFT JOIN Giocatori ON EventiPartita.idGiocatore = Giocatori.idGiocatore And EventiPartita.idAnno = Giocatori.idAnno " &
+								"LEFT JOIN Eventi ON EventiPartita.idEvento = Eventi.idEvento " &
+								"WHERE EventiPartita.idPartita=" & idPartita & " And EventiPartita.idAnno=" & idAnno
+						End If
 						Rec2 = Conn.LeggeQuery(MP, Sql, Connessione)
 						If TypeOf (Rec2) Is String Then
+							Return Rec2
 						Else
 							Dim tempoAtt As String = ""
 							Colore = "#aaa"
-							Do Until Rec2.Eof()
+
+							Do Until Rec2.Eof = True
 								Dim Path As String
 
 								If Rec2("Giocatore").Value.Contains("Avversario") Then
@@ -1315,7 +1426,7 @@ Module Globale
 									Path = DecriptaImmagine(MP, Path)
 								End If
 
-								If tempoAtt <> "" & Rec2("idTempo").Value Then
+								If Val(tempoAtt) <> Val(Rec2("idTempo").Value) Then
 									If tempoAtt <> "" Then
 										Eventi.Append("<tr><td colspan=""5""><hr /><span class=""testo rosso"" style=""font-size: 15px;"">Tempo " & Rec2("idTempo").Value & "</span><hr /></tr>")
 
@@ -1341,7 +1452,7 @@ Module Globale
 										altezzaEventi += 55
 									End If
 
-									tempoAtt = "" & Rec2("idTempo").Value
+									tempoAtt = Val(Rec2("idTempo").Value)
 								End If
 								Eventi.Append("<tr style=""background-color: " & Colore & """>")
 								'Eventi.Append("<td align=""right"">")
@@ -1491,11 +1602,27 @@ Module Globale
 
 						gf.CreaAggiornaFile(NomeFileFinale, Filone)
 
-						Dim pp As New pdfGest
-						Ritorno = pp.ConverteHTMLInPDF(NomeFileFinale, NomeFileFinalePDF, PathLog, True,, altezzaReport)
+						If TipoDB = "SQLSERVER" Then
+							Dim pp As New pdfGest
+							Ritorno = pp.ConverteHTMLInPDF(NomeFileFinale, NomeFileFinalePDF, PathLog, True,, altezzaReport)
 
-						If Ritorno = "*" Then
-							Ritorno = NomeFileFinalePDF.Replace(pathAllegati, pathMultimedia).Replace("Multimedia", "Allegati").Replace("\", "/")
+							If Ritorno = "OK" Then
+								Ritorno = NomeFileFinalePDF.Replace(pathAllegati, pathMultimedia).Replace("Multimedia", "Allegati").Replace("\", "/")
+							End If
+						Else
+							If Ritorno = "OK" Then
+								' sudo html2pdf /var/www/html/inCalcio/Multimedia/allegati/0001_00012/Partite/Anno1/00155/155.html
+								' /var/www/html/inCalcio/Multimedia/allegati/0001_00012/Partite/Anno1/00155/155.pdf
+								Dim nomeFileDaConvertire As String = NomeFileFinale.Replace("\", "/")
+								Dim nomeFileConvertito As String = nomeFileDaConvertire.Replace(".html", ".pdf")
+
+								Ritorno = ConvertePDF(nomeFileDaConvertire, nomeFileConvertito)
+								If Ritorno = "*" Then
+									Ritorno = NomeFileFinalePDF.Replace(pathAllegati, urlAllegati).Replace("Multimedia", "Allegati").Replace("\", "/")
+								End If
+
+								' Ritorno = "html2pdf " & nomeFileDaConvertire & "  " & nomeFileConvertito
+							End If
 						End If
 					End If
 				End If
@@ -1504,6 +1631,43 @@ Module Globale
 				Ritorno = "ERROR: Nessun dato rilevato"
 			End If
 		End If
+
+		Return Ritorno
+	End Function
+
+	Public Function ConvertePDF(NomeFileFinaleP As String, NomeFileFinalePDFP As String) As String
+		Dim Ritorno As String = "*"
+		Dim NomeFileFinale As String = NomeFileFinaleP
+		Dim NomeFileFinalePDF As String = NomeFileFinalePDFP
+
+		If TipoDB <> "SQLSERVER" Then
+			NomeFileFinale = NomeFileFinale.Replace("\", "/")
+			NomeFileFinale = NomeFileFinale.Replace("//", "/")
+			NomeFileFinale = NomeFileFinale.Replace("/\", "/")
+
+			NomeFileFinalePDF = NomeFileFinalePDF.Replace("\", "/")
+			NomeFileFinalePDF = NomeFileFinalePDF.Replace("//", "/")
+			NomeFileFinalePDF = NomeFileFinalePDF.Replace("/\", "/")
+		End If
+
+		Try
+			Dim processoConversione As Process = New Process()
+			Dim pi As ProcessStartInfo = New ProcessStartInfo()
+			pi.FileName = "html2pdf"
+			pi.Arguments = NomeFileFinale & "  " & NomeFileFinalePDF
+			pi.WindowStyle = ProcessWindowStyle.Normal
+			processoConversione.StartInfo = pi
+			processoConversione.StartInfo.UseShellExecute = False
+			processoConversione.StartInfo.RedirectStandardOutput = True
+			processoConversione.StartInfo.RedirectStandardError = True
+			processoConversione.Start()
+
+			Dim OutPutP As String = processoConversione.StandardOutput.ReadToEnd()
+
+			processoConversione.WaitForExit()
+		Catch ex As Exception
+			Ritorno = StringaErrore & ": " & ex.Message
+		End Try
 
 		Return Ritorno
 	End Function
@@ -2386,10 +2550,10 @@ Module Globale
 							'Dim pp2 As New pdfGest
 							'Ritorno = pp2.ConverteHTMLInPDF(fileAppoggio, fileFinale, "")
 							'Dim Ritorno2 As String = pp2.ConverteHTMLInPDF(fileAppoggioScontrino, fileFinaleScontrino, "", True)
-							'If Ritorno <> "*" And Ritorno2 <> "*" Then
+							'If Ritorno<> "OK" And Ritorno2<> "OK" Then
 							'	Ok = False
 							'Else
-							'	If Ritorno2 <> "*" Then
+							'	If Ritorno2<> "OK" Then
 							'		Ritorno = Ritorno2
 							'	End If
 							'End If

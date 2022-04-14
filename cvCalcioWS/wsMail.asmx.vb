@@ -118,11 +118,11 @@ Public Class wsMail
 								Rec.MoveNext()
 							Loop
 						Else
-							If Rec(0).Value Is DBNull.Value Then
-								Ritorno = 0
-							Else
-								Ritorno = Rec(0).Value
-							End If
+							'If Rec(0).Value Is DBNull.Value Then
+							'	Ritorno = 0
+							'Else
+							Ritorno = Rec(0).Value
+							'End If
 						End If
 					End If
 					Rec.Close()
@@ -174,13 +174,17 @@ Public Class wsMail
 				Sql = iif(tipodb="SQLSERVER", "Begin transaction", "Start transaction")
 				Ritorno = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
 
-				Sql = "SELECT Max(idMail)+1 From Mails"
-				Rec = Conn.LeggeQuery(Server.MapPath("."), Sql, Connessione)
-				If Rec(0).Value Is DBNull.Value Then
-					idMail = 1
+				If TipoDB = "SQLSERVER" Then
+					Sql = "SELECT IsNull(Max(idMail),0)+1 From Mails"
 				Else
-					idMail = Rec(0).Value
+					Sql = "SELECT Coalesce(Max(idMail),0)+1 From Mails"
 				End If
+				Rec = Conn.LeggeQuery(Server.MapPath("."), Sql, Connessione)
+				'If Rec(0).Value Is DBNull.Value Then
+				'	idMail = 1
+				'Else
+				idMail = Rec(0).Value
+				'End If
 				Rec.Close()
 
 				Sql = "Select * From [Generale].[dbo].[Utenti] Where idUtente=" & idUtente
@@ -221,7 +225,7 @@ Public Class wsMail
 
 					If Ok Then
 						'Ritorno = ma.SendEmail(Squadra, from, subject, message, from, {""})
-						'If Ritorno <> "*" Then
+						'If Ritorno<> "OK" Then
 						'	Ok = False
 						'End If
 
@@ -316,7 +320,7 @@ Public Class wsMail
 					Dim attachs() As String = aa.Split(";")
 					For Each d As String In Dests
 						Ritorno = ma.SendEmail(Server.MapPath("."), Squadra, from, subject, message, d, attachs)
-						If Ritorno <> "*" Then
+						If Ritorno<> "OK" Then
 							Ok = False
 							Exit For
 						End If

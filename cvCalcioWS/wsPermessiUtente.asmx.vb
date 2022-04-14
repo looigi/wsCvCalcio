@@ -342,16 +342,20 @@ Public Class wsPermessiUtente
 
 				If Not Ritorno.Contains(StringaErrore) Then
 					Try
-						Sql = "SELECT Max(Progressivo)+1 FROM PermessiUtente Where IDutente=" & IDutente
+						If TipoDB = "SQLSERVER" Then
+							Sql = "SELECT IsNull(Max(Progressivo),0)+1 FROM PermessiUtente Where IDutente=" & IDutente
+						Else
+							Sql = "SELECT Coalesce(Max(Progressivo),0)+1 FROM PermessiUtente Where IDutente=" & IDutente
+						End If
 						Rec = Conn.LeggeQuery(Server.MapPath("."), Sql, Connessione)
 						If TypeOf (Rec) Is String Then
 							Ritorno = Rec
 						Else
-							If Rec(0).Value Is DBNull.Value Then
-								ProgPerm = 1
-							Else
-								ProgPerm = Rec(0).Value
-							End If
+							'If Rec(0).Value Is DBNull.Value Then
+							'	ProgPerm = 1
+							'Else
+							ProgPerm = Rec(0).Value
+							'End If
 							Rec.Close()
 						End If
 					Catch ex As Exception

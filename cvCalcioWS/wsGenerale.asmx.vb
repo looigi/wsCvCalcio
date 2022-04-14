@@ -102,7 +102,8 @@ Public Class wsGenerale
 	<WebMethod()>
 	Public Function InviaMail(Oggetto As String, Body As String, ChiRiceve As String) As String
 		Dim m As New mail
-		Dim Ritorno As String = m.SendEmail(Server.MapPath("."), "", "looigi@gmail.com", Oggetto, Body, ChiRiceve, {"E:\Sorgenti\VB.Net\Miei\WEB\Webservices\cvCalcio\cvCalcioWS\cvCalcioWS\Impostazioni\Paths.txt", "E:\Sorgenti\VB.Net\Miei\WEB\Webservices\cvCalcio\cvCalcioWS\cvCalcioWS\Impostazioni\PercorsoSito.txt"})
+		' Dim Ritorno As String = m.SendEmail(Server.MapPath("."), "", "looigi@gmail.com", Oggetto, Body, ChiRiceve, {"E:\Sorgenti\VB.Net\Miei\WEB\Webservices\cvCalcio\cvCalcioWS\cvCalcioWS\Impostazioni\Paths.txt", "E:\Sorgenti\VB.Net\Miei\WEB\Webservices\cvCalcio\cvCalcioWS\cvCalcioWS\Impostazioni\PercorsoSito.txt"})
+		Dim Ritorno As String = m.SendEmail(Server.MapPath("."), "", "looigi@gmail.com", Oggetto, Body, ChiRiceve, {})
 		Return Ritorno
 	End Function
 
@@ -922,12 +923,12 @@ Public Class wsGenerale
 								If TypeOf (Rec) Is String Then
 									Ritorno = Rec
 								Else
-									If Rec(0).Value Is DBNull.Value Then
-									Else
-										If Rec(0).Value > 0 Then
-											PagamentiPresenti = "S"
-										End If
+									'If Rec(0).Value Is DBNull.Value Then
+									'Else
+									If Rec(0).Value > 0 Then
+										PagamentiPresenti = "S"
 									End If
+									'End If
 									Rec.Close()
 								End If
 
@@ -1350,7 +1351,7 @@ Public Class wsGenerale
 							"EMail, idCategoria, idTipologia From UtentiMobile Where idAnno=" & idAnnoAttuale & " And idUtente=" & idUtente
 						Ritorno = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
 
-						If Ritorno <> "*" Then
+						If Ritorno<> "OK" Then
 							EliminaDatiNuovoAnnoDopoErrore(Server.MapPath("."), idAnno, Conn, Connessione)
 						Else
 							If CreazioneTuttiIDati = "S" Then
@@ -1358,7 +1359,7 @@ Public Class wsGenerale
 								Sql = "Insert Into Categorie SELECT " & idAnno & " as idAnno, idCategoria, Descrizione, Eliminato, " &
 									"Ordinamento From Categorie Where Eliminato='N' And idAnno=" & idAnnoAttuale
 								Ritorno = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
-								If Ritorno <> "*" Then
+								If Ritorno<> "OK" Then
 									EliminaDatiNuovoAnnoDopoErrore(Server.MapPath("."), idAnno, Conn, Connessione)
 								Else
 									' Allenatori
@@ -1366,7 +1367,7 @@ Public Class wsGenerale
 										"Select " & idAnno & " As idAnno, idAllenatore, Cognome, Nome, EMail, Telefono, Eliminato, idCategoria  From " &
 										"Allenatori Where Eliminato='N' And idAnno=" & idAnnoAttuale
 									Ritorno = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
-									If Ritorno <> "*" Then
+									If Ritorno<> "OK" Then
 										EliminaDatiNuovoAnnoDopoErrore(Server.MapPath("."), idAnno, Conn, Connessione)
 									Else
 										' Dirigenti
@@ -1374,7 +1375,7 @@ Public Class wsGenerale
 											"SELECT " & idAnno & " as idAnno, idDirigente, Cognome, Nome, EMail, Telefono, Eliminato, idCategoria From " &
 											"Dirigenti Where Eliminato='N' And idAnno=" & idAnnoAttuale
 										Ritorno = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
-										If Ritorno <> "*" Then
+										If Ritorno<> "OK" Then
 											EliminaDatiNuovoAnnoDopoErrore(Server.MapPath("."), idAnno, Conn, Connessione)
 										Else
 											' Giocatori
@@ -1382,14 +1383,14 @@ Public Class wsGenerale
 												"SELECT " & idAnno & " as idAnno, idGiocatore, idCategoria, idRuolo, Cognome, Nome, EMail, Telefono, Soprannome, DataDiNascita, Indirizzo, CodFiscale, Eliminato, CertScad, Maschio, " &
 												"Telefono2, Citta, idTaglia, idCategoria2, Matricola, NumeroMaglia, idCategoria3 From Giocatori Where idAnno=" & idAnnoAttuale & " And Eliminato='N'"
 											Ritorno = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
-											If Ritorno <> "*" Then
+											If Ritorno<> "OK" Then
 												EliminaDatiNuovoAnnoDopoErrore(Server.MapPath("."), idAnno, Conn, Connessione)
 											Else
 												' Arbitri
 												Sql = "Insert Into Arbitri " &
 												"SELECT " & idAnno & " As idAnno, idArbitro, Cognome, Nome, EMail, Telefono, Eliminato, idCategoria From Arbitri Where idAnno=" & idAnnoAttuale & " And Eliminato='N'"
 												Ritorno = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
-												If Ritorno <> "*" Then
+												If Ritorno<> "OK" Then
 													EliminaDatiNuovoAnnoDopoErrore(Server.MapPath("."), idAnno, Conn, Connessione)
 												End If
 											End If
@@ -1836,7 +1837,7 @@ Public Class wsGenerale
 						End If
 					End If
 
-					Ritorno = urlIniziale & "Appoggio/" & Datella & ".jpg" ' §" & fileOrigine & "§" & fileDestinazione
+					Ritorno = urlIniziale & "multimedia/Appoggio/" & Datella & ".jpg" ' §" & fileOrigine & "§" & fileDestinazione
 
 					If TipoDB <> "SQLSERVER" Then
 						Ritorno = Ritorno.Replace("\", "/")

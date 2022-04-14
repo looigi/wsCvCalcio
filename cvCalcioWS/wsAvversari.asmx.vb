@@ -26,17 +26,20 @@ Public Class wsAvversari
 				Dim Rec As Object
 				Dim Sql As String = ""
 				'Dim idUtente As String = ""
-
-				Sql = "SELECT Max(idAvversario)+1 FROM Avversari"
-				Rec = Conn.LeggeQuery(Server.MapPath("."),  Sql, Connessione)
+				If TipoDB = "SQLSERVER" Then
+					Sql = "SELECT IsNull(Max(idAvversario),0)+1 FROM Avversari"
+				Else
+					Sql = "SELECT Coalesce(Max(idAvversario),0)+1 FROM Avversari"
+				End If
+				Rec = Conn.LeggeQuery(Server.MapPath("."), Sql, Connessione)
 				If TypeOf (Rec) Is String Then
 					Ritorno = Rec
 				Else
-					If Rec(0).Value Is DBNull.Value Then
-						idAvversario = "1"
-					Else
-						idAvversario = Rec(0).Value.ToString
-					End If
+					'If Rec(0).Value Is DBNull.Value Then
+					'	idAvversario = "1"
+					'Else
+					idAvversario = Rec(0).Value.ToString
+					'End If
 					Rec.Close()
 				End If
 			End If
@@ -129,16 +132,20 @@ Public Class wsAvversari
 				If Not Ritorno.Contains(StringaErrore) Then
 					If idAvversario = "-1" Then
 						Try
-							Sql = "SELECT Max(idAvversario)+1 FROM SquadreAvversarie"
-							Rec = Conn.LeggeQuery(Server.MapPath("."),  Sql, Connessione)
+							If TipoDB = "SQLSERVER" Then
+								Sql = "SELECT IsNull(Max(idAvversario),0)+1 FROM SquadreAvversarie"
+							Else
+								Sql = "SELECT Coalesce(Max(idAvversario),0)+1 FROM SquadreAvversarie"
+							End If
+							Rec = Conn.LeggeQuery(Server.MapPath("."), Sql, Connessione)
 							If TypeOf (Rec) Is String Then
 								Ritorno = Rec
 							Else
-								If Rec(0).Value Is DBNull.Value Then
-									idAvv = 1
-								Else
-									idAvv = Rec(0).Value
-								End If
+								'If Rec(0).Value Is DBNull.Value Then
+								'	idAvv = 1
+								'Else
+								idAvv = Rec(0).Value
+								'End If
 								Rec.Close()
 							End If
 						Catch ex As Exception
@@ -156,16 +163,20 @@ Public Class wsAvversari
 
 					If Ok = True And idCampo = "-1" Then
 						Try
-							Sql = "SELECT Max(idCampo)+1 FROM CampiAvversari"
-							Rec = Conn.LeggeQuery(Server.MapPath("."),  Sql, Connessione)
+							If TipoDB = "SQLSERVER" Then
+								Sql = "SELECT IsNull(Max(idCampo),0)+1 FROM CampiAvversari"
+							Else
+								Sql = "SELECT Coalesce(Max(idCampo),0)+1 FROM CampiAvversari"
+							End If
+							Rec = Conn.LeggeQuery(Server.MapPath("."), Sql, Connessione)
 							If TypeOf (Rec) Is String Then
 								Ritorno = Rec
 							Else
-								If Rec(0).Value Is DBNull.Value Then
-									idCam = 1
-								Else
-									idCam = Rec(0).Value
-								End If
+								'If Rec(0).Value Is DBNull.Value Then
+								'	idCam = 1
+								'Else
+								idCam = Rec(0).Value
+								'End If
 								Rec.Close()
 							End If
 						Catch ex As Exception

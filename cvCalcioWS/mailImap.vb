@@ -73,16 +73,20 @@ Public Class mailImap
 				End If
 
 				If Ok Then
-					Sql = "SELECT Max(idMail)+1 From Mails"
-					Rec = Conn.LeggeQuery(MP, Sql, Connessione)
-					If Rec(0).Value Is DBNull.Value Then
-						idMail = 1
+					If TipoDB = "SQLSERVER" Then
+						Sql = "SELECT IsNull(Max(idMail),0)+1 From Mails"
 					Else
-						idMail = Rec(0).Value
+						Sql = "SELECT Coalesce(Max(idMail),0)+1 From Mails"
 					End If
+					Rec = Conn.LeggeQuery(MP, Sql, Connessione)
+					'If Rec(0).Value Is DBNull.Value Then
+					'	idMail = 1
+					'Else
+					idMail = Rec(0).Value
+					'End If
 					Rec.Close()
 
-					Sql = iif(tipodb="SQLSERVER", "Begin transaction", "Start transaction")
+					Sql = IIf(TipoDB = "SQLSERVER", "Begin transaction", "Start transaction")
 					Ritorno = Conn.EsegueSql(MP, Sql, Connessione)
 
 					Dim imap As ImapClient

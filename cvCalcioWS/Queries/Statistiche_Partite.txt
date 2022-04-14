@@ -1,6 +1,6 @@
 Select A.idPartita, D.categorie, E.Descrizione As Avversario, Risultato, B.Casa As Dove, 
-Substring(Risultato, 0, Charindex('-', Risultato)) As Casa, 
-Substring(Risultato, Charindex('-', Risultato) + 1, 2) As Fuori,
+Substring(Risultato, 0, Instr(Risultato, '-')) As Casa, 
+Substring(Risultato, Instr(Risultato, '-') + 1, 2) As Fuori,
 F.Descrizione + ' ' + F.AnnoCategoria As Categoria, E.idAvversario
 From Risultati A
 Left Join Partite B On A.idPartita = B.idPartita

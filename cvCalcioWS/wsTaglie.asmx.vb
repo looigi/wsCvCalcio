@@ -194,16 +194,20 @@ Public Class wsTaglie
 
 				If Not Ritorno.Contains(StringaErrore) Then
 					Try
-						Sql = "SELECT Max(idTaglia)+1 FROM Taglie"
-						Rec = Conn.LeggeQuery(Server.MapPath("."),   Sql, Connessione)
+						If TipoDB = "SQLSERVER" Then
+							Sql = "SELECT IsNull(Max(idTaglia),0)+1 FROM Taglie"
+						Else
+							Sql = "SELECT Coalesce(Max(idTaglia),0)+1 FROM Taglie"
+						End If
+						Rec = Conn.LeggeQuery(Server.MapPath("."), Sql, Connessione)
 						If TypeOf (Rec) Is String Then
 							Ritorno = Rec
 						Else
-							If Rec(0).Value Is DBNull.Value Then
-								idTaglia = 1
-							Else
-								idTaglia = Rec(0).Value
-							End If
+							'If Rec(0).Value Is DBNull.Value Then
+							'	idTaglia = 1
+							'Else
+							idTaglia = Rec(0).Value
+							'End If
 							Rec.Close()
 						End If
 					Catch ex As Exception

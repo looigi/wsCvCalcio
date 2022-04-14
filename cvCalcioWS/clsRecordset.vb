@@ -48,7 +48,7 @@ Public Class clsRecordset
 		Dim r As New Ritorno
 		Try
 			If RigaSelezionata.Item(NomeCampo) Is DBNull.Value Then
-				r.Value = ""
+				r.Value = "<NULL>"
 			Else
 				r.Value = RigaSelezionata.Item(NomeCampo)
 			End If

@@ -79,7 +79,7 @@ Public Class wsSuperUser
 	Public Function CreaDB(Squadra As String, DataScadenza As String, MailAdmin As String, NomeAdmin As String, CognomeAdmin As String, Anno As String, idTipologia As String,
 						   idLicenza As String, Mittente As String, Telefono As String, CAP As String, Citta As String, Indirizzo As String, Stima As String, PIVA As String, CF As String, DBPrecompilato As String) As String
 		Dim Ritorno As String = ""
-		Dim NomeDBDaCopiare As String = "DBVUOTO"
+		Dim NomeDBDaCopiare As String = "DBVuoto"
 		Dim TipoDB2 As String = "Vuoto"
 		If DBPrecompilato = "S" Or DBPrecompilato.ToUpper.Trim = "TRUE" Then
 			If TipoDB = "SQLSERVER" Then
@@ -166,7 +166,11 @@ Public Class wsSuperUser
 					Rec.Close()
 				End If
 
-				Sql = "Select Max(idSquadra)+1 From Squadre"
+				If TipoDB = "SQLSERVER" Then
+					Sql = "Select IsNull(Max(idSquadra),0)+1 From Squadre"
+				Else
+					Sql = "Select Coalesce(Max(idSquadra),0)+1 From Squadre"
+				End If
 				Rec = ConnGen.LeggeQuery(Server.MapPath("."), Sql, ConnessioneGenerale)
 				If TypeOf (Rec) Is String Then
 					Ritorno = Rec
@@ -174,15 +178,19 @@ Public Class wsSuperUser
 				Else
 					Dim idSocieta As Integer = -1
 
-					If Rec(0).Value Is DBNull.Value = True Then
-						idSocieta = 1
-					Else
-						idSocieta = Rec(0).Value
-						Rec.Close()
-					End If
+					'If Rec(0).Value Is DBNull.Value = True Then
+					'	idSocieta = 1
+					'Else
+					idSocieta = Rec(0).Value
+					Rec.Close()
+					'End If
 					gf.ScriveTestoSuFileAperto("idSocieta: " & idSocieta.ToString)
 
-					Sql = "Select Max(idUtente)+1 From Utenti"
+					If TipoDB = "SQLSERVER" Then
+						Sql = "Select IsNull(Max(idUtente),0)+1 From Utenti"
+					Else
+						Sql = "Select Coalesce(Max(idUtente),0)+1 From Utenti"
+					End If
 					Rec = ConnGen.LeggeQuery(Server.MapPath("."), Sql, ConnessioneGenerale)
 					If TypeOf (Rec) Is String Then
 						Ritorno = Rec
@@ -190,12 +198,12 @@ Public Class wsSuperUser
 					Else
 						Dim idUtente As Integer = -1
 
-						If Rec(0).Value Is DBNull.Value = True Then
-							idUtente = 1
-						Else
-							idUtente = Rec(0).Value
-							Rec.Close()
-						End If
+						'If Rec(0).Value Is DBNull.Value = True Then
+						'	idUtente = 1
+						'Else
+						idUtente = Rec(0).Value
+						Rec.Close()
+						'End If
 						gf.ScriveTestoSuFileAperto("idUtente: " & idUtente.ToString)
 
 						If Ok Then
@@ -285,7 +293,9 @@ Public Class wsSuperUser
 
 										If Ok Then
 											gf.ScriveTestoSuFileAperto("Utente Inserito")
+
 											For i As Integer = 0 To q - 1
+												gf.ScriveTestoSuFileAperto("Copia Tabella: " & Tabelle(i))
 												Try
 													If TipoDB = "SQLSERVER" Then
 														Sql = "Select * Into [" & nomeDb & "].[dbo].[" & Tabelle(i) & "] From " & Tabelle(i)
@@ -301,6 +311,7 @@ Public Class wsSuperUser
 														gf.ScriveTestoSuFileAperto("Copiata Tabella: " & Tabelle(i) & " (" & Sql & ")")
 													End If
 												Catch ex As Exception
+													gf.ScriveTestoSuFileAperto("ERRORE su Copia Tabella: " & Tabelle(i) & " -> " & ex.Message)
 													Ritorno = StringaErrore & " " & ex.Message
 													Ok = False
 												End Try
@@ -312,17 +323,22 @@ Public Class wsSuperUser
 													Ok = False
 												Else
 													For i As Integer = 0 To q - 1
+														gf.ScriveTestoSuFileAperto("Gestione chiavi Tabella: " & Tabelle(i))
+
 														Sql = "Select Chiave From _CHIAVI_ Where Upper(lTrim(rTrim(Tabella)))='" & Tabelle(i).Trim.ToUpper & "'"
 														Rec = ConnDbVuoto.LeggeQuery(Server.MapPath("."), Sql, ConnessioneDBVuoto)
 														If TypeOf (Rec) Is String Then
+															gf.ScriveTestoSuFileAperto("ERRORE creazione recordset Gestione chiavi Tabella: " & Tabelle(i) & " -> " & Rec)
 															Ritorno = Rec
 															Ok = False
 															Exit For
 														Else
 															If Rec.Eof() = False Then
-																Dim Query As String = "" & Rec(0).Value
+																Dim Query As String = "" & Rec("Chiave").Value
 
 																If Query <> "" Then
+																	gf.ScriveTestoSuFileAperto("Chiave Tabella: " & Tabelle(i) & " -> " & Query)
+
 																	If TipoDB <> "SQLSERVER" Then
 																		Query = Mid(Query, 1, Query.ToLower.IndexOf("with"))
 																	End If
@@ -342,6 +358,8 @@ Public Class wsSuperUser
 													Next
 
 													If Ok Then
+														gf.ScriveTestoSuFileAperto("Eliminazione Tabella Chiave")
+
 														Sql = "Drop Table _CHIAVI_"
 														Ritorno = ConnNuovo.EsegueSql(Server.MapPath("."), Sql, ConnessioneNuovo)
 														If Ritorno.Contains(StringaErrore) Then
@@ -592,6 +610,7 @@ Public Class wsSuperUser
 
 				Sql = "Select * From Squadre Where Eliminata = 'N' Order By Descrizione"
 				Rec = ConnGen.LeggeQuery(Server.MapPath("."), Sql, ConnessioneGenerale)
+
 				If TypeOf (Rec) Is String Then
 					Ritorno = Rec
 				Else
@@ -618,16 +637,30 @@ Public Class wsSuperUser
 									Licenza = "Premium"
 							End Select
 
-							Dim Scadenza As String = "" & Rec("DataScadenza").Value
+							Dim Scadenza As String = ""
+							Try
+								Scadenza = "" & Rec("DataScadenza").Value
+							Catch ex As Exception
+
+							End Try
+
 							Dim Semaforo1 As String = "" : Dim Titolo1 As String = ""
 							Dim Semaforo2 As String = "" : Dim Titolo2 As String = ""
 
 							If Scadenza <> "" Then
 								Dim sc() As String = Scadenza.Split("-")
 								Scadenza = sc(2) & "/" & sc(1) & "/" & sc(0)
-								Dim dScadenza As DateTime = Convert.ToDateTime(Scadenza)
+
+								Dim dScadenza As DateTime
 								Dim Oggi As Date = Now
-								Dim diff As Integer = DateAndTime.DateDiff(DateInterval.Day, Oggi, dScadenza, )
+								Dim diff As Integer = 0
+
+								Try
+									dScadenza = Convert.ToDateTime(Scadenza)
+									diff = DateAndTime.DateDiff(DateInterval.Day, Oggi, dScadenza, )
+								Catch ex As Exception
+
+								End Try
 
 								Select Case diff
 									Case < 0
@@ -837,7 +870,13 @@ Public Class wsSuperUser
 						"Where idSquadra=" & idSquadra
 					Ritorno = ConnGen.EsegueSql(Server.MapPath("."), Sql, ConnessioneGenerale)
 					If Not Ritorno.Contains(StringaErrore) Then
-						Ritorno = "*"
+						Sql = "Update Utenti Set " &
+							"Eliminato='S'" &
+							"Where idSquadra=" & idSquadra
+						Ritorno = ConnGen.EsegueSql(Server.MapPath("."), Sql, ConnessioneGenerale)
+						If Not Ritorno.Contains(StringaErrore) Then
+							Ritorno = "*"
+						End If
 					End If
 				Catch ex As Exception
 					Ritorno = StringaErrore & " " & ex.Message
@@ -873,16 +912,20 @@ Public Class wsSuperUser
 				Dim idAnno As Integer = 1
 				Dim NomeSquadra As String = ""
 
-				Sql = "Select Max(idAnno)+1 From SquadraAnni Where idSquadra=" & idSquadra
+				If TipoDB = "SQLSERVER" Then
+					Sql = "Select IsNull(Max(idAnno),0)+1 From SquadraAnni Where idSquadra=" & idSquadra
+				Else
+					Sql = "Select Coalesce(Max(idAnno),0)+1 From SquadraAnni Where idSquadra=" & idSquadra
+				End If
 				Rec = ConnGen.LeggeQuery(Server.MapPath("."), Sql, ConnessioneGenerale)
 				If TypeOf (Rec) Is String Then
 					Ritorno = Rec
 				Else
-					If Rec(0).Value Is DBNull.Value Then
-						idAnno = 1
-					Else
-						idAnno = Rec(0).Value
-					End If
+					'If Rec(0).Value Is DBNull.Value Then
+					'	idAnno = 1
+					'Else
+					idAnno = Rec(0).Value
+					'End If
 				End If
 
 				Sql = "Select Descrizione From Squadre Where idSquadra=" & idSquadra
@@ -1128,18 +1171,22 @@ Public Class wsSuperUser
 											Dim Rec As Object
 											Dim Rec2 As Object
 
-											Sql = "Select Max(idGiocatore)+1 From Giocatori"
+											If TipoDB = "SQLSERVER" Then
+												Sql = "Select IsNull(Max(idGiocatore),0)+1 From Giocatori"
+											Else
+												Sql = "Select Coalesce(Max(idGiocatore),0)+1 From Giocatori"
+											End If
 											Rec = ConnGen.LeggeQuery(Server.MapPath("."), Sql, ConnessioneGenerale)
 											If TypeOf (Rec) Is String Then
 												Ritorno = Rec
 												Ok = False
 											Else
-												If Rec(0).Value Is DBNull.Value = True Then
-													idGiocatore = 1
-												Else
-													idGiocatore = Rec(0).Value
-													Rec.Close()
-												End If
+												'If Rec(0).Value Is DBNull.Value = True Then
+												'	idGiocatore = 1
+												'Else
+												idGiocatore = Rec(0).Value
+												Rec.Close()
+												'End If
 											End If
 											gf.ScriveTestoSuFileAperto("idGiocatore di partenza: " & idGiocatore)
 
@@ -1276,7 +1323,7 @@ Public Class wsSuperUser
 														gf.ScriveTestoSuFileAperto("Riga scartata.")
 														gf.ScriveTestoSuFileAperto("")
 													End If
-													If Ritorno <> "*" Then
+													If Ritorno<> "OK" Then
 														Ok = False
 														Exit For
 													End If

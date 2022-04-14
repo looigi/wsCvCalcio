@@ -83,11 +83,11 @@ Public Class wsQuote
 							Ritorno &= "<tr><td><hr /></td><td><hr /></td><td><hr /></td><td><hr /></td><td><hr /></td><td><hr /></td><td><hr /></td><td><hr /></td><td><hr /></td><td><hr /></td></tr>"
 
 							Dim idTP As String = ""
-							If Rec("idTipoPagamento").Value Is DBNull.Value Then
-								idTP = ""
-							Else
-								idTP = Rec("idTipoPagamento").Value
-							End If
+							'If Rec("idTipoPagamento").Value Is DBNull.Value Then
+							'	idTP = ""
+							'Else
+							idTP = Rec("idTipoPagamento").Value
+							'End If
 							If idTP = 1 Then
 								totRata += Val(pag)
 							Else
@@ -649,16 +649,20 @@ Public Class wsQuote
 
 				If Not Ritorno.Contains(StringaErrore) Then
 					Try
-						Sql = "SELECT Max(idQuota)+1 FROM Quote"
-						Rec = Conn.LeggeQuery(Server.MapPath("."),  Sql, Connessione)
+						If TipoDB = "SQLSERVER" Then
+							Sql = "SELECT IsNull(Max(idQuota),0)+1 FROM Quote"
+						Else
+							Sql = "SELECT Coalesce(Max(idQuota),0)+1 FROM Quote"
+						End If
+						Rec = Conn.LeggeQuery(Server.MapPath("."), Sql, Connessione)
 						If TypeOf (Rec) Is String Then
 							Ritorno = Rec
 						Else
-							If Rec(0).Value Is DBNull.Value Then
-								idQuota = 1
-							Else
-								idQuota = Rec(0).Value
-							End If
+							'If Rec(0).Value Is DBNull.Value Then
+							'	idQuota = 1
+							'Else
+							idQuota = Rec(0).Value
+							'End If
 							Rec.Close()
 						End If
 					Catch ex As Exception

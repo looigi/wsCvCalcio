@@ -180,16 +180,16 @@ Public Class wsKit
 
 				If Not Ritorno.Contains(StringaErrore) Then
 					Try
-						Sql = "SELECT Max(idElemento)+1 FROM KitElementi"
+						Sql = "SELECT " & IIf(TipoDB = "SQLSERVER", "IsNull(Max(idElemento),0)", "Coalesce(Max(idElemento),0)") & "+1 FROM KitElementi"
 						Rec = Conn.LeggeQuery(Server.MapPath("."),   Sql, Connessione)
 						If TypeOf (Rec) Is String Then
 							Ritorno = Rec
 						Else
-							If Rec(0).Value Is DBNull.Value Then
-								idElemento = 1
-							Else
-								idElemento = Rec(0).Value
-							End If
+							'If Rec(0).Value Is DBNull.Value Then
+							'	idElemento = 1
+							'Else
+							idElemento = Rec(0).Value
+							'End If
 							Rec.Close()
 						End If
 					Catch ex As Exception
@@ -369,16 +369,16 @@ Public Class wsKit
 
 				If Not Ritorno.Contains(StringaErrore) Then
 					Try
-						Sql = "SELECT Max(idTipoKit)+1 FROM KitTipologie"
+						Sql = "SELECT " & IIf(TipoDB = "SQLSERVER", "IsNull(Max(idTipoKit),0)", "Coalesce(Max(idTipoKit),0)") & "+1 FROM KitTipologie"
 						Rec = Conn.LeggeQuery(Server.MapPath("."),   Sql, Connessione)
 						If TypeOf (Rec) Is String Then
 							Ritorno = Rec
 						Else
-							If Rec(0).Value Is DBNull.Value Then
-								idElemento = 1
-							Else
-								idElemento = Rec(0).Value
-							End If
+							'If Rec(0).Value Is DBNull.Value Then
+							'	idElemento = 1
+							'Else
+							idElemento = Rec(0).Value
+							'End If
 							Rec.Close()
 						End If
 					Catch ex As Exception
@@ -546,16 +546,16 @@ Public Class wsKit
 				Dim Progressivo As Integer = -1
 				If Not Ritorno.Contains(StringaErrore) Then
 					Try
-						Sql = "SELECT Max(Progressivo)+1 FROM KitComposizione Where idAnno=" & idAnno & " And idTipoKit=" & idTipoKit
+						Sql = "SELECT " & IIf(TipoDB = "SQLSERVER", "IsNull(Max(Progressivo),0)", "Coalesce(Max(Progressivo),0)") & "+1 FROM KitComposizione Where idAnno=" & idAnno & " And idTipoKit=" & idTipoKit
 						Rec = Conn.LeggeQuery(Server.MapPath("."),   Sql, Connessione)
 						If TypeOf (Rec) Is String Then
 							Ritorno = Rec
 						Else
-							If Rec(0).Value Is DBNull.Value Then
-								Progressivo = 1
-							Else
-								Progressivo = Rec(0).Value
-							End If
+							'If Rec(0).Value Is DBNull.Value Then
+							'	Progressivo = 1
+							'Else
+							Progressivo = Rec(0).Value
+							'End If
 							Rec.Close()
 						End If
 					Catch ex As Exception
@@ -976,17 +976,21 @@ Public Class wsKit
 							Else
 								Dim Progressivo As Integer = -1
 
-								Sql = "Select Max(Progressivo)+1 From KitGiocatori Where idTipoKit = " & idTipoKit & " And idGiocatore=" & idGiocatore
+								If TipoDB = "SQLSERVER" Then
+									Sql = "Select IsNull(Max(Progressivo),0)+1 From KitGiocatori Where idTipoKit = " & idTipoKit & " And idGiocatore=" & idGiocatore
+								Else
+									Sql = "Select Coalesce(Max(Progressivo),0)+1 From KitGiocatori Where idTipoKit = " & idTipoKit & " And idGiocatore=" & idGiocatore
+								End If
 								Rec2 = Conn.LeggeQuery(Server.MapPath("."), Sql, Connessione)
 								If TypeOf (Rec2) Is String Then
 									Ritorno = Rec2
 									Ok = False
 								Else
-									If Rec2(0).Value Is DBNull.Value Then
-										Progressivo = 1
-									Else
-										Progressivo = Rec2(0).Value
-									End If
+									'If Rec2(0).Value Is DBNull.Value Then
+									'	Progressivo = 1
+									'Else
+									Progressivo = Rec2(0).Value
+									'End If
 								End If
 								Rec2.Close()
 

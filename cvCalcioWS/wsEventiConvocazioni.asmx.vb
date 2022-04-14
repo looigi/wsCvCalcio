@@ -29,16 +29,20 @@ Public Class wsEventiConvocazioni
 				Dim Sql As String = ""
 				'Dim idUtente As String = ""
 
-				Sql = "SELECT Max(idEvento)+1 FROM EventiConvocazioni"
-				Rec = Conn.LeggeQuery(Server.MapPath("."),   Sql, Connessione)
+				If TipoDB = "SQLSERVER" Then
+					Sql = "SELECT IsNull(Max(idEvento),0)+1 FROM EventiConvocazioni"
+				Else
+					Sql = "SELECT Coalesce(Max(idEvento),0)+1 FROM EventiConvocazioni"
+				End If
+				Rec = Conn.LeggeQuery(Server.MapPath("."), Sql, Connessione)
 				If TypeOf (Rec) Is String Then
 					Ritorno = Rec
 				Else
-					If Rec(0).Value Is DBNull.Value Then
-						idEvento = "1"
-					Else
-						idEvento = Rec(0).Value.ToString
-					End If
+					'If Rec(0).Value Is DBNull.Value Then
+					'	idEvento = "1"
+					'Else
+					idEvento = Rec(0).Value.ToString
+					'End If
 				End If
 				Rec.Close()
 			End If
@@ -125,7 +129,7 @@ Public Class wsEventiConvocazioni
 					"'" & idPartita & "' " &
 					")"
 				Ritorno = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
-				'If Ritorno <> "*" Then
+				'If Ritorno<> "OK" Then
 				'	Ritorno = Sql
 				'End If
 			End If
@@ -152,7 +156,7 @@ Public Class wsEventiConvocazioni
 				Dim Rec As Object
 				Dim ritEliminazione As String = ""
 
-				Sql = "Select * From EventiConvocazioni Where idEvento = " & idEvento
+				Sql = "Select idTipologia, " & IIf(TipoDB = "SQLSERVER", "IsNull(idPartita,-1)", "Coalesce(idPartita, -1)") & " As idPartita From EventiConvocazioni Where idEvento = " & idEvento
 				Rec = Conn.LeggeQuery(Server.MapPath("."),   Sql, Connessione)
 				If TypeOf (Rec) Is String Then
 					Ritorno = Rec
@@ -161,7 +165,7 @@ Public Class wsEventiConvocazioni
 						If Val(Rec("idTipologia").Value) = 1 Then
 							Dim idPartita As String = Rec("idPartita").Value
 
-							If idPartita Is DBNull.Value Then
+							If idPartita = -1 Then
 								ritEliminazione = "*"
 							Else
 								ritEliminazione = EliminaPartita(Server.MapPath("."), Squadra, idAnno, idPartita)

@@ -4,7 +4,9 @@ Imports System.Net.Mime
 Imports System.Timers
 
 Public Class mail
-	Public Function SendEmail(pathMail As String, Squadra As String, Mittente As String, ByVal oggetto As String, ByVal newBody As String, ByVal ricevente As String, ByVal Allegato() As String,
+	Private pathMail As String = ""
+
+	Public Function SendEmail(pm As String, Squadra As String, Mittente As String, ByVal oggetto As String, ByVal newBody As String, ByVal ricevente As String, ByVal Allegato() As String,
 							  Optional AllegatoOMultimedia As String = "", Optional NuovaSocieta As String = "") As String
 		Dim Ritorno As String = "*"
 		Dim s As New strutturaMail
@@ -18,6 +20,7 @@ Public Class mail
 		s.NuovaSocieta = NuovaSocieta
 
 		' pathMail = HttpContext.Current.Server.MapPath(".")
+		pathMail = pm
 
 		listaMails.Add(s)
 
@@ -30,7 +33,7 @@ Public Class mail
 				pp(1) = pp(1) & "\"
 			End If
 			gf.CreaDirectoryDaPercorso(pp(1))
-			nomeFileLogmail = pp(1) & "logMail_" & Squadra.Replace(" ", "_") & "_" & Now.Day & "_" & Now.Month & "_" & Now.Year & ".txt"
+			nomeFileLogMail = pp(1) & "logMail_" & Squadra.Replace(" ", "_") & "_" & Now.Day & "_" & Now.Month & "_" & Now.Year & ".txt"
 			'Dim Datella As String = Format(Now.Day, "00") & "/" & Format(Now.Month, "00") & "/" & Now.Year & " " & Format(Now.Hour, "00") & ":" & Format(Now.Minute, "00") & ":" & Format(Now.Second, "00")
 			'Dim Allegati As String = ""
 			'For Each a As String In s.Allegato
@@ -52,11 +55,11 @@ Public Class mail
 			AddHandler timerMails.Elapsed, New ElapsedEventHandler(AddressOf scodaMessaggi)
 			timerMails.Start()
 
-			If effettuaLogMail And nomeFileLogmail <> "" Then
+			If effettuaLogMail And nomeFileLogMail <> "" Then
 				Dim gf As New GestioneFilesDirectory
 				Dim Datella As String = Format(Now.Day, "00") & "/" & Format(Now.Month, "00") & "/" & Now.Year & " " & Format(Now.Hour, "00") & ":" & Format(Now.Minute, "00") & ":" & Format(Now.Second, "00")
 
-				gf.ApreFileDiTestoPerScrittura(nomeFileLogmail)
+				gf.ApreFileDiTestoPerScrittura(nomeFileLogMail)
 				gf.ScriveTestoSuFileAperto(Datella & " - Timer avviato. Mail da scodare: " & listaMails.Count)
 				gf.ChiudeFileDiTestoDopoScrittura()
 			End If
@@ -71,7 +74,7 @@ Public Class mail
 		If effettuaLogMail Then
 			Dim Datella As String = Format(Now.Day, "00") & "/" & Format(Now.Month, "00") & "/" & Now.Year & " " & Format(Now.Hour, "00") & ":" & Format(Now.Minute, "00") & ":" & Format(Now.Second, "00")
 
-			gf.ApreFileDiTestoPerScrittura(nomeFileLogmail)
+			gf.ApreFileDiTestoPerScrittura(nomeFileLogMail)
 			gf.ScriveTestoSuFileAperto(Datella & " - Scodo Mail: " & mail.Squadra & "/" & mail.Mittente & "/" & mail.Oggetto & "/" & mail.Ricevente)
 			gf.ChiudeFileDiTestoDopoScrittura()
 		End If
@@ -96,13 +99,33 @@ Public Class mail
 		'myStream.Close()
 		'myStream.Dispose()
 
+		'CODICE INCOLLATO
+		'Dim m As System.Net.Mail.MailMessage = New System.Net.Mail.MailMessage()
+		'm.Subject = "subject"
+		'm.[To].Add(New System.Net.Mail.MailAddress(Properties.Settings.[Default].RFQRecipient))
+		'm.From = New System.Net.Mail.MailAddress(Properties.Settings.[Default].SmtpUsername)
+		'm.Body = "message"
+
+		'Try
+		'	If fuAttach.HasFile Then m.Attachments.Add(New System.Net.Mail.Attachment(fuAttach.FileContent, fuAttach.FileName))
+		'	Dim s As System.Net.Mail.SmtpClient = New System.Net.Mail.SmtpClient(Properties.Settings.[Default].SmtpServer)
+		'	s.UseDefaultCredentials = False
+		'	s.Credentials = New System.Net.NetworkCredential(Properties.Settings.[Default].SmtpUsername, Properties.Settings.[Default].SmtpPassword)
+		'	s.Send(m)
+		'Catch ex As Exception
+		'	lblError.InnerText = ex.Message
+		'End Try
+		'End Sub
+		'CODICE INCOLLATO
+
+
 		Dim Ritorno As String = ""
 		Dim mail As MailMessage = New MailMessage()
 		Dim Credenziali As String = gf.LeggeFileIntero(pathMail & "\Impostazioni\CredenzialiPosta.txt")
 		Dim Datella As String = Format(Now.Day, "00") & "/" & Format(Now.Month, "00") & "/" & Now.Year & " " & Format(Now.Hour, "00") & ":" & Format(Now.Minute, "00") & ":" & Format(Now.Second, "00")
 
 		If effettuaLogMail Then
-			gf.ApreFileDiTestoPerScrittura(nomeFileLogmail)
+			gf.ApreFileDiTestoPerScrittura(nomeFileLogMail)
 			gf.ScriveTestoSuFileAperto(Datella & " - Inizio")
 		End If
 
@@ -235,14 +258,19 @@ Public Class mail
 			'Dim htmlView As System.Net.Mail.AlternateView = System.Net.Mail.AlternateView.CreateAlternateViewFromString(newBody, Nothing, "text/html")
 			'mail.AlternateViews.Add(plainView)
 			'mail.AlternateViews.Add(htmlView)
-			Dim smtpClient As SmtpClient = New SmtpClient("smtps.aruba.it")
 
+			Dim smtpClient As SmtpClient = New SmtpClient("smtps.aruba.it")
 			smtpClient.EnableSsl = True
 			smtpClient.Port = 587
 			smtpClient.UseDefaultCredentials = False
 			smtpClient.Credentials = New System.Net.NetworkCredential(Utenza, Password)
 			smtpClient.Send(mail)
 			smtpClient = Nothing
+
+			'Dim s As System.Net.Mail.SmtpClient = New System.Net.Mail.SmtpClient("smtps.aruba.it")
+			's.UseDefaultCredentials = False
+			's.Credentials = New System.Net.NetworkCredential(Utenza, Password)
+			's.Send(mail)
 
 			If effettuaLogMail Then
 				gf.ScriveTestoSuFileAperto(Datella & " - Invio in corso")

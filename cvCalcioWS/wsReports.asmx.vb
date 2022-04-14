@@ -80,7 +80,7 @@ Public Class wsReports
 
 				Sql = "Select * From  ( " &
 					"Select *, TotaleDaPagare - TotalePagato As Differenza From ( " &
-					"Select 'Validato S' As Cosa, A.idGiocatore, Cognome, Nome, C.Descrizione As DescrizioneQuota, C.Importo, 0) As Importo, " & If(TipoDB = "SQLSERVER", "IsNull(Sconto, 0)", "COALESCE(Sconto, 0)") & " As Sconto, " &
+					"Select 'Validato S' As Cosa, A.idGiocatore, Cognome, Nome, C.Descrizione As DescrizioneQuota, " & IIf(TipoDB = "SQLSERVER", "Isnull(C.Importo, 0)", "COALESCE(C.Importo,0)") & " As Importo, " & IIf(TipoDB = "SQLSERVER", "IsNull(Sconto, 0)", "COALESCE(Sconto, 0)") & " As Sconto, " &
 					" " & IIf(TipoDB = "SQLSERVER", "IsNull(C.Importo, 0)", "COALESCE(C.Importo, 0)") & " - " & IIf(TipoDB = "SQLSERVER", "IsNull(Sconto, 0)", "COALESCE(Sconto, 0)") & " As TotaleDaPagare,  " &
 					"Validato, Pagamento, idTipoPagamento, " &
 					"CASE idTipoPagamento " &
@@ -264,7 +264,7 @@ Public Class wsReports
 					Loop
 					Rec.Close()
 
-					Dim filePaths As String = gf.LeggeFileIntero(HttpContext.Current.Server.MapPath(".") & "\Impostazioni\Paths.txt")
+					Dim filePaths As String = gf.LeggeFileIntero(Server.MapPath(".") & "\Impostazioni\Paths.txt")
 					filePaths = filePaths.Replace(vbCrLf, "")
 					If Strings.Right(filePaths, 1) <> "\" Then
 						filePaths &= "\"
@@ -299,13 +299,13 @@ Public Class wsReports
 
 						Output.Append("</table>")
 
-						Dim filetto As String = gf.LeggeFileIntero(HttpContext.Current.Server.MapPath(".") & "\Scheletri\base_report.txt")
+						Dim filetto As String = gf.LeggeFileIntero(Server.MapPath(".") & "\Scheletri\base_report.txt")
 
 						filetto = filetto.Replace("***TITOLO***", "Lista Pagamenti")
 						filetto = filetto.Replace("***DATI***", Output.ToString)
 						filetto = filetto.Replace("***NOME SQUADRA***", "<br /><br />" & NomeSquadra)
 
-						Dim multimediaPaths As String = gf.LeggeFileIntero(HttpContext.Current.Server.MapPath(".") & "\Impostazioni\PathAllegati.txt")
+						Dim multimediaPaths As String = gf.LeggeFileIntero(Server.MapPath(".") & "\Impostazioni\PathAllegati.txt")
 						Dim mmPaths() As String = multimediaPaths.Split(";")
 						mmPaths(2) = mmPaths(2).Replace(vbCrLf, "")
 						If Strings.Right(mmPaths(2), 1) <> "/" Then
@@ -368,7 +368,7 @@ Public Class wsReports
 		If Connessione = "" Then
 			Ritorno = ErroreConnessioneNonValida
 		Else
-			Dim Conn As Object = new clsGestioneDB
+			Dim Conn As Object = New clsGestioneDB
 			Dim Rec As Object
 			Dim Sql As String = ""
 			Dim Altro As String = ""
@@ -395,7 +395,7 @@ Public Class wsReports
 					"Where A.Eliminato='N' And C.Eliminato='N' " & Altro & " " &
 					") As A Order By Cognome, Nome"
 			End If
-			Rec = Conn.LeggeQuery(Server.MapPath("."),  Sql, Connessione)
+			Rec = Conn.LeggeQuery(Server.MapPath("."), Sql, Connessione)
 			If TypeOf (Rec) Is String Then
 				Ritorno = Rec
 			Else
@@ -434,7 +434,7 @@ Public Class wsReports
 				Loop
 				Rec.Close()
 
-				Dim filePaths As String = gf.LeggeFileIntero(HttpContext.Current.Server.MapPath(".") & "\Impostazioni\Paths.txt")
+				Dim filePaths As String = gf.LeggeFileIntero(Server.MapPath(".") & "\Impostazioni\Paths.txt")
 				filePaths = filePaths.Replace(vbCrLf, "")
 				If Strings.Right(filePaths, 1) <> "\" Then
 					filePaths &= "\"
@@ -458,9 +458,9 @@ Public Class wsReports
 		If Connessione = "" Then
 			Ritorno = ErroreConnessioneNonValida
 		Else
-			Dim Conn As Object = new clsGestioneDB
-			Dim Rec as object
-			Dim Rec2 as object
+			Dim Conn As Object = New clsGestioneDB
+			Dim Rec As Object
+			Dim Rec2 As Object
 
 			If TypeOf (Conn) Is String Then
 				Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
@@ -476,7 +476,7 @@ Public Class wsReports
 				Dim c As New CriptaFiles
 
 				Sql = "Select * From Anni"
-				Rec = Conn.LeggeQuery(Server.MapPath("."),  Sql, Connessione)
+				Rec = Conn.LeggeQuery(Server.MapPath("."), Sql, Connessione)
 				If TypeOf (Rec) Is String Then
 					Ritorno = Rec
 					Ok = False
@@ -491,7 +491,7 @@ Public Class wsReports
 
 				If Ok Then
 					Sql = "Select * From [Generale].[dbo].[Squadre] Where idSquadra = " & idSquadra
-					Rec = Conn.LeggeQuery(Server.MapPath("."),  Sql, Connessione)
+					Rec = Conn.LeggeQuery(Server.MapPath("."), Sql, Connessione)
 					If TypeOf (Rec) Is String Then
 						Ritorno = Rec
 						Ok = False
@@ -558,7 +558,7 @@ Public Class wsReports
 
 					Sql &= " And A.Eliminato = 'N' Order By Cognome, Nome"
 
-					Rec = Conn.LeggeQuery(Server.MapPath("."),  Sql, Connessione)
+					Rec = Conn.LeggeQuery(Server.MapPath("."), Sql, Connessione)
 					If TypeOf (Rec) Is String Then
 						Ritorno = Rec
 					Else
@@ -776,7 +776,7 @@ Public Class wsReports
 										"Left Join Taglie F On E.idTaglia = F.idTaglia " &
 										"Left Join KitElementi G On G.idElemento = C.idElemento " &
 										"Where B.idGiocatore = " & Rec("idGiocatore").Value & " And C.Eliminato='N' And A.Eliminato='N' And D.Eliminato='N' And E.Eliminato='N' And G.Eliminato='N'"
-									Rec2 = Conn.LeggeQuery(Server.MapPath("."),Sql, Connessione)
+									Rec2 = Conn.LeggeQuery(Server.MapPath("."), Sql, Connessione)
 									If TypeOf (Rec2) Is String Then
 										Ritorno = Rec2
 										Ok = False
@@ -898,20 +898,20 @@ Public Class wsReports
 
 						Output &= "</table>"
 
-						Dim filetto As String = gf.LeggeFileIntero(HttpContext.Current.Server.MapPath(".") & "\Scheletri\base_report.txt")
+						Dim filetto As String = gf.LeggeFileIntero(Server.MapPath(".") & "\Scheletri\base_report.txt")
 
 						filetto = filetto.Replace("***TITOLO***", Titolo & Altro & "<br />Rilevati: " & Quanti)
 						filetto = filetto.Replace("***DATI***", Output)
 						filetto = filetto.Replace("***NOME SQUADRA***", "<br /><br />" & NomeSquadra)
 
-						Dim multimediaPaths As String = gf.LeggeFileIntero(HttpContext.Current.Server.MapPath(".") & "\Impostazioni\PathAllegati.txt")
+						Dim multimediaPaths As String = gf.LeggeFileIntero(Server.MapPath(".") & "\Impostazioni\PathAllegati.txt")
 						Dim mmPaths() As String = multimediaPaths.Split(";")
 						mmPaths(2) = mmPaths(2).Replace(vbCrLf, "")
 						If Strings.Right(mmPaths(2), 1) <> "/" Then
 							mmPaths(2) &= "/"
 						End If
 
-						Dim filePaths As String = gf.LeggeFileIntero(HttpContext.Current.Server.MapPath(".") & "\Impostazioni\Paths.txt")
+						Dim filePaths As String = gf.LeggeFileIntero(Server.MapPath(".") & "\Impostazioni\Paths.txt")
 						filePaths = filePaths.Replace(vbCrLf, "")
 						If Strings.Right(filePaths, 1) <> "\" Then
 							filePaths &= "\"
