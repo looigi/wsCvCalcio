@@ -180,6 +180,7 @@
     <Content Include="Scheletri\base_partita.txt" />
     <Content Include="Scheletri\base_statistiche.txt" />
     <Content Include="wsAllegati.asmx" />
+    <Content Include="wsImmagini.asmx" />
     <Content Include="wsEventiReminder.asmx" />
     <Content Include="wsEventiConvocazioni.asmx" />
     <Content Include="wsFunzioni.asmx" />
@@ -237,6 +238,10 @@
     <Compile Include="pdf.vb" />
     <Compile Include="wsAllegati.asmx.vb">
       <DependentUpon>wsAllegati.asmx</DependentUpon>
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="wsImmagini.asmx.vb">
+      <DependentUpon>wsImmagini.asmx</DependentUpon>
       <SubType>Component</SubType>
     </Compile>
     <Compile Include="wsEventiReminder.asmx.vb">

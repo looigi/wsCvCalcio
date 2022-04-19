@@ -193,6 +193,8 @@ Module Globale
 		Dim ListaConnessioni As ConnectionStringSettingsCollection = ConfigurationManager.ConnectionStrings
 
 		If ListaConnessioni.Count <> 0 Then
+			Dim NomeStringa As String = "SQLConnectionStringLOCALEMD"
+
 			' Get the collection elements. 
 			For Each Connessioni As ConnectionStringSettings In ListaConnessioni
 				Dim Nome As String = Connessioni.Name
@@ -215,7 +217,7 @@ Module Globale
 						Exit For
 					End If
 				Else
-					If Nome = "SQLConnectionStringLOCALEMD" Then
+					If Nome = NomeStringa Then
 						Connessione = connectionString
 						Connessione = Replace(Connessione, "*^*^*", Percorso & "\")
 						If Squadra <> "" Then
@@ -344,7 +346,7 @@ Module Globale
 		Next
 		Dim NomeFile As String = r & "_" & Now.Year & Format(Now.Month, "00") & Format(Now.Day, "00") & Format(Now.Hour, "00") & Format(Now.Minute & "00") & Format(Now.Second, "00") & ".jpg"
 		Dim pathScritturaFile1 As String = pathAppoggio & Barra & NomeFile
-		Dim pathUrl1 As String = pathUrl & "Appoggio" & Barra & NomeFile
+		Dim pathUrl1 As String = pathUrl & "multimedia/Appoggio" & Barra & NomeFile
 
 		Dim PathBaseImmScon As String = pathUrl & "Sconosciuto.png"
 

@@ -102,6 +102,7 @@ Public Class wsSuperUser
 			Dim Ok As Boolean = True
 			Dim BarraFile As String = "\"
 			Dim BarraUrl As String = "/"
+			Dim idSocieta As Integer = -1
 
 			If TipoDB <> "SQLSERVER" Then
 				BarraFile = "/"
@@ -176,8 +177,6 @@ Public Class wsSuperUser
 					Ritorno = Rec
 					Ok = False
 				Else
-					Dim idSocieta As Integer = -1
-
 					'If Rec(0).Value Is DBNull.Value = True Then
 					'	idSocieta = 1
 					'Else
@@ -340,7 +339,8 @@ Public Class wsSuperUser
 																	gf.ScriveTestoSuFileAperto("Chiave Tabella: " & Tabelle(i) & " -> " & Query)
 
 																	If TipoDB <> "SQLSERVER" Then
-																		Query = Mid(Query, 1, Query.ToLower.IndexOf("with"))
+																		Query = Query.ToLower
+																		'Query = Mid(Query, 1, Query.ToLower.IndexOf("with"))
 																	End If
 																	Ritorno = ConnNuovo.EsegueSql(Server.MapPath("."), Query, ConnessioneNuovo)
 																	If Ritorno.Contains(StringaErrore) Then
@@ -373,44 +373,48 @@ Public Class wsSuperUser
 											End If
 
 											If Ok = True Then
+												gf.ScriveTestoSuFileAperto("Inserimento riga su tabella anni")
+
 												Sql = "Insert Into [" & nomeDb & "].[dbo].[Anni] Values (" &
-													"1, " & ' idAnno
-													"'" & Anno & "', " & ' Descrizione
-													"'', " & ' NomeSquadra
-													"null, " & ' Lat
-													"null, " & ' Lon
-													"'" & Indirizzo.Replace("'", "''") & "', " &
-													"'Campo " & Squadra.Replace("'", "''") & "', " & ' CampoSquadra
-													"'" & Squadra.Replace("'", "''") & "', " & ' NomePolisportiva
-													"'" & MailAdmin.Replace("'", "''") & "', " &
-													"null, " & ' PEC
-													"'" & Telefono.Replace("'", "''") & "', " &
-													"'" & PIVA.Replace("'", "''") & "', " &
-													"'" & CF.Replace("'", "''") & "', " &
-													"null, " & ' CodiceUnivoco
-													"null, " & ' SitoWeb
-													"'" & MailAdmin.Replace("'", "''") & "', " & ' MittenteMail
-													"null, " & ' GestionePagamenti
-													"null, " & ' CostoScuolaCalcio
-													"null, " & ' Suffisso
-													"null, " & ' iscrFirmaEntrambi
-													"null, " & ' Modulo Associato
-													"10, " & ' PercCashBack
-													"'N', " & ' Rate Manuali
-													"'N' " & ' Cashback
-													")"
+														"1, " & ' idAnno
+														"'" & Anno & "', " & ' Descrizione
+														"'', " & ' NomeSquadra
+														"null, " & ' Lat
+														"null, " & ' Lon
+														"'" & Indirizzo.Replace("'", "''") & "', " &
+														"'Campo " & Squadra.Replace("'", "''") & "', " & ' CampoSquadra
+														"'" & Squadra.Replace("'", "''") & "', " & ' NomePolisportiva
+														"'" & MailAdmin.Replace("'", "''") & "', " &
+														"null, " & ' PEC
+														"'" & Telefono.Replace("'", "''") & "', " &
+														"'" & PIVA.Replace("'", "''") & "', " &
+														"'" & CF.Replace("'", "''") & "', " &
+														"null, " & ' CodiceUnivoco
+														"null, " & ' SitoWeb
+														"'" & MailAdmin.Replace("'", "''") & "', " & ' MittenteMail
+														"null, " & ' GestionePagamenti
+														"null, " & ' CostoScuolaCalcio
+														"null, " & ' Suffisso
+														"null, " & ' iscrFirmaEntrambi
+														"null, " & ' Modulo Associato
+														"10, " & ' PercCashBack
+														"'N', " & ' Rate Manuali
+														"'N' " & ' Cashback
+														")"
 												Ritorno = ConnDbVuoto.EsegueSql(Server.MapPath("."), Sql, ConnessioneDBVuoto)
 												If Ritorno.Contains(StringaErrore) Then
 													Ok = False
 													gf.ScriveTestoSuFileAperto("Creazione voce su Tabella Anni: " & Ritorno)
 												Else
 													gf.ScriveTestoSuFileAperto("Dati inseriti in tabella Anni: " & "[" & nomeDb & "].[dbo].[Anni]")
+													gf.ScriveTestoSuFileAperto("Insertimento riga SquadraAnni")
+
 													Sql = "Insert Into SquadraAnni Values (" &
-													" " & idSocieta & ", " &
-													"1, " &
-													"'" & Anno & "', " &
-													"'S' " &
-													")"
+														" " & idSocieta & ", " &
+														"1, " &
+														"'" & Anno & "', " &
+														"'S' " &
+														")"
 													Ritorno = ConnGen.EsegueSql(Server.MapPath("."), Sql, ConnessioneGenerale)
 													If Ritorno.Contains(StringaErrore) Then
 														Ok = False
@@ -443,16 +447,21 @@ Public Class wsSuperUser
 														Else
 															gf.ScriveTestoSuFileAperto("Dati inseriti in tabella Dettaglio società: " & "[" & nomeDb & "].[dbo].[Anni]")
 
-															If TipoDB <> "SQLSERVER" Then
-																Sql = "GRANT ALL PRIVILEGES ON `0001\_00013`.* TO 'looigi'@'%' WITH GRANT OPTION;"
-																Ritorno = ConnNuovo.EsegueSql(Server.MapPath("."), Sql, ConnessioneNuovo, False)
-																If Ritorno.Contains(StringaErrore) Then
-																	Ok = False
-																	gf.ScriveTestoSuFileAperto("Errore nell'impostazione dei permessi sul db della nuova società: " & Ritorno)
-																Else
-																	gf.ScriveTestoSuFileAperto("Impostati i permessi sul db della nuova società")
-																End If
-															End If
+															'If TipoDB <> "SQLSERVER" Then
+															'	gf.ScriveTestoSuFileAperto("Concessione privilegi all'utente sul db della nuova società")
+
+															'	Dim ConnessioneGeneraleAdmin As String = LeggeImpostazioniDiBase(Server.MapPath("."), "", True)
+															'	Dim ConnGenAdmin As Object = New clsGestioneDB
+
+															'	Sql = "GRANT ALL PRIVILEGES ON `" & nomeDb & "`.* TO 'incalciouser'@'%' WITH GRANT OPTION;"
+															'	Ritorno = ConnGenAdmin.EsegueSql(Server.MapPath("."), Sql, ConnessioneGeneraleAdmin, False)
+															'	If Ritorno.Contains(StringaErrore) Then
+															'		Ok = False
+															'		gf.ScriveTestoSuFileAperto("Errore nell'impostazione dei permessi sul db della nuova società: " & Ritorno)
+															'	Else
+															'		gf.ScriveTestoSuFileAperto("Impostati i permessi sul db della nuova società")
+															'	End If
+															'End If
 
 															If Ok Then
 																Try
@@ -579,6 +588,22 @@ Public Class wsSuperUser
 					Sql = "Drop Database [" & nomeDb & "]"
 					Ritorno2 = ConnGen.EsegueSql(Server.MapPath("."), Sql, ConnessioneGenerale)
 					gf.ScriveTestoSuFileAperto("Drop Database: " & Ritorno2)
+
+					Sql = "Delete From [Generale].[dbo].[Squadre] Where idsquadra='" & idSocieta & "'"
+					Ritorno2 = ConnGen.EsegueSql(Server.MapPath("."), Sql, ConnessioneGenerale)
+					gf.ScriveTestoSuFileAperto("Delete from DettaglioSocieta: " & Ritorno2)
+
+					Sql = "Delete From [Generale].[dbo].[SquadraAnni] Where idsquadra='" & idSocieta & "'"
+					Ritorno2 = ConnGen.EsegueSql(Server.MapPath("."), Sql, ConnessioneGenerale)
+					gf.ScriveTestoSuFileAperto("Delete from DettaglioSocieta: " & Ritorno2)
+
+					Sql = "Delete From [Generale].[dbo].[Utenti] Where idsquadra='" & idSocieta & "'"
+					Ritorno2 = ConnGen.EsegueSql(Server.MapPath("."), Sql, ConnessioneGenerale)
+					gf.ScriveTestoSuFileAperto("Delete from DettaglioSocieta: " & Ritorno2)
+
+					Sql = "Delete From [Generale].[dbo].[DettaglioSocieta] Where codsquadra='" & nomeDb & "'"
+					Ritorno2 = ConnGen.EsegueSql(Server.MapPath("."), Sql, ConnessioneGenerale)
+					gf.ScriveTestoSuFileAperto("Delete from DettaglioSocieta: " & Ritorno2)
 
 					ConnGen.Close()
 				End If
@@ -875,7 +900,28 @@ Public Class wsSuperUser
 							"Where idSquadra=" & idSquadra
 						Ritorno = ConnGen.EsegueSql(Server.MapPath("."), Sql, ConnessioneGenerale)
 						If Not Ritorno.Contains(StringaErrore) Then
-							Ritorno = "*"
+							Sql = "Select * From Squadre Where idSquadra=" & idSquadra
+							Rec = ConnGen.LeggeQuery(Server.MapPath("."), Sql, ConnessioneGenerale)
+							If TypeOf (Rec) Is String Then
+								Ritorno = Rec
+							Else
+								If Not Rec.Eof() Then
+									Dim CodSquadra As String = Rec("CodSquadra").Value
+
+									Sql = "Delete From dettagliosocieta " &
+										"Where codsquadra='" & CodSquadra & "'"
+									Ritorno = ConnGen.EsegueSql(Server.MapPath("."), Sql, ConnessioneGenerale)
+									If Not Ritorno.Contains(StringaErrore) Then
+										Sql = "Update squadraanni set Eliminata='S' " &
+											"Where idsquadra=" & idSquadra
+										Ritorno = ConnGen.EsegueSql(Server.MapPath("."), Sql, ConnessioneGenerale)
+										If Not Ritorno.Contains(StringaErrore) Then
+											Ritorno = "*"
+										End If
+									End If
+								End If
+							End If
+
 						End If
 					End If
 				Catch ex As Exception

@@ -1698,6 +1698,7 @@ Public Class wsCampionato
 									If Soprannome <> "" Then Soprannome = "'" & Soprannome & "' "
 									Dim Nominativo As String = Rec("Nome").Value & " " & Soprannome & Rec("Cognome").Value
 									Dim Path As String = PathBaseMultimedia & "/" & NomeSquadra & "/Giocatori/" & idAnno & "_" & Rec("idGiocatore").Value & ".kgb"
+
 									Path = DecriptaImmagine(Server.MapPath("."), Path)
 
 									StampaMarcatori &= "<tr style=""background-color: " & Colore & ";"">" & vbCrLf

@@ -50,7 +50,12 @@ Public Class clsRecordset
 			If RigaSelezionata.Item(NomeCampo) Is DBNull.Value Then
 				r.Value = "<NULL>"
 			Else
-				r.Value = RigaSelezionata.Item(NomeCampo)
+				Dim Tipo As Type = RigaSelezionata.Item(NomeCampo).GetType
+				If Tipo.Name = "Byte[]" Then
+					r.Value = System.Text.Encoding.UTF8.GetString(RigaSelezionata.Item(NomeCampo))
+				Else
+					r.Value = RigaSelezionata.Item(NomeCampo)
+				End If
 			End If
 		Catch ex As Exception
 			r.Value = StringaErrore & NomeCampo & ". Lunghezza DT: " & DT.Rows.Count & ". Riga Attuale: " & RigaAttuale & ". EOF: " & Fine & ". SQL: " & Sql
