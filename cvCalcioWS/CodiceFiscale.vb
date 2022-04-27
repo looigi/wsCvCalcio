@@ -201,7 +201,7 @@
         If Connessione = "" Then
             Ritorno = ErroreConnessioneNonValida
         Else
-            Dim Conn As Object = new clsGestioneDB
+            Dim Conn As Object = New clsGestioneDB("Generale")
 
             If TypeOf (Conn) Is String Then
                 Ritorno = ErroreConnessioneDBNonValida & ":" & Conn

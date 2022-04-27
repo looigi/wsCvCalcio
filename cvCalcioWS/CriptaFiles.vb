@@ -18,7 +18,7 @@ Public Class CriptaFiles
 		in_file As String, ByVal out_file As String, ByVal _
 		encrypt As Boolean)
 
-		If TipoDB <> "SQLSERVER" Then
+		If TipoPATH <> "SQLSERVER" Then
 			in_file = in_file.Replace("\", "/")
 			in_file = in_file.Replace("//", "/")
 

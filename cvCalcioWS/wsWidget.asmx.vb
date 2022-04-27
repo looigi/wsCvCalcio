@@ -46,7 +46,7 @@ Public Class wsWidget
 		If Connessione = "" Then
 			Ritorno = ErroreConnessioneNonValida
 		Else
-			Dim Conn As Object = new clsGestioneDB
+			Dim Conn As Object = New clsGestioneDB(Squadra)
 
 			If TypeOf (Conn) Is String Then
 				Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
@@ -96,7 +96,7 @@ Public Class wsWidget
 		If Connessione = "" Then
 			Ritorno = ErroreConnessioneNonValida
 		Else
-			Dim Conn As Object = new clsGestioneDB
+			Dim Conn As Object = New clsGestioneDB(Squadra)
 
 			If TypeOf (Conn) Is String Then
 				Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
@@ -143,7 +143,7 @@ Public Class wsWidget
 		If Connessione = "" Then
 			Ritorno = ErroreConnessioneNonValida
 		Else
-			Dim Conn As Object = new clsGestioneDB
+			Dim Conn As Object = New clsGestioneDB(Squadra)
 			Dim Trovato As Boolean = False
 
 			If TypeOf (Conn) Is String Then
@@ -184,7 +184,7 @@ Public Class wsWidget
 		If Connessione = "" Then
 			Ritorno = ErroreConnessioneNonValida
 		Else
-			Dim Conn As Object = new clsGestioneDB
+			Dim Conn As Object = New clsGestioneDB(Squadra)
 
 			If TypeOf (Conn) Is String Then
 				Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
@@ -228,7 +228,7 @@ Public Class wsWidget
 		If Connessione = "" Then
 			Ritorno = ErroreConnessioneNonValida
 		Else
-			Dim Conn As Object = new clsGestioneDB
+			Dim Conn As Object = New clsGestioneDB(Squadra)
 			Dim Trovato As Boolean = False
 
 			If TypeOf (Conn) Is String Then
@@ -284,31 +284,38 @@ Public Class wsWidget
 		If Connessione = "" Then
 			Ritorno = ErroreConnessioneNonValida
 		Else
-			Dim Conn As Object = new clsGestioneDB
+			Dim Conn As Object = New clsGestioneDB(Squadra)
 
 			If TypeOf (Conn) Is String Then
 				Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
 			Else
 				Dim Rec As Object
 				Dim Altro As String = ""
+				Dim Altro2 As String = ""
 
 				If Tutte = "" Or Tutte = "N" Or Tutte = "NO" Then
-					Altro = "Top 3"
+					If TipoDB = "SQLSERVER" Then
+						Altro = "Top 3"
+						Altro2 = ""
+					Else
+						Altro = ""
+						Altro2 = "Limit 3"
+					End If
 				End If
 
-				Dim Sql As String = "Delete From WidgetFirme"
+				Dim Sql As String = "Delete From widgetfirme"
 				Ritorno = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
 
-				Sql = "Insert Into WidgetFirme Select " & Altro & " A.*, B.Cognome + ' ' + B.Nome As Giocatore, " &
+				Sql = "Insert Into widgetfirme (idGiocatore, idGenitore, Datella, DataFirma, Validazione, Giocatore, Genitore) Select " & Altro & " A.*, " & IIf(TipoDB = "SQLSERVER", "B.Cognome + ' ' + B.Nome", "CONCAT(B.Cognome, ' ', B.Nome)") & " As Giocatore, " &
 					"CASE A.idGenitore " &
 					"     WHEN 1 THEN C.Genitore1 " &
 					"     WHEN 2 THEN C.Genitore2 " &
 					"     WHEN 3 THEN B.Cognome + ' ' + B.Nome " &
 					"END As Genitore " &
-					"From GiocatoriFirme A " &
-					"Left Join Giocatori B On A.idGiocatore = B.idGiocatore " &
-					"Left Join GiocatoriDettaglio C On A.idGiocatore = C.idGiocatore " &
-					"Where (DataFirma Is Not Null And DataFirma <> '') And (Validazione Is Null Or Validazione = '') And idGenitore < 100"
+					"From giocatorifirme A " &
+					"Left Join giocatori B On A.idGiocatore = B.idGiocatore " &
+					"Left Join giocatoridettaglio C On A.idGiocatore = C.idGiocatore " &
+					"Where (DataFirma Is Not Null And DataFirma <> '') And (Validazione Is Null Or Validazione = '') And idGenitore < 100 " & Altro2
 				Ritorno = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
 			End If
 		End If
@@ -335,7 +342,7 @@ Public Class wsWidget
 		If Connessione = "" Then
 			Ritorno = ErroreConnessioneNonValida
 		Else
-			Dim Conn As Object = new clsGestioneDB
+			Dim Conn As Object = New clsGestioneDB(Squadra)
 			Dim Trovato1 As Boolean = False
 			Dim Trovato2 As Boolean = False
 
@@ -397,7 +404,7 @@ Public Class wsWidget
 		If Connessione = "" Then
 			Ritorno = ErroreConnessioneNonValida
 		Else
-			Dim Conn As Object = new clsGestioneDB
+			Dim Conn As Object = New clsGestioneDB(Squadra)
 
 			If TypeOf (Conn) Is String Then
 				Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
@@ -453,7 +460,7 @@ Public Class wsWidget
 		If Connessione = "" Then
 			Ritorno = ErroreConnessioneNonValida
 		Else
-			Dim Conn As Object = new clsGestioneDB
+			Dim Conn As Object = New clsGestioneDB(Squadra)
 			Dim Trovato As Boolean = False
 
 			If TypeOf (Conn) Is String Then
@@ -512,7 +519,7 @@ Public Class wsWidget
 		If Connessione = "" Then
 			Ritorno = ErroreConnessioneNonValida
 		Else
-			Dim Conn As Object = new clsGestioneDB
+			Dim Conn As Object = New clsGestioneDB(Squadra)
 
 			If TypeOf (Conn) Is String Then
 				Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
@@ -686,7 +693,7 @@ Public Class wsWidget
 		If Connessione = "" Then
 			Ritorno = ErroreConnessioneNonValida
 		Else
-			Dim Conn As Object = new clsGestioneDB
+			Dim Conn As Object = New clsGestioneDB(Squadra)
 
 			If TypeOf (Conn) Is String Then
 				Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
@@ -751,7 +758,7 @@ Public Class wsWidget
 		If Connessione = "" Then
 			Ritorno = ErroreConnessioneNonValida
 		Else
-			Dim Conn As Object = new clsGestioneDB
+			Dim Conn As Object = New clsGestioneDB(Squadra)
 
 			If TypeOf (Conn) Is String Then
 				Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
@@ -848,7 +855,7 @@ Public Class wsWidget
 		If Connessione = "" Then
 			Ritorno = ErroreConnessioneNonValida
 		Else
-			Dim Conn As Object = new clsGestioneDB
+			Dim Conn As Object = New clsGestioneDB(Squadra)
 
 			If TypeOf (Conn) Is String Then
 				Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
@@ -1145,7 +1152,7 @@ Public Class wsWidget
 		If Connessione = "" Then
 			Ritorno = ErroreConnessioneNonValida
 		Else
-			Dim Conn As Object = new clsGestioneDB
+			Dim Conn As Object = New clsGestioneDB(Squadra)
 			Dim Trovato As Boolean = False
 
 			If TypeOf (Conn) Is String Then

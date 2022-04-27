@@ -13,7 +13,7 @@ Public Class clsMariaDB
 		Try
 			Conn.Open()
 		Catch ex As Exception
-			Return ex.Message
+			Return "ERROR: " & ex.Message
 		End Try
 
 		Return Conn

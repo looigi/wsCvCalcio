@@ -17,7 +17,7 @@ Public Class wsUtentiLocali
 		If Connessione = "" Then
 			Ritorno = ErroreConnessioneNonValida
 		Else
-			Dim Conn As Object = new clsGestioneDB
+			Dim Conn As Object = New clsGestioneDB("Generale")
 
 			If TypeOf (Conn) Is String Then
 				Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
@@ -39,12 +39,23 @@ Public Class wsUtentiLocali
 						'If Rec(0).Value Is DBNull.Value Then
 						If Rec(0).Value = 1 Then
 							idEve = 1
-							Sql = "Insert Into ErroriLogin Values (" & idUtente & ", " & idEve & ")"
 						Else
 							idEve = Rec(0).Value
-							Sql = "Update ErroriLogin Set Contatore = " & idEve & " Where idUtente=" & idUtente
 						End If
 						Rec.Close()
+
+						Sql = "Select * From ErroriLogin Where idUtente=" & idUtente
+						Rec = Conn.LeggeQuery(Server.MapPath("."), Sql, Connessione)
+						If TypeOf (Rec) Is String Then
+							Ritorno = Rec
+						Else
+							If Rec.Eof Then
+								Sql = "Insert Into errorilogin Values (" & idUtente & ", " & idEve & ")"
+							Else
+								Sql = "Update errorilogin Set Contatore = " & idEve & " Where idUtente=" & idUtente
+							End If
+							Rec.Close()
+						End If
 					End If
 
 					If idEve > 3 Then
@@ -55,7 +66,7 @@ Public Class wsUtentiLocali
 							Ritorno = Rec
 						Else
 							Dim Utente As String = Rec("Utente").Value
-							Ritorno = RitornaMailDopoRichiesta(Server.MapPath("."), Utente)
+							Ritorno = RitornaMailDopoRichiesta(Server.MapPath("."), "Generale", Utente)
 							Rec.Close()
 
 							Ritorno = "ERROR: password scaduta"
@@ -93,7 +104,7 @@ Public Class wsUtentiLocali
 		If Connessione = "" Then
 			Ritorno = ErroreConnessioneNonValida
 		Else
-			Dim Conn As Object = new clsGestioneDB
+			Dim Conn As Object = New clsGestioneDB("Generale")
 
 			If TypeOf (Conn) Is String Then
 				Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
@@ -137,7 +148,7 @@ Public Class wsUtentiLocali
 		If ConnessioneGenerale = "" Then
 			Ritorno = ErroreConnessioneNonValida
 		Else
-			Dim Conn As Object = New clsGestioneDB
+			Dim Conn As Object = New clsGestioneDB(Squadra)
 
 			If TypeOf (Conn) Is String Then
 				Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
@@ -198,7 +209,7 @@ Public Class wsUtentiLocali
 		If Connessione = "" Then
 			Ritorno = ErroreConnessioneNonValida
 		Else
-			Dim Conn As Object = new clsGestioneDB
+			Dim Conn As Object = New clsGestioneDB("Generale")
 
 			If TypeOf (Conn) Is String Then
 				Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
@@ -238,7 +249,7 @@ Public Class wsUtentiLocali
 
 	<WebMethod()>
 	Public Function RitornaMailDimenticata(ByVal Utente As String) As String
-		Return RitornaMailDopoRichiesta(Server.MapPath("."), Utente)
+		Return RitornaMailDopoRichiesta(Server.MapPath("."), "Generale", Utente)
 	End Function
 
 	<WebMethod()>
@@ -259,7 +270,7 @@ Public Class wsUtentiLocali
 		If Connessione = "" Then
 			Ritorno = ErroreConnessioneNonValida
 		Else
-			Dim Conn As Object = new clsGestioneDB
+			Dim Conn As Object = New clsGestioneDB(Squadra)
 
 			If TypeOf (Conn) Is String Then
 				Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
@@ -275,13 +286,13 @@ Public Class wsUtentiLocali
 				Try
 					Sql = "SELECT A.idAnno, A.idUtente, Utente, Cognome, Nome, " &
 						"Password, EMail, idCategoria, A.idTipologia As idTipologia, A.idSquadra, Descrizione As Squadra, PasswordScaduta, Telefono, " &
-						"COALESCE(B.Eliminata, 'N'), B.idTipologia As idTipo2, B.idLicenza, A.idSquadra, A.AmmOriginale, C.Mail, C.PwdMail, D.AggiornaWidgets As AggiornaWidget " &
+						" " & IIf(TipoDB = "SQLSERVER", "ISNULL(B.Eliminata, 'N')", "COALESCE(B.Eliminata, 'N')") & " As Eliminata, B.idTipologia As idTipo2, B.idLicenza, A.idSquadra, A.AmmOriginale, C.Mail, C.PwdMail, D.AggiornaWidgets As AggiornaWidget " &
 						"FROM Utenti A Left Join Squadre B On A.idSquadra = B.idSquadra " &
 						"Left Join UtentiMails C On A.idUtente = C.idUtente " &
 						"Left Join AggiornamentoWidgets D On A.idSquadra = D.idSquadra " &
 						"Where Upper(Utente)='" & Utente.ToUpper.Replace("'", "''") & "' And A.Eliminato = 'N' " &
 						"Order By A.idTipologia"
-					Rec = Conn.LeggeQuery(Server.MapPath("."),   Sql, Connessione)
+					Rec = Conn.LeggeQuery(Server.MapPath("."), Sql, Connessione)
 					If TypeOf (Rec) Is String Then
 						Ritorno = Rec
 					Else
@@ -537,7 +548,7 @@ Public Class wsUtentiLocali
 		If Connessione = "" Then
 			Ritorno = ErroreConnessioneNonValida
 		Else
-			Dim Conn As Object = new clsGestioneDB
+			Dim Conn As Object = New clsGestioneDB(Squadra)
 
 			If TypeOf (Conn) Is String Then
 				Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
@@ -573,7 +584,7 @@ Public Class wsUtentiLocali
 		If Connessione = "" Then
 			Ritorno = ErroreConnessioneNonValida
 		Else
-			Dim Conn As Object = new clsGestioneDB
+			Dim Conn As Object = New clsGestioneDB(Squadra)
 
 			If TypeOf (Conn) Is String Then
 				Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
@@ -637,7 +648,7 @@ Public Class wsUtentiLocali
 		If Connessione = "" Then
 			Ritorno = ErroreConnessioneNonValida
 		Else
-			Dim Conn As Object = new clsGestioneDB
+			Dim Conn As Object = New clsGestioneDB(Squadra)
 
 			If TypeOf (Conn) Is String Then
 				Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
@@ -695,7 +706,7 @@ Public Class wsUtentiLocali
 		If Connessione = "" Then
 			Ritorno = ErroreConnessioneNonValida
 		Else
-			Dim Conn As Object = new clsGestioneDB
+			Dim Conn As Object = New clsGestioneDB(Squadra)
 
 			If TypeOf (Conn) Is String Then
 				Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
@@ -804,7 +815,7 @@ Public Class wsUtentiLocali
 		If Connessione = "" Then
 			Ritorno = ErroreConnessioneNonValida
 		Else
-			Dim Conn As Object = new clsGestioneDB
+			Dim Conn As Object = New clsGestioneDB("Generale")
 
 			If TypeOf (Conn) Is String Then
 				Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
@@ -844,7 +855,7 @@ Public Class wsUtentiLocali
 		If Connessione = "" Then
 			Ritorno = ErroreConnessioneNonValida
 		Else
-			Dim Conn As Object = new clsGestioneDB
+			Dim Conn As Object = New clsGestioneDB(Squadra)
 
 			If TypeOf (Conn) Is String Then
 				Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
@@ -983,7 +994,7 @@ Public Class wsUtentiLocali
 		If Connessione = "" Then
 			Ritorno = ErroreConnessioneNonValida
 		Else
-			Dim Conn As Object = new clsGestioneDB
+			Dim Conn As Object = New clsGestioneDB(Squadra)
 
 			If TypeOf (Conn) Is String Then
 				Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
@@ -1009,7 +1020,7 @@ Public Class wsUtentiLocali
 		If Connessione = "" Then
 			Ritorno = ErroreConnessioneNonValida
 		Else
-			Dim Conn As Object = new clsGestioneDB
+			Dim Conn As Object = New clsGestioneDB(Squadra)
 
 			If TypeOf (Conn) Is String Then
 				Ritorno = ErroreConnessioneDBNonValida & ":" & Conn

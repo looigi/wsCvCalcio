@@ -149,7 +149,7 @@ Public Class wsGenerale
 		If Connessione = "" Then
 			Ritorno = ErroreConnessioneNonValida & ":" & Connessione
 		Else
-			Dim Conn As Object = New clsGestioneDB
+			Dim Conn As Object = New clsGestioneDB(Squadra)
 
 			If TypeOf (Conn) Is String Then
 				Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
@@ -627,7 +627,7 @@ Public Class wsGenerale
 		If Connessione = "" Then
 			Ritorno = ErroreConnessioneNonValida & ":" & Connessione
 		Else
-			Dim Conn As Object = New clsGestioneDB
+			Dim Conn As Object = New clsGestioneDB(Squadra)
 
 			If TypeOf (Conn) Is String Then
 				Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
@@ -704,7 +704,7 @@ Public Class wsGenerale
 		If Connessione = "" Then
 			Ritorno = ErroreConnessioneNonValida & ":" & Connessione
 		Else
-			Dim Conn As Object = New clsGestioneDB
+			Dim Conn As Object = New clsGestioneDB(Squadra)
 
 			If TypeOf (Conn) Is String Then
 				Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
@@ -740,7 +740,7 @@ Public Class wsGenerale
 		If Connessione = "" Then
 			Ritorno = ErroreConnessioneNonValida & ":" & Connessione
 		Else
-			Dim Conn As Object = New clsGestioneDB
+			Dim Conn As Object = New clsGestioneDB(Squadra)
 
 			If TypeOf (Conn) Is String Then
 				Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
@@ -765,7 +765,7 @@ Public Class wsGenerale
 		If Connessione = "" Then
 			Ritorno = ErroreConnessioneNonValida & ":" & Connessione
 		Else
-			Dim Conn As Object = New clsGestioneDB
+			Dim Conn As Object = New clsGestioneDB(Cod_Squadra)
 
 			If TypeOf (Conn) Is String Then
 				Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
@@ -823,8 +823,8 @@ Public Class wsGenerale
 		If Connessione = "" Then
 			Ritorno = ErroreConnessioneNonValida
 		Else
-			Dim Conn As Object = New clsGestioneDB
-			Dim ConnGen As Object = New clsGestioneDB
+			Dim Conn As Object = New clsGestioneDB(Squadra)
+			Dim ConnGen As Object = New clsGestioneDB(Squadra)
 
 			If TypeOf (Conn) Is String Or TypeOf (ConnGen) Is String Then
 				If TypeOf (Conn) Is String Then
@@ -1014,7 +1014,7 @@ Public Class wsGenerale
 		If Connessione = "" Then
 			Ritorno = ErroreConnessioneNonValida
 		Else
-			Dim Conn As Object = New clsGestioneDB
+			Dim Conn As Object = New clsGestioneDB(Squadra)
 
 			If TypeOf (Conn) Is String Then
 				Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
@@ -1057,7 +1057,7 @@ Public Class wsGenerale
 		If Connessione = "" Then
 			Ritorno = ErroreConnessioneNonValida
 		Else
-			Dim Conn As Object = New clsGestioneDB
+			Dim Conn As Object = New clsGestioneDB(Squadra)
 
 			If TypeOf (Conn) Is String Then
 				Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
@@ -1130,7 +1130,7 @@ Public Class wsGenerale
 		If Connessione = "" Then
 			Ritorno = ErroreConnessioneNonValida
 		Else
-			Dim Conn As Object = New clsGestioneDB
+			Dim Conn As Object = New clsGestioneDB(Squadra)
 
 			If TypeOf (Conn) Is String Then
 				Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
@@ -1175,7 +1175,7 @@ Public Class wsGenerale
 		If Connessione = "" Then
 			Ritorno = ErroreConnessioneNonValida
 		Else
-			Dim Conn As Object = New clsGestioneDB
+			Dim Conn As Object = New clsGestioneDB(Squadra)
 
 			If TypeOf (Conn) Is String Then
 				Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
@@ -1220,7 +1220,7 @@ Public Class wsGenerale
 		If Connessione = "" Then
 			Ritorno = ErroreConnessioneNonValida
 		Else
-			Dim Conn As Object = New clsGestioneDB
+			Dim Conn As Object = New clsGestioneDB(Squadra)
 
 			If TypeOf (Conn) Is String Then
 				Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
@@ -1287,7 +1287,7 @@ Public Class wsGenerale
 		If Connessione = "" Then
 			Ritorno = ErroreConnessioneNonValida
 		Else
-			Dim Conn As Object = New clsGestioneDB
+			Dim Conn As Object = New clsGestioneDB(Squadra)
 
 			If TypeOf (Conn) Is String Then
 				Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
@@ -1420,7 +1420,7 @@ Public Class wsGenerale
 		If Connessione = "" Then
 			Ritorno = ErroreConnessioneNonValida
 		Else
-			Dim Conn As Object = New clsGestioneDB
+			Dim Conn As Object = New clsGestioneDB(Squadra)
 
 			If TypeOf (Conn) Is String Then
 				Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
@@ -1495,7 +1495,7 @@ Public Class wsGenerale
 		If Connessione = "" Then
 			Ritorno = ErroreConnessioneNonValida
 		Else
-			Dim Conn As Object = New clsGestioneDB
+			Dim Conn As Object = New clsGestioneDB(Squadra)
 			Dim Sql As String = ""
 
 			Sql = iif(tipodb="SQLSERVER", "Begin transaction", "Start transaction")
@@ -1568,7 +1568,7 @@ Public Class wsGenerale
 		If Connessione = "" Then
 			Ritorno = ErroreConnessioneNonValida & ":" & Connessione
 		Else
-			Dim Conn As Object = New clsGestioneDB
+			Dim Conn As Object = New clsGestioneDB(Squadra)
 
 			If TypeOf (Conn) Is String Then
 				Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
@@ -1588,7 +1588,7 @@ Public Class wsGenerale
 		If Connessione = "" Then
 			Ritorno = ErroreConnessioneNonValida
 		Else
-			Dim Conn As Object = New clsGestioneDB
+			Dim Conn As Object = New clsGestioneDB("Generale")
 
 			If TypeOf (Conn) Is String Then
 				Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
@@ -1640,7 +1640,7 @@ Public Class wsGenerale
 		If Connessione = "" Then
 			Ritorno = ErroreConnessioneNonValida
 		Else
-			Dim Conn As Object = New clsGestioneDB
+			Dim Conn As Object = New clsGestioneDB(Squadra)
 
 			If TypeOf (Conn) Is String Then
 				Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
@@ -1839,7 +1839,7 @@ Public Class wsGenerale
 
 					Ritorno = urlIniziale & "multimedia/Appoggio/" & Datella & ".jpg" ' §" & fileOrigine & "§" & fileDestinazione
 
-					If TipoDB <> "SQLSERVER" Then
+					If TipoPATH <> "SQLSERVER" Then
 						Ritorno = Ritorno.Replace("\", "/")
 						Ritorno = Ritorno.Replace("//", "/")
 						Ritorno = Ritorno.Replace("http:/", "http://")
@@ -1953,7 +1953,7 @@ Public Class wsGenerale
 		If Connessione = "" Then
 			Ritorno = ErroreConnessioneNonValida
 		Else
-			Dim Conn As Object = New clsGestioneDB
+			Dim Conn As Object = New clsGestioneDB(Squadra)
 
 			If TypeOf (Conn) Is String Then
 				Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
@@ -2070,7 +2070,7 @@ Public Class wsGenerale
 		If Connessione = "" Then
 			Ritorno = ErroreConnessioneNonValida & ":" & Connessione
 		Else
-			Dim Conn As Object = New clsGestioneDB
+			Dim Conn As Object = New clsGestioneDB("Generale")
 
 			If TypeOf (Conn) Is String Then
 				Ritorno = ErroreConnessioneDBNonValida & ":" & Conn

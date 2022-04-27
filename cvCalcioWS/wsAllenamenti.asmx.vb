@@ -18,7 +18,7 @@ Public Class wsAllenamenti
 		If Connessione = "" Then
 			Ritorno = ErroreConnessioneNonValida
 		Else
-			Dim Conn As Object = new clsGestioneDB
+			Dim Conn As Object = New clsGestioneDB(Squadra)
 
 			If TypeOf (Conn) Is String Then
 				Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
@@ -59,7 +59,7 @@ Public Class wsAllenamenti
 	Public Function InseriscePresenzaAllenamenti(CodiceTessera As String, NomeLettore As String, DataOra As String) As String
 		Dim Ritorno As String = ""
 		Dim Connessione As String = LeggeImpostazioniDiBase(Server.MapPath("."), "")
-		Dim Conn As Object = new clsGestioneDB
+		Dim Conn As Object = New clsGestioneDB("Generale")
 
 		If TypeOf (Conn) Is String Then
 			Ritorno = "01" ' ErroreConnessioneDBNonValida & ":" & Conn
@@ -170,7 +170,7 @@ Public Class wsAllenamenti
 						If Connessione = "" Then
 							Ritorno = ErroreConnessioneNonValida
 						Else
-							Dim Conn As Object = new clsGestioneDB
+							Dim Conn As Object = New clsGestioneDB(Squadra)
 
 							If TypeOf (Conn) Is String Then
 								Ritorno = "01" ' ErroreConnessioneDBNonValida & ":" & Conn
@@ -326,7 +326,7 @@ Public Class wsAllenamenti
 		If Connessione = "" Then
 			Ritorno = ErroreConnessioneNonValida
 		Else
-			Dim Conn As Object = new clsGestioneDB
+			Dim Conn As Object = New clsGestioneDB(Squadra)
 
 			If TypeOf (Conn) Is String Then
 				Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
@@ -401,7 +401,7 @@ Public Class wsAllenamenti
 		If Connessione = "" Then
 			Ritorno = ErroreConnessioneNonValida
 		Else
-			Dim Conn As Object = new clsGestioneDB
+			Dim Conn As Object = New clsGestioneDB(Squadra)
 
 			If TypeOf (Conn) Is String Then
 				Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
@@ -451,7 +451,7 @@ Public Class wsAllenamenti
 		If Connessione = "" Then
 			Ritorno = ErroreConnessioneNonValida
 		Else
-			Dim Conn As Object = new clsGestioneDB
+			Dim Conn As Object = New clsGestioneDB(Squadra)
 
 			If TypeOf (Conn) Is String Then
 				Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
@@ -674,7 +674,7 @@ Public Class wsAllenamenti
 		If Connessione = "" Then
 			Ritorno = ErroreConnessioneNonValida
 		Else
-			Dim Conn As Object = new clsGestioneDB
+			Dim Conn As Object = New clsGestioneDB(Squadra)
 
 			If TypeOf (Conn) Is String Then
 				Ritorno = ErroreConnessioneDBNonValida & ":" & Conn

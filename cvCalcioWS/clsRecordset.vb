@@ -48,7 +48,7 @@ Public Class clsRecordset
 		Dim r As New Ritorno
 		Try
 			If RigaSelezionata.Item(NomeCampo) Is DBNull.Value Then
-				r.Value = "<NULL>"
+				r.Value = "" ' <NULL>
 			Else
 				Dim Tipo As Type = RigaSelezionata.Item(NomeCampo).GetType
 				If Tipo.Name = "Byte[]" Then

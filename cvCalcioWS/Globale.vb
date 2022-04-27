@@ -6,7 +6,7 @@ Imports System.Windows.Forms
 
 Module Globale
 	Public effettuaLog As Boolean = True
-	Public effettuaLogMail As Boolean = False
+	Public effettuaLogMail As Boolean = True
 
 	Public nomeFileLogMail As String = ""
 
@@ -53,7 +53,26 @@ Module Globale
 	Public CryptPasswordString As String = "WPippoBaudo227!"
 	Public stringaWidgets As String = "1-1-1-1-1"
 	Public TipoDB As String = "MariaDB"
+	Public TipoPATH As String = "SQLSERVER"
+	Public TipoPDF As String = "WINDOWS"
 	'Public mdb(5) As clsMariaDB
+
+	'Public CodicePartitaPerImmagini As String = ""
+
+	Public Function ConvertePath(Path As String) As String
+		Dim NomeFile As String = Path
+
+		If TipoPATH <> "SQLSERVER" Then
+			NomeFile = NomeFile.Replace("\", "/")
+			NomeFile = NomeFile.Replace("/\", "/")
+			Dim inizio As String = Mid(NomeFile, 1, 10)
+			Dim resto As String = Mid(NomeFile, 10, NomeFile.Length)
+			resto = resto.Replace("//", "/")
+			NomeFile = inizio & resto
+		End If
+
+		Return NomeFile
+	End Function
 
 	Public Function LeggeTipoDB() As String
 		'If TipoDB = "" Then
@@ -123,14 +142,14 @@ Module Globale
 		Ritorno = Conn.EsegueSql(MP, Sql, Connessione)
 	End Sub
 
-	Public Function RitornaMailDopoRichiesta(MP As String, Utente As String) As String
+	Public Function RitornaMailDopoRichiesta(MP As String, Squadra As String, Utente As String) As String
 		Dim Ritorno As String = ""
 		Dim Connessione As String = LeggeImpostazioniDiBase(MP, "")
 
 		If Connessione = "" Then
 			Ritorno = ErroreConnessioneNonValida
 		Else
-			Dim Conn As Object = New clsGestioneDB
+			Dim Conn As Object = New clsGestioneDB(Squadra)
 
 			If TypeOf (Conn) Is String Then
 				Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
@@ -311,64 +330,64 @@ Module Globale
 
 	Public Function DecriptaImmagine(MP As String, Nome As String) As String
 		Dim Ritorno As String = ""
-		Dim gf As New GestioneFilesDirectory
-		Dim Barra As String = "\"
-		Dim ControBarra As String = "/"
+		'Dim gf As New GestioneFilesDirectory
+		'Dim Barra As String = "\"
+		'Dim ControBarra As String = "/"
 
-		If TipoDB <> "SQLSERVER" Then Barra = "/"
+		'If TipoDB <> "SQLSERVER" Then Barra = "/"
 
-		Dim tutto As String = gf.LeggeFileIntero(MP & "\Impostazioni\PathAllegati.txt")
-		Dim campi() As String = tutto.Split(";")
-		Dim pathFisico As String = campi(0).Replace(vbCrLf, "")
-		Dim pathUrl As String = campi(5).Replace(vbCrLf, "")
+		'Dim tutto As String = gf.LeggeFileIntero(MP & "\Impostazioni\PathAllegati.txt")
+		'Dim campi() As String = tutto.Split(";")
+		'Dim pathFisico As String = campi(0).Replace(vbCrLf, "")
+		'Dim pathUrl As String = campi(5).Replace(vbCrLf, "")
 
-		If Strings.Right(pathFisico, 1) <> Barra Then pathFisico &= Barra
-		If Strings.Right(pathUrl, 1) <> ControBarra Then pathUrl &= ControBarra
-		'If TipoDB = "SQLSERVER" Then
-		'	pathFisico = pathFisico.Replace("Allegati", "CalcioImages")
-		'Else
-		'	pathUrl = pathUrl.Replace("Multimedia/allegati", "Multimedia/multimedia")
+		'If Strings.Right(pathFisico, 1) <> Barra Then pathFisico &= Barra
+		'If Strings.Right(pathUrl, 1) <> ControBarra Then pathUrl &= ControBarra
+		''If TipoDB = "SQLSERVER" Then
+		''	pathFisico = pathFisico.Replace("Allegati", "CalcioImages")
+		''Else
+		''	pathUrl = pathUrl.Replace("Multimedia/allegati", "Multimedia/multimedia")
+		''End If
+
+		'Dim pathLetturaFile1 As String = Nome.Replace(pathUrl, "")
+
+		'pathLetturaFile1 = pathLetturaFile1.Replace(ControBarra, Barra)
+		''pathLetturaFile1 = pathFisico & pathLetturaFile1
+		'pathLetturaFile1 = pathLetturaFile1.Replace(Barra & Barra, Barra)
+		'pathLetturaFile1 = pathLetturaFile1.Replace(" ", "_")
+
+		'Dim pathAppoggio As String = pathFisico & "Appoggio"
+		'Dim stringaRandom As String = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"
+		'Dim r As String = ""
+		'For i As Integer = 1 To 5
+		'	Dim p As String = RitornaValoreRandom(stringaRandom.Length - 1) + 1
+		'	r &= Mid(stringaRandom, p, 1)
+		'Next
+		'Dim NomeFile As String = r & "_" & Now.Year & Format(Now.Month, "00") & Format(Now.Day, "00") & Format(Now.Hour, "00") & Format(Now.Minute & "00") & Format(Now.Second, "00") & ".jpg"
+		'Dim pathScritturaFile1 As String = pathAppoggio & Barra & NomeFile
+		'Dim pathUrl1 As String = pathUrl & "multimedia/Appoggio" & Barra & NomeFile
+
+		'Dim PathBaseImmScon As String = pathUrl & "Sconosciuto.png"
+
+		'Dim c As New CriptaFiles
+
+		'If TipoDB <> "SQLSERVER" Then
+		'	pathLetturaFile1 = pathLetturaFile1.Replace("Multimedia/allegati", "Multimedia/multimedia")
+		'	pathScritturaFile1 = pathScritturaFile1.Replace("Multimedia/allegati", "Multimedia/multimedia")
 		'End If
 
-		Dim pathLetturaFile1 As String = Nome.Replace(pathUrl, "")
+		''Return pathLetturaFile1 & " - " & pathScritturaFile1 & " - " & pathUrl1 & PathBaseImmScon
 
-		pathLetturaFile1 = pathLetturaFile1.Replace(ControBarra, Barra)
-		'pathLetturaFile1 = pathFisico & pathLetturaFile1
-		pathLetturaFile1 = pathLetturaFile1.Replace(Barra & Barra, Barra)
-		pathLetturaFile1 = pathLetturaFile1.Replace(" ", "_")
-
-		Dim pathAppoggio As String = pathFisico & "Appoggio"
-		Dim stringaRandom As String = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"
-		Dim r As String = ""
-		For i As Integer = 1 To 5
-			Dim p As String = RitornaValoreRandom(stringaRandom.Length - 1) + 1
-			r &= Mid(stringaRandom, p, 1)
-		Next
-		Dim NomeFile As String = r & "_" & Now.Year & Format(Now.Month, "00") & Format(Now.Day, "00") & Format(Now.Hour, "00") & Format(Now.Minute & "00") & Format(Now.Second, "00") & ".jpg"
-		Dim pathScritturaFile1 As String = pathAppoggio & Barra & NomeFile
-		Dim pathUrl1 As String = pathUrl & "multimedia/Appoggio" & Barra & NomeFile
-
-		Dim PathBaseImmScon As String = pathUrl & "Sconosciuto.png"
-
-		Dim c As New CriptaFiles
-
-		If TipoDB <> "SQLSERVER" Then
-			pathLetturaFile1 = pathLetturaFile1.Replace("Multimedia/allegati", "Multimedia/multimedia")
-			pathScritturaFile1 = pathScritturaFile1.Replace("Multimedia/allegati", "Multimedia/multimedia")
-		End If
-
-		'Return pathLetturaFile1 & " - " & pathScritturaFile1 & " - " & pathUrl1 & PathBaseImmScon
-
-		If ControllaEsistenzaFile(pathLetturaFile1) Then
-			c.DecryptFile(CryptPasswordString, pathLetturaFile1, pathScritturaFile1)
-			If ControllaEsistenzaFile(pathScritturaFile1) Then
-				Ritorno = pathUrl1
-			Else
-				Ritorno = PathBaseImmScon
-			End If
-		Else
-			Ritorno = PathBaseImmScon
-		End If
+		'If ControllaEsistenzaFile(pathLetturaFile1) Then
+		'	c.DecryptFile(CryptPasswordString, pathLetturaFile1, pathScritturaFile1)
+		'	If ControllaEsistenzaFile(pathScritturaFile1) Then
+		'		Ritorno = pathUrl1
+		'	Else
+		'		Ritorno = PathBaseImmScon
+		'	End If
+		'Else
+		'	Ritorno = PathBaseImmScon
+		'End If
 
 		Return Ritorno
 	End Function
@@ -394,11 +413,16 @@ Module Globale
 		End If
 		Dim pathAllegati As String = P(0).Replace(vbCrLf, "")
 
+		P(1) = P(1).Trim.Replace(vbCrLf, "")
+		If Strings.Right(P(1), 1) <> Barra Then
+			P(1) &= Barra
+		End If
+		Dim pathLogG As String = P(1).Replace(vbCrLf, "")
+
 		P(2) = P(2).Trim.Replace(vbCrLf, "")
 		If Strings.Right(P(2), 1) <> Barra Then
 			P(2) &= Barra
 		End If
-
 		Dim pathMultimedia As String = P(0).Replace(vbCrLf, "")
 
 		P(4) = P(4).Trim.Replace(vbCrLf, "")
@@ -410,7 +434,7 @@ Module Globale
 		Dim PathBaseImmagini As String = pathMultimedia
 		Dim PathBaseMultimedia As String = pathMultimedia.Replace("Allegati", "Multimedia")
 		Dim PathBaseImmScon As String = pathMultimedia & "Sconosciuto.png"
-		Dim PathLog As String = MP & "\Log\Pdf.txt"
+		Dim PathLog As String = pathLogG & "Pdf.txt"
 		Dim Ritorno As String = "*"
 
 		Dim Filone As String = gf.LeggeFileIntero(MP & "\Scheletri\base_partita.txt")
@@ -434,7 +458,7 @@ Module Globale
 		'gf.ScriveTestoSuFileAperto("ppp")
 		'gf.ChiudeFileDiTestoDopoScrittura()
 
-		If TipoDB <> "SQLSERVER" Then
+		If TipoPATH <> "SQLSERVER" Then
 			PathPerMultimedia = PathPerMultimedia.Replace("\", "/")
 			PathPerMultimedia = PathPerMultimedia.Replace("//", "/")
 
@@ -1604,7 +1628,7 @@ Module Globale
 
 						gf.CreaAggiornaFile(NomeFileFinale, Filone)
 
-						If TipoDB = "SQLSERVER" Then
+						If TipoPDF = "WINDOWS" Then
 							Dim pp As New pdfGest
 							Ritorno = pp.ConverteHTMLInPDF(NomeFileFinale, NomeFileFinalePDF, PathLog, True,, altezzaReport)
 
@@ -1642,7 +1666,7 @@ Module Globale
 		Dim NomeFileFinale As String = NomeFileFinaleP
 		Dim NomeFileFinalePDF As String = NomeFileFinalePDFP
 
-		If TipoDB <> "SQLSERVER" Then
+		If TipoPATH <> "SQLSERVER" Then
 			NomeFileFinale = NomeFileFinale.Replace("\", "/")
 			NomeFileFinale = NomeFileFinale.Replace("//", "/")
 			NomeFileFinale = NomeFileFinale.Replace("/\", "/")
@@ -1743,7 +1767,7 @@ Module Globale
 		If Connessione = "" Then
 			Ritorno = ErroreConnessioneNonValida
 		Else
-			Dim Conn As Object = New clsGestioneDB
+			Dim Conn As Object = New clsGestioneDB(Squadra)
 
 			If TypeOf (Conn) Is String Then
 				Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
@@ -2092,7 +2116,7 @@ Module Globale
 		Dim qFiletti As String = gf.RitornaQuantiFilesRilevati
 
 		For i As Integer = 1 To qFiletti
-			If TipoDB <> "SQLSERVER" Then
+			If TipoPATH <> "SQLSERVER" Then
 				Filetti(i) = Filetti(i).Replace("\", "/")
 				Filetti(i) = Filetti(i).Replace("//", "/")
 			End If
@@ -2108,6 +2132,41 @@ Module Globale
 		' Return Quanti
 	End Sub
 
+	Public Function SistemaPercorso(pathPassato As String) As String
+		Dim pp As String = pathPassato
+
+		pp = pp.Replace(vbCrLf, "").Trim()
+		If Strings.Right(pp, 1) = "\" Or Strings.Right(pp, 1) = "/" Then
+			pp = Mid(pp, 1, pp.Length - 1)
+		End If
+
+		Return pp
+	End Function
+
+	Public Sub ScriveLog(MP As String, Squadra As String, NomeFile As String, Cosa As String)
+		Dim gf As New GestioneFilesDirectory
+
+		'If nomeFileLogMail = "" Then
+		Dim pp As String = gf.LeggeFileIntero(MP & "\Impostazioni\Paths.txt")
+		pp = gf.LeggeFileIntero(MP & "\Impostazioni\PathAllegati.txt")
+
+		Dim paths() As String = pp.Split(";")
+		Dim PathLog As String = SistemaPercorso(paths(1))
+		Dim ppp As String = gf.LeggeFileIntero(MP & "\Impostazioni\PercorsoSito.txt")
+
+		Dim nomeFileLog As String = PathLog & "\" & Squadra & "\" & NomeFile & ".txt"
+		gf.CreaDirectoryDaPercorso(nomeFileLog)
+		'End If
+
+		Dim Datella As String = Format(Now.Day, "00") & "/" & Format(Now.Month, "00") & "/" & Now.Year & " " & Format(Now.Hour, "00") & ":" & Format(Now.Minute, "00") & ":" & Format(Now.Second, "00")
+
+		gf.ApreFileDiTestoPerScrittura(nomeFileLog)
+		gf.ScriveTestoSuFileAperto(Datella & Cosa)
+		gf.ChiudeFileDiTestoDopoScrittura()
+
+		gf = Nothing
+	End Sub
+
 	Public Function GeneraRicevutaEScontrino(MP As String, Squadra As String, NomeSquadra As String, idAnno As String, idGiocatore As String, idPagamento As String, idUtente As String, vecchioID As String) As String
 		Dim Ritorno As String = ""
 		Dim Ok As Boolean = True
@@ -2118,7 +2177,7 @@ Module Globale
 			If Connessione = "" Then
 				Ritorno = ErroreConnessioneNonValida
 			Else
-				Dim Conn As Object = New clsGestioneDB
+				Dim Conn As Object = New clsGestioneDB(Squadra)
 
 				If TypeOf (Conn) Is String Then
 					Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
@@ -2128,6 +2187,7 @@ Module Globale
 					Rec = Conn.LeggeQuery(MP, Sql, Connessione)
 					If Rec.Eof() Then
 						Ritorno = StringaErrore & " Dati ricevuta non presenti"
+						ScriveLog(MP, Squadra, "Pagamenti", "Dati ricevuta NON acquisiti")
 					Else
 						Dim Pagamento As String = "" & Rec("Pagamento").Value
 						Dim DataRicevuta As String = "" & Rec("DataPagamento").Value
@@ -2142,6 +2202,8 @@ Module Globale
 						Dim idModalitaPagamento As String = "" & Rec("MetodoPagamento").Value
 						Dim NumeroRicevuta As String = "" & Rec("NumeroRicevuta").Value
 						'Rec.Close()
+
+						ScriveLog(MP, Squadra, "Pagamenti", "Dati ricevuta acquisiti: Pagamento " & Pagamento)
 
 						Dim nomeRate As String = ""
 						Dim rr As New List(Of String)
@@ -2165,6 +2227,8 @@ Module Globale
 							End If
 						Next
 
+						ScriveLog(MP, Squadra, "Pagamenti", "Nome rate " & nomeRate)
+
 						Dim Cognome As String = ""
 						Dim CognomePagatore As String = ""
 						Dim Nome As String = ""
@@ -2185,6 +2249,7 @@ Module Globale
 						Rec = Conn.LeggeQuery(MP, Sql, Connessione)
 						If Rec.Eof() Then
 							Ritorno = StringaErrore & " Nessuna squadra rilevata"
+							ScriveLog(MP, Squadra, "Pagamenti", Ritorno)
 							Ok = False
 						Else
 							NomeSquadra = "" & Rec("NomeSquadra").Value
@@ -2198,12 +2263,15 @@ Module Globale
 						End If
 						'Rec.Close()
 
+						ScriveLog(MP, Squadra, "Pagamenti", "Dati squadra acquisiti: " & NomeSquadra)
+
 						If Ok Then
 							If idPagatore = 3 Then
 								Sql = "SELECT * FROM Giocatori Where idGiocatore=" & idGiocatore
 								Rec = Conn.LeggeQuery(MP, Sql, Connessione)
 								If Rec.Eof() Then
 									Ritorno = StringaErrore & " Nessun giocatore rilevato"
+									ScriveLog(MP, Squadra, "Pagamenti", Ritorno)
 									Ok = False
 								Else
 									Cognome = Rec("Cognome").Value
@@ -2220,6 +2288,7 @@ Module Globale
 								Rec = Conn.LeggeQuery(MP, Sql, Connessione)
 								If Rec.Eof() Then
 									Ritorno = StringaErrore & " Nessun giocatore rilevato"
+									ScriveLog(MP, Squadra, "Pagamenti", Ritorno)
 									Ok = False
 								Else
 									CognomeIscritto = Rec("Cognome").Value
@@ -2232,6 +2301,7 @@ Module Globale
 								Rec = Conn.LeggeQuery(MP, Sql, Connessione)
 								If Rec.Eof() Then
 									Ritorno = StringaErrore & " Nessun dettaglio giocatore rilevato"
+									ScriveLog(MP, Squadra, "Pagamenti", Ritorno)
 									Ok = False
 								Else
 									If idPagatore = 1 Then
@@ -2247,6 +2317,8 @@ Module Globale
 								Rec.Close()
 							End If
 						End If
+
+						ScriveLog(MP, Squadra, "Pagamenti", "Dati pagatore acquisiti: " & Cognome & " " & Nome)
 
 						If Ok Then
 							Dim Intero As String
@@ -2312,19 +2384,19 @@ Module Globale
 							End If
 							Dim NominativoRicevuta As String = CognomeIscritto & " " & NomeIscritto & "<br />" & CodFiscaleIscritto & " " & Altro & "<br />" & nomeRate
 
+							ScriveLog(MP, Squadra, "Pagamenti", "Nominativo ricevuta: " & NominativoRicevuta)
+
 							Dim gT1 As New GestioneTags(MP)
+							ScriveLog(MP, Squadra, "Pagamenti", "Eseguo stampa ricevuta")
 							gT1.EsegueStampaRicevuta(MP, Squadra, idGiocatore, idAnno, idPagamento, Dati, ssNumeroRicevuta, sDataRicevuta, Motivazione, Intero, Virgola, ImportoLettere, NominativoRicevuta, idPagatore)
 							gT1 = Nothing
 
 							Dim gT2 As New GestioneTags(MP)
+							ScriveLog(MP, Squadra, "Pagamenti", "Eseguo stampa scontrino")
 							gT2.EsegueStampaScontrino(MP, Squadra, idGiocatore, idAnno, idPagamento, Dati, ssNumeroRicevuta, sDataRicevuta, Motivazione, Intero, Virgola, ImportoLettere, NominativoRicevuta, idPagatore)
 							gT2 = Nothing
 
 							Ritorno = "*"
-
-
-
-
 
 							'Dim gf As New GestioneFilesDirectory
 							'Dim filePaths As String = gf.LeggeFileIntero(MP & "\Impostazioni\PathAllegati.txt")
@@ -2785,7 +2857,7 @@ Module Globale
 	Public Function ControllaEsistenzaFile(Filetto As String) As Boolean
 		Dim Ritorno As Boolean = True
 
-		If TipoDB <> "SQLSERVER" Then
+		If TipoPATH <> "SQLSERVER" Then
 			Filetto = Filetto.Replace("\", "/")
 			Filetto = Filetto.Replace("//", "/")
 		End If
@@ -2795,5 +2867,58 @@ Module Globale
 		Else
 			Return False
 		End If
+	End Function
+
+	Public Function RitornaImmagine(MP As String, Tipologia As String, Squadra As String, id As String) As String
+		Dim Ritorno As String = ""
+		Dim Rec As Object
+
+		Dim Connessione As String = LeggeImpostazioniDiBase(MP, Squadra)
+
+		If Connessione = "" Then
+			Ritorno = ErroreConnessioneNonValida
+		Else
+			Dim Conn As Object = New clsGestioneDB(Squadra)
+
+			If TypeOf (Conn) Is String Then
+				Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
+			Else
+				Dim Sql As String = ""
+				Sql = "Select * From immagini_" & Tipologia & " Where id=" & id
+				Rec = Conn.LeggeQuery(MP, Sql, Connessione)
+				If TypeOf (Rec) Is String Then
+					Ritorno = Rec
+				Else
+					If Rec.Eof() Then
+						Ritorno = ""
+					Else
+						Ritorno = Rec("Dati").Value
+					End If
+					Rec.Close()
+				End If
+			End If
+		End If
+
+		Return Ritorno
+	End Function
+
+	Public Function ControllaEsistenzaFile(MP As String, Conn As Object, Connessione As String, idGiocatore As String, Genitore As String, Privacy As String) As Boolean
+		Dim Ritorno As Boolean = True
+		Dim Rec As Object
+
+		Dim Sql As String = "Select * From immagini_firme Where id=" & idGiocatore & " And Progressivo=" & Genitore & " And Privacy='" & Privacy & "'"
+		Rec = Conn.LeggeQuery(MP, Sql, Connessione)
+		If TypeOf (Rec) Is String Then
+			Ritorno = Rec
+		Else
+			If Rec.Eof() Then
+				Ritorno = False
+			Else
+				Ritorno = True
+			End If
+			Rec.Close()
+		End If
+
+		Return Ritorno
 	End Function
 End Module

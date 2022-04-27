@@ -28,7 +28,7 @@ Public Class wsGiocatori
 		If Connessione = "" Then
 			Ritorno = ErroreConnessioneNonValida
 		Else
-			Dim Conn As Object = new clsGestioneDB
+			Dim Conn As Object = New clsGestioneDB(Squadra)
 
 			If TypeOf (Conn) Is String Then
 				Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
@@ -74,7 +74,8 @@ Public Class wsGiocatori
 
 						'Rec.Close()
 
-						Sql = "Select A.Genitore" & idGenitore & ", MailGenitore" & idGenitore & ", TelefonoGenitore" & idGenitore & ", B.Maggiorenne From GiocatoriDettaglio A Left Join Giocatori B On A.idGiocatore = B.idGiocatore Where A.idGiocatore=" & idGiocatore
+						Sql = "Select A.Genitore" & idGenitore & ", MailGenitore" & idGenitore & ", TelefonoGenitore" & idGenitore & ", B.Maggiorenne From GiocatoriDettaglio A " &
+							"Left Join Giocatori B On A.idGiocatore = B.idGiocatore Where A.idGiocatore=" & idGiocatore
 						Rec = Conn.LeggeQuery(Server.MapPath("."), Sql, Connessione)
 						If TypeOf (Rec) Is String Then
 							Ritorno = Rec
@@ -144,7 +145,7 @@ Public Class wsGiocatori
 												If TipoDB = "SQLSERVER" Then
 													Sql = "Select IsNull(Max(idUtente),0) + 1 From [Generale].[dbo].[Utenti] Where idAnno=" & idAnno
 												Else
-													Sql = "Select Coalesce(Max(idUtente) + 1 From [Generale].[dbo].[Utenti] Where idAnno=" & idAnno
+													Sql = "Select Coalesce(Max(idUtente),0) + 1 From [Generale].[dbo].[Utenti] Where idAnno=" & idAnno
 												End If
 												Rec = Conn.LeggeQuery(Server.MapPath("."), Sql, Connessione)
 												If TypeOf (Rec) Is String Then
@@ -264,7 +265,7 @@ Public Class wsGiocatori
 		If Connessione = "" Then
 			Ritorno = ErroreConnessioneNonValida
 		Else
-			Dim Conn As Object = New clsGestioneDB
+			Dim Conn As Object = New clsGestioneDB(Squadra)
 
 			If TypeOf (Conn) Is String Then
 				Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
@@ -298,11 +299,15 @@ Public Class wsGiocatori
 					If Strings.Right(Percorso, 1) <> "\" Then
 						Percorso &= "\"
 					End If
-					Dim path1 As String = Percorso & NomeSquadra.Replace(" ", "_") & "\Firme\" & Anno & "_" & idGiocatore & "_" & idGenitore & ".kgb"
-					If ControllaEsistenzaFile(path1) Then
+					'Dim path1 As String = Percorso & NomeSquadra.Replace(" ", "_") & "\Firme\" & Anno & "_" & idGiocatore & "_" & idGenitore & ".kgb"
+					If ControllaEsistenzaFile(Server.MapPath("."), Conn, Connessione, idGiocatore, idGenitore, "N") Then
 						Try
-							File.Delete(path1)
-							Ritorno = "*"
+							'File.Delete(path1)
+
+							'Ritorno = "*"
+
+							Sql = "Delete From immagini_firme Where id=" & idGiocatore & " And Progressivo=" & idGenitore & " And Privacy='N'"
+							Ritorno = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
 						Catch ex As Exception
 							Ritorno = StringaErrore & ": " & ex.Message
 						End Try
@@ -329,7 +334,7 @@ Public Class wsGiocatori
 		If Connessione = "" Then
 			Ritorno = ErroreConnessioneNonValida
 		Else
-			Dim Conn As Object = New clsGestioneDB
+			Dim Conn As Object = New clsGestioneDB(Squadra)
 
 			If TypeOf (Conn) Is String Then
 				Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
@@ -397,7 +402,7 @@ Public Class wsGiocatori
 		If Connessione = "" Then
 			Ritorno = ErroreConnessioneNonValida
 		Else
-			Dim Conn As Object = New clsGestioneDB
+			Dim Conn As Object = New clsGestioneDB(Squadra)
 
 			If TypeOf (Conn) Is String Then
 				Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
@@ -483,7 +488,7 @@ Public Class wsGiocatori
 		If Connessione = "" Then
 			Ritorno = ErroreConnessioneNonValida
 		Else
-			Dim Conn As Object = New clsGestioneDB
+			Dim Conn As Object = New clsGestioneDB(Squadra)
 
 			If TypeOf (Conn) Is String Then
 				Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
@@ -1236,7 +1241,7 @@ Public Class wsGiocatori
 		If Connessione = "" Then
 			Ritorno = ErroreConnessioneNonValida
 		Else
-			Dim Conn As Object = New clsGestioneDB
+			Dim Conn As Object = New clsGestioneDB(Squadra)
 
 			If TypeOf (Conn) Is String Then
 				Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
@@ -1264,7 +1269,7 @@ Public Class wsGiocatori
 		If Connessione = "" Then
 			Ritorno = ErroreConnessioneNonValida
 		Else
-			Dim Conn As Object = New clsGestioneDB
+			Dim Conn As Object = New clsGestioneDB(Squadra)
 
 			If TypeOf (Conn) Is String Then
 				Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
@@ -1297,7 +1302,7 @@ Public Class wsGiocatori
 		If Connessione = "" Then
 			Ritorno = ErroreConnessioneNonValida
 		Else
-			Dim Conn As Object = New clsGestioneDB
+			Dim Conn As Object = New clsGestioneDB(Squadra)
 
 			If TypeOf (Conn) Is String Then
 				Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
@@ -1401,7 +1406,7 @@ Public Class wsGiocatori
 		If Connessione = "" Then
 			Ritorno = ErroreConnessioneNonValida
 		Else
-			Dim Conn As Object = New clsGestioneDB
+			Dim Conn As Object = New clsGestioneDB(Squadra)
 
 			If TypeOf (Conn) Is String Then
 				Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
@@ -1482,7 +1487,7 @@ Public Class wsGiocatori
 		If Connessione = "" Then
 			Ritorno = ErroreConnessioneNonValida
 		Else
-			Dim Conn As Object = New clsGestioneDB
+			Dim Conn As Object = New clsGestioneDB(Squadra)
 
 			If TypeOf (Conn) Is String Then
 				Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
@@ -1564,7 +1569,7 @@ Public Class wsGiocatori
 		If Connessione = "" Then
 			Ritorno = ErroreConnessioneNonValida
 		Else
-			Dim Conn As Object = New clsGestioneDB
+			Dim Conn As Object = New clsGestioneDB(Squadra)
 
 			If TypeOf (Conn) Is String Then
 				Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
@@ -1756,12 +1761,12 @@ Public Class wsGiocatori
 										Ritorno &= Rec("AmministratiMadre").Value & ";"
 
 										Dim CeGreenPass As String = "N"
-										Dim PathGP As String = PathBaseMultimedia & NomeSquadra.Replace(" ", "_") & "\GreenPass\" & Rec("idGiocatore").Value & "\GreenPass.kgb"
+										'Dim PathGP As String = PathBaseMultimedia & NomeSquadra.Replace(" ", "_") & "\GreenPass\" & Rec("idGiocatore").Value & "\GreenPass.kgb"
 										Dim path As String = ""
-										If ControllaEsistenzaFile(PathGP) Then
-											CeGreenPass = "S"
-											path = pathHTTPMultimedia & NomeSquadra.Replace(" ", "_") & "/GreenPass/" & Rec("idGiocatore").Value & "/GreenPass.kgb"
-										End If
+										'If ControllaEsistenzaFile(PathGP) Then
+										'	CeGreenPass = "S"
+										'	path = pathHTTPMultimedia & NomeSquadra.Replace(" ", "_") & "/GreenPass/" & Rec("idGiocatore").Value & "/GreenPass.kgb"
+										'End If
 
 										Ritorno &= CeGreenPass & ";"
 										Ritorno &= path & ";"
@@ -1793,7 +1798,7 @@ Public Class wsGiocatori
 		If Connessione = "" Then
 			Ritorno = ErroreConnessioneNonValida
 		Else
-			Dim Conn As Object = New clsGestioneDB
+			Dim Conn As Object = New clsGestioneDB(Squadra)
 
 			If TypeOf (Conn) Is String Then
 				Ritorno = ErroreConnessioneDBNonValida & ": " & Conn
@@ -1860,7 +1865,7 @@ Public Class wsGiocatori
 		If Connessione = "" Then
 			Ritorno = ErroreConnessioneNonValida
 		Else
-			Dim Conn As Object = New clsGestioneDB
+			Dim Conn As Object = New clsGestioneDB(Squadra)
 
 			If TypeOf (Conn) Is String Then
 				Ritorno = ErroreConnessioneDBNonValida & ": " & Conn
@@ -1898,7 +1903,7 @@ Public Class wsGiocatori
 		If Connessione = "" Then
 			Ritorno = ErroreConnessioneNonValida
 		Else
-			Dim Conn As Object = New clsGestioneDB
+			Dim Conn As Object = New clsGestioneDB(Squadra)
 
 			If TypeOf (Conn) Is String Then
 				Ritorno = ErroreConnessioneDBNonValida & ": " & Conn
@@ -1911,7 +1916,7 @@ Public Class wsGiocatori
 
 				Sql = "Delete From GreenPassDati Where idGiocatore=" & idGiocatore
 				Ritorno = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
-				If Ritorno<> "OK" Then
+				If Ritorno <> "OK" Then
 					Ok = False
 				End If
 
@@ -1921,7 +1926,7 @@ Public Class wsGiocatori
 						"'" & StringaGP & "'" &
 						")"
 					Ritorno = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
-					If Ritorno<> "OK" Then
+					If Ritorno <> "OK" Then
 						Ok = False
 					End If
 				End If
@@ -1948,7 +1953,7 @@ Public Class wsGiocatori
 		If Connessione = "" Then
 			Ritorno = ErroreConnessioneNonValida
 		Else
-			Dim Conn As Object = New clsGestioneDB
+			Dim Conn As Object = New clsGestioneDB(Squadra)
 
 			If TypeOf (Conn) Is String Then
 				Ritorno = ErroreConnessioneDBNonValida & ": " & Conn
@@ -1961,7 +1966,7 @@ Public Class wsGiocatori
 
 				Sql = "Delete From GreenPassDati Where idGiocatore=" & idGiocatore
 				Ritorno = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
-				If Ritorno<> "OK" Then
+				If Ritorno <> "OK" Then
 					Ok = False
 				End If
 
@@ -1987,7 +1992,7 @@ Public Class wsGiocatori
 		If Connessione = "" Then
 			Ritorno = ErroreConnessioneNonValida
 		Else
-			Dim Conn As Object = New clsGestioneDB
+			Dim Conn As Object = New clsGestioneDB(Squadra)
 
 			If TypeOf (Conn) Is String Then
 				Ritorno = ErroreConnessioneDBNonValida & ": " & Conn
@@ -1999,7 +2004,7 @@ Public Class wsGiocatori
 				Ritorno = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
 
 				Ritorno = CalcolaSemafori(Conn, Connessione, Squadra, idGiocatore)
-				If Ritorno<> "OK" Then
+				If Ritorno <> "OK" Then
 					Ok = False
 				End If
 
@@ -2146,13 +2151,13 @@ Public Class wsGiocatori
 		Dim FirmaValidata3 As Boolean = False
 		Dim Validate As Integer = 0
 
-		Dim path1 As String = Percorso & NomeSquadra.Replace(" ", "_") & "\Firme\" & Anno & "_" & idGiocatore & "_1.kgb"
-		Dim path2 As String = Percorso & NomeSquadra.Replace(" ", "_") & "\Firme\" & Anno & "_" & idGiocatore & "_2.kgb"
-		Dim path3 As String = Percorso & NomeSquadra.Replace(" ", "_") & "\Firme\" & Anno & "_" & idGiocatore & "_3.kgb"
+		'Dim path1 As String = Percorso & NomeSquadra.Replace(" ", "_") & "\Firme\" & Anno & "_" & idGiocatore & "_1.kgb"
+		'Dim path2 As String = Percorso & NomeSquadra.Replace(" ", "_") & "\Firme\" & Anno & "_" & idGiocatore & "_2.kgb"
+		'Dim path3 As String = Percorso & NomeSquadra.Replace(" ", "_") & "\Firme\" & Anno & "_" & idGiocatore & "_3.kgb"
 
 		If AbilitaFirmaGenitore1 = "S" Then
 			'Firma elettronica attiva genitore 1
-			If ControllaEsistenzaFile(path1) Then
+			If ControllaEsistenzaFile(Server.MapPath("."), Conn, Connessione, idGiocatore, 1, "N") Then
 				FirmaPresente1 = True
 				q += 1
 
@@ -2182,7 +2187,7 @@ Public Class wsGiocatori
 
 		If AbilitaFirmaGenitore2 = "S" Then
 			'Firma elettronica attiva genitore 2
-			If ControllaEsistenzaFile(path2) Then
+			If ControllaEsistenzaFile(Server.MapPath("."), Conn, Connessione, idGiocatore, 2, "N") Then
 				FirmaPresente2 = True
 				q += 1
 
@@ -2212,7 +2217,7 @@ Public Class wsGiocatori
 
 		If AbilitaFirmaGenitore3 = "S" Then
 			'Firma elettronica attiva giocatore
-			If ControllaEsistenzaFile(path3) Then
+			If ControllaEsistenzaFile(Server.MapPath("."), Conn, Connessione, idGiocatore, 3, "N") Then
 				FirmaPresente3 = True
 				q += 1
 
@@ -2330,10 +2335,10 @@ Public Class wsGiocatori
 
 		'Semaforo 4: Certificato
 		If TipoDB = "SQLSERVER" Then
-			Sql = "Select CertificatoMedico, IsNull(ScadenzaCertificatoMedico,'') From GiocatoriDettaglio " &
+			Sql = "Select CertificatoMedico, IsNull(ScadenzaCertificatoMedico,'') As ScadenzaCertificatoMedico From GiocatoriDettaglio " &
 				"Where idGiocatore = " & idGiocatore
 		Else
-			Sql = "Select CertificatoMedico, Coalesce(ScadenzaCertificatoMedico, '') From GiocatoriDettaglio " &
+			Sql = "Select CertificatoMedico, Coalesce(ScadenzaCertificatoMedico, '') As ScadenzaCertificatoMedico From GiocatoriDettaglio " &
 				"Where idGiocatore = " & idGiocatore
 		End If
 		Rec2 = Conn.LeggeQuery(Server.MapPath("."), Sql, Connessione)
@@ -2365,23 +2370,38 @@ Public Class wsGiocatori
 							End If
 						Else
 							Dim dd As String = "" & Rec2("ScadenzaCertificatoMedico").Value
-							Dim D() As String = dd.Split("-")
-							Dim dat As Date = Convert.ToDateTime(D(2) & "/" & D(1) & "/" & D(0))
+							If dd <> "" Then
+								Try
+									If dd.Contains("-") Then
+										Dim D() As String = dd.Split("-")
+										Dim dat As Date = New Date(Val(D(0)), Val(D(1)), Val(D(2))) ' Convert.ToDateTime(D(2) & "/" & D(1) & "/" & D(0))
 
-							Dim Scadenza As DateTime = Convert.ToDateTime("" & Rec2("ScadenzaCertificatoMedico").Value)
-							Dim GiorniAllaScadenza As Integer = DateAndTime.DateDiff(DateInterval.Day, Now, Scadenza, )
+										'Dim Scadenza As DateTime = Convert.ToDateTime("" & Rec2("ScadenzaCertificatoMedico").Value)
+										Dim GiorniAllaScadenza As Integer = DateAndTime.DateDiff(DateInterval.Day, Now, dat, )
 
-							If "" & Rec2("CertificatoMedico").Value = "S" And dat > Now Then
-								If GiorniAllaScadenza <= 30 Then
-									Semaforo4 = "giallo"
-									Titolo4 = "Certificato presente ma data scadenza inferiore a 30 giorni"
-								Else
-									Semaforo4 = "verde"
-									Titolo4 = "Certificato e data scadenza presenti"
-								End If
+										If "" & Rec2("CertificatoMedico").Value = "S" And dat > Now Then
+											If GiorniAllaScadenza <= 30 Then
+												Semaforo4 = "giallo"
+												Titolo4 = "Certificato presente ma data scadenza inferiore a 30 giorni"
+											Else
+												Semaforo4 = "verde"
+												Titolo4 = "Certificato e data scadenza presenti"
+											End If
+										Else
+											Semaforo4 = "rosso"
+											Titolo4 = "Certificato presente ma con data scaduta"
+										End If
+									Else
+										Semaforo4 = "rosso"
+										Titolo4 = "Certificato presente ma con data non valida" ' (" & dd & ")"
+									End If
+								Catch ex As Exception
+									Semaforo4 = "rosso"
+									Titolo4 = "Certificato presente ma conversione data non valida" ' (" & dd & ")"
+								End Try
 							Else
 								Semaforo4 = "rosso"
-								Titolo4 = "Certificato presente ma con data scaduta"
+								Titolo4 = "Data Certificato non presente"
 							End If
 						End If
 					End If
@@ -2445,7 +2465,7 @@ Public Class wsGiocatori
 
 		Sql = "Delete From GiocatoriSemafori Where idGiocatore=" & idGiocatore
 		Ritorno = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
-		If Ritorno<> "OK" Then
+		If Ritorno <> "OK" Then
 			Return Ritorno
 		End If
 
@@ -2475,7 +2495,7 @@ Public Class wsGiocatori
 		If Connessione = "" Then
 			Ritorno = ErroreConnessioneNonValida
 		Else
-			Dim Conn As Object = New clsGestioneDB
+			Dim Conn As Object = New clsGestioneDB(Squadra)
 
 			If TypeOf (Conn) Is String Then
 				Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
@@ -2556,7 +2576,7 @@ Public Class wsGiocatori
 		If Connessione = "" Then
 			Ritorno = ErroreConnessioneNonValida
 		Else
-			Dim Conn As Object = New clsGestioneDB
+			Dim Conn As Object = New clsGestioneDB(Squadra)
 
 			If TypeOf (Conn) Is String Then
 				Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
@@ -2615,7 +2635,7 @@ Public Class wsGiocatori
 		If Connessione = "" Then
 			Ritorno = ErroreConnessioneNonValida
 		Else
-			Dim Conn As Object = New clsGestioneDB
+			Dim Conn As Object = New clsGestioneDB(Squadra)
 
 			If TypeOf (Conn) Is String Then
 				Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
@@ -2789,7 +2809,7 @@ Public Class wsGiocatori
 		If Connessione = "" Then
 			Ritorno = ErroreConnessioneNonValida
 		Else
-			Dim Conn As Object = New clsGestioneDB
+			Dim Conn As Object = New clsGestioneDB(Squadra)
 
 			If TypeOf (Conn) Is String Then
 				Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
@@ -2883,8 +2903,8 @@ Public Class wsGiocatori
 		If Connessione = "" Then
 			Ritorno = ErroreConnessioneNonValida
 		Else
-			Dim Conn As Object = New clsGestioneDB
-			Dim ConnGen As Object = New clsGestioneDB
+			Dim Conn As Object = New clsGestioneDB(Squadra)
+			Dim ConnGen As Object = New clsGestioneDB(Squadra)
 
 			If TypeOf (Conn) Is String Then
 				Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
@@ -3153,10 +3173,10 @@ Public Class wsGiocatori
 								If Strings.Right(Percorso, 1) <> "\" Then
 									Percorso &= "\"
 								End If
-								Dim path1 As String = Percorso & NomeSquadra.Replace(" ", "_") & "\Firme\" & Anno & "_" & idGiocatore & "_1.kgb"
-								Dim path2 As String = Percorso & NomeSquadra.Replace(" ", "_") & "\Firme\" & Anno & "_" & idGiocatore & "_2.kgb"
-								Dim path3 As String = Percorso & NomeSquadra.Replace(" ", "_") & "\Firme\" & Anno & "_" & idGiocatore & "_3.kgb"
-								Dim path4 As String = Percorso & NomeSquadra.Replace(" ", "_") & "\Firme\" & Anno & "_" & idGiocatore & "_4.kgb"
+								'Dim path1 As String = Percorso & NomeSquadra.Replace(" ", "_") & "\Firme\" & Anno & "_" & idGiocatore & "_1.kgb"
+								'Dim path2 As String = Percorso & NomeSquadra.Replace(" ", "_") & "\Firme\" & Anno & "_" & idGiocatore & "_2.kgb"
+								'Dim path3 As String = Percorso & NomeSquadra.Replace(" ", "_") & "\Firme\" & Anno & "_" & idGiocatore & "_3.kgb"
+								'Dim path4 As String = Percorso & NomeSquadra.Replace(" ", "_") & "\Firme\" & Anno & "_" & idGiocatore & "_4.kgb"
 								Dim dataFirma1 As String = ""
 								Dim dataFirma2 As String = ""
 								Dim dataFirma3 As String = ""
@@ -3166,7 +3186,7 @@ Public Class wsGiocatori
 
 								Dim firma1 As String = "N"
 
-								If ControllaEsistenzaFile(path1) Then
+								If ControllaEsistenzaFile(Server.MapPath("."), Conn, Connessione, idGiocatore, 1, "N") Then
 									firma1 = "S"
 									Sql = "Select * From GiocatoriFirme Where idGiocatore=" & idGiocatore & " And idGenitore=1"
 									Rec2 = Conn.LeggeQuery(Server.MapPath("."), Sql, Connessione)
@@ -3181,7 +3201,7 @@ Public Class wsGiocatori
 								End If
 
 								Dim firma2 As String = "N"
-								If ControllaEsistenzaFile(path2) Then
+								If ControllaEsistenzaFile(Server.MapPath("."), Conn, Connessione, idGiocatore, 2, "N") Then
 									firma2 = "S"
 									Sql = "Select * From GiocatoriFirme Where idGiocatore=" & idGiocatore & " And idGenitore=2"
 									Rec2 = Conn.LeggeQuery(Server.MapPath("."), Sql, Connessione)
@@ -3196,7 +3216,7 @@ Public Class wsGiocatori
 								End If
 
 								Dim firma3 As String = "N"
-								If ControllaEsistenzaFile(path3) Then
+								If ControllaEsistenzaFile(Server.MapPath("."), Conn, Connessione, idGiocatore, 3, "N") Then
 									firma3 = "S"
 									Sql = "Select * From GiocatoriFirme Where idGiocatore=" & idGiocatore & " And idGenitore=3"
 									Rec2 = Conn.LeggeQuery(Server.MapPath("."), Sql, Connessione)
@@ -3211,7 +3231,7 @@ Public Class wsGiocatori
 								End If
 
 								Dim firma4 As String = "N"
-								If ControllaEsistenzaFile(path4) Then
+								If ControllaEsistenzaFile(Server.MapPath("."), Conn, Connessione, idGiocatore, 4, "N") Then
 									firma4 = "S"
 									Sql = "Select * From GiocatoriFirme Where idGiocatore=" & idGiocatore & " And idGenitore=4"
 									Rec2 = Conn.LeggeQuery(Server.MapPath("."), Sql, Connessione)
@@ -3361,7 +3381,7 @@ Public Class wsGiocatori
 		If Connessione = "" Then
 			Ritorno = ErroreConnessioneNonValida
 		Else
-			Dim Conn As Object = New clsGestioneDB
+			Dim Conn As Object = New clsGestioneDB(Squadra)
 
 			If TypeOf (Conn) Is String Then
 				Ritorno = ErroreConnessioneDBNonValida & ": " & Conn
@@ -3407,7 +3427,7 @@ Public Class wsGiocatori
 		If Connessione = "" Then
 			Ritorno = ErroreConnessioneNonValida
 		Else
-			Dim Conn As Object = New clsGestioneDB
+			Dim Conn As Object = New clsGestioneDB(Squadra)
 
 			If TypeOf (Conn) Is String Then
 				Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
@@ -3661,7 +3681,7 @@ Public Class wsGiocatori
 		If Connessione = "" Then
 			Ritorno = ErroreConnessioneNonValida & ":" & Connessione
 		Else
-			Dim Conn As Object = New clsGestioneDB
+			Dim Conn As Object = New clsGestioneDB(Squadra)
 
 			If TypeOf (Conn) Is String Then
 				Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
@@ -3681,7 +3701,7 @@ Public Class wsGiocatori
 		If Connessione = "" Then
 			Ritorno = ErroreConnessioneNonValida & ":" & Connessione
 		Else
-			Dim Conn As Object = New clsGestioneDB
+			Dim Conn As Object = New clsGestioneDB(Squadra)
 
 			If TypeOf (Conn) Is String Then
 				Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
@@ -3731,7 +3751,7 @@ Public Class wsGiocatori
 		If Connessione = "" Then
 			Ritorno = ErroreConnessioneNonValida & ":" & Connessione
 		Else
-			Dim Conn As Object = New clsGestioneDB
+			Dim Conn As Object = New clsGestioneDB(Squadra)
 
 			If TypeOf (Conn) Is String Then
 				Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
@@ -3793,7 +3813,7 @@ Public Class wsGiocatori
 		If Connessione = "" Then
 			Ritorno = ErroreConnessioneNonValida & ":" & Connessione
 		Else
-			Dim Conn As Object = New clsGestioneDB
+			Dim Conn As Object = New clsGestioneDB(Squadra)
 
 			If TypeOf (Conn) Is String Then
 				Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
@@ -3867,7 +3887,7 @@ Public Class wsGiocatori
 		If Connessione = "" Then
 			Ritorno = ErroreConnessioneNonValida
 		Else
-			Dim Conn As Object = New clsGestioneDB
+			Dim Conn As Object = New clsGestioneDB(Squadra)
 
 			If TypeOf (Conn) Is String Then
 				Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
@@ -4233,7 +4253,7 @@ Public Class wsGiocatori
 		If Connessione = "" Then
 			Ritorno = ErroreConnessioneNonValida
 		Else
-			Dim Conn As Object = New clsGestioneDB
+			Dim Conn As Object = New clsGestioneDB(Squadra)
 
 			If TypeOf (Conn) Is String Then
 				Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
@@ -4458,12 +4478,16 @@ Public Class wsGiocatori
 						Sql = "commit"
 						Dim Ritorno2 As String = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
 
+						ScriveLog(Server.MapPath("."), Squadra, "Pagamenti", "---------------------------------------------------")
+						ScriveLog(Server.MapPath("."), Squadra, "Pagamenti", "Genera Ricevute e scontrini per numero ricevuta " & NumeroRicevuta)
 						If NumeroRicevuta <> "Bozza" Then
 							Ritorno = GeneraRicevutaEScontrino(Server.MapPath("."), Squadra, NomeSquadra, idAnno, idGiocatore, nuovoIdPagamento, idUtente, idPagamento)
 							If Ritorno = "*" Then
 								Ritorno = nuovoIdPagamento
 							End If
+							ScriveLog(Server.MapPath("."), Squadra, "Pagamenti", "---------------------------------------------------")
 						End If
+						ScriveLog(Server.MapPath("."), Squadra, "Pagamenti", "Ritorno genera ricevuta: " & Ritorno)
 					End If
 				End If
 
@@ -4497,7 +4521,7 @@ Public Class wsGiocatori
 		If Connessione = "" Then
 			Ritorno = ErroreConnessioneNonValida
 		Else
-			Dim Conn As Object = New clsGestioneDB
+			Dim Conn As Object = New clsGestioneDB(Squadra)
 
 			If TypeOf (Conn) Is String Then
 				Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
@@ -4561,7 +4585,7 @@ Public Class wsGiocatori
 		If Connessione = "" Then
 			Ritorno = ErroreConnessioneNonValida
 		Else
-			Dim Conn As Object = New clsGestioneDB
+			Dim Conn As Object = New clsGestioneDB(Squadra)
 
 			If TypeOf (Conn) Is String Then
 				Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
@@ -4633,7 +4657,7 @@ Public Class wsGiocatori
 		'If Connessione = "" Then
 		'	Ritorno = ErroreConnessioneNonValida
 		'Else
-		'	Dim Conn As Object = new clsGestioneDB
+		'	Dim Conn As Object = New clsGestioneDB(Squadra)
 
 		'	If TypeOf (Conn) Is String Then
 		'		Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
@@ -4743,7 +4767,7 @@ Public Class wsGiocatori
 		'If Connessione = "" Then
 		'	Ritorno = ErroreConnessioneNonValida
 		'Else
-		'	Dim Conn As Object = new clsGestioneDB
+		'	Dim Conn As Object = New clsGestioneDB(Squadra)
 
 		'	If TypeOf (Conn) Is String Then
 		'		Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
@@ -5047,7 +5071,7 @@ Public Class wsGiocatori
 		If Connessione = "" Then
 			Ritorno = ErroreConnessioneNonValida
 		Else
-			Dim Conn As Object = new clsGestioneDB
+			Dim Conn As Object = New clsGestioneDB(Squadra)
 
 			If TypeOf (Conn) Is String Then
 				Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
@@ -5137,7 +5161,7 @@ Public Class wsGiocatori
 		If Connessione = "" Then
 			Ritorno = ErroreConnessioneNonValida
 		Else
-			Dim Conn As Object = new clsGestioneDB
+			Dim Conn As Object = New clsGestioneDB(Squadra)
 
 			If TypeOf (Conn) Is String Then
 				Ritorno = ErroreConnessioneDBNonValida & ":" & Conn

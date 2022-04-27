@@ -14,6 +14,11 @@ Public Class clsGestioneDB
 	Private nomeFileLogExec As String = ""
 	Private listaLog As New List(Of LogStruct)
 	Private timerLog As Timers.Timer = Nothing
+	Private Squadra As String = ""
+
+	Public Sub New(SQ As String)
+		Squadra = SQ
+	End Sub
 
 	Public Function ApreDB(ByVal Connessione As String) As Object
 		' Routine che apre il DB e vede se ci sono errori
@@ -66,11 +71,22 @@ Public Class clsGestioneDB
 			If Strings.Right(pp(1), 1) <> "\" Then
 				pp(1) = pp(1) & "\"
 			End If
-			nomeFileLogExec = pp(1) & "Exec_" & Now.Day & "_" & Now.Month & "_" & Now.Year & ".txt"
+			nomeFileLogExec = pp(1) & squadra & "\Exec_" & Now.Day & "_" & Now.Month & "_" & Now.Year & ".txt"
+
 			ThreadScriveLog(Datella & "--------------------------------------------------------------------------", nomeFileLogExec)
 
 			ThreadScriveLog(Datella & ": " & Sql2, nomeFileLogExec)
 			' End If
+		End If
+
+		If TypeOf (Conn) Is String Then
+			If effettuaLog And Not HttpContext.Current Is Nothing Then
+				ThreadScriveLog(Datella & " Errore connessione: " & Conn, nomeFileLogQuery)
+				ThreadScriveLog(Datella & "--------------------------------------------------------------------------", nomeFileLogExec)
+				ThreadScriveLog("", nomeFileLogExec)
+			End If
+
+			Return Conn
 		End If
 
 		' Routine che esegue una query sul db
@@ -145,7 +161,7 @@ Public Class clsGestioneDB
 			If Strings.Right(pp(1), 1) <> "\" Then
 				pp(1) = pp(1) & "\"
 			End If
-			nomeFileLogQuery = pp(1) & "Query_" & Now.Day & "_" & Now.Month & "_" & Now.Year & ".txt"
+			nomeFileLogQuery = pp(1) & squadra & "\Query_" & Now.Day & "_" & Now.Month & "_" & Now.Year & ".txt"
 
 			ThreadScriveLog(Datella & "--------------------------------------------------------------------------", nomeFileLogQuery)
 			ThreadScriveLog(Datella & " Modifica Query: " & ModificaQuery, nomeFileLogQuery)
@@ -154,9 +170,17 @@ Public Class clsGestioneDB
 			'End If
 		End If
 
-		'Return "Lettura " & Indice & " -> " & mdb.Length
+		If TypeOf (Conn) Is String Then
+			If effettuaLog And Not HttpContext.Current Is Nothing Then
+				ThreadScriveLog(Datella & " Errore connessione: " & Conn, nomeFileLogQuery)
+				ThreadScriveLog(Datella & "--------------------------------------------------------------------------", nomeFileLogQuery)
+				ThreadScriveLog("", nomeFileLogQuery)
+			End If
 
-		Dim Rec As Object
+			Return Conn
+		End If
+
+		Dim Rec As Object = Nothing
 
 		If TipoDB = "SQLSERVER" Then
 			Rec = New Recordset
@@ -176,7 +200,7 @@ Public Class clsGestioneDB
 				If effettuaLog Then
 					ThreadScriveLog(Datella & ": ERRORE SQL -> " & ex.Message, nomeFileLogQuery)
 				End If
-				Return StringaErrore & " " & ex.Message
+				' Return StringaErrore & " " & ex.Message
 			End Try
 		End If
 
@@ -277,6 +301,7 @@ Public Class clsGestioneDB
 		Dim sLog As String = ls.Cosa
 
 		Dim gf As New GestioneFilesDirectory
+		gf.CreaDirectoryDaPercorso(Dove)
 		gf.ApreFileDiTestoPerScrittura(Dove)
 		gf.ScriveTestoSuFileAperto(sLog)
 		gf.ChiudeFileDiTestoDopoScrittura()

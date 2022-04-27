@@ -19,7 +19,7 @@ Public Class wsQuote
 		If Connessione = "" Then
 			Ritorno = ErroreConnessioneNonValida
 		Else
-			Dim Conn As Object = new clsGestioneDB
+			Dim Conn As Object = New clsGestioneDB(Squadra)
 
 			If TypeOf (Conn) Is String Then
 				Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
@@ -35,7 +35,7 @@ Public Class wsQuote
 						"Left Join [Generale].[dbo].[Utenti] D On A.idUtenteRegistratore = D.idUtente " &
 						"Where A.Eliminato = 'N' And DataPagamento Between '" & DataInizio & "' And '" & DataFine & "' " &
 						"Order By A.NumeroRicevuta Desc"
-				Rec = Conn.LeggeQuery(Server.MapPath("."),  Sql, Connessione)
+				Rec = Conn.LeggeQuery(Server.MapPath("."), Sql, Connessione)
 				If TypeOf (Rec) Is String Then
 					Ritorno = Rec
 				Else
@@ -130,13 +130,13 @@ Public Class wsQuote
 						Rec.Close()
 
 						Dim gf As New GestioneFilesDirectory
-						Dim filetto As String = gf.LeggeFileIntero(HttpContext.Current.Server.MapPath(".") & "\Scheletri\base_lista_ricevute.txt")
+						Dim filetto As String = gf.LeggeFileIntero(Server.MapPath(".") & "\Scheletri\base_lista_ricevute.txt")
 
 						filetto = filetto.Replace("***TITOLO***", "Lista Ricevute")
 						filetto = filetto.Replace("***DATI***", Ritorno)
 						filetto = filetto.Replace("***NOME SQUADRA***", NomeSquadra)
 
-						Dim multimediaPaths As String = gf.LeggeFileIntero(HttpContext.Current.Server.MapPath(".") & "\Impostazioni\PathAllegati.txt")
+						Dim multimediaPaths As String = gf.LeggeFileIntero(Server.MapPath(".") & "\Impostazioni\PathAllegati.txt")
 						Dim mmPaths() As String = multimediaPaths.Split(";")
 						mmPaths(2) = mmPaths(2).Replace(vbCrLf, "")
 						If Strings.Right(mmPaths(2), 1) <> "/" Then
@@ -148,13 +148,16 @@ Public Class wsQuote
 						If Strings.Right(filePaths, 1) <> "\" Then
 							filePaths &= "\"
 						End If
-						Dim pathLogo As String = filePaths & NomeSquadra.Replace(" ", "_") & "\Societa_1.png"
+						' Dim pathLogo As String = filePaths & NomeSquadra.Replace(" ", "_") & "\Societa_1.png"
 						Dim Esten As String = Format(Now.Second, "00") & "_" & Now.Millisecond & RitornaValoreRandom(55)
 						'Dim pathLogoConv As String = filePaths & "Appoggio\" & Esten & ".jpg"
 						'Dim c As New CriptaFiles
 						'c.DecryptFile(CryptPasswordString, pathLogo, pathLogoConv)
 
-						Dim urlLogo As String = pathLogo ' mmPaths(2) & "Appoggio/" & Esten & ".jpg"
+						' Dim urlLogo As String = pathLogo ' mmPaths(2) & "Appoggio/" & Esten & ".jpg"
+						Dim urlLogo As String = RitornaImmagine(Server.MapPath("."), "Societa", Squadra, 1)
+						urlLogo = "data:image/png;base64," & urlLogo
+
 						filetto = filetto.Replace("***LOGO SOCIETA***", urlLogo)
 
 						Dim nomeFileHtml As String = filePaths & "Appoggio\" & Esten & ".html"
@@ -183,7 +186,7 @@ Public Class wsQuote
 		If Connessione = "" Then
 			Ritorno = ErroreConnessioneNonValida
 		Else
-			Dim Conn As Object = new clsGestioneDB
+			Dim Conn As Object = New clsGestioneDB(Squadra)
 
 			If TypeOf (Conn) Is String Then
 				Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
@@ -197,7 +200,7 @@ Public Class wsQuote
 					Sql = "Select A.idQuota, Progressivo, Attiva, DescRata, DataScadenza, B.Descrizione, A.Importo From QuoteRate A Left Join Quote B On A.idQuota = B.idQuota " &
 						"Where DataScadenza <> '' And DataScadenza Is Not Null And " & IIf(TipoDB = "SQLSERVER", "Convert(DateTime, DataScadenza ,121) <= getdate()", "Convert(DataScadenza ,DateTime) <= CURRENT_DATE()") & " And Attiva = 'S' " &
 						"Order By " & IIf(TipoDB = "SQLSERVER", "Convert(DateTime, DataScadenza ,121)", "Convert(DataScadenza ,DateTime)")
-					Rec = Conn.LeggeQuery(Server.MapPath("."),  Sql, Connessione)
+					Rec = Conn.LeggeQuery(Server.MapPath("."), Sql, Connessione)
 					If TypeOf (Rec) Is String Then
 						Ritorno = Rec
 					Else
@@ -231,7 +234,7 @@ Public Class wsQuote
 									"(C.Progressivo Is Null Or (C.Progressivo In (" & qq(1) & ") And (C.NumeroRicevuta = 'Bozza' Or C.NumeroRicevuta Is Null))) " &
 									"And D.Attiva = 'S' And D.Mail <> '' And D.Mail Is Not Null " &
 									"Order By A.idGiocatore, D.Progressivo"
-								Rec2 = Conn.LeggeQuery(Server.MapPath("."),Sql, Connessione)
+								Rec2 = Conn.LeggeQuery(Server.MapPath("."), Sql, Connessione)
 								If TypeOf (Rec2) Is String Then
 									Ritorno = Rec2
 								Else
@@ -297,7 +300,7 @@ Public Class wsQuote
 		If Connessione = "" Then
 			Ritorno = ErroreConnessioneNonValida
 		Else
-			Dim Conn As Object = new clsGestioneDB
+			Dim Conn As Object = New clsGestioneDB(Squadra)
 
 			If TypeOf (Conn) Is String Then
 				Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
@@ -309,7 +312,7 @@ Public Class wsQuote
 
 				Try
 					Sql = "Select A.idGiocatore, Progressivo, Pagamento, DataPagamento, B.Cognome, B.Nome, A.Validato, A.idTipoPagamento, " &
-						"A.idRata, A.Note, A.idUtentePagatore, A.Commento, B.Maggiorenne, A.NumeroRicevuta, C.idMetodoPagamento, D.Cognome + ' ' + D.Nome As Nominativo, C.MetodoPagamento, E.idQuota From " &
+						"A.idRata, A.Note, A.idUtentePagatore, A.Commento, B.Maggiorenne, A.NumeroRicevuta, C.idMetodoPagamento, Concat(Coalesce(D.Cognome,''), ' ', Coalesce(D.Nome,'')) As Nominativo, C.MetodoPagamento, E.idQuota From " &
 						"GiocatoriPagamenti A " &
 						"Left Join Giocatori B On A.idGiocatore = B.idGiocatore " &
 						"Left Join GiocatoriDettaglio E On A.idGiocatore = E.idGiocatore " &
@@ -317,7 +320,7 @@ Public Class wsQuote
 						"Left Join [Generale].[dbo].[Utenti] D On A.idUtenteRegistratore = D.idUtente " &
 						"Where A.Eliminato = 'N' And B.Eliminato = 'N' " &
 						"Order By NumeroRicevuta Desc" ' DataPagamento Desc, Progressivo Desc"
-					Rec = Conn.LeggeQuery(Server.MapPath("."),  Sql, Connessione)
+					Rec = Conn.LeggeQuery(Server.MapPath("."), Sql, Connessione)
 					If TypeOf (Rec) Is String Then
 						Ritorno = Rec
 					Else
@@ -357,7 +360,7 @@ Public Class wsQuote
 		If Connessione = "" Then
 			Ritorno = ErroreConnessioneNonValida
 		Else
-			Dim Conn As Object = new clsGestioneDB
+			Dim Conn As Object = New clsGestioneDB(Squadra)
 
 			If TypeOf (Conn) Is String Then
 				Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
@@ -369,7 +372,7 @@ Public Class wsQuote
 
 				Try
 					Sql = "SELECT * FROM Quote Where Eliminato='N' Order By Descrizione"
-					Rec = Conn.LeggeQuery(Server.MapPath("."),  Sql, Connessione)
+					Rec = Conn.LeggeQuery(Server.MapPath("."), Sql, Connessione)
 					If TypeOf (Rec) Is String Then
 						Ritorno = Rec
 					Else
@@ -385,7 +388,7 @@ Public Class wsQuote
 								Ritorno &= Rec("QuotaManuale").Value & ";"
 
 								Sql = "Select * From QuoteRate Where idQuota=" & Rec("idQuota").Value & " And Eliminato='N' Order By Progressivo"
-								Rec2 = Conn.LeggeQuery(Server.MapPath("."),Sql, Connessione)
+								Rec2 = Conn.LeggeQuery(Server.MapPath("."), Sql, Connessione)
 								If TypeOf (Rec2) Is String Then
 									Ritorno = Rec2
 
@@ -417,7 +420,7 @@ Public Class wsQuote
 								End If
 
 								Sql = "Select * From GiocatoriPagamenti Where idQuota = " & Rec("idQuota").Value & " And Eliminato='N'"
-								Rec2 = Conn.LeggeQuery(Server.MapPath("."),Sql, Connessione)
+								Rec2 = Conn.LeggeQuery(Server.MapPath("."), Sql, Connessione)
 								If TypeOf (Rec2) Is String Then
 									Ritorno = Rec2
 
@@ -462,7 +465,7 @@ Public Class wsQuote
 		If Connessione = "" Then
 			Ritorno = ErroreConnessioneNonValida
 		Else
-			Dim Conn As Object = new clsGestioneDB
+			Dim Conn As Object = New clsGestioneDB(Squadra)
 
 			If TypeOf (Conn) Is String Then
 				Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
@@ -471,7 +474,7 @@ Public Class wsQuote
 				Dim Sql As String = ""
 				Dim Ok As Boolean = True
 
-				Sql = iif(tipodb="SQLSERVER", "Begin transaction", "Start transaction")
+				Sql = IIf(TipoDB = "SQLSERVER", "Begin transaction", "Start transaction")
 				Ritorno = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
 
 				If Not Ritorno.Contains(StringaErrore) Then
@@ -518,7 +521,7 @@ Public Class wsQuote
 		If Connessione = "" Then
 			Ritorno = ErroreConnessioneNonValida
 		Else
-			Dim Conn As Object = new clsGestioneDB
+			Dim Conn As Object = New clsGestioneDB(Squadra)
 
 			If TypeOf (Conn) Is String Then
 				Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
@@ -527,7 +530,7 @@ Public Class wsQuote
 				Dim Sql As String = ""
 				Dim Ok As Boolean = True
 
-				Sql = iif(tipodb="SQLSERVER", "Begin transaction", "Start transaction")
+				Sql = IIf(TipoDB = "SQLSERVER", "Begin transaction", "Start transaction")
 				Ritorno = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
 
 				If Not Ritorno.Contains(StringaErrore) Then
@@ -633,7 +636,7 @@ Public Class wsQuote
 		If Connessione = "" Then
 			Ritorno = ErroreConnessioneNonValida
 		Else
-			Dim Conn As Object = new clsGestioneDB
+			Dim Conn As Object = New clsGestioneDB(Squadra)
 
 			If TypeOf (Conn) Is String Then
 				Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
