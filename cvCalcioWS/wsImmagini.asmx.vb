@@ -385,19 +385,19 @@ Public Class wsImmagini
 			If TypeOf (Conn) Is String Then
 				Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
 			Else
-				Dim Sql As String = ""
-				Dim Rec As Object
+				'Dim Sql As String = ""
+				'Dim Rec As Object
 
-				Rec = Conn.LeggeQuery(Server.MapPath("."), Sql, Connessione)
-				If TypeOf (Rec) Is String Then
-					Ritorno = Rec
-				Else
-					Sql = "Delete From immagini_" & Tipologia.ToLower & " Where id=" & Id
-					Ritorno = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
-					If Not Ritorno.Contains(StringaErrore) Then
-						Ritorno = "*"
-					End If
+				'Rec = Conn.LeggeQuery(Server.MapPath("."), Sql, Connessione)
+				'If TypeOf (Rec) Is String Then
+				'	Ritorno = Rec
+				'Else
+				Dim Sql As String = "Delete From immagini_" & Tipologia.ToLower & " Where id=" & Id
+				Ritorno = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
+				If Not Ritorno.Contains(StringaErrore) Then
+					Ritorno = "*"
 				End If
+				'End If
 
 			End If
 		End If

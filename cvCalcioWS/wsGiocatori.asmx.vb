@@ -4000,38 +4000,51 @@ Public Class wsGiocatori
 									NumeroRicevuta = sNumeroRicevuta
 								Else
 									If Validato = "S" Then
-										If TipoDB = "SQLSERVER" Then
-											Sql = "SELECT IsNull(Max(Progressivo),0)+1 FROM DatiFattura Where Anno=" & Now.Year
-										Else
-											Sql = "SELECT Coalesce(Max(Progressivo),0)+1 FROM DatiFattura Where Anno=" & Now.Year
-										End If
-										Rec = Conn.LeggeQuery(Server.MapPath("."), Sql, Connessione)
-										'If Rec(0).Value Is DBNull.Value Then
-										'	ProgressivoGenerale = 1
-										'	Sql = "Insert Into DatiFattura Values(" & Now.Year & ", 1)"
+										'If TipoDB = "SQLSERVER" Then
+										'	Sql = "SELECT IsNull(Max(Progressivo),0)+1 As Progressivo FROM DatiFattura Where Anno=" & Now.Year
 										'Else
-										ProgressivoGenerale = Rec(0).Value
-										If ProgressivoGenerale = 1 Then
-											Sql = "Insert Into DatiFattura Values(" & Now.Year & ", 1)"
-										Else
-											Sql = "Update DatiFattura Set Progressivo = " & ProgressivoGenerale & " Where Anno=" & Now.Year
-										End If
+										'	Sql = "SELECT Coalesce(Max(Progressivo),0)+1 As Progressivo FROM DatiFattura Where Anno=" & Now.Year
 										'End If
-										Rec.Close()
+										'Rec = Conn.LeggeQuery(Server.MapPath("."), Sql, Connessione)
+										''If Rec(0).Value Is DBNull.Value Then
+										''	ProgressivoGenerale = 1
+										''	Sql = "Insert Into DatiFattura Values(" & Now.Year & ", 1)"
+										''Else
+										'ProgressivoGenerale = Rec("Progressivo").Value
+										Rec.Close
+
+										Sql = "Select * From DatiFattura Where Anno=" & Now.Year
+										Rec = Conn.LeggeQuery(Server.MapPath("."), Sql, Connessione)
+										If Rec.Eof() Then
+											ProgressivoGenerale = 1
+											Sql = "Insert Into datifattura Values(" & Now.Year & ", 1)"
+										Else
+											ProgressivoGenerale = Rec("Progressivo").Value + 1
+											Sql = "Update datifattura Set Progressivo = " & ProgressivoGenerale & " Where Anno=" & Now.Year
+										End If
+										Rec.Close
+
+										'If ProgressivoGenerale = 0 Then
+										'	Sql = "Insert Into datifattura Values(" & Now.Year & ", 1)"
+										'Else
+										'	Sql = "Update datifattura Set Progressivo = " & ProgressivoGenerale + 1 & " Where Anno=" & Now.Year
+										'End If
+										''End If
+										'Rec.Close()
 
 										If Suffisso <> "" Then
 											NumeroRicevuta = ProgressivoGenerale & "/" & Suffisso & "/" & Now.Year
 										Else
 											NumeroRicevuta = ProgressivoGenerale & "/" & Now.Year
 										End If
+
+										Ritorno = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
+										If Ritorno.Contains(StringaErrore) Then
+											Ok = False
+										End If
 									Else
 										NumeroRicevuta = "Bozza"
 									End If
-								End If
-
-								Ritorno = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
-								If Ritorno.Contains(StringaErrore) Then
-									Ok = False
 								End If
 
 								If Ok Then
@@ -4282,14 +4295,20 @@ Public Class wsGiocatori
 				Sql = IIf(TipoDB = "SQLSERVER", "Begin transaction", "Start transaction")
 				Ritorno = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
 
+				ScriveLog(Server.MapPath("."), Squadra, "ModificaPagamenti", "-----------------------------------")
 				If Not Ritorno.Contains(StringaErrore) Then
-					'Dim DataPagamento As String = Now.Year & "-" & Format(Now.Month, "00") & "-" & Format(Now.Day, "00") & " " & Format(Now.Hour, "00") & ":" & Format(Now.Minute, "00") & ":" & Format(Now.Second, "00")
+					ScriveLog(Server.MapPath("."), Squadra, "ModificaPagamenti", "Modifica: " & Modifica)
+					ScriveLog(Server.MapPath("."), Squadra, "ModificaPagamenti", "ID Pagamento: " & idPagamento)
+					ScriveLog(Server.MapPath("."), Squadra, "ModificaPagamenti", "Numero ricevuta: " & NumeroRicevuta)
+					ScriveLog(Server.MapPath("."), Squadra, "ModificaPagamenti", "Validato: " & Validato)
+
 					If Modifica <> "AMM-SUPERUSER" And Stato <> "Bozza" Then
 						If NumeroRicevuta <> "" And NumeroRicevuta <> "Bozza" And Validato = "N" Then
 							Sql = "SELECT * FROM GiocatoriPagamenti Where NumeroRicevuta='" & NumeroRicevuta & "'"
 							Rec = Conn.LeggeQuery(Server.MapPath("."), Sql, Connessione)
 							If Not Rec.Eof() Then
 								Ritorno = StringaErrore & " Numero ricevuta già presente"
+								ScriveLog(Server.MapPath("."), Squadra, "ModificaPagamenti", Ritorno)
 								Ok = False
 							End If
 							Rec.Close()
@@ -4302,6 +4321,7 @@ Public Class wsGiocatori
 							Rec = Conn.LeggeQuery(Server.MapPath("."), Sql, Connessione)
 							If Rec.Eof() Then
 								Ritorno = StringaErrore & " Nessuna squadra rilevata"
+								ScriveLog(Server.MapPath("."), Squadra, "ModificaPagamenti", Ritorno)
 								Ok = False
 							Else
 								NomeSquadra = "" & Rec("NomeSquadra").Value
@@ -4313,13 +4333,16 @@ Public Class wsGiocatori
 								eMail = "" & Rec("Mail").Value
 							End If
 							'Rec.Close()
+							ScriveLog(Server.MapPath("."), Squadra, "ModificaPagamenti", "Nome squadra: " & NomeSquadra)
 
 							If Ok Then
+								ScriveLog(Server.MapPath("."), Squadra, "ModificaPagamenti", "ID Pagatore: " & idPagatore)
 								If idPagatore = 3 Then
 									Sql = "SELECT * FROM Giocatori Where idGiocatore=" & idGiocatore
 									Rec = Conn.LeggeQuery(Server.MapPath("."), Sql, Connessione)
 									If Rec.Eof() Then
 										Ritorno = StringaErrore & " Nessun giocatore rilevato"
+										ScriveLog(Server.MapPath("."), Squadra, "ModificaPagamenti", Ritorno)
 										Ok = False
 									Else
 										Cognome = "" & Rec("Cognome").Value
@@ -4336,6 +4359,7 @@ Public Class wsGiocatori
 									Rec = Conn.LeggeQuery(Server.MapPath("."), Sql, Connessione)
 									If Rec.Eof() Then
 										Ritorno = StringaErrore & " Nessun giocatore rilevato"
+										ScriveLog(Server.MapPath("."), Squadra, "ModificaPagamenti", Ritorno)
 										Ok = False
 									Else
 										CognomeIscritto = "" & Rec("Cognome").Value
@@ -4348,6 +4372,7 @@ Public Class wsGiocatori
 									Rec = Conn.LeggeQuery(Server.MapPath("."), Sql, Connessione)
 									If Rec.Eof() Then
 										Ritorno = StringaErrore & " Nessun dettaglio giocatore rilevato"
+										ScriveLog(Server.MapPath("."), Squadra, "ModificaPagamenti", Ritorno)
 										Ok = False
 									Else
 										If idPagatore = 1 Then
@@ -4362,31 +4387,48 @@ Public Class wsGiocatori
 									End If
 									'Rec.Close()
 								End If
+								ScriveLog(Server.MapPath("."), Squadra, "ModificaPagamenti", "Cognome: " & Cognome)
+								ScriveLog(Server.MapPath("."), Squadra, "ModificaPagamenti", "Cognome Iscritto: " & CognomeIscritto)
+								ScriveLog(Server.MapPath("."), Squadra, "ModificaPagamenti", "Cognome Pagatore: " & CognomePagatore)
 
 								If Ok Then
 									Dim Altro As String = ""
 									Dim ProgressivoGenerale As Integer
 
-									If NumeroRicevuta = "" Then
+									If NumeroRicevuta = "Bozza" Then
 										If Validato = "S" Then
-											If TipoDB = "SQLSERVER" Then
-												Sql = "SELECT IsNull(Max(Progressivo),0)+1 FROM DatiFattura Where Anno=" & Now.Year
-											Else
-												Sql = "SELECT Coalesce(Max(Progressivo),0)+1 FROM DatiFattura Where Anno=" & Now.Year
-											End If
-											Rec = Conn.LeggeQuery(Server.MapPath("."), Sql, Connessione)
-											' If Rec(0).Value Is DBNull.Value Then
-											If Rec(0).Value = 1 Then
-												ProgressivoGenerale = 1
-												Sql = "Insert Into DatiFattura Values(" & Now.Year & ", 1)"
-											Else
-												ProgressivoGenerale = Rec(0).Value
-												Sql = "Update DatiFattura Set Progressivo = " & ProgressivoGenerale & " Where Anno=" & Now.Year
-											End If
+											'If TipoDB = "SQLSERVER" Then
+											'	Sql = "SELECT IsNull(Max(Progressivo),0)+1 FROM DatiFattura Where Anno=" & Now.Year
+											'Else
+											'	Sql = "SELECT Coalesce(Max(Progressivo),0)+1 FROM DatiFattura Where Anno=" & Now.Year
+											'End If
+											'Rec = Conn.LeggeQuery(Server.MapPath("."), Sql, Connessione)
+											'' If Rec(0).Value Is DBNull.Value Then
+											''If Rec(0).Value = 1 Then
+											''	ProgressivoGenerale = 1
+											''	Sql = "Insert Into DatiFattura Values(" & Now.Year & ", 1)"
+											''Else
+											'ProgressivoGenerale = Rec(0).Value
+											'Sql = "Update DatiFattura Set Progressivo = " & ProgressivoGenerale & " Where Anno=" & Now.Year
+											''End If
 											'Rec.Close()
+
+											Sql = "Select * From DatiFattura Where Anno=" & Now.Year
+											Rec = Conn.LeggeQuery(Server.MapPath("."), Sql, Connessione)
+											If Rec.Eof() Then
+												ProgressivoGenerale = 1
+												Sql = "Insert Into datifattura Values(" & Now.Year & ", 1)"
+												ScriveLog(Server.MapPath("."), Squadra, "ModificaPagamenti", "Nuova riga in dati fattura: 1")
+											Else
+												ProgressivoGenerale = Rec("Progressivo").Value + 1
+												Sql = "Update datifattura Set Progressivo = " & ProgressivoGenerale & " Where Anno=" & Now.Year
+												ScriveLog(Server.MapPath("."), Squadra, "ModificaPagamenti", "Modifica riga in dati fattura: " & ProgressivoGenerale)
+											End If
+											Rec.Close
 
 											Ritorno = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
 											If Ritorno.Contains(StringaErrore) Then
+												ScriveLog(Server.MapPath("."), Squadra, "ModificaPagamenti", Ritorno)
 												Ok = False
 											End If
 
@@ -4395,8 +4437,10 @@ Public Class wsGiocatori
 											Else
 												NumeroRicevuta = ProgressivoGenerale & "/" & Now.Year
 											End If
+											ScriveLog(Server.MapPath("."), Squadra, "ModificaPagamenti", "Nuovo numero ricevuta: " & NumeroRicevuta)
 										Else
 											NumeroRicevuta = "Bozza"
+											ScriveLog(Server.MapPath("."), Squadra, "ModificaPagamenti", "Nuovo numero ricevuta: " & NumeroRicevuta)
 										End If
 									End If
 
@@ -4441,7 +4485,9 @@ Public Class wsGiocatori
 									'Else
 									nuovoIdPagamento = Rec(0).Value
 									'End If
-									'Rec.Close()
+									Rec.Close()
+
+									ScriveLog(Server.MapPath("."), Squadra, "ModificaPagamenti", "Nuovo id pagamento: " & nuovoIdPagamento)
 
 									Sql = "Update GiocatoriPagamenti Set " &
 										"Progressivo=" & nuovoIdPagamento & ", " &
@@ -4463,6 +4509,7 @@ Public Class wsGiocatori
 										"Where idGiocatore = " & idGiocatore & " And Progressivo = " & idPagamento
 									Ritorno = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
 									If Ritorno.Contains(StringaErrore) Then
+										ScriveLog(Server.MapPath("."), Squadra, "ModificaPagamenti", Ritorno)
 										Ok = False
 									End If
 								End If
@@ -4470,6 +4517,7 @@ Public Class wsGiocatori
 							End If
 						Catch ex As Exception
 							Ritorno = StringaErrore & " " & ex.Message
+							ScriveLog(Server.MapPath("."), Squadra, "ModificaPagamenti", Ritorno)
 							Ok = False
 						End Try
 					End If
@@ -4481,11 +4529,15 @@ Public Class wsGiocatori
 						ScriveLog(Server.MapPath("."), Squadra, "Pagamenti", "---------------------------------------------------")
 						ScriveLog(Server.MapPath("."), Squadra, "Pagamenti", "Genera Ricevute e scontrini per numero ricevuta " & NumeroRicevuta)
 						If NumeroRicevuta <> "Bozza" Then
-							Ritorno = GeneraRicevutaEScontrino(Server.MapPath("."), Squadra, NomeSquadra, idAnno, idGiocatore, nuovoIdPagamento, idUtente, idPagamento)
-							If Ritorno = "*" Then
+							Ritorno = GeneraRicevutaEScontrino(Server.MapPath("."), Squadra, NomeSquadra, idAnno, idGiocatore, nuovoIdPagamento, idUtente, nuovoIdPagamento)
+							If Ritorno = "*" Or Ritorno = "OK" Then
 								Ritorno = nuovoIdPagamento
 							End If
 							ScriveLog(Server.MapPath("."), Squadra, "Pagamenti", "---------------------------------------------------")
+						Else
+							If Ritorno = "*" Or Ritorno = "OK" Then
+								Ritorno = nuovoIdPagamento
+							End If
 						End If
 						ScriveLog(Server.MapPath("."), Squadra, "Pagamenti", "Ritorno genera ricevuta: " & Ritorno)
 					End If
@@ -4494,8 +4546,10 @@ Public Class wsGiocatori
 				If Not Ok Then
 					Sql = "rollback"
 					Dim Ritorno2 As String = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
+					ScriveLog(Server.MapPath("."), Squadra, "ModificaPagamenti", "ROLLBACK")
 				End If
 
+				ScriveLog(Server.MapPath("."), Squadra, "ModificaPagamenti", "-----------------------------------")
 			End If
 
 			Conn.Close()

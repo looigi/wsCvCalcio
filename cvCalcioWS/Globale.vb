@@ -2161,7 +2161,7 @@ Module Globale
 		Dim Datella As String = Format(Now.Day, "00") & "/" & Format(Now.Month, "00") & "/" & Now.Year & " " & Format(Now.Hour, "00") & ":" & Format(Now.Minute, "00") & ":" & Format(Now.Second, "00")
 
 		gf.ApreFileDiTestoPerScrittura(nomeFileLog)
-		gf.ScriveTestoSuFileAperto(Datella & Cosa)
+		gf.ScriveTestoSuFileAperto(Datella & " " & Cosa)
 		gf.ChiudeFileDiTestoDopoScrittura()
 
 		gf = Nothing
@@ -2182,8 +2182,9 @@ Module Globale
 				If TypeOf (Conn) Is String Then
 					Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
 				Else
+					ScriveLog(MP, Squadra, "Pagamenti", "ID Giocatore: " & idGiocatore & " - ID Pagamento: " & idPagamento)
 					Dim Rec As Object ' = HttpContext.Current.Server.CreateObject("ADODB.Recordset")
-					Dim Sql As String = "Select * From GiocatoriPagamenti Where idGiocatore=" & idGiocatore & " And Progressivo=" & idPagamento
+					Dim Sql As String = "Select * From GiocatoriPagamenti Where idGiocatore=" & idGiocatore & " And Progressivo=" & vecchioID
 					Rec = Conn.LeggeQuery(MP, Sql, Connessione)
 					If Rec.Eof() Then
 						Ritorno = StringaErrore & " Dati ricevuta non presenti"
