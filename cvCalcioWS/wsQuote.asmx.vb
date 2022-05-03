@@ -330,7 +330,9 @@ Public Class wsQuote
 							Ritorno = ""
 							Do Until Rec.Eof()
 								Dim nn As String = ("" & Rec("Note").Value).replace(";", "*PV*")
-								Ritorno &= Rec("idGiocatore").Value & ";" & Rec("Progressivo").Value & ";" & Rec("Pagamento").Value & ";" &
+								Dim pag As String = Rec("Pagamento").Value
+
+								Ritorno &= Rec("idGiocatore").Value & ";" & Rec("Progressivo").Value & ";" & pag & ";" &
 									Rec("DataPagamento").Value & ";" & Rec("Cognome").Value & ";" & Rec("Nome").Value & ";" & Rec("Validato").Value & ";" &
 									Rec("idTipoPagamento").Value & ";" & Rec("idRata").Value.replace(";", ":") & ";" & nn & ";" &
 									Rec("idUtentePagatore").Value & ";" & Rec("Commento").Value & ";" & Rec("idQuota").Value & ";" & Rec("Maggiorenne").Value & ";" &
@@ -406,7 +408,7 @@ Public Class wsQuote
 									Do Until Rec2.Eof()
 										Ritorno &= Rec2("Attiva").Value & ";"
 										Ritorno &= Rec2("DescRata").Value & ";"
-										Ritorno &= Rec2("DataScadenza").Value & ";"
+										Ritorno &= ConverteData(Rec2("DataScadenza").Value) & ";"
 										Ritorno &= Rec2("Importo").Value & ";"
 										q += 1
 

@@ -53,7 +53,8 @@ Public Class wsMail
 					Altro = " And letto = 'N' And folder = 'Inbox'"
 					Cosa = "" & IIf(TipoDB = "SQLSERVER", "Isnull(Count(*),0)", "COALESCE(Count(*),0)") & ""
 				Else
-					Altro &= " Order By cast(substring(time,7,4) + substring(time,4,2) + substring(time,1,2) + substring(time,12,2) + substring(time,15,2) + substring(time,18,2) as numeric(15)) Desc"
+					' Altro &= " Order By cast(substring(time,7,4) + substring(time,4,2) + substring(time,1,2) + substring(time,12,2) + substring(time,15,2) + substring(time,18,2) as numeric(15)) Desc"
+					Altro &= " Order By Time Desc"
 				End If
 
 				Sql = "SELECT " & Cosa & " From Mails " &

@@ -29,6 +29,11 @@ Module Globale
 		Dim Tempo As Integer
 	End Structure
 
+	Public Structure FormatoByte
+		Dim Occupazione As Double
+		Dim Cosa As String
+	End Structure
+
 	Public Structure strutturaMail
 		Dim Squadra As String
 		Dim Mittente As String
@@ -2167,6 +2172,38 @@ Module Globale
 		gf = Nothing
 	End Sub
 
+	Public Function ConverteInByte(Occupazione2 As Double) As FormatoByte
+		Dim Occupazione As Double = Occupazione2
+		Dim Cosa As String = ""
+		Dim giga As Double = 1024L * 1024 * 1024 ' * 1024
+		Dim mega As Double = 1024L * 1024 '* 1024
+		Dim kappa As Double = 1024L '* 1024
+
+		If Occupazione > giga Then
+			Occupazione /= giga
+			Cosa = "Gb."
+		Else
+			If Occupazione > mega Then
+				Occupazione /= mega
+				Cosa = "Mb."
+			Else
+				If Occupazione > kappa Then
+					Occupazione /= kappa
+					Cosa = "Kb."
+				Else
+					Cosa = "B."
+				End If
+			End If
+		End If
+		Occupazione = CInt(Occupazione * 100) / 100
+
+		Dim Ritorno As New FormatoByte
+		Ritorno.Occupazione = Occupazione
+		Ritorno.Cosa = Cosa
+
+		Return Ritorno
+	End Function
+
 	Public Function GeneraRicevutaEScontrino(MP As String, Squadra As String, NomeSquadra As String, idAnno As String, idGiocatore As String, idPagamento As String, idUtente As String, vecchioID As String) As String
 		Dim Ritorno As String = ""
 		Dim Ok As Boolean = True
@@ -2663,6 +2700,21 @@ Module Globale
 	'Return Immagine
 	'End Function
 
+	Public Function ConverteData(Data As String) As String
+		Dim Ritorno As String = Data
+		If Ritorno <> "" And Ritorno.Contains("-") Then
+			Dim dd() As String = Ritorno.Split("-")
+			' Ritorno = Format(Val(dd(2)), "00") & "-" & Format(dd(1), "00") & "-" & dd(0)
+			If dd(2) > 50 Then
+				Ritorno = dd(0) & "-" & dd(1) & "-" & dd(2)
+			Else
+				Ritorno = dd(2) & "-" & dd(1) & "-" & dd(0)
+			End If
+		End If
+
+		Return Ritorno
+	End Function
+
 	Public Function CreaNumeroTesseraNFC(MP As String, Conn As Object, Connessione As String, Squadra As String, idGiocatore As String) As String
 		Dim CodiceTessera As String = ""
 		Dim Rec As Object ' = HttpContext.Current.Server.CreateObject("ADODB.Recordset")
@@ -2907,7 +2959,7 @@ Module Globale
 		Dim Ritorno As Boolean = True
 		Dim Rec As Object
 
-		Dim Sql As String = "Select * From immagini_firme Where id=" & idGiocatore & " And Progressivo=" & Genitore & " And Privacy='" & Privacy & "'"
+		Dim Sql As String = "Select * From immagini_firme Where id=" & idGiocatore & " And Progressivo=" & Genitore & " And Privacy='" & Privacy.ToLower & "'"
 		Rec = Conn.LeggeQuery(MP, Sql, Connessione)
 		If TypeOf (Rec) Is String Then
 			Ritorno = Rec

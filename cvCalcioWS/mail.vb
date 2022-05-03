@@ -206,7 +206,7 @@ Public Class mail
 			End If
 
 			mail.Body &= "<br><hr />"
-			mail.Body &= "<span style=""font-family: Verdana; font-size: 12px;"">Mail inviata tramite InCalcio, software per la gestione delle società di calcio – <a href=""www.incalcio.it"">www.incalcio.it</a> – <a href=""mailto:info@incalcio.it"">info@incalcio.it</a></span>"
+			mail.Body &= "<span style=""font-family: Verdana; font-size: 12px;"">Mail inviata tramite InCalcio, software per la gestione delle societa' di calcio - <a href=""www.incalcio.it"">www.incalcio.it</a> - <a href=""mailto:info@incalcio.it"">info@incalcio.it</a></span>"
 
 			Dim Data As Attachment = Nothing
 			If Allegato.Length > 0 Then

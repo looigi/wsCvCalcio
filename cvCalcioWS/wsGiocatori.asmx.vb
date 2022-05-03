@@ -300,24 +300,30 @@ Public Class wsGiocatori
 						Percorso &= "\"
 					End If
 					'Dim path1 As String = Percorso & NomeSquadra.Replace(" ", "_") & "\Firme\" & Anno & "_" & idGiocatore & "_" & idGenitore & ".kgb"
-					If ControllaEsistenzaFile(Server.MapPath("."), Conn, Connessione, idGiocatore, idGenitore, "N") Then
-						Try
-							'File.Delete(path1)
-
-							'Ritorno = "*"
-
-							Sql = "Delete From immagini_firme Where id=" & idGiocatore & " And Progressivo=" & idGenitore & " And Privacy='N'"
+					'If ControllaEsistenzaFile(Server.MapPath("."), Conn, Connessione, idGiocatore, idGenitore, "N") Then
+					Try
+							Sql = "Delete From immagini_firme Where id=" & idGiocatore & " "
 							Ritorno = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
 						Catch ex As Exception
 							Ritorno = StringaErrore & ": " & ex.Message
 						End Try
-					Else
-						Ritorno = StringaErrore & "Firma non esistente"
-					End If
+
+					'Try
+					'	Sql = "Delete From immagini_firme Where id=" & idGiocatore & " And Progressivo=" & idGenitore & " And Privacy='S'"
+					'	Ritorno = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
+					'Catch ex As Exception
+					'	Ritorno = StringaErrore & ": " & ex.Message
+					'End Try
+					'Else
+					'	Ritorno = StringaErrore & "Firma non esistente"
+					'End If
 				End If
 
-				If Ritorno = "*" Then
+				If Ritorno = "*" Or Ritorno = "OK" Then
 					Sql = "Delete From GiocatoriFirme Where idGiocatore=" & idGiocatore & " And idGenitore=" & idGenitore
+					Ritorno = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
+
+					Sql = "Delete From GiocatoriFirme Where idGiocatore=" & idGiocatore & " And idGenitore=" & idGenitore + 100
 					Ritorno = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
 				End If
 			End If
@@ -1619,36 +1625,36 @@ Public Class wsGiocatori
 					If Ok Then
 						Try
 							Sql = "SELECT Giocatori.idGiocatore, Ruoli.idRuolo As idR, Giocatori.Cognome, Giocatori.Nome, Ruoli.Descrizione, Giocatori.EMail, Giocatori.Telefono, Giocatori.Soprannome, Giocatori.DataDiNascita, Giocatori.Indirizzo, " &
-							"CodFiscale, Maschio, Citta, Matricola, NumeroMaglia, Giocatori.idCategoria, Giocatori.idCategoria2 As idCategoria2, Categorie2.Descrizione As Categoria2, " &
-							"Giocatori.idCategoria3 As idCategoria3, Categorie3.Descrizione As Categoria3, Categorie.Descrizione As Categoria1, Giocatori.Categorie, " &
-							"Giocatori.RapportoCompleto, Giocatori.idTaglia, Min(KitGiocatori.idTipoKit) As idTipologiaKit, Giocatori.Cap, Giocatori.CittaNascita, Giocatori.Maggiorenne, " &
-							" " & IIf(TipoDB = "SQLSERVER", "IsNull(GiocatoriSemafori.Semaforo1,'')", "Coalesce(GiocatoriSemafori.Semaforo1,'')") & " As Semaforo1, GiocatoriSemafori.Titolo1, " &
-							" " & IIf(TipoDB = "SQLSERVER", "IsNull(GiocatoriSemafori.Semaforo2,'')", "Coalesce(GiocatoriSemafori.Semaforo2,'')") & " As Semaforo2, GiocatoriSemafori.Titolo2, " &
-							" " & IIf(TipoDB = "SQLSERVER", "IsNull(GiocatoriSemafori.Smeaforo3,'')", "Coalesce(GiocatoriSemafori.Smeaforo3,'')") & " As Semaforo3, GiocatoriSemafori.Titolo3, " &
-							" " & IIf(TipoDB = "SQLSERVER", "IsNull(GiocatoriSemafori.Semaforo4,'')", "Coalesce(GiocatoriSemafori.Semaforo4,'')") & " As Semaforo4, GiocatoriSemafori.Titolo4, " &
-							" " & IIf(TipoDB = "SQLSERVER", "IsNull(GiocatoriSemafori.Semaforo5,'')", "Coalesce(GiocatoriSemafori.Semaforo5,'')") & " As Semaforo5, GiocatoriSemafori.Titolo5, CodiceTessera, " &
-							" " & IIf(TipoDB = "SQLSERVER", "IsNull(GiocatoriDettaglio.MailGenitore1,'')", "Coalesce(GiocatoriDettaglio.MailGenitore1,'')") & " As MailGenitore1, " &
-							" " & IIf(TipoDB = "SQLSERVER", "IsNull(GiocatoriDettaglio.MailGenitore2,'')", "Coalesce(GiocatoriDettaglio.MailGenitore2,'')") & " As MailGenitore2, " &
-							"UtentiPadre.idGiocatore As AmministratiPadre, UtentiMadre.idGiocatore As AmministratiMadre " &
-							"FROM Giocatori " &
-							"Left Join KitGiocatori On Giocatori.idGiocatore=KitGiocatori.idGiocatore " &
-							"Left Join [Generale].[dbo].[Ruoli] On Giocatori.idRuolo=Ruoli.idRuolo " &
-							"Left Join Categorie On Categorie.idCategoria=Giocatori.idCategoria And Categorie.idAnno=Giocatori.idAnno " &
-							"Left Join Categorie As Categorie2 On Categorie2.idCategoria=Giocatori.idCategoria2 And Categorie2.idAnno=Giocatori.idAnno " &
-							"Left Join Categorie As Categorie3 On Categorie3.idCategoria=Giocatori.idCategoria3 And Categorie3.idAnno=Giocatori.idAnno " &
-							"Left Join GiocatoriSemafori On Giocatori.idGiocatore = GiocatoriSemafori.idGiocatore " &
-							"Left Join [Generale].[dbo].[GiocatoriTessereNFC] As NFC On NFC.idGiocatore=Giocatori.idGiocatore And NFC.CodSquadra = '" & Squadra & "' " &
-							"Left Join GiocatoriDettaglio On GiocatoriDettaglio.idGiocatore = Giocatori.idGiocatore " &
-							"Left Join [Generale].[dbo].[Utenti] As UtentiPadre On GiocatoriDettaglio.MailGenitore1=UtentiPadre.Utente " &
-							"Left Join [Generale].[dbo].[Utenti] As UtentiMadre On GiocatoriDettaglio.MailGenitore2=UtentiPadre.Utente " &
-							"Where Giocatori.Eliminato='N' And Giocatori.idAnno=" & idAnno & " " &
-							"Group By Giocatori.idGiocatore, Ruoli.idRuolo, Giocatori.Cognome, Giocatori.Nome, Ruoli.Descrizione, Giocatori.EMail, Giocatori.Telefono, Giocatori.Soprannome, Giocatori.DataDiNascita, Giocatori.Indirizzo, CodFiscale, Maschio, " &
-							"Citta, Matricola, NumeroMaglia, Giocatori.idCategoria, Giocatori.idCategoria2, Categorie2.Descrizione, Giocatori.idCategoria3, Categorie3.Descrizione, Categorie.Descrizione, " &
-							"Giocatori.Categorie, Giocatori.RapportoCompleto, Giocatori.idTaglia, Giocatori.Cap, Giocatori.CittaNascita, Giocatori.Maggiorenne, " &
-							"GiocatoriSemafori.Semaforo1, GiocatoriSemafori.Titolo1, GiocatoriSemafori.Semaforo2, GiocatoriSemafori.Titolo2, GiocatoriSemafori.Smeaforo3, GiocatoriSemafori.Titolo3, " &
-							"GiocatoriSemafori.Semaforo4, GiocatoriSemafori.Titolo4, GiocatoriSemafori.Semaforo5, GiocatoriSemafori.Titolo5, CodiceTessera, GiocatoriDettaglio.MailGenitore1, GiocatoriDettaglio.MailGenitore2, " &
-							"UtentiPadre.idGiocatore, UtentiMadre.idGiocatore " &
-							"Order By Giocatori.Cognome, Giocatori.Nome"
+								"CodFiscale, Maschio, Citta, Matricola, NumeroMaglia, Giocatori.idCategoria, Giocatori.idCategoria2 As idCategoria2, Categorie2.Descrizione As Categoria2, " &
+								"Giocatori.idCategoria3 As idCategoria3, Categorie3.Descrizione As Categoria3, Categorie.Descrizione As Categoria1, Giocatori.Categorie, " &
+								"Giocatori.RapportoCompleto, Giocatori.idTaglia, Min(KitGiocatori.idTipoKit) As idTipologiaKit, Giocatori.Cap, Giocatori.CittaNascita, Giocatori.Maggiorenne, " &
+								" " & IIf(TipoDB = "SQLSERVER", "IsNull(GiocatoriSemafori.Semaforo1,'')", "Coalesce(GiocatoriSemafori.Semaforo1,'')") & " As Semaforo1, GiocatoriSemafori.Titolo1, " &
+								" " & IIf(TipoDB = "SQLSERVER", "IsNull(GiocatoriSemafori.Semaforo2,'')", "Coalesce(GiocatoriSemafori.Semaforo2,'')") & " As Semaforo2, GiocatoriSemafori.Titolo2, " &
+								" " & IIf(TipoDB = "SQLSERVER", "IsNull(GiocatoriSemafori.Smeaforo3,'')", "Coalesce(GiocatoriSemafori.Smeaforo3,'')") & " As Semaforo3, GiocatoriSemafori.Titolo3, " &
+								" " & IIf(TipoDB = "SQLSERVER", "IsNull(GiocatoriSemafori.Semaforo4,'')", "Coalesce(GiocatoriSemafori.Semaforo4,'')") & " As Semaforo4, GiocatoriSemafori.Titolo4, " &
+								" " & IIf(TipoDB = "SQLSERVER", "IsNull(GiocatoriSemafori.Semaforo5,'')", "Coalesce(GiocatoriSemafori.Semaforo5,'')") & " As Semaforo5, GiocatoriSemafori.Titolo5, CodiceTessera, " &
+								" " & IIf(TipoDB = "SQLSERVER", "IsNull(GiocatoriDettaglio.MailGenitore1,'')", "Coalesce(GiocatoriDettaglio.MailGenitore1,'')") & " As MailGenitore1, " &
+								" " & IIf(TipoDB = "SQLSERVER", "IsNull(GiocatoriDettaglio.MailGenitore2,'')", "Coalesce(GiocatoriDettaglio.MailGenitore2,'')") & " As MailGenitore2, " &
+								"UtentiPadre.idGiocatore As AmministratiPadre, UtentiMadre.idGiocatore As AmministratiMadre " &
+								"FROM Giocatori " &
+								"Left Join KitGiocatori On Giocatori.idGiocatore=KitGiocatori.idGiocatore " &
+								"Left Join [Generale].[dbo].[Ruoli] On Giocatori.idRuolo=Ruoli.idRuolo " &
+								"Left Join Categorie On Categorie.idCategoria=Giocatori.idCategoria And Categorie.idAnno=Giocatori.idAnno " &
+								"Left Join Categorie As Categorie2 On Categorie2.idCategoria=Giocatori.idCategoria2 And Categorie2.idAnno=Giocatori.idAnno " &
+								"Left Join Categorie As Categorie3 On Categorie3.idCategoria=Giocatori.idCategoria3 And Categorie3.idAnno=Giocatori.idAnno " &
+								"Left Join GiocatoriSemafori On Giocatori.idGiocatore = GiocatoriSemafori.idGiocatore " &
+								"Left Join [Generale].[dbo].[GiocatoriTessereNFC] As NFC On NFC.idGiocatore=Giocatori.idGiocatore And NFC.CodSquadra = '" & Squadra & "' " &
+								"Left Join GiocatoriDettaglio On GiocatoriDettaglio.idGiocatore = Giocatori.idGiocatore " &
+								"Left Join [Generale].[dbo].[Utenti] As UtentiPadre On GiocatoriDettaglio.MailGenitore1=UtentiPadre.Utente " &
+								"Left Join [Generale].[dbo].[Utenti] As UtentiMadre On GiocatoriDettaglio.MailGenitore2=UtentiPadre.Utente " &
+								"Where Giocatori.Eliminato='N' And Giocatori.idAnno=" & idAnno & " " &
+								"Group By Giocatori.idGiocatore, Ruoli.idRuolo, Giocatori.Cognome, Giocatori.Nome, Ruoli.Descrizione, Giocatori.EMail, Giocatori.Telefono, Giocatori.Soprannome, Giocatori.DataDiNascita, Giocatori.Indirizzo, CodFiscale, Maschio, " &
+								"Citta, Matricola, NumeroMaglia, Giocatori.idCategoria, Giocatori.idCategoria2, Categorie2.Descrizione, Giocatori.idCategoria3, Categorie3.Descrizione, Categorie.Descrizione, " &
+								"Giocatori.Categorie, Giocatori.RapportoCompleto, Giocatori.idTaglia, Giocatori.Cap, Giocatori.CittaNascita, Giocatori.Maggiorenne, " &
+								"GiocatoriSemafori.Semaforo1, GiocatoriSemafori.Titolo1, GiocatoriSemafori.Semaforo2, GiocatoriSemafori.Titolo2, GiocatoriSemafori.Smeaforo3, GiocatoriSemafori.Titolo3, " &
+								"GiocatoriSemafori.Semaforo4, GiocatoriSemafori.Titolo4, GiocatoriSemafori.Semaforo5, GiocatoriSemafori.Titolo5, CodiceTessera, GiocatoriDettaglio.MailGenitore1, GiocatoriDettaglio.MailGenitore2, " &
+								"UtentiPadre.idGiocatore, UtentiMadre.idGiocatore " &
+								"Order By Giocatori.Cognome, Giocatori.Nome"
 							Rec = Conn.LeggeQuery(Server.MapPath("."), Sql, Connessione)
 
 							If TypeOf (Rec) Is String Then
@@ -2979,7 +2985,7 @@ Public Class wsGiocatori
 
 						Sql = "Select B.Progressivo, B.ImportoManuale, B.DescrizioneManuale, B.DataManuale From GiocatoriDettaglio A " &
 							"Left Join GiocatoriPagamenti B On A.idGiocatore = B.idGiocatore " &
-							"Where A.idGiocatore = " & idGiocatore & " And " & IIf(TipoDB = "SQLSERVER", "CHARINDEX('27;', B.idRata) > 0", "Instr(B.idRata, '27;') > 0") & " "
+							"Where A.idGiocatore = " & idGiocatore & " And " & IIf(TipoDB = "SQLSERVER", "CHARINDEX('9999;', B.idRata) > 0", "Instr(B.idRata, '9999;') > 0") & " "
 						Rec = Conn.LeggeQuery(Server.MapPath("."), Sql, Connessione)
 						If TypeOf (Rec) Is String Then
 							Ritorno = Rec
@@ -4665,7 +4671,7 @@ Public Class wsGiocatori
 						'End If
 						Rec.Close()
 
-						Sql = "Select * From GiocatoriPagamenti Where idAnno=" & idAnno & " And idGiocatore=" & idGiocatore & " And Eliminato='N' Order By Progressivo"
+						Sql = "Select * From GiocatoriPagamenti Where idAnno=" & idAnno & " And idGiocatore=" & idGiocatore & " And Eliminato='N' And NumeroRicevuta<>'Bozza' Order By Progressivo"
 						Rec = Conn.LeggeQuery(Server.MapPath("."), Sql, Connessione)
 						If TypeOf (Rec) Is String Then
 							Ritorno = Rec

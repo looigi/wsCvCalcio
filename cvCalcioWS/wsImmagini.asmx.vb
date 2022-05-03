@@ -137,14 +137,37 @@ Public Class wsImmagini
 					Ritorno = ""
 					Do Until Rec.Eof()
 						If Tipologia = "Partite" Then
-							Ritorno &= Rec("Dati").Value & "^" & Rec("NomeFile").Value & "^" & Rec("Lunghezza").Value & "^^" & Rec("Progressivo").Value & "^§"
+							Ritorno &= Rec("Dati").Value & "^" & Rec("NomeFile").Value & "^" & Rec("Lunghezza").Value & "^^" & Rec("Progressivo").Value & "^DB^§"
 						Else
-							Ritorno &= "" & ";" & Rec("NomeFile").Value & ";" & Rec("Lunghezza").Value & ";;" & Rec("Progressivo").Value & ";§"
+							Ritorno &= "" & ";" & Rec("NomeFile").Value & ";" & Rec("Lunghezza").Value & ";;" & Rec("Progressivo").Value & ";DB;§"
 						End If
 
 						Rec.MoveNext()
 					Loop
 					Rec.Close()
+
+					Dim gf As New GestioneFilesDirectory
+					Dim PathAllegati As String = gf.LeggeFileIntero(Server.MapPath(".") & "\Impostazioni\PathAllegati.txt")
+					Dim P() As String = PathAllegati.Split(";")
+					If Strings.Right(P(0), 1) = "\" Then
+						P(0) = Mid(P(0), 1, P(0).Length - 1)
+					End If
+					Dim PathAll As String = P(0) & "\" & Squadra & "\" & Tipologia & "\" & ID & "\"
+					gf.CreaDirectoryDaPercorso(PathAll)
+					gf.ScansionaDirectorySingola(PathAll)
+					Dim Filetti() As String = gf.RitornaFilesRilevati
+					Dim qFiletti As Long = gf.RitornaQuantiFilesRilevati
+					Dim Progressivo As Integer = 0
+					For i As Long = 1 To qFiletti
+						Progressivo += 1
+						Dim Lungh As Long = gf.TornaDimensioneFile(Filetti(i))
+
+						If Tipologia = "Partite" Then
+							Ritorno &= "" & "^" & Filetti(i) & "^" & Lungh & "^^" & Progressivo & "^FILE^§"
+						Else
+							Ritorno &= "" & ";" & Filetti(i) & ";" & lungh & ";;" & Progressivo & ";FILE;§"
+						End If
+					Next
 				End If
 			End If
 		End If
@@ -153,7 +176,7 @@ Public Class wsImmagini
 	End Function
 
 	<WebMethod()>
-	Public Function EliminaAllegato(Squadra As String, Tipologia As String, ID As String, Progressivo As String) As String
+	Public Function EliminaAllegato(Squadra As String, Tipologia As String, ID As String, Progressivo As String, NomeFile As String) As String
 		Dim Ritorno As String = ""
 		Dim Connessione As String = LeggeImpostazioniDiBase(Server.MapPath("."), Squadra)
 
@@ -166,19 +189,33 @@ Public Class wsImmagini
 			If TypeOf (Conn) Is String Then
 				Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
 			Else
-				Dim NomePrefisso As String = ""
+				Dim gf As New GestioneFilesDirectory
+				Dim Este As String = gf.TornaEstensioneFileDaPath(NomeFile).ToUpper.Trim
 
-				If Tipologia = "Partite" Then
-					NomePrefisso = "immagini"
+				If Este.Contains("JPG") Or Este.Contains("GIF") Or Este.Contains("JPEG") Or Este.Contains("BMP") Or Este.Contains("PNG") Then
+					Dim NomePrefisso As String = ""
+
+					If Tipologia = "Partite" Then
+						NomePrefisso = "immagini"
+					Else
+						NomePrefisso = "allegati"
+					End If
+
+					Dim Sql As String = "Delete From " & NomePrefisso & "_" & Tipologia & " Where Id=" & ID & " And Progressivo=" & Progressivo
+
+					Ritorno = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
+					If Not Ritorno.Contains(StringaErrore) Then
+						Ritorno = "*"
+					End If
 				Else
-					NomePrefisso = "allegati"
-				End If
-
-				Dim Sql As String = "Delete From " & NomePrefisso & "_" & Tipologia & " Where Id=" & ID & " And Progressivo=" & Progressivo
-
-				Ritorno = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
-				If Not Ritorno.Contains(StringaErrore) Then
-					Ritorno = "*"
+					Dim PathAllegati As String = gf.LeggeFileIntero(Server.MapPath(".") & "\Impostazioni\PathAllegati.txt")
+					Dim P() As String = PathAllegati.Split(";")
+					If Strings.Right(P(0), 1) = "\" Then
+						P(0) = Mid(P(0), 1, P(0).Length - 1)
+					End If
+					Dim PathAll As String = P(0) & "\" & Squadra & "\" & Tipologia & "\" & ID & "\" & NomeFile
+					gf.CreaDirectoryDaPercorso(PathAll)
+					Ritorno = gf.EliminaFileFisico(PathAll)
 				End If
 			End If
 		End If
@@ -192,7 +229,7 @@ Public Class wsImmagini
 	End Function
 
 	<WebMethod()>
-	Public Function SalvaImmagineDB(Squadra As String, Tipologia As String, PathImmagine As String, NomeFile As String, Allegati As String) As String
+	Public Function SalvaImmagineDB(Squadra As String, Tipologia As String, Path As String, NomeFile As String, Allegati As String, id As String) As String
 		Dim Ritorno As String = ""
 		Dim Connessione As String = LeggeImpostazioniDiBase(Server.MapPath("."), Squadra)
 
@@ -208,80 +245,111 @@ Public Class wsImmagini
 				Dim Sql As String = ""
 				Dim gf As New GestioneFilesDirectory
 				Dim Este As String = gf.TornaEstensioneFileDaPath(NomeFile).ToUpper.Trim
-				Dim id As String
+				'Dim id2 As String
 				Dim Rec As Object
 				Dim b64 As String = ""
 
 				If Allegati = "SI" Then
-					If PathImmagine.Contains("_") Then
-						Dim Splittone() As String = PathImmagine.Split("_")
-						id = Val(Splittone(1))
-					Else
-						'If CodicePartitaPerImmagini <> "" Then
-						'	id = CodicePartitaPerImmagini
-						'Else
-						Return StringaErrore & " Problemi nell'ottenere il codice del multimedia"
-						'End If
-					End If
+					'If Path.Contains("_") Then
+					'	Dim Splittone() As String = Path.Split("_")
+					'	id2 = Val(Splittone(1))
+					'Else
+					'	'If CodicePartitaPerImmagini <> "" Then
+					'	'	id = CodicePartitaPerImmagini
+					'	'Else
+					'	Return StringaErrore & " Problemi nell'ottenere il codice del multimedia"
+					'	'End If
+					'End If
 
-					If id.Contains(".") Then
-						id = Mid(id, 1, id.IndexOf("."))
-					End If
+					'If id2.Contains(".") Then
+					'	id2 = Mid(id2, 1, id2.IndexOf("."))
+					'End If
 
 					If Este.Contains("JPG") Or Este.Contains("GIF") Or Este.Contains("JPEG") Or Este.Contains("BMP") Or Este.Contains("PNG") Then
-						b64 = ConverteImmagineBase64(PathImmagine)
-					Else
-						b64 = UnicodeBytesToString(File.ReadAllBytes(PathImmagine)).Replace("'", "''")
+						b64 = ConverteImmagineBase64(Path)
+						'Else
+						' b64 = ConverteImmagineBase64(PathImmagine)
+						' b64 = UnicodeBytesToString(File.ReadAllBytes(PathImmagine)).Replace("'", "''")
 					End If
 
-					Dim NomePrefisso As String = ""
 
-					If Tipologia = "Partite" Then
-						NomePrefisso = "immagini"
-						NomeFile = NomeFile.Replace(Este, "")
-					Else
-						NomePrefisso = "allegati"
-					End If
+					If Este.Contains("JPG") Or Este.Contains("GIF") Or Este.Contains("JPEG") Or Este.Contains("BMP") Or Este.Contains("PNG") Then
+						Dim NomePrefisso As String = ""
 
-					If TipoDB = "SQLSERVER" Then
-						Sql = "Select IsNull(max(Progressivo),0)+1 From " & NomePrefisso & "_" & Tipologia.ToLower & " Where id=" & id
-					Else
-						Sql = "Select Coalesce(max(Progressivo),0)+1 From " & NomePrefisso & "_" & Tipologia.ToLower & " Where id=" & id
-					End If
-					Rec = Conn.LeggeQuery(Server.MapPath("."), Sql, Connessione)
-					If TypeOf (Rec) Is String Then
-						Ritorno = Rec
-					Else
-						Dim Progressivo As Integer = Rec(0).Value
-						Rec.Close()
-
-						Sql = "INSERT INTO " & NomePrefisso & "_" & Tipologia.ToLower & " (id, Progressivo, Lunghezza, Dati, NomeFile) VALUES(" & id & ", " & Progressivo & ", " & b64.Length & ", '" & b64 & "', '" & NomeFile.Replace("'", "''") & "');"
-						Ritorno = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
-						If Not Ritorno.Contains(StringaErrore) Then
-							gf.EliminaFileFisico(PathImmagine)
-							Ritorno = "*"
+						If Tipologia = "Partite" Then
+							NomePrefisso = "immagini"
+							NomeFile = NomeFile.Replace(Este, "")
+						Else
+							NomePrefisso = "allegati"
 						End If
+
+						If TipoDB = "SQLSERVER" Then
+							Sql = "Select IsNull(max(Progressivo),0)+1 As Progressivo From " & NomePrefisso & "_" & Tipologia.ToLower & " Where id=" & id
+						Else
+							Sql = "Select coalesce(Max(progressivo),0)+1 As Progressivo From " & NomePrefisso & "_" & Tipologia.ToLower & " Where id=" & id
+						End If
+						Rec = Conn.LeggeQuery(Server.MapPath("."), Sql, Connessione)
+						If TypeOf (Rec) Is String Then
+							Ritorno = Rec
+							Return Ritorno
+						Else
+							Dim Progressivo As Integer = Rec("Progressivo").Value
+							Rec.Close()
+
+							Sql = "INSERT INTO " & NomePrefisso & "_" & Tipologia.ToLower & " (id, Progressivo, Lunghezza, Dati, NomeFile) VALUES(" & id & ", " & Progressivo & ", " & b64.Length & ", '" & b64 & "', '" & NomeFile.Replace("'", "''") & "');"
+							Ritorno = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
+							If Not Ritorno.Contains(StringaErrore) Then
+								gf.EliminaFileFisico(Path)
+								Ritorno = "*"
+							End If
+						End If
+					Else
+						Dim PathAllegati As String = gf.LeggeFileIntero(Server.MapPath(".") & "\Impostazioni\PathAllegati.txt")
+						Dim P() As String = PathAllegati.Split(";")
+						If Strings.Right(P(0), 1) = "\" Then
+							P(0) = Mid(P(0), 1, P(0).Length - 1)
+						End If
+						Dim PathAll As String = P(0) & "\" & Squadra & "\" & Tipologia & "\" & id & "\" & NomeFile
+						gf.CreaDirectoryDaPercorso(Path)
+						Ritorno = gf.CopiaFileFisico(Path, PathAll, True)
+						gf.EliminaFileFisico(Path)
 					End If
 				Else
 					Dim Privacy As String = "n"
 					Dim Progressivo As Integer = -1
 
-					NomeFile = NomeFile.Replace(Este, "")
-					If NomeFile.Contains("_") Then
-						Dim Splittone() As String = NomeFile.Split("_")
-						id = Splittone(1)
-						If Tipologia = "Firme" Then
-							Progressivo = Val(Splittone(2).Replace(Este, ""))
+					If Tipologia = "Firme" Then
+						If TipoDB = "SQLSERVER" Then
+							Sql = "Select IsNull(max(Progressivo),0)+1 As Progressivo From immagini_" & Tipologia.ToLower & " Where id=" & id
+						Else
+							Sql = "Select coalesce(Max(progressivo),0)+1 As Progressivo From immagini_" & Tipologia.ToLower & " Where id=" & id
 						End If
-					Else
-						id = NomeFile
+						Rec = Conn.LeggeQuery(Server.MapPath("."), Sql, Connessione)
+						If TypeOf (Rec) Is String Then
+							Ritorno = Rec
+							Return Ritorno
+						Else
+							Progressivo = Rec("Progressivo").Value
+							Rec.Close()
+						End If
 					End If
-					b64 = ConverteImmagineBase64(PathImmagine)
+
+					NomeFile = NomeFile.Replace(Este, "")
+					'If NomeFile.Contains("_") Then
+					'	Dim Splittone() As String = NomeFile.Split("_")
+					'	id2 = Splittone(1)
+					'	If Tipologia = "Firme" Then
+					'		Progressivo = Val(Splittone(2).Replace(Este, ""))
+					'	End If
+					'Else
+					'	id2 = NomeFile
+					'End If
+					b64 = ConverteImmagineBase64(Path)
 					'Return b64
 
-					If id.Contains(".") Then
-						id = Mid(id, 1, id.IndexOf("."))
-					End If
+					'If id2.Contains(".") Then
+					'	id2 = Mid(id2, 1, id2.IndexOf("."))
+					'End If
 
 					If Tipologia = "Firme" Then
 						If NomeFile.Contains("_P") Then
@@ -314,7 +382,7 @@ Public Class wsImmagini
 
 					Ritorno = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
 					If Not Ritorno.Contains(StringaErrore) Then
-						gf.EliminaFileFisico(PathImmagine)
+						gf.EliminaFileFisico(Path)
 						Ritorno = "*"
 					End If
 				End If
@@ -334,6 +402,41 @@ Public Class wsImmagini
 				Return base64String
 			End Using
 		End Using
+	End Function
+
+	<WebMethod()>
+	Public Function RitornaAllegatoDB(Squadra As String, Tipologia As String, Id As String, Progressivo As String) As String
+		Dim Ritorno As String = ""
+		Dim Connessione As String = LeggeImpostazioniDiBase(Server.MapPath("."), Squadra)
+
+		If Connessione = "" Then
+			Ritorno = ErroreConnessioneNonValida
+		Else
+			Dim Conn As Object = New clsGestioneDB(Squadra)
+
+			If TypeOf (Conn) Is String Then
+				Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
+			Else
+				Dim Sql As String = ""
+				Dim Rec As Object
+
+				Sql = "Select * From allegati_" & Tipologia.ToLower & " Where id=" & Id & " And Progressivo=" & Progressivo
+				Rec = Conn.LeggeQuery(Server.MapPath("."), Sql, Connessione)
+				If TypeOf (Rec) Is String Then
+					Ritorno = Rec
+				Else
+					If Not Rec.Eof Then
+						Ritorno = Rec("Dati").Value
+					Else
+						Ritorno = StringaErrore & " Nessuna immagine rilevata"
+					End If
+					Rec.Close()
+				End If
+
+			End If
+		End If
+
+		Return Ritorno
 	End Function
 
 	<WebMethod()>

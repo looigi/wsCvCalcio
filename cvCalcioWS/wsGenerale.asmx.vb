@@ -1652,7 +1652,7 @@ Public Class wsGenerale
 				Dim Body As String = ""
 
 				Dim gf As New GestioneFilesDirectory
-				Dim Percorso As String = gf.LeggeFileIntero(Server.MapPath(".") & "\Impostazioni\PercorsoSito.txt")
+				Dim Percorso As String = gf.LeggeFileIntero(Server.MapPath(".") & "\Impostazioni\PercorsoSitoFirma.txt")
 
 				If Percorso = "" Then
 					Ritorno = StringaErrore & " Nessun percorso sito rilevato"

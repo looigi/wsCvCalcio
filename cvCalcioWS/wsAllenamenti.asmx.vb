@@ -616,39 +616,65 @@ Public Class wsAllenamenti
 									filetto = filetto.Replace("***DATI***", Ritorno)
 									filetto = filetto.Replace("***NOME SQUADRA***", "<br /><br />" & NomeSquadra)
 
-									Dim multimediaPaths As String = gf.LeggeFileIntero(HttpContext.Current.Server.MapPath(".") & "\Impostazioni\PathAllegati.txt")
-									Dim mmPaths() As String = multimediaPaths.Split(";")
-									mmPaths(2) = mmPaths(2).Replace(vbCrLf, "")
-									If Strings.Right(mmPaths(2), 1) <> "/" Then
-										mmPaths(2) &= "/"
-									End If
+									'Dim multimediaPaths As String = gf.LeggeFileIntero(HttpContext.Current.Server.MapPath(".") & "\Impostazioni\PathAllegati.txt")
+									'Dim mmPaths() As String = multimediaPaths.Split(";")
+									'mmPaths(2) = mmPaths(2).Replace(vbCrLf, "")
+									'If Strings.Right(mmPaths(2), 1) <> "/" Then
+									'	mmPaths(2) &= "/"
+									'End If
 
-									Dim filePaths As String = gf.LeggeFileIntero(HttpContext.Current.Server.MapPath(".") & "\Impostazioni\Paths.txt")
-									filePaths = filePaths.Replace(vbCrLf, "")
-									If Strings.Right(filePaths, 1) <> "\" Then
-										filePaths &= "\"
-									End If
-									Dim Esten As String = Format(Now.Second, "00") & "_" & Now.Millisecond & RitornaValoreRandom(55)
-									Dim pathLogo As String = filePaths & NomeSquadra.Replace(" ", "_") & "\Societa\1_1.kgb"
-									If ControllaEsistenzaFile(pathLogo) Then
-										Dim pathLogoConv As String = filePaths & "Appoggio\" & Esten & ".jpg"
-										Dim c As New CriptaFiles
-										c.DecryptFile(CryptPasswordString, pathLogo, pathLogoConv)
+									'Dim filePaths As String = gf.LeggeFileIntero(HttpContext.Current.Server.MapPath(".") & "\Impostazioni\Paths.txt")
+									'filePaths = filePaths.Replace(vbCrLf, "")
+									'If Strings.Right(filePaths, 1) <> "\" Then
+									'	filePaths &= "\"
+									'End If
+									Dim Esten As String = "Allenamenti_" & Squadra 'Format(Now.Second, "00") & "_" & Now.Millisecond & RitornaValoreRandom(55)
+									'Dim pathLogo As String = filePaths & NomeSquadra.Replace(" ", "_") & "\Societa\1_1.kgb"
+									'If ControllaEsistenzaFile(pathLogo) Then
+									'	Dim pathLogoConv As String = filePaths & "Appoggio\" & Esten & ".jpg"
+									'	Dim c As New CriptaFiles
+									'	c.DecryptFile(CryptPasswordString, pathLogo, pathLogoConv)
 
-										Dim urlLogo As String = mmPaths(2) & "Appoggio/" & Esten & ".jpg"
-										filetto = filetto.Replace("***LOGO SOCIETA***", urlLogo)
-									Else
-										filetto = filetto.Replace("***LOGO SOCIETA***", "")
-									End If
+									'	Dim urlLogo As String = mmPaths(2) & "Appoggio/" & Esten & ".jpg"
+									'	filetto = filetto.Replace("***LOGO SOCIETA***", urlLogo)
+									'Else
+									'	filetto = filetto.Replace("***LOGO SOCIETA***", "")
+									'End If
+									Dim imm As New wsImmagini
+									Dim img As String = imm.RitornaImmagineDB(Squadra, "Societa", "1")
+									filetto = filetto.Replace("***LOGO SOCIETA***", "data:image/png;base64," & img)
 
-									Dim nomeFileHtml As String = filePaths & "Appoggio\" & Esten & ".html"
-									Dim nomeFilePDF As String = filePaths & "Appoggio\" & Esten & ".pdf"
+									'Dim Paths As String = gf.LeggeFileIntero(HttpContext.Current.Server.MapPath(".") & "\Impostazioni\PathAllegati.txt")
+									'Dim Paths2() As String = Paths.Split(";")
+									'Paths2(0) = Paths2(0).Replace(vbCrLf, "")
+									'If Strings.Right(Paths2(2), 1) <> "\" Then
+									'	Paths2(0) &= "\"
+									'End If
+
+									Dim nomeFileHtml As String = Server.MapPath(".") & "\Appoggio\" & Esten & ".html"
+									Dim nomeFilePDF As String = Server.MapPath(".") & "\Appoggio\" & Esten & ".pdf"
 
 									gf.CreaAggiornaFile(nomeFileHtml, filetto)
 
+									Dim paths As String = gf.LeggeFileIntero(Server.MapPath(".") & "\Impostazioni\PathAllegati.txt")
+									Dim P() As String = paths.Split(";")
+									Dim Barra As String = "\"
+
+									If TipoDB <> "SQLSERVER" Then
+										Barra = "/"
+									End If
+
+									P(1) = P(1).Trim.Replace(vbCrLf, "")
+									If Strings.Right(P(1), 1) <> Barra Then
+										P(1) &= Barra
+									End If
+									Dim pathLogG As String = P(1).Replace(vbCrLf, "")
+									Dim PathLog As String = pathLogG & "Pdf.txt"
+
 									Dim pp2 As New pdfGest
-									Ritorno = pp2.ConverteHTMLInPDF(nomeFileHtml, nomeFilePDF, "")
+									Ritorno = pp2.ConverteHTMLInPDF(nomeFileHtml, nomeFilePDF, PathLog, True)
 									If Ritorno = "*" Then
+										gf.EliminaFileFisico(nomeFileHtml)
 										Ritorno = "Appoggio/" & Esten & ".pdf"
 									End If
 								End If

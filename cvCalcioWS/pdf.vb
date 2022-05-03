@@ -65,7 +65,8 @@ Public Class pdfGest
 			converter.Footer.DisplayOnOddPages = True
 			converter.Footer.DisplayOnEvenPages = True
 
-			Dim textData As New PdfTextSection(0, 10, Now.ToString("F"), New System.Drawing.Font("Arial", 8))
+			Dim Datella As String = Format(Now.Day, "00") & "-" & Format(Now.Month, "00") & "-" & Now.Year & " " & Format(Now.Hour, "00") & ":" & Format(Now.Minute, "00") & ":" & Format(Now.Second, "00")
+			Dim textData As New PdfTextSection(0, 10, datella, New System.Drawing.Font("Arial", 8))
 			textData.HorizontalAlign = PdfTextHorizontalAlign.Left
 			Dim text As New PdfTextSection(0, 10, "Stampato tramite InCalcio – www.incalcio.it – info@incalcio.it", New System.Drawing.Font("Arial", 8))
 			text.HorizontalAlign = PdfTextHorizontalAlign.Center

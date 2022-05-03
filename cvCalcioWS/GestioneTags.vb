@@ -664,7 +664,7 @@ Public Class GestioneTags
 										If Rec.Eof() Then
 											ScriveLog(MP, CodSquadra, "GestioneTags", " - Nessun tag query rilevato. Ritorno -----")
 
-											Ritorno = "-----"
+											Ritorno = ""
 											' Ritorno = "ERROR: Nessun tag query rilevato"
 										Else
 											Ritorno = "" & Rec(0).Value

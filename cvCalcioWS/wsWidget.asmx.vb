@@ -738,7 +738,7 @@ Public Class wsWidget
 				Else
 					Ritorno = ""
 					Do Until Rec.Eof()
-						Ritorno &= Rec("Cosa").Value & ";" & Rec("Id").Value & ";" & Rec("PrimoCampo").Value & ";" & Rec("SecondoCampo").Value & ";" & Rec("Data").Value & "§"
+						Ritorno &= Rec("Cosa").Value & ";" & Rec("Id").Value & ";" & Rec("PrimoCampo").Value & ";" & Rec("SecondoCampo").Value & ";" & ConverteData(Rec("Data").Value) & "§"
 
 						Rec.MoveNext()
 					Loop

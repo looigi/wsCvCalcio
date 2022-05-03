@@ -75,7 +75,11 @@ Public Class clsGestioneDB
 
 			ThreadScriveLog(Datella & "--------------------------------------------------------------------------", nomeFileLogExec)
 
-			ThreadScriveLog(Datella & ": " & Sql2, nomeFileLogExec)
+			Dim sql3 As String = Sql2
+			If sql3.Length > 1024 Then
+				sql3 = Mid(sql3, 1, 1021) & "..."
+			End If
+			ThreadScriveLog(Datella & ": " & sql3, nomeFileLogExec)
 			' End If
 		End If
 
@@ -166,7 +170,11 @@ Public Class clsGestioneDB
 			ThreadScriveLog(Datella & "--------------------------------------------------------------------------", nomeFileLogQuery)
 			ThreadScriveLog(Datella & " Modifica Query: " & ModificaQuery, nomeFileLogQuery)
 			ThreadScriveLog(Datella & " TIPO DB: " & TipoDB, nomeFileLogQuery)
-			ThreadScriveLog(Datella & ": " & Sql2, nomeFileLogQuery)
+			Dim sql3 As String = Sql2
+			If sql3.Length > 1024 Then
+				sql3 = Mid(sql3, 1, 1021) & "..."
+			End If
+			ThreadScriveLog(Datella & ": " & sql3, nomeFileLogQuery)
 			'End If
 		End If
 

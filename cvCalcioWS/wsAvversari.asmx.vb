@@ -111,6 +111,8 @@ Public Class wsAvversari
 									EMail As String, Fax As String, FuoriClassifica As String) As String
 		Dim Ritorno As String = ""
 		Dim Connessione As String = LeggeImpostazioniDiBase(Server.MapPath("."), Squadra)
+		Dim idAvv As Integer = -1
+		Dim idCam As Integer = -1
 
 		If Connessione = "" Then
 			Ritorno = ErroreConnessioneNonValida
@@ -123,10 +125,8 @@ Public Class wsAvversari
 			Else
 				Dim Rec As Object ' = CreateObject("ADODB.Recordset")
 				Dim Sql As String = ""
-				Dim idAvv As Integer = -1
-				Dim idCam As Integer = -1
 
-				Sql = iif(tipodb="SQLSERVER", "Begin transaction", "Start transaction")
+				Sql = IIf(TipoDB = "SQLSERVER", "Begin transaction", "Start transaction")
 				Ritorno = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
 
 				If Not Ritorno.Contains(StringaErrore) Then
@@ -261,7 +261,7 @@ Public Class wsAvversari
 			End If
 		End If
 
-		Return Ritorno
+		Return idAvv & ";" & idCam
 	End Function
 
 	<WebMethod()>

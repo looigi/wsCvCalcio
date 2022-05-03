@@ -2324,10 +2324,24 @@ Public Class wsPartite
 							Dim Appuntamento As String = "" & Rec("DataOraAppuntamento").Value
 							If Appuntamento <> "" Then
 								Appuntamento = Mid(Appuntamento, Appuntamento.IndexOf(" ") + 1, Appuntamento.Length)
+								Appuntamento = Appuntamento.Replace(".000", "")
+								If Appuntamento.Contains(":") Then
+									Dim a() As String = Appuntamento.Split(":")
+									If a.Length > 1 Then
+										Appuntamento = a(0) & ":" & a(1)
+									End If
+								End If
 							End If
 							Dim OraConv As String = "" & Rec("DataOra").Value
 							If OraConv <> "" Then
 								OraConv = Mid(OraConv, OraConv.IndexOf(" ") + 1, OraConv.Length)
+								OraConv = OraConv.Replace(".000", "")
+								If OraConv.Contains(":") Then
+									Dim o() As String = OraConv.Split(":")
+									If o.Length > 1 Then
+										OraConv = o(0) & ":" & o(1)
+									End If
+								End If
 							End If
 							Filetto = Filetto.Replace("***ORARIO1***", Appuntamento)
 							Filetto = Filetto.Replace("***ORARIO2***", OraConv)
@@ -2404,10 +2418,9 @@ Public Class wsPartite
 								End If
 
 								Dim metaGiocatori As Integer = Int(Giocatori.Count / 2)
-								'If Giocatori.Count / 2 <> Int(Giocatori.Count / 2) Then
-								'	metaGiocatori -= 1
-								'End If
-
+								If Giocatori.Count / 2 <> Int(Giocatori.Count / 2) Then
+									metaGiocatori += 1
+								End If
 								'Dim ii As Integer = 0
 								'For Each g As String In Giocatori
 								'	Convocati &= ii + 1 & ":" & g & "<br />"
@@ -2416,126 +2429,126 @@ Public Class wsPartite
 								'Convocati &= "<hr />"
 
 								Convocati &= "<table style=""width: 100%;"" cellpadding=""0px"" cellspacing=""0px"">"
-								For i As Integer = 0 To metaGiocatori - 1
-									Dim Riga As String = ""
+									For i As Integer = 0 To metaGiocatori - 1
+										Dim Riga As String = ""
 
-									Riga &= "<tr>"
+										Riga &= "<tr>"
 
-									Dim Path11 As String = ""
-									If i < Giocatori.Count Then
-										'Path11 = PathBaseMultimedia & "/" & NomeSquadra & "/Giocatori/" & idAnno & "_" & idGiocatore.Item(i) & ".kgb"
-										'Path11 = DecriptaImmagine(Server.MapPath("."), Path11)
-										Path11 = imm.RitornaImmagineDB(Squadra, "Giocatori", idGiocatore.Item(i))
-										If Path11.Contains("ERROR:") Then
-											Path11 = Server.MapPath(".") & "\ImmaginiLocali\Sconosciuto.png"
-										Else
-											Path11 = "data:image/png;base64," & Path11
+										Dim Path11 As String = ""
+										If i < Giocatori.Count Then
+											'Path11 = PathBaseMultimedia & "/" & NomeSquadra & "/Giocatori/" & idAnno & "_" & idGiocatore.Item(i) & ".kgb"
+											'Path11 = DecriptaImmagine(Server.MapPath("."), Path11)
+											Path11 = imm.RitornaImmagineDB(Squadra, "Giocatori", idGiocatore.Item(i))
+											If Path11.Contains("ERROR:") Then
+												Path11 = Server.MapPath(".") & "\ImmaginiLocali\Sconosciuto.png"
+											Else
+												Path11 = "data:image/png;base64," & Path11
+											End If
+											'Filetto = Filetto.Replace("***URL LOGO***", "data:image/png;base64," & img)
 										End If
-										'Filetto = Filetto.Replace("***URL LOGO***", "data:image/png;base64," & img)
-									End If
 
-									Dim Path12 As String = ""
-									If i + (metaGiocatori + 0) < Giocatori.Count Then
-										'Path12 = PathBaseMultimedia & "/" & NomeSquadra & "/Giocatori/" & idAnno & "_" & idGiocatore.Item(i + (metaGiocatori + 0)) & ".kgb"
-										'Path12 = DecriptaImmagine(Server.MapPath("."), Path12)
-										Path12 = imm.RitornaImmagineDB(Squadra, "Giocatori", idGiocatore.Item(i + (metaGiocatori + 0)))
-										If Path12.Contains("ERROR:") Then
-											Path12 = Server.MapPath(".") & "\ImmaginiLocali\Sconosciuto.png"
-										Else
-											Path12 = "data:image/png;base64," & Path12
+										Dim Path12 As String = ""
+										If i + (metaGiocatori + 0) < Giocatori.Count Then
+											'Path12 = PathBaseMultimedia & "/" & NomeSquadra & "/Giocatori/" & idAnno & "_" & idGiocatore.Item(i + (metaGiocatori + 0)) & ".kgb"
+											'Path12 = DecriptaImmagine(Server.MapPath("."), Path12)
+											Path12 = imm.RitornaImmagineDB(Squadra, "Giocatori", idGiocatore.Item(i + (metaGiocatori + 0)))
+											If Path12.Contains("ERROR:") Then
+												Path12 = Server.MapPath(".") & "\ImmaginiLocali\Sconosciuto.png"
+											Else
+												Path12 = "data:image/png;base64," & Path12
+											End If
 										End If
-									End If
 
-									Dim Altro As String = ""
+										Dim Altro As String = ""
 
-									If i / 2 = Int(i / 2) Then
-										Colore = "#fff"
-									Else
-										If idRuolo.Item(i) > -1 Then
-											Colore = codiceColore(idRuolo.Item(i))
-										Else
-											Colore = "#ccc"
-										End If
-									End If
-									If vecchioIdRuolo <> idRuolo.Item(i) Then
-										Altro = "border-top: 2px solid #000;"
-										vecchioIdRuolo = idRuolo.Item(i)
-									End If
-
-									Riga &= "<td style=""width: 10%; background-color: " & Colore & "; " & Altro & """ class=""adestra"">"
-									Riga &= "<span class=""titolo3"">" & i + 1 & "</span>"
-									Riga &= "</td>"
-
-									Riga &= "<td style=""width: 10%; background-color: " & Colore & "; " & Altro & "text-align: center;"">"
-									If Path11 = "" Then
-										Riga &= "&nbsp;"
-									Else
-										Riga &= "<img src=""" & Path11 & """ width=""50"" height=""50"" />"
-									End If
-									Riga &= "</td>"
-
-									Riga &= "<td  style=""width: 30%; background-color: " & Colore & "; " & Altro & """>"
-									If i < Giocatori.Count Then
-										Riga &= "<span class=""titolo3"">" & Giocatori.Item(i) & "</span>"
-									Else
-										Riga &= "<span class=""titolo3"">&nbsp;</span>"
-									End If
-									Riga &= "</td>"
-
-									Dim Altro2 As String = ""
-									Dim Numero As String = ""
-
-									If i + (metaGiocatori + 0) < Giocatori.Count Then
-										Numero = i + (metaGiocatori + 1)
-										If (i + (metaGiocatori + 0)) / 2 = Int((i + (metaGiocatori + 0)) / 2) Then
+										If i / 2 = Int(i / 2) Then
 											Colore = "#fff"
 										Else
 											If idRuolo.Item(i) > -1 Then
-												Colore = codiceColore(idRuolo.Item(i + (metaGiocatori + 0)))
+												Colore = codiceColore(idRuolo.Item(i))
 											Else
 												Colore = "#ccc"
 											End If
 										End If
-
-										If vecchioIdRuolo2 <> idRuolo.Item(i + (metaGiocatori + 0)) Then
-											Altro2 = "border-top: 2px solid #000;"
-											vecchioIdRuolo2 = idRuolo.Item(i + (metaGiocatori + 0))
+										If vecchioIdRuolo <> idRuolo.Item(i) Then
+											Altro = "border-top: 2px solid #000;"
+											vecchioIdRuolo = idRuolo.Item(i)
 										End If
-									Else
-										Numero = ""
-										'If (i + 12) / 2 = Int((i + 12) / 2) Then
-										Colore = "#fff"
-										'Else
-										'	Colore = "#ccc"
-										'End If
-									End If
 
-									Riga &= "<td style=""width: 10%; background-color: " & Colore & "; " & Altro2 & """ class=""adestra"">"
-									Riga &= "<span class=""titolo3"">" & Numero & "</span>"
-									Riga &= "</td>"
+										Riga &= "<td style=""width: 10%; background-color: " & Colore & "; " & Altro & """ class=""adestra"">"
+										Riga &= "<span class=""titolo3"">" & i + 1 & "</span>"
+										Riga &= "</td>"
 
-									Riga &= "<td style=""width: 10%; background-color: " & Colore & "; " & Altro2 & " text-align: center;"">"
-									If Path12 = "" Then
-										Riga &= "&nbsp;"
-									Else
-										Riga &= "<img src=""" & Path12 & """ width=""50"" height=""50"" />"
-									End If
-									Riga &= "</td>"
+										Riga &= "<td style=""width: 10%; background-color: " & Colore & "; " & Altro & "text-align: center;"">"
+										If Path11 = "" Then
+											Riga &= "&nbsp;"
+										Else
+											Riga &= "<img src=""" & Path11 & """ width=""50"" height=""50"" />"
+										End If
+										Riga &= "</td>"
 
-									Riga &= "<td style=""width:  30%; background-color: " & Colore & "; " & Altro2 & """>"
-									If i + (metaGiocatori + 0) < Giocatori.Count Then
-										Riga &= "<span class=""titolo3"">" & Giocatori.Item(i + (metaGiocatori + 0)) & "</span>"
-									Else
-										Riga &= "<span class=""titolo3"">&nbsp;</span>"
-									End If
-									Riga &= "</td>"
-									Riga &= "</tr>"
+										Riga &= "<td  style=""width: 30%; background-color: " & Colore & "; " & Altro & """>"
+										If i < Giocatori.Count Then
+											Riga &= "<span class=""titolo3"">" & Giocatori.Item(i) & "</span>"
+										Else
+											Riga &= "<span class=""titolo3"">&nbsp;</span>"
+										End If
+										Riga &= "</td>"
 
-									Convocati &= Riga
-								Next
-								Convocati &= "</table>"
-							End If
-							Filetto = Filetto.Replace("***CONVOCATI***", Convocati)
+										Dim Altro2 As String = ""
+										Dim Numero As String = ""
+
+										If i + (metaGiocatori + 0) < Giocatori.Count Then
+											Numero = i + (metaGiocatori + 1)
+											If (i + (metaGiocatori + 0)) / 2 = Int((i + (metaGiocatori + 0)) / 2) Then
+												Colore = "#fff"
+											Else
+												If idRuolo.Item(i) > -1 Then
+													Colore = codiceColore(idRuolo.Item(i + (metaGiocatori + 0)))
+												Else
+													Colore = "#ccc"
+												End If
+											End If
+
+											If vecchioIdRuolo2 <> idRuolo.Item(i + (metaGiocatori + 0)) Then
+												Altro2 = "border-top: 2px solid #000;"
+												vecchioIdRuolo2 = idRuolo.Item(i + (metaGiocatori + 0))
+											End If
+										Else
+											Numero = ""
+											'If (i + 12) / 2 = Int((i + 12) / 2) Then
+											Colore = "#fff"
+											'Else
+											'	Colore = "#ccc"
+											'End If
+										End If
+
+										Riga &= "<td style=""width: 10%; background-color: " & Colore & "; " & Altro2 & """ class=""adestra"">"
+										Riga &= "<span class=""titolo3"">" & Numero & "</span>"
+										Riga &= "</td>"
+
+										Riga &= "<td style=""width: 10%; background-color: " & Colore & "; " & Altro2 & " text-align: center;"">"
+										If Path12 = "" Then
+											Riga &= "&nbsp;"
+										Else
+											Riga &= "<img src=""" & Path12 & """ width=""50"" height=""50"" />"
+										End If
+										Riga &= "</td>"
+
+										Riga &= "<td style=""width:  30%; background-color: " & Colore & "; " & Altro2 & """>"
+										If i + (metaGiocatori + 0) < Giocatori.Count Then
+											Riga &= "<span class=""titolo3"">" & Giocatori.Item(i + (metaGiocatori + 0)) & "</span>"
+										Else
+											Riga &= "<span class=""titolo3"">&nbsp;</span>"
+										End If
+										Riga &= "</td>"
+										Riga &= "</tr>"
+
+										Convocati &= Riga
+									Next
+									Convocati &= "</table>"
+								End If
+								Filetto = Filetto.Replace("***CONVOCATI***", Convocati)
 
 							Dim pathFileAgg As String = pathAllegati & Squadra & "\Scheletri\testo_convocazioni.txt"
 							If Not ControllaEsistenzaFile(pathFileAgg) Then

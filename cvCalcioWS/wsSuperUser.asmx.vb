@@ -499,6 +499,11 @@ Public Class wsSuperUser
 																		Dim Oggetto As String = "Creazione nuova società"
 																		Dim BodyMail As String = gf.LeggeFileIntero(Server.MapPath(".") & "\Scheletri\template_nuova_societa\template-mail-nuova-societa.html")
 
+																		Dim s As String = gf.LeggeFileIntero(Server.MapPath(".") & "\Impostazioni\PercorsoSito.txt")
+																		s = s.Replace(vbCrLf, "")
+
+																		BodyMail = BodyMail.Replace("***INDIRIZZO SITO WEB***", s)
+
 																		Dim Body As String = ""
 																		Body &= Squadra & "<br /><br />"
 																		Body &= "Amministratore: " & CognomeAdmin & " " & NomeAdmin & "<br />"
@@ -526,11 +531,6 @@ Public Class wsSuperUser
 																		BodyMail = BodyMail.Replace("***contentFB***", contentFB)
 																		BodyMail = BodyMail.Replace("***contentLOGO***", contentLogo)
 																		BodyMail = BodyMail.Replace("***PATH_IMG***", pathIMG)
-
-																		Dim s As String = gf.LeggeFileIntero(Server.MapPath(".") & "\Impostazioni\PercorsoSito.txt")
-																		s = s.Replace(vbCrLf, "")
-
-																		BodyMail = BodyMail.Replace("***INDIRIZZO SITO WEB***", s)
 
 																		Dim ChiScrive As String = "servizioclienti@incalcio.cloud"
 
@@ -699,23 +699,32 @@ Public Class wsSuperUser
 							Dim Semaforo2 As String = "" : Dim Titolo2 As String = ""
 
 							If Scadenza <> "" Then
+								'Scadenza = ConverteData(Scadenza)
 								Dim sc() As String = Scadenza.Split("-")
-								Scadenza = sc(2) & "-" & sc(1) & "-" & sc(0)
+								If sc(0) > 50 Then
+									Scadenza = sc(0) & "-" & sc(1) & "-" & sc(2)
+								Else
+									Scadenza = sc(2) & "-" & sc(1) & "-" & sc(0)
+								End If
 
 								Dim dScadenza As DateTime
 								Dim Oggi As Date = Now
 								Dim diff As Integer = 0
 
 								Try
-									dScadenza = New Date(Val(sc(0)), Val(sc(1)), Val(sc(2))) ' DateTime.ParseExact(Scadenza, "yyyy-MM-dd", Nothing) ' Convert.ToDateTime(Scadenza)
+									If sc(2) > 50 Then
+										dScadenza = New Date(Val(sc(2)), Val(sc(1)), Val(sc(0))) ' DateTime.ParseExact(Scadenza, "yyyy-MM-dd", Nothing) ' Convert.ToDateTime(Scadenza)
+									Else
+										dScadenza = New Date(Val(sc(0)), Val(sc(1)), Val(sc(2))) ' DateTime.ParseExact(Scadenza, "yyyy-MM-dd", Nothing) ' Convert.ToDateTime(Scadenza)
+									End If
 									diff = DateAndTime.DateDiff(DateInterval.Day, Oggi, dScadenza)
 
 									' Return Scadenza & " - " & dScadenza & " -> " & Oggi & " : " & diff
 								Catch ex As Exception
-									Ritorno = StringaErrore & " " & ex.Message
+									Ritorno = StringaErrore & " " & ex.Message & " " & Val(sc(0)) & "-" & Val(sc(1)) & "-" & Val(sc(2))
 									Ok = False
 
-									Ritorno = Val(sc(2)) & "-" & Val(sc(1)) & "-" & Val(sc(0)) & " " & Scadenza & " - " & dScadenza & " -> " & Oggi & " : " & diff & " ----> " & Ritorno
+									' Ritorno = Val(sc(2)) & "-" & Val(sc(1)) & "-" & Val(sc(0)) & " " & Scadenza & " - " & dScadenza & " -> " & Oggi & " : " & diff & " ----> " & Ritorno
 								End Try
 
 								Select Case diff
@@ -814,6 +823,7 @@ Public Class wsSuperUser
 								End If
 
 								Dim Occupazione As Double = 0
+								Dim DettaglioLunghezze As String = ""
 								Dim OccupazioneOriginale As Double = 0
 								Dim sOccupazione As String = ""
 								Dim giga As Double = 1024L * 1024 * 1024 ' * 1024
@@ -828,75 +838,114 @@ Public Class wsSuperUser
 									If TypeOf (ConnSq) Is String Then
 										Ritorno = ErroreConnessioneDBNonValida & ":" & ConnGen
 									Else
-										Sql = "Select Coalesce(Sum(Lunghezza),0) As Lunghezza2 From (
-											SELECT Coalesce(Sum(Lunghezza),0) As Lunghezza FROM `allegati_allenatori`
-											Union All
-											SELECT Coalesce(Sum(Lunghezza),0) As Lunghezza FROM `allegati_arbitri`
-											Union All
-											SELECT Coalesce(Sum(Lunghezza),0) As Lunghezza FROM `allegati_avversari`
-											Union All
-											SELECT Coalesce(Sum(Lunghezza),0) As Lunghezza FROM `allegati_categorie`
-											Union All
-											SELECT Coalesce(Sum(Lunghezza),0) As Lunghezza FROM `allegati_certificati`
-											Union All
-											SELECT Coalesce(Sum(Lunghezza),0) As Lunghezza FROM `allegati_dirigenti`
-											Union All
-											SELECT Coalesce(Sum(Lunghezza),0) As Lunghezza FROM `allegati_giocatoridocumenti`
-											Union All
-											SELECT Coalesce(Sum(Lunghezza),0) As Lunghezza FROM `immagini_allenatori`
-											Union All
-											SELECT Coalesce(Sum(Lunghezza),0) As Lunghezza FROM `immagini_arbitri`
-											Union All
-											SELECT Coalesce(Sum(Lunghezza),0) As Lunghezza FROM `immagini_avversari`
-											Union All
-											SELECT Coalesce(Sum(Lunghezza),0) As Lunghezza FROM `immagini_categorie`
-											Union All
-											SELECT Coalesce(Sum(Lunghezza),0) As Lunghezza FROM `immagini_dirigenti`
-											Union All
-											SELECT Coalesce(Sum(Lunghezza),0) As Lunghezza FROM `immagini_firme`
-											Union All
-											SELECT Coalesce(Sum(Lunghezza),0) As Lunghezza FROM `immagini_giocatori`
-											Union All
-											SELECT Coalesce(Sum(Lunghezza),0) As Lunghezza FROM `immagini_partite`
-											Union All
-											SELECT Coalesce(Sum(Lunghezza),0) As Lunghezza FROM `immagini_segreteria`
-											Union All
-											SELECT Coalesce(Sum(Lunghezza),0) As Lunghezza FROM `immagini_societa`
-											Union All
-											SELECT Coalesce(Sum(Lunghezza),0) As Lunghezza FROM `immagini_utenti`
-											Union All
-											SELECT Coalesce(Sum(Lunghezza),0) As Lunghezza FROM `immagini_utentifirme`
-											) As A"
+										Sql = " " &
+											"SELECT 'Allegati Allenatori' As Cosa, Coalesce(Sum(Lunghezza),0) As Lunghezza FROM `allegati_allenatori` " &
+											"Union All " &
+											"SELECT 'Allegati Arbitri' As Cosa, Coalesce(Sum(Lunghezza),0) As Lunghezza FROM `allegati_arbitri` " &
+											"Union All " &
+											"SELECT 'Allegati Avversari' As Cosa, Coalesce(Sum(Lunghezza),0) As Lunghezza FROM `allegati_avversari` " &
+											"Union All " &
+											"SELECT'Allegati Categorie' As Cosa,  Coalesce(Sum(Lunghezza),0) As Lunghezza FROM `allegati_categorie` " &
+											"Union All " &
+											"SELECT 'Allegati Certificati' As Cosa, Coalesce(Sum(Lunghezza),0) As Lunghezza FROM `allegati_certificati` " &
+											"Union All " &
+											"SELECT 'Allegati Dirigenti' As Cosa, Coalesce(Sum(Lunghezza),0) As Lunghezza FROM `allegati_dirigenti` " &
+											"Union All " &
+											"SELECT 'Allegati Documenti Giocatori' As Cosa, Coalesce(Sum(Lunghezza),0) As Lunghezza FROM `allegati_giocatoridocumenti` " &
+											"Union All " &
+											"SELECT 'Immagini Allenatori' As Cosa, Coalesce(Sum(Lunghezza),0) As Lunghezza FROM `immagini_allenatori` " &
+											"Union All " &
+											"SELECT 'Immagini Arbitri' As Cosa, Coalesce(Sum(Lunghezza),0) As Lunghezza FROM `immagini_arbitri` " &
+											"Union All " &
+											"SELECT 'Immagini Avversari' As Cosa, Coalesce(Sum(Lunghezza),0) As Lunghezza FROM `immagini_avversari` " &
+											"Union All " &
+											"SELECT 'Immagini Categorie' As Cosa, Coalesce(Sum(Lunghezza),0) As Lunghezza FROM `immagini_categorie` " &
+											"Union All " &
+											"SELECT 'Immagini Dirigenti' As Cosa, Coalesce(Sum(Lunghezza),0) As Lunghezza FROM `immagini_dirigenti` " &
+											"Union All " &
+											"SELECT 'Immagini Firme' As Cosa, Coalesce(Sum(Lunghezza),0) As Lunghezza FROM `immagini_firme` " &
+											"Union All " &
+											"SELECT 'Immagini Giocatori' As Cosa, Coalesce(Sum(Lunghezza),0) As Lunghezza FROM `immagini_giocatori` " &
+											"Union All " &
+											"SELECT 'Immagini Partite' As Cosa, Coalesce(Sum(Lunghezza),0) As Lunghezza FROM `immagini_partite` " &
+											"Union All " &
+											"SELECT 'Immagini Segreteria' As Cosa, Coalesce(Sum(Lunghezza),0) As Lunghezza FROM `immagini_segreteria` " &
+											"Union All " &
+											"SELECT 'Immagini Società' As Cosa, Coalesce(Sum(Lunghezza),0) As Lunghezza FROM `immagini_societa` " &
+											"Union All " &
+											"SELECT 'Immagini Utenti' As Cosa, Coalesce(Sum(Lunghezza),0) As Lunghezza FROM `immagini_utenti` " &
+											"Union All " &
+											"Select 'Immagini Firme Utenti' As Cosa, Coalesce(Sum(Lunghezza), 0) As Lunghezza FROM `immagini_utentifirme`"
 										Rec2 = ConnSq.LeggeQuery(Server.MapPath("."), Sql, ConnessioneSquadra)
 										If TypeOf (Rec2) Is String Then
 											Ritorno = Rec2
 										Else
 											If Not Rec2.Eof() Then
-												Dim mega As Double = 1024L * 1024 '* 1024
-												Dim kappa As Double = 1024L '* 1024
 												Dim Cosa As String = ""
+												Dim Tipo As New List(Of String)
+												Dim Dime As New List(Of Double)
 
-												Occupazione = Rec2("Lunghezza2").Value
+												Do Until Rec2.eof
+													Occupazione += Rec2("Lunghezza").Value
+
+													Tipo.Add(Rec2("Cosa").Value)
+													Dime.Add(Rec2("Lunghezza").Value)
+
+													Rec2.MoveNext
+												Loop
+												Rec2.Close()
+
+												Dim gf As New GestioneFilesDirectory
+												Dim PathAllegati As String = gf.LeggeFileIntero(Server.MapPath(".") & "\Impostazioni\PathAllegati.txt")
+												Dim P() As String = PathAllegati.Split(";")
+												If Strings.Right(P(0), 1) = "\" Then
+													P(0) = Mid(P(0), 1, P(0).Length - 1)
+												End If
+												Dim pathSquadra As String = P(0) & "\" & CodiceSquadra & "\"
+												gf.CreaDirectoryDaPercorso(pathSquadra)
+												gf.ScansionaDirectorySingola(pathSquadra)
+												Dim Filetti() As String = gf.RitornaFilesRilevati
+												Dim qFiletti As Long = gf.RitornaQuantiFilesRilevati
+												Dim TotaleAllegati As Double = 0
+												For i As Long = 1 To qFiletti
+													Dim lungh As Long = gf.TornaDimensioneFile(Filetti(i))
+													Dim t As String = Filetti(i).Replace(pathSquadra, "")
+													Dim tt() As String = t.Split("\")
+													Dim ttt As String = "Cartella " & tt(0)
+
+													TotaleAllegati += lungh
+
+													Dim ppp As Integer = 0
+													Dim ok2 As Boolean = True
+
+													For Each tttt As String In Tipo
+														If tttt = ttt Then
+															Dime.Item(ppp) = Dime.Item(ppp) + lungh
+															ok2 = False
+														End If
+														ppp += 1
+													Next
+													If (ok2) Then
+														Tipo.Add(ttt)
+														Dime.Add(lungh)
+													End If
+												Next
+												Occupazione += TotaleAllegati
+
+												Dim pp As Integer = 0
+												For Each t As String In Tipo
+													Dim v As FormatoByte = ConverteInByte(Dime(pp))
+
+													DettaglioLunghezze &= t & ": " & v.Occupazione & " " & v.Cosa & "^" & Val(v.Occupazione) & "|"
+
+													pp += 1
+												Next
+
 												OccupazioneOriginale = Occupazione
 
-												If Occupazione > giga Then
-													Occupazione /= giga
-													Cosa = "Gb."
-												Else
-													If Occupazione > mega Then
-														Occupazione /= mega
-														Cosa = "Mb."
-													Else
-														If Occupazione > kappa Then
-															Occupazione /= kappa
-															Cosa = "Kb."
-														Else
-															Cosa = "B."
-														End If
-													End If
-												End If
-												Occupazione = CInt(Occupazione * 100) / 100
-												sOccupazione = Occupazione & " " & Cosa
+												Dim Valore As FormatoByte = ConverteInByte(Occupazione)
+
+												sOccupazione = Valore.Occupazione & " " & Valore.Cosa
 											End If
 											Rec2.Close()
 
@@ -923,7 +972,7 @@ Public Class wsSuperUser
 
 								Ritorno &= Rec("idSquadra").Value & ";" &
 										Rec("Descrizione").Value & ";" &
-										Rec("DataScadenza").Value & ";" &
+										ConverteData(Rec("DataScadenza").Value.ToString) & ";" &
 										Tipologia & ";" &
 										Licenza & ";" &
 										Semaforo1 & "*" & Titolo1 & ";" &
@@ -938,6 +987,7 @@ Public Class wsSuperUser
 										sOccupazione & ";" &
 										SpazioTotale & ";" &
 										Semaforo3 & "*" & Titolo3 & ";" &
+										DettaglioLunghezze & ";" &
 										"§"
 
 								Rec.MoveNext()
