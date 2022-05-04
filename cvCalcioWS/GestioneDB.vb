@@ -76,7 +76,7 @@ Public Class clsGestioneDB
 			ThreadScriveLog(Datella & "--------------------------------------------------------------------------", nomeFileLogExec)
 
 			Dim sql3 As String = Sql2
-			If sql3.Length > 1024 Then
+			If sql3.Length > 1024 And (sql3.ToUpper.Contains("IMMAGINI_") Or sql3.ToUpper.Contains("ALLEGATI_")) Then
 				sql3 = Mid(sql3, 1, 1021) & "..."
 			End If
 			ThreadScriveLog(Datella & ": " & sql3, nomeFileLogExec)
@@ -171,7 +171,7 @@ Public Class clsGestioneDB
 			ThreadScriveLog(Datella & " Modifica Query: " & ModificaQuery, nomeFileLogQuery)
 			ThreadScriveLog(Datella & " TIPO DB: " & TipoDB, nomeFileLogQuery)
 			Dim sql3 As String = Sql2
-			If sql3.Length > 1024 Then
+			If sql3.Length > 1024 And (sql3.ToUpper.Contains("IMMAGINI_") Or sql3.ToUpper.Contains("ALLEGATI_")) Then
 				sql3 = Mid(sql3, 1, 1021) & "..."
 			End If
 			ThreadScriveLog(Datella & ": " & sql3, nomeFileLogQuery)

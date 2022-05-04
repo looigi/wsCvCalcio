@@ -57,7 +57,7 @@ Public Class wsStatAllenamenti
 				If TipoDB = "SQLSERVER" Then
 					Altro = "And CharIndex(CONVERT(varchar(5),Allenamenti.idCategoria) + '-', Giocatori.Categorie) > 0 "
 				Else
-					Altro = "And Instr(CONVERT(Allenamenti.idCategoria, varchar(5)) + '-', Giocatori.Categorie) > 0 "
+					Altro = "And Instr(Concat(CONVERT(Allenamenti.idCategoria, char(5)), '-'), Giocatori.Categorie) > 0 "
 				End If
 				Dim Altro2 As String = "Allenamenti.idCategoria=" & idCategoria & " And "
 				Dim Altro3 As String = "And idCategoria=" & idCategoria & " "
@@ -68,13 +68,13 @@ Public Class wsStatAllenamenti
 					Altro3 = ""
 				End If
 				Try
-					Sql = "Select B.idGiocatore, B.Cognome, B.Nome, B.Descrizione,  B.Presenze, B.Totale, (Cast(B.Presenze As Numeric) / Cast(B.Totale As Numeric)) * 100 As Perc, B.NumeroMaglia From ( " &
+					Sql = "Select B.idGiocatore, B.Cognome, B.Nome, B.Descrizione,  B.Presenze, B.Totale, (Cast(B.Presenze as Decimal) / Cast(B.Totale As Decimal)) * 100 As Perc, B.NumeroMaglia From ( " &
 						"Select A.idGiocatore, A.Cognome, A.Nome, A.Descrizione,  A.Presenze, (SELECT " & IIf(TipoDB = "SQLSERVER", "Isnull(Count(*),0)", "COALESCE(Count(*),0)") & " From Allenamenti " &
 						"Where idAnno=" & idAnno & " " & Altro3 & " And " & IIf(TipoDB = "SQLSERVER", "CharIndex('" & sMese & "', Datella)>0", "Instr(Datella, '" & sMese & "')>0") & " And Progressivo=0) As Totale, A.NumeroMaglia From ( " &
 						"SELECT Giocatori.idGiocatore, Cognome, Nome, Ruoli.Descrizione,  " & IIf(TipoDB = "SQLSERVER", "Isnull(Count(*),0)", "COALESCE(Count(*),0)") & " As Presenze, Giocatori.NumeroMaglia " &
 						"FROM Allenamenti LEFT JOIN Giocatori ON Allenamenti.idAnno = Giocatori.idAnno AND Allenamenti.idGiocatore=Giocatori.idGiocatore " & Altro & " " &
 						"LEFT Join [Generale].[dbo].[Ruoli] On Giocatori.idRuolo=Ruoli.idRuolo " &
-						"WHERE " & Altro2 & " Allenamenti.idAnno=" & idAnno & " And Giocatori.idGiocatore Is Not Null And " & IIf(TipoDB = "SQLSERVER", "CharIndex('" & sMese & "', Datella)>0", "Instr(Datella, '" & sMese & "', )>0") & " " &
+						"WHERE " & Altro2 & " Allenamenti.idAnno=" & idAnno & " And Giocatori.idGiocatore Is Not Null And " & IIf(TipoDB = "SQLSERVER", "CharIndex('" & sMese & "', Datella)>0", "Instr(Datella, '" & sMese & "')>0") & " " &
 						"Group By Giocatori.idGiocatore, Cognome, Nome, Ruoli.Descrizione, Giocatori.NumeroMaglia " &
 						") A) B " &
 						"Order By 2"

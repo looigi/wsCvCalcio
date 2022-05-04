@@ -539,11 +539,11 @@ Public Class wsReports
 					Select Case Certificato
 						Case "1"
 							' Scaduto
-							Sql &= " And (B.ScadenzaCertificatoMedico Is Not Null And B.ScadenzaCertificatoMedico <> '' And " & IIf(TipoDB = "SQLSERVER", "DateTime, B.ScadenzaCertificatoMedico ,121)", "Convert(B.ScadenzaCertificatoMedico ,DateTime)") & " <= CURRENT_TIMESTAMP And B.CertificatoMedico = 'S')" ' And (Convert(DateTime, B.ScadenzaCertificatoMedico ,121) > DateAdd(Day, -30, CURRENT_TIMESTAMP) And B.CertificatoMedico = 'S')"
+							Sql &= " And (B.ScadenzaCertificatoMedico Is Not Null And B.ScadenzaCertificatoMedico <> '' And " & IIf(TipoDB = "SQLSERVER", "DateTime, B.ScadenzaCertificatoMedico ,121)", "Convert(B.ScadenzaCertificatoMedico ,DateTime)") & " < " & IIf(TipoDB = "SQLSERVER", "CURRENT_TIMESTAMP", "SUBDATE(NOW(), INTERVAL 1 DAY)") & " And B.CertificatoMedico = 'S')" ' And (Convert(DateTime, B.ScadenzaCertificatoMedico ,121) > DateAdd(Day, -30, CURRENT_TIMESTAMP) And B.CertificatoMedico = 'S')"
 							Altro &= ", certificato medico scaduto"
 						Case "2"
 							' Presente
-							Sql &= " And B.CertificatoMedico = 'S'  And " & IIf(TipoDB = "SQLSERVER", "Convert(DateTime, B.ScadenzaCertificatoMedico ,121)", "Convert(B.ScadenzaCertificatoMedico ,DateTime)") & " > CURRENT_TIMESTAMP"
+							Sql &= " And B.CertificatoMedico = 'S'  And " & IIf(TipoDB = "SQLSERVER", "Convert(DateTime, B.ScadenzaCertificatoMedico ,121)", "Convert(B.ScadenzaCertificatoMedico ,DateTime)") & " > " & IIf(TipoDB = "SQLSERVER", "CURRENT_TIMESTAMP", "SUBDATE(NOW(), INTERVAL 1 DAY)") & " "
 							Altro &= ", certificato medico presente"
 						Case "3"
 							' Assente
@@ -551,8 +551,8 @@ Public Class wsReports
 							Altro &= ", certificato medico assente"
 						Case "4"
 							' In scadenza
-							Sql &= " And (" & IIf(TipoDB = "SQLSERVER", "Convert(DateTime, B.ScadenzaCertificatoMedico ,121)", "Convert(B.ScadenzaCertificatoMedico ,DateTime)") & " > CURRENT_TIMESTAMP) And " &
-								"(" & IIf(TipoDB = "SQLSERVER", "Convert(DateTime, B.ScadenzaCertificatoMedico ,121)", "Convert(B.ScadenzaCertificatoMedico ,DateTime)") & " <= " & IIf(TipoDB = "SQLSERVER", "DateAdd(Day, 30, CURRENT_TIMESTAMP)", "ADDDATE(CURRENT_TIMESTAMP, 30)") & " And B.CertificatoMedico = 'S')"
+							Sql &= " And (" & IIf(TipoDB = "SQLSERVER", "Convert(DateTime, B.ScadenzaCertificatoMedico ,121)", "Convert(B.ScadenzaCertificatoMedico ,DateTime)") & " > " & IIf(TipoDB = "SQLSERVER", "CURRENT_TIMESTAMP", "SUBDATE(NOW(), INTERVAL 1 DAY)") & ") And " &
+								"(" & IIf(TipoDB = "SQLSERVER", "Convert(DateTime, B.ScadenzaCertificatoMedico ,121)", "Convert(B.ScadenzaCertificatoMedico ,DateTime)") & " <= " & IIf(TipoDB = "SQLSERVER", "DateAdd(Day, 30, CURRENT_TIMESTAMP)", "ADDDATE(NOW(), INTERVAL 30 DAY)") & " And B.CertificatoMedico = 'S')"
 							Altro &= ", certificato medico in scadenza"
 					End Select
 
@@ -932,7 +932,7 @@ Public Class wsReports
 
 						' filetto &= "<hr />Stampato tramite InCalcio, software per la gestione delle società di calcio - www.incalcio.it - info@incalcio.it"
 						Dim imm As New wsImmagini
-						Dim img As String = imm.RitornaImmagineDB(Squadra, "Societa", "1")
+						Dim img As String = imm.RitornaImmagineDB(Squadra, "Societa", "1", "")
 						filetto = filetto.Replace("***LOGO SOCIETA***", "data:image/png;base64," & img)
 
 						Dim nomeFileHtml As String = filePaths & "Appoggio/" & Esten & ".html"

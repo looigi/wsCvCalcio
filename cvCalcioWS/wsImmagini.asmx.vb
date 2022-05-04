@@ -229,6 +229,74 @@ Public Class wsImmagini
 	End Function
 
 	<WebMethod()>
+	Public Function SalvaAllegatoDB(Squadra As String, Tipologia As String, Path As String, NomeFile As String, id As String, Progressivo As String) As String
+		Dim Ritorno As String = ""
+		Dim Connessione As String = LeggeImpostazioniDiBase(Server.MapPath("."), Squadra)
+
+		If Connessione = "" Then
+			Ritorno = ErroreConnessioneNonValida
+		Else
+			Dim Conn As Object = New clsGestioneDB(Squadra)
+			Dim ConnGen As Object = New clsGestioneDB(Squadra)
+
+			If TypeOf (Conn) Is String Then
+				Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
+			Else
+				Dim Sql As String = ""
+				Dim gf As New GestioneFilesDirectory
+				Dim bytes As Byte() = System.IO.File.ReadAllBytes(Path)
+				Dim stringona As String = System.Text.Encoding.Unicode.GetString(bytes)
+
+				Sql = "INSERT INTO allegati_" & Tipologia.ToLower & " (id, Progressivo, Lunghezza, Dati, NomeFile) VALUES(" & id & ", " & Progressivo & ", " & stringona.Length & ", '" & stringona.Replace("'", "''") & "', '" & NomeFile.Replace("'", "''") & "');"
+				Ritorno = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
+				If Not Ritorno.Contains(StringaErrore) Then
+					Ritorno = "*"
+				End If
+			End If
+		End If
+
+		Return Ritorno
+	End Function
+
+	<WebMethod()>
+	Public Function RitornaAllegatoDB2(Squadra As String, Tipologia As String, id As String, Progressivo As String) As String
+		Dim Ritorno As String = ""
+		Dim Connessione As String = LeggeImpostazioniDiBase(Server.MapPath("."), Squadra)
+
+		If Connessione = "" Then
+			Ritorno = ErroreConnessioneNonValida
+		Else
+			Dim Conn As Object = New clsGestioneDB(Squadra)
+			Dim ConnGen As Object = New clsGestioneDB(Squadra)
+
+			If TypeOf (Conn) Is String Then
+				Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
+			Else
+				Dim Sql As String = ""
+				Dim gf As New GestioneFilesDirectory
+				Dim Rec As Object
+
+				Sql = "Select * From allegati_" & Tipologia.ToLower & " Where id=" & id & " And Progressivo=" & Progressivo
+				Rec = Conn.LeggeQuery(Server.MapPath("."), Sql, Connessione)
+				If TypeOf (Rec) Is String Then
+					Ritorno = Rec
+					Return Ritorno
+				Else
+					If Not Rec.Eof Then
+						Ritorno = Rec("Dati").Value
+					Else
+						Ritorno = "ERROR: Nessun dato ricevuto"
+					End If
+					Rec.Close()
+				End If
+
+			End If
+		End If
+
+		Return Ritorno
+	End Function
+
+	<WebMethod()>
 	Public Function SalvaImmagineDB(Squadra As String, Tipologia As String, Path As String, NomeFile As String, Allegati As String, id As String) As String
 		Dim Ritorno As String = ""
 		Dim Connessione As String = LeggeImpostazioniDiBase(Server.MapPath("."), Squadra)
@@ -319,18 +387,27 @@ Public Class wsImmagini
 					Dim Progressivo As Integer = -1
 
 					If Tipologia = "Firme" Then
-						If TipoDB = "SQLSERVER" Then
-							Sql = "Select IsNull(max(Progressivo),0)+1 As Progressivo From immagini_" & Tipologia.ToLower & " Where id=" & id
+						'If TipoDB = "SQLSERVER" Then
+						'	Sql = "Select IsNull(max(Progressivo),0)+1 As Progressivo From immagini_" & Tipologia.ToLower & " Where id=" & id
+						'Else
+						'	Sql = "Select coalesce(Max(progressivo),0)+1 As Progressivo From immagini_" & Tipologia.ToLower & " Where id=" & id
+						'End If
+						'Rec = Conn.LeggeQuery(Server.MapPath("."), Sql, Connessione)
+						'If TypeOf (Rec) Is String Then
+						'	Ritorno = Rec
+						'	Return Ritorno
+						'Else
+						'	Progressivo = Rec("Progressivo").Value
+						'	Rec.Close()
+						'End If
+						If NomeFile.Contains("_") Then
+							Dim Splittone() As String = NomeFile.Split("_")
+							'Progressivo = Splittone(1)
+							'If Tipologia = "Firme" Then
+							Progressivo = Val(Splittone(2).Replace(Este, ""))
+							'End If
 						Else
-							Sql = "Select coalesce(Max(progressivo),0)+1 As Progressivo From immagini_" & Tipologia.ToLower & " Where id=" & id
-						End If
-						Rec = Conn.LeggeQuery(Server.MapPath("."), Sql, Connessione)
-						If TypeOf (Rec) Is String Then
-							Ritorno = Rec
-							Return Ritorno
-						Else
-							Progressivo = Rec("Progressivo").Value
-							Rec.Close()
+							Progressivo = NomeFile
 						End If
 					End If
 
@@ -440,7 +517,7 @@ Public Class wsImmagini
 	End Function
 
 	<WebMethod()>
-	Public Function RitornaImmagineDB(Squadra As String, Tipologia As String, Id As String) As String
+	Public Function RitornaImmagineDB(Squadra As String, Tipologia As String, Id As String, Privacy As String) As String
 		Dim Ritorno As String = ""
 		Dim Connessione As String = LeggeImpostazioniDiBase(Server.MapPath("."), Squadra)
 
@@ -454,8 +531,12 @@ Public Class wsImmagini
 			Else
 				Dim Sql As String = ""
 				Dim Rec As Object
+				Dim Altro As String = ""
 
-				Sql = "Select * From immagini_" & Tipologia.ToLower & " Where id=" & Id
+				If Privacy <> "" Then
+					Altro = " And Privacy='" & Privacy.ToLower & "'"
+				End If
+				Sql = "Select * From immagini_" & Tipologia.ToLower & " Where id=" & Id & Altro
 				Rec = Conn.LeggeQuery(Server.MapPath("."), Sql, Connessione)
 				If TypeOf (Rec) Is String Then
 					Ritorno = Rec

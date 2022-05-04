@@ -28,7 +28,8 @@ Public Class wsQuote
 				Dim Sql As String = ""
 
 				Sql = "Select A.idGiocatore, Progressivo, Pagamento, DataPagamento, B.Cognome, B.Nome, A.Validato, Case A.idTipoPagamento When 1 Then 'Rata' When 2 Then 'Altro' Else '' End As TipoPagamento, " &
-						"A.idRata, A.Note, A.idUtentePagatore, A.Commento, B.Maggiorenne, A.NumeroRicevuta, C.MetodoPagamento, D.Cognome + ' ' + D.Nome As Nominativo, A.idTipoPagamento From " &
+						"A.idRata, A.Note, A.idUtentePagatore, A.Commento, B.Maggiorenne, A.NumeroRicevuta, C.MetodoPagamento, " &
+						" " & IIf(TipoDB = "SQLSERVER", "D.Cognome + ' ' + D.Nome", "Concat(D.Cognome, ' ', D.Nome)") & " As Nominativo, A.idTipoPagamento From " &
 						"GiocatoriPagamenti A " &
 						"Left Join Giocatori B On A.idGiocatore = B.idGiocatore " &
 						"Left Join MetodiPagamento C On A.MetodoPagamento = C.idMetodoPagamento " &
@@ -143,13 +144,13 @@ Public Class wsQuote
 							mmPaths(2) &= "/"
 						End If
 
-						Dim filePaths As String = gf.LeggeFileIntero(HttpContext.Current.Server.MapPath(".") & "\Impostazioni\Paths.txt")
-						filePaths = filePaths.Replace(vbCrLf, "")
-						If Strings.Right(filePaths, 1) <> "\" Then
-							filePaths &= "\"
-						End If
+						'Dim filePaths As String = gf.LeggeFileIntero(HttpContext.Current.Server.MapPath(".") & "\Impostazioni\Paths.txt")
+						'filePaths = filePaths.Replace(vbCrLf, "")
+						'If Strings.Right(filePaths, 1) <> "\" Then
+						'	filePaths &= "\"
+						'End If
 						' Dim pathLogo As String = filePaths & NomeSquadra.Replace(" ", "_") & "\Societa_1.png"
-						Dim Esten As String = Format(Now.Second, "00") & "_" & Now.Millisecond & RitornaValoreRandom(55)
+						Dim Esten As String = "ListaRicevute_" & Squadra
 						'Dim pathLogoConv As String = filePaths & "Appoggio\" & Esten & ".jpg"
 						'Dim c As New CriptaFiles
 						'c.DecryptFile(CryptPasswordString, pathLogo, pathLogoConv)
@@ -160,8 +161,8 @@ Public Class wsQuote
 
 						filetto = filetto.Replace("***LOGO SOCIETA***", urlLogo)
 
-						Dim nomeFileHtml As String = filePaths & "Appoggio\" & Esten & ".html"
-						Dim nomeFilePDF As String = filePaths & "Appoggio\" & Esten & ".pdf"
+						Dim nomeFileHtml As String = Server.MapPath(".") & "\Appoggio\" & Esten & ".html"
+						Dim nomeFilePDF As String = Server.MapPath(".") & "\Appoggio\" & Esten & ".pdf"
 
 						gf.CreaAggiornaFile(nomeFileHtml, filetto)
 
@@ -169,6 +170,7 @@ Public Class wsQuote
 						Ritorno = pp2.ConverteHTMLInPDF(nomeFileHtml, nomeFilePDF, "",, True)
 						If Ritorno = "*" Then
 							Ritorno = "Appoggio/" & Esten & ".pdf"
+							gf.EliminaFileFisico(nomeFileHtml)
 						End If
 					End If
 				End If

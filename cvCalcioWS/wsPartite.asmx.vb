@@ -2229,7 +2229,7 @@ Public Class wsPartite
 							'Filetto = Filetto.Replace("***URL SOCIETA***", PathIimmSoc)
 
 							Dim imm As New wsImmagini
-							Dim img As String = imm.RitornaImmagineDB(Squadra, "Societa", "1")
+							Dim img As String = imm.RitornaImmagineDB(Squadra, "Societa", "1", "")
 							Filetto = Filetto.Replace("***URL SOCIETA***", "data:image/png;base64," & img)
 
 							If Rec("Casa").Value = "S" Then
@@ -2237,7 +2237,7 @@ Public Class wsPartite
 								'ImmCat = DecriptaImmagine(Server.MapPath("."), ImmCat)
 								'Filetto = Filetto.Replace("***URL LOGO***", ImmCat)
 
-								img = imm.RitornaImmagineDB(Squadra, "Categorie", Rec("idCategoria").Value)
+								img = imm.RitornaImmagineDB(Squadra, "Categorie", Rec("idCategoria").Value, "")
 								If img.Contains("ERROR:") Then
 									Filetto = Filetto.Replace("***URL LOGO***", Server.MapPath(".") & "\ImmaginiLocali\Sconosciuto.png")
 								Else
@@ -2251,7 +2251,7 @@ Public Class wsPartite
 								'ImmAvv = DecriptaImmagine(Server.MapPath("."), ImmAvv)
 								'Filetto = Filetto.Replace("***URL LOGO AVV***", ImmAvv)
 
-								img = imm.RitornaImmagineDB(Squadra, "Avversari", Rec("idAvversario").Value)
+								img = imm.RitornaImmagineDB(Squadra, "Avversari", Rec("idAvversario").Value, "")
 								If img.Contains("ERROR:") Then
 									Filetto = Filetto.Replace("***URL LOGO AVV***", Server.MapPath(".") & "\ImmaginiLocali\Sconosciuto.png")
 								Else
@@ -2262,7 +2262,7 @@ Public Class wsPartite
 								'ImmCat = DecriptaImmagine(Server.MapPath("."), ImmCat)
 								'Filetto = Filetto.Replace("***URL LOGO AVV***", ImmCat)
 
-								img = imm.RitornaImmagineDB(Squadra, "Categorie", Rec("idCategoria").Value)
+								img = imm.RitornaImmagineDB(Squadra, "Categorie", Rec("idCategoria").Value, "")
 								If img.Contains("ERROR:") Then
 									Filetto = Filetto.Replace("***URL LOGO AVV***", Server.MapPath(".") & "\ImmaginiLocali\Sconosciuto.png")
 								Else
@@ -2276,7 +2276,7 @@ Public Class wsPartite
 								'ImmAvv = DecriptaImmagine(Server.MapPath("."), ImmAvv)
 								'Filetto = Filetto.Replace("***URL LOGO***", ImmAvv)
 
-								img = imm.RitornaImmagineDB(Squadra, "Avversari", Rec("idAvversario").Value)
+								img = imm.RitornaImmagineDB(Squadra, "Avversari", Rec("idAvversario").Value, "")
 								If img.Contains("ERROR:") Then
 									Filetto = Filetto.Replace("***URL LOGO***", Server.MapPath(".") & "\ImmaginiLocali\Sconosciuto.png")
 								Else
@@ -2349,7 +2349,7 @@ Public Class wsPartite
 							'Dim PathAll As String = PathBaseMultimedia & "/" & NomeSquadra & "/Allenatori/" & idAnno & "_" & Rec("idAllenatore").Value & ".kgb"
 							'PathAll = DecriptaImmagine(Server.MapPath("."), PathAll)
 
-							Dim PathAll As String = imm.RitornaImmagineDB(Squadra, "Allenatori", Rec("idAllenatore").Value)
+							Dim PathAll As String = imm.RitornaImmagineDB(Squadra, "Allenatori", Rec("idAllenatore").Value, "")
 							If PathAll.Contains("ERROR:") Then
 								PathAll = Server.MapPath(".") & "\ImmaginiLocali\Sconosciuto.png"
 							Else
@@ -2436,10 +2436,10 @@ Public Class wsPartite
 
 										Dim Path11 As String = ""
 										If i < Giocatori.Count Then
-											'Path11 = PathBaseMultimedia & "/" & NomeSquadra & "/Giocatori/" & idAnno & "_" & idGiocatore.Item(i) & ".kgb"
-											'Path11 = DecriptaImmagine(Server.MapPath("."), Path11)
-											Path11 = imm.RitornaImmagineDB(Squadra, "Giocatori", idGiocatore.Item(i))
-											If Path11.Contains("ERROR:") Then
+										'Path11 = PathBaseMultimedia & "/" & NomeSquadra & "/Giocatori/" & idAnno & "_" & idGiocatore.Item(i) & ".kgb"
+										'Path11 = DecriptaImmagine(Server.MapPath("."), Path11)
+										Path11 = imm.RitornaImmagineDB(Squadra, "Giocatori", idGiocatore.Item(i), "")
+										If Path11.Contains("ERROR:") Then
 												Path11 = Server.MapPath(".") & "\ImmaginiLocali\Sconosciuto.png"
 											Else
 												Path11 = "data:image/png;base64," & Path11
@@ -2449,10 +2449,10 @@ Public Class wsPartite
 
 										Dim Path12 As String = ""
 										If i + (metaGiocatori + 0) < Giocatori.Count Then
-											'Path12 = PathBaseMultimedia & "/" & NomeSquadra & "/Giocatori/" & idAnno & "_" & idGiocatore.Item(i + (metaGiocatori + 0)) & ".kgb"
-											'Path12 = DecriptaImmagine(Server.MapPath("."), Path12)
-											Path12 = imm.RitornaImmagineDB(Squadra, "Giocatori", idGiocatore.Item(i + (metaGiocatori + 0)))
-											If Path12.Contains("ERROR:") Then
+										'Path12 = PathBaseMultimedia & "/" & NomeSquadra & "/Giocatori/" & idAnno & "_" & idGiocatore.Item(i + (metaGiocatori + 0)) & ".kgb"
+										'Path12 = DecriptaImmagine(Server.MapPath("."), Path12)
+										Path12 = imm.RitornaImmagineDB(Squadra, "Giocatori", idGiocatore.Item(i + (metaGiocatori + 0)), "")
+										If Path12.Contains("ERROR:") Then
 												Path12 = Server.MapPath(".") & "\ImmaginiLocali\Sconosciuto.png"
 											Else
 												Path12 = "data:image/png;base64," & Path12
@@ -2570,7 +2570,7 @@ Public Class wsPartite
 								Do Until Rec.Eof()
 									'Dim Path As String = PathBaseMultimedia & "/" & NomeSquadra & "/Dirigenti/" & idAnno & "_" & Rec("idDirigente").Value & ".kgb"
 									'Path = DecriptaImmagine(Server.MapPath("."), Path)
-									Dim Path As String = imm.RitornaImmagineDB(Squadra, "Dirigenti", Rec("idDirigente").Value)
+									Dim Path As String = imm.RitornaImmagineDB(Squadra, "Dirigenti", Rec("idDirigente").Value, "")
 									If Path.Contains("ERROR:") Then
 										Path = Server.MapPath(".") & "\ImmaginiLocali\Sconosciuto.png"
 									Else

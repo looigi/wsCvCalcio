@@ -311,6 +311,9 @@ Public Class GestioneTags
 			Dim fileFinale As String = PathAllegati & "\" & CodSquadra & "\Ricevute\Anno" & idAnno & "\" & idGiocatore & "\Ricevuta_" & Progressivo & ".pdf"
 			Dim fileAppoggio As String = PathAllegati & "\" & CodSquadra & "\Ricevute\Anno" & idAnno & "\" & idGiocatore & "\Ricevuta_" & Progressivo & ".html"
 			Dim fileLog As String = PathAllegati & "\" & CodSquadra & "\Ricevute\Anno" & idAnno & "\" & idGiocatore & "\Ricevuta_" & Progressivo & ".log"
+			'Dim fileFinale As String = MP & "\Ricevuta_" & idGiocatore & "_" & Progressivo & ".pdf"
+			'Dim fileAppoggio As String = MP & "\Ricevuta_" & idGiocatore & "_" & Progressivo & ".html"
+			'Dim fileLog As String = MP & "\Ricevuta_" & idGiocatore & "_" & Progressivo & ".log"
 
 			'Dim fileDaCopiare2 As String = P(0) & "\" & Squadra & "\Firme\iscrizione_" & Anno & "_" & idGiocatore & "_send.html"
 			gf.CreaDirectoryDaPercorso(fileFinale)
@@ -341,6 +344,12 @@ Public Class GestioneTags
 
 			If Ritorno = "*" Then
 				gf.EliminaFileFisico(fileAppoggio)
+
+				'Dim imm As New wsImmagini
+				'Ritorno = imm.SalvaAllegatoDB(CodSquadra, "ricevute", fileFinale, gf.TornaNomeFileDaPath(fileFinale), idGiocatore, Progressivo)
+				'If Ritorno = "*" Then
+				'	gf.EliminaFileFisico(fileFinale)
+				'End If
 			End If
 		Else
 			ScriveLog(MP, CodSquadra, "GestioneTags", " - ERRORE SU PRENDE DATI: " & NomeSquadra & " - " & idGiocatore & " - " & idAnno)
@@ -363,8 +372,10 @@ Public Class GestioneTags
 			Dim gf As New GestioneFilesDirectory
 
 			Dim fileFinale As String = PathAllegati & "\" & CodSquadra & "\Ricevute\Anno" & idAnno & "\" & idGiocatore & "\Scontrino_" & Progressivo & ".html"
-			'Dim fileAppoggio As String = PathAllegati & "\" & CodSquadra & "\Ricevute\Anno" & idAnno & "\" & idGiocatore & "\Scontrino_" & Progressivo & ".app"
 			Dim fileLog As String = PathAllegati & "\" & CodSquadra & "\Ricevute\Anno" & idAnno & "\" & idGiocatore & "\Scontrino_" & Progressivo & ".log"
+
+			'Dim fileFinale As String = MP & "\Scontrino_" & idGiocatore & "_" & Progressivo & ".html"
+			'Dim fileLog As String = MP & "\Scontrino_" & idGiocatore & "_" & Progressivo & ".log"
 
 			'Dim fileDaCopiare2 As String = P(0) & "\" & Squadra & "\Firme\iscrizione_" & Anno & "_" & idGiocatore & "_send.html"
 			gf.CreaDirectoryDaPercorso(fileFinale)
@@ -393,6 +404,12 @@ Public Class GestioneTags
 
 			'If Ritorno = "*" Then
 			'gf.EliminaFileFisico(fileAppoggio)
+			'End If
+
+			'Dim imm As New wsImmagini
+			'Dim Ritorno As String = imm.SalvaAllegatoDB(CodSquadra, "scontrini", fileFinale, gf.TornaNomeFileDaPath(fileFinale), idGiocatore, Progressivo)
+			'If Ritorno = "*" Then
+			'	gf.EliminaFileFisico(fileFinale)
 			'End If
 		Else
 			ScriveLog(MP, CodSquadra, "GestioneTags", " - ERRORE SU PRENDE DATI: " & NomeSquadra & " - " & idGiocatore & " - " & idAnno)

@@ -460,6 +460,7 @@ Public Class wsGiocatori
 							If TypeOf (Rec) Is String Then
 								Ritorno = Rec
 							Else
+								Ritorno = ""
 								If Not Rec.Eof() Then
 									If Genitore <> 4 Then
 										sGenitore = Rec("Genitore" & Genitore).Value
@@ -3220,6 +3221,8 @@ Public Class wsGiocatori
 										Rec2.Close()
 									End If
 								End If
+
+								' Return firma2 & "-" & dataFirma2 & " -> " & Sql
 
 								Dim firma3 As String = "N"
 								If ControllaEsistenzaFile(Server.MapPath("."), Conn, Connessione, idGiocatore, 3, "N") Then

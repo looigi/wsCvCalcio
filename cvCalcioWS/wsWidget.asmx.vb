@@ -715,10 +715,10 @@ Public Class wsWidget
 				End If
 
 				Sql = "Select " & Altro & " * From ( " &
-					"Select 'Cert. Scad.' As Cosa, A.idGiocatore As Id, 'Certificato medico scaduto' As PrimoCampo, A.Cognome + ' ' + A.Nome As SecondoCampo, B.ScadenzaCertificatoMedico As Data From Giocatori A " &
+					"Select 'Cert. Scad.' As Cosa, A.idGiocatore As Id, 'Certificato medico scaduto' As PrimoCampo, " & IIf(TipoDB = "SQLSERVER", "A.Cognome + ' ' + A.Nome", "Concat(A.Cognome, ' ', A.Nome)") & " As SecondoCampo, B.ScadenzaCertificatoMedico As Data From Giocatori A " &
 					"Left Join GiocatoriDettaglio B On A.idGiocatore = B.idGiocatore " &
 					"Where A.Eliminato='N' And B.ScadenzaCertificatoMedico Is Not Null And B.ScadenzaCertificatoMedico <> '' " &
-					"And " & IIf(TipoDB = "SQLSERVER", "Convert(DateTime, B.ScadenzaCertificatoMedico, 121)", "Convert(B.ScadenzaCertificatoMedico, DateTime)") & " < CURRENT_TIMESTAMP " &
+					"And " & IIf(TipoDB = "SQLSERVER", "Convert(DateTime, B.ScadenzaCertificatoMedico, 121)", "Convert(B.ScadenzaCertificatoMedico, DateTime)") & " < " & IIf(TipoDB = "SQLSERVER", "CURRENT_TIMESTAMP", "SUBDATE(NOW(), INTERVAL 1 DAY)") & " " &
 					"Union All " &
 					"Select 'Cert. Med.' As Cosa, A.idGiocatore As Id, A.Cognome As PrimoCampo, A.Nome As SecondoCampo, " & IIf(TipoDB = "SQLSERVER", "CONVERT(date, B.ScadenzaCertificatoMedico)", "CONVERT(B.ScadenzaCertificatoMedico, date)") & "As Data From Giocatori A " &
 					"Left Join GiocatoriDettaglio B On A.idGiocatore = B.idGiocatore " &

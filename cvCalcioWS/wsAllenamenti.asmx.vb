@@ -641,7 +641,7 @@ Public Class wsAllenamenti
 									'	filetto = filetto.Replace("***LOGO SOCIETA***", "")
 									'End If
 									Dim imm As New wsImmagini
-									Dim img As String = imm.RitornaImmagineDB(Squadra, "Societa", "1")
+									Dim img As String = imm.RitornaImmagineDB(Squadra, "Societa", "1", "")
 									filetto = filetto.Replace("***LOGO SOCIETA***", "data:image/png;base64," & img)
 
 									'Dim Paths As String = gf.LeggeFileIntero(HttpContext.Current.Server.MapPath(".") & "\Impostazioni\PathAllegati.txt")
