@@ -43,6 +43,7 @@ Module Globale
 		Dim Allegato() As String
 		Dim AllegatoOMultimedia As String
 		Dim NuovaSocieta As String
+		Dim MP As String
 	End Structure
 	Public listaMails As New List(Of strutturaMail)
 	Public timerMails As Timers.Timer = Nothing
@@ -2070,6 +2071,18 @@ Module Globale
 		Return rnd1.Next(Massimo)
 	End Function
 
+	Public Function RitornaNomeFileRandom() As String
+		Dim chiave As String = "ABCDEFGHIJKLMNOPQRSTUVZabcdefghijklmnopqrstuvwxyz0123456789!-.,;:"
+		Dim nomeFile As String = ""
+
+		For i As Integer = 1 To 25
+			Dim c As String = RitornaValoreRandom(chiave.Length - 1) + 1
+			nomeFile &= Mid(chiave, c, 1)
+		Next
+
+		Return nomeFile
+	End Function
+
 	Public Function generaPassRandom() As String
 		Dim chiaveMaiuscole As String = "ABCDEFGHIJKLMNOPQRSTUVZ"
 		Dim chiaveMinuscole As String = "abcdefghijklmnopqrstuvz"
@@ -2149,6 +2162,14 @@ Module Globale
 	End Function
 
 	Public Sub ScriveLog(MP As String, Squadra As String, NomeFile As String, Cosa As String)
+		If Not effettuaLog Then
+			Return
+		End If
+
+		If Squadra = "" Then
+			Squadra = "NessunaSquadra"
+		End If
+
 		Dim gf As New GestioneFilesDirectory
 
 		'If nomeFileLogMail = "" Then
@@ -2922,7 +2943,7 @@ Module Globale
 		End If
 	End Function
 
-	Public Function RitornaImmagine(MP As String, Tipologia As String, Squadra As String, id As String) As String
+	Public Function RitornaImmagine(MP As String, Tipologia As String, Squadra As String, id As String, Progressivo As String, Progressivo2 As String) As String
 		Dim Ritorno As String = ""
 		Dim Rec As Object
 
@@ -2937,7 +2958,11 @@ Module Globale
 				Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
 			Else
 				Dim Sql As String = ""
-				Sql = "Select * From immagini_" & Tipologia & " Where id=" & id
+				If Tipologia = "Firme" Then
+					Sql = "Select * From immagini_" & Tipologia & " Where id=" & id & " And idGenitore=" & Progressivo2 & " And Progressivo=" & Progressivo
+				Else
+					Sql = "Select * From immagini_" & Tipologia & " Where id=" & id
+				End If
 				Rec = Conn.LeggeQuery(MP, Sql, Connessione)
 				If TypeOf (Rec) Is String Then
 					Ritorno = Rec

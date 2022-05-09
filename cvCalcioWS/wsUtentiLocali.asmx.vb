@@ -261,6 +261,65 @@ Public Class wsUtentiLocali
 	End Function
 
 	<WebMethod()>
+	Public Function CaricaFirme(CodSquadra As String, idSquadra As String) As String
+		Dim Ritorno As String = ""
+		Dim Connessione As String = LeggeImpostazioniDiBase(Server.MapPath("."), "")
+
+		If Connessione = "" Then
+			Ritorno = ErroreConnessioneNonValida
+		Else
+			Dim Conn As Object = New clsGestioneDB(CodSquadra)
+
+			If TypeOf (Conn) Is String Then
+				Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
+			Else
+				Dim Rec As Object
+				Dim NumeroFirme As Integer = 2
+
+				Dim Sql As String = "Select * From NumeroFirme Where idSquadra=" & idSquadra
+				Rec = Conn.LeggeQuery(Server.MapPath("."), Sql, Connessione)
+				If TypeOf (Rec) Is String Then
+					Ritorno = Rec
+				Else
+					If Not Rec.Eof() Then
+						NumeroFirme = Rec("NumeroFirme").Value
+					End If
+					Rec.Close
+
+					Dim Firme As String = ""
+					Dim ConnessioneSquadra As String = LeggeImpostazioniDiBase(Server.MapPath("."), CodSquadra)
+					If ConnessioneSquadra = "" Then
+						Ritorno = ErroreConnessioneNonValida
+					Else
+						Dim ConnSquadra As Object = New clsGestioneDB(CodSquadra)
+
+						If TypeOf (Conn) Is String Then
+							Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
+						Else
+							Sql = "Select * From TipologiaFirme Order By idFirma"
+							Rec = ConnSquadra.LeggeQuery(Server.MapPath("."), Sql, ConnessioneSquadra)
+							If TypeOf (Rec) Is String Then
+								Ritorno = Rec
+							Else
+								Do Until Rec.Eof()
+									Firme &= Rec("idFirma").Value & "^" & Rec("Tipologia").value & "^" & Rec("Descrizione").Value & "!"
+
+									Rec.MoveNext
+								Loop
+								Rec.Close
+
+								Ritorno = NumeroFirme & ";" & Firme
+							End If
+						End If
+					End If
+				End If
+			End If
+		End If
+
+		Return Ritorno
+	End Function
+
+	<WebMethod()>
 	Public Function RitornaUtentePerLoginNuovo(Utente As String) As String
 		Dim Ritorno As String = ""
 		Dim Connessione As String = LeggeImpostazioniDiBase(Server.MapPath("."), "")
@@ -290,6 +349,7 @@ Public Class wsUtentiLocali
 						"FROM Utenti A Left Join Squadre B On A.idSquadra = B.idSquadra " &
 						"Left Join UtentiMails C On A.idUtente = C.idUtente " &
 						"Left Join AggiornamentoWidgets D On A.idSquadra = D.idSquadra " &
+						"Left Join NumeroFirme E On A.idSquadra = E.idSquadra " &
 						"Where Upper(Utente)='" & Utente.ToUpper.Replace("'", "''") & "' And A.Eliminato = 'N' " &
 						"Order By A.idTipologia"
 					Rec = Conn.LeggeQuery(Server.MapPath("."), Sql, Connessione)
@@ -326,49 +386,50 @@ Public Class wsUtentiLocali
 								'If Ok = True Then
 								Dim ok2 As Boolean = True
 
-									If Rec("idTipologia").Value = 0 Or Rec("idTipologia").Value = "0" Then
-										idLicenza = 1
-										idSquadra = 1
-										idAnno = 1
+								If Rec("idTipologia").Value = 0 Or Rec("idTipologia").Value = "0" Then
+									idLicenza = 1
+									idSquadra = 1
+									idAnno = 1
+								Else
+									idLicenza = "" & Rec("idLicenza").Value
+									idSquadra = Rec("idSquadra").Value.ToString.Trim
+									idAnno = Rec("idAnno").Value.ToString.Trim
+								End If
+
+								Dim app1 As String = idAnno
+								For i As Integer = app1.Length + 1 To 4
+									app1 = "0" & app1
+								Next
+								Dim app2 As String = idSquadra
+								For i As Integer = app2.Length + 1 To 5
+									app2 = "0" & app2
+								Next
+								codSquadra = app1 & "_" & app2
+
+								If Rec("idSquadra").Value <> -1 Then
+									Sql = "Select * From SquadraAnni Where idSquadra=" & Rec("idSquadra").Value & " And idAnno=" & Rec("idAnno").Value
+									Rec2 = Conn.LeggeQuery(Server.MapPath("."), Sql, Connessione)
+									If TypeOf (Rec2) Is String Then
+										Ritorno = Rec2
+										ok2 = False
 									Else
-										idLicenza = "" & Rec("idLicenza").Value
-										idSquadra = Rec("idSquadra").Value.ToString.Trim
-										idAnno = Rec("idAnno").Value.ToString.Trim
-									End If
-
-									Dim app1 As String = idAnno
-									For i As Integer = app1.Length + 1 To 4
-										app1 = "0" & app1
-									Next
-									Dim app2 As String = idSquadra
-									For i As Integer = app2.Length + 1 To 5
-										app2 = "0" & app2
-									Next
-									codSquadra = app1 & "_" & app2
-
-									If Rec("idSquadra").Value <> -1 Then
-										Sql = "Select * From SquadraAnni Where idSquadra=" & Rec("idSquadra").Value & " And idAnno=" & Rec("idAnno").Value
-										Rec2 = Conn.LeggeQuery(Server.MapPath("."),Sql, Connessione)
-										If TypeOf (Rec2) Is String Then
-											Ritorno = Rec2
+										If Rec2.Eof() Then
+											Ritorno = StringaErrore & " Nessun dettaglio squadra rilevato"
 											ok2 = False
 										Else
-											If Rec2.Eof() Then
-												Ritorno = StringaErrore & " Nessun dettaglio squadra rilevato"
+											If Rec2("OnLine").Value = "N" Then
+												Ritorno = StringaErrore & " La squadra dell'utente è temporanemante offline. Riprovare più tardi"
 												ok2 = False
 											Else
-												If Rec2("OnLine").Value = "N" Then
-													Ritorno = StringaErrore & " La squadra dell'utente è temporanemante offline. Riprovare più tardi"
-													ok2 = False
-												Else
-													ok2 = True
-												End If
-
-												Rec2.Close()
+												ok2 = True
 											End If
+
+											Rec2.Close()
 										End If
 									End If
+								End If
 
+								If ok2 Then
 									If ok2 Then
 										Ritorno &= Rec("idAnno").Value & ";"
 										Ritorno &= Rec("idUtente").Value & ";"
@@ -388,11 +449,14 @@ Public Class wsUtentiLocali
 										Ritorno &= Rec("AmmOriginale").Value & ";"
 										Ritorno &= Rec("Mail").Value & ";"
 										Ritorno &= Rec("PwdMail").Value & ";"
+										'Ritorno &= NumeroFirme & ";"
+										'Ritorno &= Firme & ";"
 										Ritorno &= "§"
 
 										Squadra = "" & Rec("Squadra").Value
 										UtenteDaSalvare = Ritorno
 									End If
+								End If
 								'End If
 
 								Rec.MoveNext()
@@ -402,7 +466,7 @@ Public Class wsUtentiLocali
 
 							If Not Ritorno.Contains(StringaErrore) Then
 								Sql = "Select * From Squadre Where Eliminata = 'N' Order By Descrizione"
-								Rec = Conn.LeggeQuery(Server.MapPath("."),   Sql, Connessione)
+								Rec = Conn.LeggeQuery(Server.MapPath("."), Sql, Connessione)
 								If TypeOf (Rec) Is String Then
 									Ritorno = Rec
 								Else
@@ -441,7 +505,7 @@ Public Class wsUtentiLocali
 									Sql = "Select A.idPermesso, Descrizione, NomePerCodice From Permessi_Composizione A " &
 										"Left Join Permessi_Lista B On A.idPermesso = B.idPermesso " &
 										"Where A.idTipologia = " & idLicenza & " And B.Eliminato = 'N'"
-									Rec = Conn.LeggeQuery(Server.MapPath("."),   Sql, Connessione)
+									Rec = Conn.LeggeQuery(Server.MapPath("."), Sql, Connessione)
 									If TypeOf (Rec) Is String Then
 										Ritorno = Rec
 									Else

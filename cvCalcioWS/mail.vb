@@ -18,6 +18,7 @@ Public Class mail
 		s.Allegato = Allegato
 		s.AllegatoOMultimedia = AllegatoOMultimedia
 		s.NuovaSocieta = NuovaSocieta
+		s.MP = pm
 
 		' pathMail = HttpContext.Current.Server.MapPath(".")
 		pathMail = pm
@@ -33,7 +34,8 @@ Public Class mail
 				pp(1) = pp(1) & "\"
 			End If
 			gf.CreaDirectoryDaPercorso(pp(1))
-			nomeFileLogMail = pp(1) & "logMail_" & Squadra.Replace(" ", "_") & "_" & Now.Day & "_" & Now.Month & "_" & Now.Year & ".txt"
+			nomeFileLogMail = pp(1) & "\" & Squadra & "\logMail_" & Now.Day & "_" & Now.Month & "_" & Now.Year & ".txt"
+			gf.CreaDirectoryDaPercorso(nomeFileLogMail)
 			'Dim Datella As String = Format(Now.Day, "00") & "/" & Format(Now.Month, "00") & "/" & Now.Year & " " & Format(Now.Hour, "00") & ":" & Format(Now.Minute, "00") & ":" & Format(Now.Second, "00")
 			'Dim Allegati As String = ""
 			'For Each a As String In s.Allegato
@@ -79,7 +81,7 @@ Public Class mail
 			gf.ChiudeFileDiTestoDopoScrittura()
 		End If
 
-		Dim Ritorno As String = SendEmailAsincrona(mail.Squadra, mail.Mittente, mail.Oggetto, mail.newBody, mail.Ricevente, mail.Allegato, mail.AllegatoOMultimedia, mail.NuovaSocieta, gf)
+		Dim Ritorno As String = SendEmailAsincrona(mail.mp, mail.Squadra, mail.Mittente, mail.Oggetto, mail.newBody, mail.Ricevente, mail.Allegato, mail.AllegatoOMultimedia, mail.NuovaSocieta, gf)
 		listaMails.RemoveAt(0)
 		If listaMails.Count > 0 Then
 			timerMails.Enabled = True
@@ -89,7 +91,7 @@ Public Class mail
 		End If
 	End Sub
 
-	Private Function SendEmailAsincrona(Squadra As String, Mittente As String, ByVal oggetto As String, ByVal newBody As String,
+	Private Function SendEmailAsincrona(Mp As String, Squadra As String, Mittente As String, ByVal oggetto As String, ByVal newBody As String,
 										ByVal ricevente As String, ByVal Allegato() As String, AllegatoOMultimedia As String, NuovaSocieta As String,
 										gf As GestioneFilesDirectory) As String
 		'Dim myStream As StreamReader = New StreamReader(Server.MapPath(ConfigurationManager.AppSettings("VirtualDir") & "mailresponsive.html"))
@@ -215,12 +217,16 @@ Public Class mail
 						Dim Allegatone As String = All
 						Dim paths As String = ""
 						If AllegatoOMultimedia = "A" Then
-							paths = gf.LeggeFileIntero(pathMail & "\Impostazioni\PathAllegati.txt")
-							Dim p() As String = paths.Split(";")
-							If Strings.Right(p(0), 1) <> "\" Then
-								p(0) &= "\"
+							'paths = gf.LeggeFileIntero(pathMail & "\Impostazioni\PathAllegati.txt")
+							'Dim p() As String = paths.Split(";")
+							'If Strings.Right(p(0), 1) <> "\" Then
+							'	p(0) &= "\"
+							'End If
+							'Allegatone = p(0) & Allegatone
+							Allegatone = Mp & "\" & Allegatone
+							If TipoDB <> "SQLSERVER" Then
+								Allegatone = ConvertePath(Allegatone)
 							End If
-							Allegatone = p(0) & Allegatone
 						Else
 							If AllegatoOMultimedia = "M" Then
 								paths = gf.LeggeFileIntero(pathMail & "\Impostazioni\Paths.txt")

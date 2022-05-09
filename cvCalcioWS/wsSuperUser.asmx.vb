@@ -853,6 +853,14 @@ Public Class wsSuperUser
 											"Union All " &
 											"SELECT 'Allegati Documenti Giocatori' As Cosa, Coalesce(Sum(Lunghezza),0) As Lunghezza FROM `allegati_giocatoridocumenti` " &
 											"Union All " &
+											"SELECT 'Allegati Iscrizioni' As Cosa, Coalesce(Sum(Lunghezza),0) As Lunghezza FROM `allegati_iscrizioni` " &
+											"Union All " &
+											"SELECT 'Allegati Privacy' As Cosa, Coalesce(Sum(Lunghezza),0) As Lunghezza FROM `allegati_privacy` " &
+											"Union All " &
+											"SELECT 'Allegati Scontrini' As Cosa, Coalesce(Sum(Lunghezza),0) As Lunghezza FROM `allegati_scontrini` " &
+											"Union All " &
+											"SELECT 'Allegati Ricevute' As Cosa, Coalesce(Sum(Lunghezza),0) As Lunghezza FROM `allegati_ricevute` " &
+											"Union All " &
 											"SELECT 'Immagini Allenatori' As Cosa, Coalesce(Sum(Lunghezza),0) As Lunghezza FROM `immagini_allenatori` " &
 											"Union All " &
 											"SELECT 'Immagini Arbitri' As Cosa, Coalesce(Sum(Lunghezza),0) As Lunghezza FROM `immagini_arbitri` " &
@@ -895,42 +903,42 @@ Public Class wsSuperUser
 												Loop
 												Rec2.Close()
 
-												Dim gf As New GestioneFilesDirectory
-												Dim PathAllegati As String = gf.LeggeFileIntero(Server.MapPath(".") & "\Impostazioni\PathAllegati.txt")
-												Dim P() As String = PathAllegati.Split(";")
-												If Strings.Right(P(0), 1) = "\" Then
-													P(0) = Mid(P(0), 1, P(0).Length - 1)
-												End If
-												Dim pathSquadra As String = P(0) & "\" & CodiceSquadra & "\"
-												gf.CreaDirectoryDaPercorso(pathSquadra)
-												gf.ScansionaDirectorySingola(pathSquadra)
-												Dim Filetti() As String = gf.RitornaFilesRilevati
-												Dim qFiletti As Long = gf.RitornaQuantiFilesRilevati
-												Dim TotaleAllegati As Double = 0
-												For i As Long = 1 To qFiletti
-													Dim lungh As Long = gf.TornaDimensioneFile(Filetti(i))
-													Dim t As String = Filetti(i).Replace(pathSquadra, "")
-													Dim tt() As String = t.Split("\")
-													Dim ttt As String = "Cartella " & tt(0)
+												'Dim gf As New GestioneFilesDirectory
+												'Dim PathAllegati As String = gf.LeggeFileIntero(Server.MapPath(".") & "\Impostazioni\PathAllegati.txt")
+												'Dim P() As String = PathAllegati.Split(";")
+												'If Strings.Right(P(0), 1) = "\" Then
+												'	P(0) = Mid(P(0), 1, P(0).Length - 1)
+												'End If
+												'Dim pathSquadra As String = P(0) & "\" & CodiceSquadra & "\"
+												'gf.CreaDirectoryDaPercorso(pathSquadra)
+												'gf.ScansionaDirectorySingola(pathSquadra)
+												'Dim Filetti() As String = gf.RitornaFilesRilevati
+												'Dim qFiletti As Long = gf.RitornaQuantiFilesRilevati
+												'Dim TotaleAllegati As Double = 0
+												'For i As Long = 1 To qFiletti
+												'	Dim lungh As Long = gf.TornaDimensioneFile(Filetti(i))
+												'	Dim t As String = Filetti(i).Replace(pathSquadra, "")
+												'	Dim tt() As String = t.Split("\")
+												'	Dim ttt As String = "Cartella " & tt(0)
 
-													TotaleAllegati += lungh
+												'	TotaleAllegati += lungh
 
-													Dim ppp As Integer = 0
-													Dim ok2 As Boolean = True
+												'	Dim ppp As Integer = 0
+												'	Dim ok2 As Boolean = True
 
-													For Each tttt As String In Tipo
-														If tttt = ttt Then
-															Dime.Item(ppp) = Dime.Item(ppp) + lungh
-															ok2 = False
-														End If
-														ppp += 1
-													Next
-													If (ok2) Then
-														Tipo.Add(ttt)
-														Dime.Add(lungh)
-													End If
-												Next
-												Occupazione += TotaleAllegati
+												'	For Each tttt As String In Tipo
+												'		If tttt = ttt Then
+												'			Dime.Item(ppp) = Dime.Item(ppp) + lungh
+												'			ok2 = False
+												'		End If
+												'		ppp += 1
+												'	Next
+												'	If (ok2) Then
+												'		Tipo.Add(ttt)
+												'		Dime.Add(lungh)
+												'	End If
+												'Next
+												'Occupazione += TotaleAllegati
 
 												Dim pp As Integer = 0
 												For Each t As String In Tipo
@@ -970,6 +978,21 @@ Public Class wsSuperUser
 									End If
 								End If
 
+								Dim NumeroFirme As String = ""
+
+								Sql = "Select * From NumeroFirme Where idSquadra = " & Val(id)
+								Rec2 = ConnGen.LeggeQuery(Server.MapPath("."), Sql, ConnessioneGenerale)
+								If TypeOf (Rec2) Is String Then
+									Ritorno = Rec2
+								Else
+									If Not Rec2.Eof() Then
+										NumeroFirme = "" & Rec2("NumeroFirme").Value
+									Else
+										NumeroFirme = "2"
+									End If
+									Rec2.Close()
+								End If
+
 								Ritorno &= Rec("idSquadra").Value & ";" &
 										Rec("Descrizione").Value & ";" &
 										ConverteData(Rec("DataScadenza").Value.ToString) & ";" &
@@ -988,6 +1011,7 @@ Public Class wsSuperUser
 										SpazioTotale & ";" &
 										Semaforo3 & "*" & Titolo3 & ";" &
 										DettaglioLunghezze & ";" &
+										numeroFirme & ";" &
 										"§"
 
 								Rec.MoveNext()
@@ -1005,7 +1029,7 @@ Public Class wsSuperUser
 	End Function
 
 	<WebMethod()>
-	Public Function ModificaSquadra(idSquadra As String, Squadra As String, DataScadenza As String, idTipologia As String, idLicenza As String, rateManuali As String, Cashback As String, GestioneGenitori As String, SpazioDB As String) As String
+	Public Function ModificaSquadra(idSquadra As String, Squadra As String, DataScadenza As String, idTipologia As String, idLicenza As String, rateManuali As String, Cashback As String, GestioneGenitori As String, SpazioDB As String, NumeroFirme As String) As String
 		Dim Ritorno As String = ""
 		Dim ConnessioneGenerale As String = LeggeImpostazioniDiBase(Server.MapPath("."), "")
 
@@ -1020,6 +1044,9 @@ Public Class wsSuperUser
 			Else
 				Dim Rec As Object
 				Dim Sql As String = ""
+
+				Sql = IIf(TipoDB = "SQLSERVER", "Begin transaction", "Start transaction")
+				Ritorno = ConnGen.EsegueSql(Server.MapPath("."), Sql, ConnessioneGenerale)
 
 				Try
 					Sql = "Update Squadre Set " &
@@ -1054,44 +1081,83 @@ Public Class wsSuperUser
 							Ritorno = ConnGen.EsegueSql(Server.MapPath("."), Sql, ConnessioneGenerale)
 							If Not Ritorno.Contains(StringaErrore) Then
 								Ritorno = "*"
+							Else
+								Ok = False
 							End If
 
-							Sql = "Select * From GestioneGenitori Where idSquadra=" & idSquadra
-							Rec = ConnGen.LeggeQuery(Server.MapPath("."), Sql, ConnessioneGenerale)
-							If TypeOf (Rec) Is String Then
-								Ritorno = Rec
-							Else
-								If Not Rec.Eof() Then
-									Sql = "Update GestioneGenitori Set GestioneGenitori = '" & GestioneGenitori & "' Where idSquadra = " & idSquadra
+							If Ok Then
+								Sql = "Select * From GestioneGenitori Where idSquadra=" & idSquadra
+								Rec = ConnGen.LeggeQuery(Server.MapPath("."), Sql, ConnessioneGenerale)
+								If TypeOf (Rec) Is String Then
+									Ritorno = Rec
 								Else
-									Sql = "Insert Into GestioneGenitori Values( " & idSquadra & ", '" & GestioneGenitori & "')"
-								End If
-								Ritorno = ConnGen.EsegueSql(Server.MapPath("."), Sql, ConnessioneGenerale)
-								If Not Ritorno.Contains(StringaErrore) Then
-									Ritorno = "*"
+									If Not Rec.Eof() Then
+										Sql = "Update GestioneGenitori Set GestioneGenitori = '" & GestioneGenitori & "' Where idSquadra = " & idSquadra
+									Else
+										Sql = "Insert Into GestioneGenitori Values( " & idSquadra & ", '" & GestioneGenitori & "')"
+									End If
+									Ritorno = ConnGen.EsegueSql(Server.MapPath("."), Sql, ConnessioneGenerale)
+									If Not Ritorno.Contains(StringaErrore) Then
+										Ritorno = "*"
+									Else
+										Ok = False
+									End If
 								End If
 							End If
 
-							Sql = "Select * From SpazioDB Where id =" & idSquadra
-							Rec = ConnGen.LeggeQuery(Server.MapPath("."), Sql, ConnessioneGenerale)
-							If TypeOf (Rec) Is String Then
-								Ritorno = Rec
-							Else
-								If Not Rec.Eof() Then
-									Sql = "Update SpazioDB Set Spazio = " & SpazioDB & " Where id = " & idSquadra
+							If Ok Then
+								Sql = "Select * From SpazioDB Where id =" & idSquadra
+								Rec = ConnGen.LeggeQuery(Server.MapPath("."), Sql, ConnessioneGenerale)
+								If TypeOf (Rec) Is String Then
+									Ritorno = Rec
 								Else
-									Sql = "Insert Into SpazioDB Values( " & idSquadra & ", " & SpazioDB & ")"
+									If Not Rec.Eof() Then
+										Sql = "Update SpazioDB Set Spazio = " & SpazioDB & " Where id = " & idSquadra
+									Else
+										Sql = "Insert Into SpazioDB Values( " & idSquadra & ", " & SpazioDB & ")"
+									End If
+									Ritorno = ConnGen.EsegueSql(Server.MapPath("."), Sql, ConnessioneGenerale)
+									If Not Ritorno.Contains(StringaErrore) Then
+										Ritorno = "*"
+									Else
+										Ok = False
+									End If
 								End If
-								Ritorno = ConnGen.EsegueSql(Server.MapPath("."), Sql, ConnessioneGenerale)
-								If Not Ritorno.Contains(StringaErrore) Then
-									Ritorno = "*"
+							End If
+
+							If Ok Then
+								Sql = "Select * From NumeroFirme Where idSquadra =" & idSquadra
+								Rec = ConnGen.LeggeQuery(Server.MapPath("."), Sql, ConnessioneGenerale)
+								If TypeOf (Rec) Is String Then
+									Ritorno = Rec
+								Else
+									If Not Rec.Eof() Then
+										Sql = "Update NumeroFirme Set NumeroFirme = " & NumeroFirme & " Where idSquadra = " & idSquadra
+									Else
+										Sql = "Insert Into NumeroFirme Values( " & idSquadra & ", " & NumeroFirme & ")"
+									End If
+									Ritorno = ConnGen.EsegueSql(Server.MapPath("."), Sql, ConnessioneGenerale)
+									If Not Ritorno.Contains(StringaErrore) Then
+										Ritorno = "*"
+									Else
+										Ok = False
+									End If
 								End If
 							End If
 						End If
 					End If
 				Catch ex As Exception
 					Ritorno = StringaErrore & " " & ex.Message
+					Ok = False
 				End Try
+
+				If Ok Then
+					Sql = "Commit"
+					Dim Ritorno2 As String = ConnGen.EsegueSql(Server.MapPath("."), Sql, ConnessioneGenerale)
+				Else
+					Sql = "Rollback"
+					Dim Ritorno2 As String = ConnGen.EsegueSql(Server.MapPath("."), Sql, ConnessioneGenerale)
+				End If
 			End If
 		End If
 
@@ -1370,32 +1436,47 @@ Public Class wsSuperUser
 	Public Function ImportaAnagrafica(CodiceSquadra As String, Squadra As String, idAnno As String) As String
 		Dim Ritorno As String = ""
 		Dim gf As New GestioneFilesDirectory
-		Dim Path As String = gf.LeggeFileIntero(Server.MapPath(".") & "\Impostazioni\Paths.txt")
-		Dim NomeFile As String = Path.Trim & Squadra.Replace(" ", "_").Trim & "\CSV\importAnagrafica.csv"
+		Dim Path As String = gf.LeggeFileIntero(Server.MapPath(".") & "\Impostazioni\PathAllegati.txt")
+		Dim p() As String = Path.Split(";")
+		If Right(p(0), 1) <> "\" Then
+			p(0) &= "\"
+		End If
+
+		' Dim NomeFile As String = Path.Trim & Squadra.Replace(" ", "_").Trim & "\CSV\importAnagrafica.csv"
+		Dim NomeFile As String = p(0).Trim & CodiceSquadra & "\CSV\importAnagrafica.csv"
 		Dim CampiCSV() As String = {"Cognome", "Nome", "EMail", "Telefono", "DataDiNascita", "Indirizzo", "CodFiscale", "Maschio", "Citta", "Cap"}
 		Dim TipoCampiCSV() As String = {"T", "T", "T", "N", "T", "T", "T", "T", "T", "T"}
 
-		If Not ControllaEsistenzaFile(NomeFile) Then
+		ScriveLog(Server.MapPath("."), Squadra, "ImportAnagrafica", "-----------------------------------")
+		ScriveLog(Server.MapPath("."), Squadra, "ImportAnagrafica", "Nome File: " & NomeFile)
+
+		If Not gf.EsisteFile(NomeFile) Then
 			Ritorno = StringaErrore & " File non esistente: " & NomeFile
 		Else
 			Dim Tutto As String = gf.LeggeFileIntero(NomeFile)
 			Dim Righe() As String = Tutto.Split(vbCrLf)
+
+			ScriveLog(Server.MapPath("."), CodiceSquadra, "ImportAnagrafica", "Righe: " & Righe.Count)
 
 			If Righe.Count = 0 Then
 				Ritorno = StringaErrore & " File vuoto"
 			Else
 				Dim Campi() As String = (Righe(0).Replace(Chr(34), "").Replace("'", "").Replace(vbCrLf, "")).Split(";")
 
+				ScriveLog(Server.MapPath("."), CodiceSquadra, "ImportAnagrafica", "Campi: " & Campi.Count)
+
 				If Campi.Count = 0 Then
 					Ritorno = StringaErrore & " Intestazione vuota"
 				Else
 					If Campi.Count <> CampiCSV.Count Then
+						ScriveLog(Server.MapPath("."), CodiceSquadra, "ImportAnagrafica", "Intestazione non valida: " & CampiCSV.Count)
 						Ritorno = StringaErrore & " Intestazione non valida"
 					Else
 						Dim q As Integer = 0
 
 						For Each c In CampiCSV
 							If c.Trim.ToUpper.Replace(Chr(34), "").Replace("'", "").Replace(vbCrLf, "") <> Campi(q).Trim.ToUpper.Replace(Chr(34), "").Replace("'", "").Replace(vbCrLf, "") Then
+								ScriveLog(Server.MapPath("."), CodiceSquadra, "ImportAnagrafica", " Intestazione non valida: " & c.ToString & " -> " & Campi(q).ToString)
 								Ritorno = StringaErrore & " Intestazione non valida: " & c.ToString & " -> " & Campi(q).ToString
 								Exit For
 							End If
@@ -1412,25 +1493,28 @@ Public Class wsSuperUser
 								Dim Ok As Boolean = True
 								Dim Datella As String = Now.Year & Format(Now.Month, "00") & Format(Now.Day, "00") & Format(Now.Hour, "00") & Format(Now.Minute, "00") & Format(Now.Second, "00")
 
-								gf.ApreFileDiTestoPerScrittura(Path.Trim & Squadra.Replace(" ", "_").Trim & "\CSV\LogCaricamento_" & Datella & ".txt")
-								gf.ScriveTestoSuFileAperto("Codice squadra: " & CodiceSquadra)
+								ScriveLog(Server.MapPath("."), CodiceSquadra, "ImportAnagrafica", "Aperto DB")
+
+								'gf.ApreFileDiTestoPerScrittura(Path.Trim & Squadra.Replace(" ", "_").Trim & "\CSV\LogCaricamento_" & Datella & ".txt")
+								'gf.ScriveTestoSuFileAperto("Codice squadra: " & CodiceSquadra)
 
 								If TypeOf (ConnGen) Is String Then
 									Ritorno = ErroreConnessioneDBNonValida & ":" & ConnGen
 								Else
-									gf.ScriveTestoSuFileAperto("Begin trans")
+									ScriveLog(Server.MapPath("."), CodiceSquadra, "ImportAnagrafica", "Begin Trans")
 
-									Dim Sql As String = "Begin transaction"
+									Dim Sql As String = IIf(TipoDB = "SQLSERVER", "Begin transaction", "Start transaction")
 									Ritorno = ConnGen.EsegueSql(Server.MapPath("."), Sql, ConnessioneGenerale)
 
 									Dim Scartati As Integer = 0
 									Dim Scritti As Integer = 0
 
-									If Ritorno = "*" Then
+									If Ritorno = "*" Or Ritorno = "OK" Then
 										Try
 											Dim IntestCampi As String = ""
 
-											gf.ScriveTestoSuFileAperto("Intestazione 1")
+											' gf.ScriveTestoSuFileAperto("Intestazione 1")
+											ScriveLog(Server.MapPath("."), CodiceSquadra, "ImportAnagrafica", "Intestazione 1")
 
 											For i As Integer = 0 To CampiCSV.Count - 1
 												IntestCampi &= CampiCSV(i).Replace(Chr(34), "").Replace("'", "").Replace(vbCrLf, "") & ", "
@@ -1438,7 +1522,8 @@ Public Class wsSuperUser
 											IntestCampi = "(idAnno, idGiocatore, idCategoria, " & Mid(IntestCampi, 1, IntestCampi.Length - 2) & ", Eliminato, RapportoCompleto, " &
 												"idRuolo, Maggiorenne, idTaglia, Categorie, idCategoria2, idCategoria3 )"
 
-											gf.ScriveTestoSuFileAperto("Intestazione 2")
+											' gf.ScriveTestoSuFileAperto("Intestazione 2")
+											ScriveLog(Server.MapPath("."), CodiceSquadra, "ImportAnagrafica", "Intestazione 2")
 
 											Dim idGiocatore As Integer = 1
 											Dim Rec As Object
@@ -1461,9 +1546,10 @@ Public Class wsSuperUser
 												Rec.Close()
 												'End If
 											End If
-											gf.ScriveTestoSuFileAperto("idGiocatore di partenza: " & idGiocatore)
+											' gf.ScriveTestoSuFileAperto("idGiocatore di partenza: " & idGiocatore)
+											ScriveLog(Server.MapPath("."), CodiceSquadra, "ImportAnagrafica", "ID Giocatore di partenza: " & idGiocatore)
 
-											gf.ScriveTestoSuFileAperto("Righe: " & Righe.Count - 1)
+											'gf.ScriveTestoSuFileAperto("Righe: " & Righe.Count - 1)
 
 											For i As Integer = 1 To Righe.Count - 1
 												If Righe(i).Trim <> "" Then
@@ -1488,10 +1574,14 @@ Public Class wsSuperUser
 															If TypeOf (Rec2) Is String Then
 																Ritorno = Rec2
 																Ok = False
+																Exit For
 															Else
 																If Not Rec2.Eof() Then
 																	Scrive = False
+																	Ok = False
 																	Rec2.Close()
+																	Ritorno = "ERRORE: Codice fiscale già esistente: " & Campi2(k).Replace(Chr(34), "").Replace("'", "").Replace(vbCrLf, "").Trim.ToUpper
+																	ScriveLog(Server.MapPath("."), CodiceSquadra, "ImportAnagrafica", Ritorno)
 																	Exit For
 																End If
 															End If
@@ -1534,36 +1624,34 @@ Public Class wsSuperUser
 													If Scrive = True Then
 														idGiocatore += 1
 
-														gf.ScriveTestoSuFileAperto("Maggiorenne:" & Maggiorenne)
-														gf.ScriveTestoSuFileAperto("EMail:" & eMail)
-														gf.ScriveTestoSuFileAperto(Sql)
+														ScriveLog(Server.MapPath("."), CodiceSquadra, "ImportAnagrafica", "Maggiorenne: " & Maggiorenne)
+														ScriveLog(Server.MapPath("."), CodiceSquadra, "ImportAnagrafica", "EMail: " & eMail)
+														ScriveLog(Server.MapPath("."), CodiceSquadra, "ImportAnagrafica", Sql)
 
 														Ritorno = ConnGen.EsegueSql(Server.MapPath("."), Sql, ConnessioneGenerale)
 
-														If Ritorno.Contains(StringaErrore) Then
-															gf.ScriveTestoSuFileAperto(Ritorno)
+														If Ritorno.Contains("ERROR:") Then
+															'gf.ScriveTestoSuFileAperto(Ritorno)
+															ScriveLog(Server.MapPath("."), CodiceSquadra, "ImportAnagrafica", Ritorno)
+															ScriveLog(Server.MapPath("."), CodiceSquadra, "ImportAnagrafica", Sql)
 															Ok = False
 															Exit For
 														Else
 															Sql = "Insert into GiocatoriDettaglio (idAnno, idGiocatore) Values (" & idAnno & ", " & idGiocatore & ")"
-															gf.ScriveTestoSuFileAperto(Sql)
 															Ritorno = ConnGen.EsegueSql(Server.MapPath("."), Sql, ConnessioneGenerale)
 
 															If Ritorno.Contains(StringaErrore) Then
-																gf.ScriveTestoSuFileAperto(Ritorno)
+																ScriveLog(Server.MapPath("."), CodiceSquadra, "ImportAnagrafica", "ERR1: " & Ritorno)
 																Ok = False
 																Exit For
 															Else
 																Sql = "Insert into GiocatoriMails Values (" & idGiocatore & ", 3, '" & eMail.Replace("'", "''") & "', 'S')"
-																gf.ScriveTestoSuFileAperto(Sql)
 																Ritorno = ConnGen.EsegueSql(Server.MapPath("."), Sql, ConnessioneGenerale)
 
 																Sql = "Insert into GiocatoriMails Values (" & idGiocatore & ", 1, '', 'S')"
-																gf.ScriveTestoSuFileAperto(Sql)
 																Ritorno = ConnGen.EsegueSql(Server.MapPath("."), Sql, ConnessioneGenerale)
 
 																Sql = "Insert into GiocatoriMails Values (" & idGiocatore & ", 2, '', 'S')"
-																gf.ScriveTestoSuFileAperto(Sql)
 																Ritorno = ConnGen.EsegueSql(Server.MapPath("."), Sql, ConnessioneGenerale)
 
 																Sql = "Insert Into GiocatoriSemafori Values (" &
@@ -1581,63 +1669,77 @@ Public Class wsSuperUser
 																	")"
 																Ritorno = ConnGen.EsegueSql(Server.MapPath("."), Sql, ConnessioneGenerale)
 
-																gf.ScriveTestoSuFileAperto("Creazione tessera NFC per il giocatore")
+																' gf.ScriveTestoSuFileAperto("Creazione tessera NFC per il giocatore")
+																ScriveLog(Server.MapPath("."), CodiceSquadra, "ImportAnagrafica", "Creazione tessera NFC")
 																Dim Ritorno2 As String = CreaNumeroTesseraNFC(Server.MapPath("."), ConnGen, ConnessioneGenerale, Squadra, idGiocatore)
-																gf.ScriveTestoSuFileAperto("Creazione tessera NFC per il giocatore. Numero tessera: " & Ritorno2)
-
-																gf.ScriveTestoSuFileAperto("Riga scritta")
-																gf.ScriveTestoSuFileAperto("")
+																ScriveLog(Server.MapPath("."), CodiceSquadra, "ImportAnagrafica", "Creazione tessera NFC. Effettuata. Codice: " & Ritorno2)
+																ScriveLog(Server.MapPath("."), CodiceSquadra, "ImportAnagrafica", "Riga scritta")
 
 																Scritti += 1
 															End If
 														End If
 													Else
 														Scartati += 1
-														gf.ScriveTestoSuFileAperto("Riga scartata.")
-														gf.ScriveTestoSuFileAperto("")
+														ScriveLog(Server.MapPath("."), CodiceSquadra, "ImportAnagrafica", "Riga scartata")
 													End If
-													If Ritorno<> "OK" Then
+													If Ritorno <> "OK" Then
 														Ok = False
 														Exit For
 													End If
 												End If
 											Next
 										Catch ex As Exception
-											gf.ScriveTestoSuFileAperto(ex.Message)
+											ScriveLog(Server.MapPath("."), CodiceSquadra, "ImportAnagrafica", "ERRORE: " & ex.Message)
+
 											Ritorno = StringaErrore & " " & ex.Message
 										End Try
 
-										If Ritorno = "*" Then
-											Ok = True
-											Ritorno = Scritti & ";" & Scartati ' Righe.Count - 3
-										End If
-
 										If Ok Then
+											If Ritorno = "*" Then
+												Ritorno = Scritti & ";" & Scartati ' Righe.Count - 3
+											End If
+
+											ScriveLog(Server.MapPath("."), CodiceSquadra, "ImportAnagrafica", "Commit")
 											gf.EliminaFileFisico(NomeFile)
 
 											Sql = "commit"
 											Dim Ritorno2 As String = ConnGen.EsegueSql(Server.MapPath("."), Sql, ConnessioneGenerale)
 
-											Dim wsWidget As New wsWidget
-											wsWidget.CreaConteggi(Squadra)
-											wsWidget.CreaFirmeDaValidare(Squadra, "S")
-											wsWidget.CreaIndicatori(Squadra)
-											wsWidget.CreaIscritti(Squadra)
-											wsWidget.CreaQuoteNonSaldate(Squadra)
+											Dim Connessione As String = LeggeImpostazioniDiBase(Server.MapPath("."), CodiceSquadra)
+
+											If ConnessioneGenerale = "" Then
+												Ritorno = ErroreConnessioneNonValida
+											Else
+												Dim Conn As Object = New clsGestioneDB(CodiceSquadra)
+
+												Dim wsWidget As New wsWidget
+												ScriveLog(Server.MapPath("."), CodiceSquadra, "ImportAnagrafica", "Crea conteggi WIDGET. Squadra " & CodiceSquadra & " - " & Squadra)
+												wsWidget.CreaConteggi(Connessione, Conn, CodiceSquadra)
+												ScriveLog(Server.MapPath("."), CodiceSquadra, "ImportAnagrafica", "Crea firme da validare WIDGET. Squadra " & CodiceSquadra & " - " & Squadra)
+												wsWidget.CreaFirmeDaValidare(Squadra, "S")
+												ScriveLog(Server.MapPath("."), CodiceSquadra, "ImportAnagrafica", "Crea indicatori WIDGET. Squadra " & CodiceSquadra & " - " & Squadra)
+												wsWidget.CreaIndicatori(Squadra)
+												ScriveLog(Server.MapPath("."), CodiceSquadra, "ImportAnagrafica", "Crea iscritti WIDGET. Squadra " & CodiceSquadra & " - " & Squadra)
+												wsWidget.CreaIscritti(Squadra)
+												ScriveLog(Server.MapPath("."), CodiceSquadra, "ImportAnagrafica", "Crea quote non saldate WIDGET. Squadra " & CodiceSquadra & " - " & Squadra)
+												wsWidget.CreaQuoteNonSaldate(Squadra)
+											End If
 										Else
+											ScriveLog(Server.MapPath("."), CodiceSquadra, "ImportAnagrafica", "Rollback")
 											Sql = "rollback"
 											Dim Ritorno2 As String = ConnGen.EsegueSql(Server.MapPath("."), Sql, ConnessioneGenerale)
 										End If
 									End If
 								End If
-
-								gf.ChiudeFileDiTestoDopoScrittura()
 							End If
 						End If
 					End If
 				End If
 			End If
 		End If
+		ScriveLog(Server.MapPath("."), CodiceSquadra, "ImportAnagrafica", "Fine elaborazione")
+		ScriveLog(Server.MapPath("."), CodiceSquadra, "ImportAnagrafica", "-----------------------------------")
+		ScriveLog(Server.MapPath("."), CodiceSquadra, "ImportAnagrafica", "")
 
 		Return Ritorno
 	End Function

@@ -71,6 +71,20 @@ Public Class GestioneFilesDirectory
         End If
     End Function
 
+    Public Function EsisteFile(NomeFile As String) As Long
+        If TipoPATH <> "SQLSERVER" Then
+            NomeFile = NomeFile.Replace("\", "/")
+            NomeFile = NomeFile.Replace("//", "/")
+            NomeFile = NomeFile.Replace("/\", "/")
+        End If
+
+        If File.Exists(NomeFile) Then
+            Return True
+        Else
+            Return False
+        End If
+    End Function
+
     Public Sub PulisceCartelleVuote(Percorso As String)
         Dim qFiles As Integer
         ScansionaDirectorySingola(Percorso)
@@ -122,6 +136,7 @@ Public Class GestioneFilesDirectory
 
         If File.Exists(NomeFile) Then
             Dim Ritorno As String = ""
+            Dim Conta As Integer = 0
 
             If NomeFile.Trim <> "" Then
                 Try
@@ -129,6 +144,13 @@ Public Class GestioneFilesDirectory
 
                     Do While (File.Exists(NomeFile) = True)
                         Threading.Thread.Sleep(1000)
+
+                        File.Delete(NomeFile)
+
+                        Conta += 1
+                        If Conta > 30 Then
+                            Ritorno = "ERRORE: Eliminazione file non riuscita"
+                        End If
                     Loop
                 Catch ex As Exception
                     Ritorno = "ERRORE: " & ex.Message

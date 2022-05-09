@@ -156,7 +156,7 @@ Public Class wsQuote
 						'c.DecryptFile(CryptPasswordString, pathLogo, pathLogoConv)
 
 						' Dim urlLogo As String = pathLogo ' mmPaths(2) & "Appoggio/" & Esten & ".jpg"
-						Dim urlLogo As String = RitornaImmagine(Server.MapPath("."), "Societa", Squadra, 1)
+						Dim urlLogo As String = RitornaImmagine(Server.MapPath("."), "Societa", Squadra, 1, "", "")
 						urlLogo = "data:image/png;base64," & urlLogo
 
 						filetto = filetto.Replace("***LOGO SOCIETA***", urlLogo)

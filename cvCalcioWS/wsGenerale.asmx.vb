@@ -758,7 +758,8 @@ Public Class wsGenerale
 									  Indirizzo As String, CampoSquadra As String, NomePolisportiva As String, Mail As String, PEC As String,
 									  Telefono As String, PIva As String, CodiceFiscale As String, CodiceUnivoco As String, SitoWeb As String, MittenteMail As String,
 									  GestionePagamenti As String, CostoScuolaCalcio As String, idUtente As String, Widgets As String, Suffisso As String,
-									  IscrFirmaEntrambi As String, ModuloAssociato As String, PercCashBack As String, RateManuali As String, Cashback As String) As String
+									  IscrFirmaEntrambi As String, ModuloAssociato As String, PercCashBack As String, RateManuali As String, Cashback As String,
+									  Firme As String) As String
 		Dim Ritorno As String = ""
 		Dim Connessione As String = LeggeImpostazioniDiBase(Server.MapPath("."), Cod_Squadra)
 
@@ -803,6 +804,26 @@ Public Class wsGenerale
 
 				Sql = "Update [Generale].[dbo].[Utenti] Set Widgets = '" & Widgets & "' Where idUtente=" & idUtente
 				Ritorno = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
+
+				If Firme <> "" And Firme.Contains("*") And Firme.Contains("§") Then
+					Sql = "Delete From TipologiaFirme"
+					Ritorno = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
+
+					Dim f() As String = Firme.Split("§")
+
+					For Each ff As String In f
+						If ff <> "" Then
+							Try
+								Dim fff() As String = ff.Split("*")
+
+								Sql = "Insert Into TipologiaFirme (idFirma, Tipologia, Descrizione) Values (" & fff(0) & ", '" & fff(1).Replace("'", "''") & "', '" & fff(2).Replace("'", "''") & "')"
+								Ritorno = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
+							Catch ex As Exception
+
+							End Try
+						End If
+					Next
+				End If
 			End If
 		End If
 
@@ -900,8 +921,18 @@ Public Class wsGenerale
 								Dim urlFirma1 As String = pp & "\" & NomeSquadra.Replace(" ", "_") & "\Utenti\" & Anno & "_" & idUtente & "_Firma.kgb"
 								Dim esisteFirma As String = "N"
 
-								If ControllaEsistenzaFile(urlFirma1) Then
-									esisteFirma = "S"
+								'If ControllaEsistenzaFile(urlFirma1) Then
+								'	esisteFirma = "S"
+								'End If
+								Sql = "Select * From Immagini_Firme Where id=" & idUtente & " And Progressivo=99"
+								Rec = Conn.LeggeQuery(Server.MapPath("."), Sql, Connessione)
+								If TypeOf (Rec) Is String Then
+									Ritorno = Rec
+								Else
+									If Not Rec.Eof Then
+										esisteFirma = "S"
+									End If
+									Rec.Close()
 								End If
 
 								Dim Widgets As String = ""
@@ -1632,10 +1663,98 @@ Public Class wsGenerale
 	End Function
 
 	<WebMethod()>
+	Public Function CaricaDatiGiocatorePerFirma(Squadra As String, idGiocatore As String, idGenitore As String) As String
+		' RichiedeFirma?Squadra= 0002_00160&idGiocatore=432&Genitore=1 
+		Dim Ritorno As String = ""
+		Dim Connessione As String = LeggeImpostazioniDiBase(Server.MapPath("."), Squadra)
+
+		If Connessione = "" Then
+			Ritorno = ErroreConnessioneNonValida
+		Else
+			Dim Conn As Object = New clsGestioneDB(Squadra)
+
+			If TypeOf (Conn) Is String Then
+				Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
+			Else
+				Dim Sql As String = "Select * From GiocatoriDettaglio Where idGiocatore=" & idGiocatore
+				Dim Rec As Object = Conn.LeggeQuery(Server.MapPath("."), Sql, Connessione)
+				If TypeOf (Rec) Is String Then
+					Ritorno = Rec
+				Else
+					Dim Genitore As String = ""
+					Dim Giocatore As String = ""
+
+					If Not Rec.eof Then
+						Select Case idGenitore
+							Case "1"
+								Genitore = Rec("Genitore1").Value
+							Case "2"
+								Genitore = Rec("Genitore2").Value
+						End Select
+					End If
+					Rec.Close
+
+					Sql = "Select * From Giocatori Where idGiocatore=" & idGiocatore
+					Rec = Conn.LeggeQuery(Server.MapPath("."), Sql, Connessione)
+					If TypeOf (Rec) Is String Then
+						Ritorno = Rec
+					Else
+						If Not Rec.eof Then
+							Giocatore = Rec("Cognome").Value & " " & Rec("Nome").Value
+						End If
+						Rec.Close
+
+						If Val(idGenitore) < 3 Then
+							Ritorno = Genitore & ";" & Giocatore
+						Else
+							Ritorno = Giocatore & ";se stesso"
+						End If
+					End If
+				End If
+			End If
+		End If
+
+		Return Ritorno
+	End Function
+
+	<WebMethod()>
+	Public Function RichiedeFirme(Squadra As String) As String
+		' RichiedeFirma?Squadra= 0002_00160&idGiocatore=432&Genitore=1 
+		Dim Ritorno As String = ""
+		Dim Connessione As String = LeggeImpostazioniDiBase(Server.MapPath("."), Squadra)
+
+		If Connessione = "" Then
+			Ritorno = ErroreConnessioneNonValida
+		Else
+			Dim Conn As Object = New clsGestioneDB(Squadra)
+
+			If TypeOf (Conn) Is String Then
+				Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
+			Else
+				Dim Sql As String = "Select * From TipologiaFirme Order by idFirma"
+				Dim Rec As Object = Conn.LeggeQuery(Server.MapPath("."), Sql, Connessione)
+				If TypeOf (Rec) Is String Then
+					Ritorno = Rec
+				Else
+					Ritorno = ""
+					Do Until Rec.Eof
+						Ritorno &= Rec("idFirma").Value & ";" & Rec("Tipologia").Value & ";" & Rec("Descrizione").Value & "§"
+
+						Rec.MoveNext
+					Loop
+					Rec.Close
+				End If
+			End If
+		End If
+
+		Return Ritorno
+	End Function
+
+	<WebMethod()>
 	Public Function RichiedeFirma(Squadra As String, CodSquadra As String, idUtente As String, Mail As String, Privacy As String, Mittente As String) As String
 		' RichiedeFirma?Squadra= 0002_00160&idGiocatore=432&Genitore=1 
 		Dim Ritorno As String = ""
-		Dim Connessione As String = LeggeImpostazioniDiBase(Server.MapPath("."), CodSquadra)
+		Dim Connessione As String = LeggeImpostazioniDiBase(Server.MapPath("."), "")
 
 		If Connessione = "" Then
 			Ritorno = ErroreConnessioneNonValida
@@ -1647,6 +1766,7 @@ Public Class wsGenerale
 			Else
 				Dim c() As String = CodSquadra.Split("_")
 				Dim Anno As String = Str(Val(c(0))).Trim
+				Dim idSquadra As String = c(1)
 				Dim m As New mail
 				Dim Oggetto As String = "Richiesta Firma inCalcio"
 				Dim Body As String = ""
@@ -1662,14 +1782,31 @@ Public Class wsGenerale
 						Percorso &= "/"
 					End If
 
-					Body &= "E' stata richiesta la firma dalla società " & Squadra.Replace("_", " ") & ".<br /><br />"
-					Body &= "Per effettuare l'operazione eseguire il seguente link:<br /><br />"
+					Dim NumeroFirme As Integer = 2
+					Dim Sql As String = "Select * From NumeroFirme Where idSquadra=" & idSquadra
+					Dim Rec2 As Object = Conn.LeggeQuery(Server.MapPath("."), Sql, Connessione)
+					If TypeOf (Rec2) Is String Then
+						Ritorno = Rec2
+					Else
+						If Rec2.Eof() Then
+							NumeroFirme = Rec2("NumeroFirme").Value
+						End If
+						Rec2.Close
 
-					Body &= "<a href= """ & Percorso & "?firma=true&codSquadra=" & CodSquadra & "&id=" & idUtente & "&squadra=" & Squadra.Replace(" ", "_") & "&anno=" & Anno & "&genitore=-1&privacy=" & Privacy & "&tipoUtente=2"">"
-					Body &= "Click per firmare"
-					Body &= "</a>"
+						Body &= "E' stata richiesta la firma dalla società " & Squadra.Replace("_", " ") & ".<br /><br />"
+						Body &= "Per effettuare l'operazione eseguire il seguente link:<br /><br />"
 
-					Ritorno = m.SendEmail(Server.MapPath("."), Squadra, Mittente, Oggetto, Body, Mail, {""})
+						' Body &= "<a href= """ & Percorso & "?firma=true&codSquadra=" & CodSquadra & "&id=" & idUtente & "&squadra=" & Squadra.Replace(" ", "_") & "&anno=" & Anno & "&genitore=-1&privacy=" & Privacy & "&tipoUtente=2&numeroFirme=" & numerofirme & """>"
+						If Privacy = "Segreteria" Then
+							Body &= "<a href= """ & Percorso & "?firma=true&codSquadra=" & CodSquadra & "&id=" & idUtente & "&squadra=" & Squadra.Replace(" ", "_") & "&anno=" & Anno & "&genitore=-1&tipoUtente=2&numeroFirme=1&tipologia=Segreteria"" >"
+						Else
+							Body &= "<a href= """ & Percorso & "?firma=true&codSquadra=" & CodSquadra & "&id=" & idUtente & "&squadra=" & Squadra.Replace(" ", "_") & "&anno=" & Anno & "&genitore=-1&tipoUtente=2&numeroFirme=" & NumeroFirme & "&tipologia="""">"
+						End If
+						Body &= "Click per firmare"
+						Body &= "</a>"
+
+						Ritorno = m.SendEmail(Server.MapPath("."), Squadra, Mittente, Oggetto, Body, Mail, {""})
+					End If
 				End If
 			End If
 		End If

@@ -60,7 +60,7 @@ Public Class wsWidget
 					Ritorno = Rec
 				Else
 					If Not Rec.Eof() Then
-						CreaConteggi(Squadra)
+						CreaConteggi(Connessione, Conn, Squadra)
 						CreaFirmeDaValidare(Squadra, "S")
 						CreaIndicatori(Squadra)
 						CreaIscritti(Squadra)
@@ -126,13 +126,13 @@ Public Class wsWidget
 	End Function
 
 	<WebMethod()>
-	Public Function CreaConteggi(Squadra As String) As String
+	Public Function CreaConteggi(Connessione As String, conn As Object, Squadra As String) As String
 		'Dim thread As New Thread(AddressOf RitornaConteggiThread)
 		'Dim parameters As New parametriConteggi
 		'parameters.Squadra = Squadra
 		'thread.Start(parameters)
 
-		Return RitornaConteggiThread(Squadra) ' "*"
+		Return RitornaConteggiThread(Connessione, conn, Squadra) ' "*"
 	End Function
 
 	<WebMethod()>
@@ -168,43 +168,28 @@ Public Class wsWidget
 			End If
 
 			If Not Trovato Then
-				CreaConteggi(Squadra)
+				CreaConteggi(Connessione, Conn, Squadra)
 			End If
 		End If
 
 		Return Ritorno
 	End Function
 
-	Private Function RitornaConteggiThread(ByVal data As String) As String
-		Dim Squadra As String = data ' .Squadra
-
+	Private Function RitornaConteggiThread(Connessione As String, Conn As Object, ByVal Squadra As String) As String
 		Dim Ritorno As String = ""
-		Dim Connessione As String = LeggeImpostazioniDiBase(Server.MapPath("."), Squadra)
+		Dim c() As String = Squadra.Split("_")
+		Dim Anno As String = Str(Val(c(0))).Trim
+		Dim codSquadra As String = c(1)
 
-		If Connessione = "" Then
-			Ritorno = ErroreConnessioneNonValida
-		Else
-			Dim Conn As Object = New clsGestioneDB(Squadra)
+		Dim Sql As String = "Delete From WidgetConteggi"
+		Ritorno = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
 
-			If TypeOf (Conn) Is String Then
-				Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
-			Else
-				Dim c() As String = Squadra.Split("_")
-				Dim Anno As String = Str(Val(c(0))).Trim
-				Dim codSquadra As String = c(1)
-
-				Dim Rec As Object
-				Dim Sql As String = "Delete From WidgetConteggi"
-				Ritorno = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
-
-				Sql = "Insert Into WidgetConteggi Select A.idTipologia, B.Descrizione, " & IIf(TipoDB = "SQLSERVER", "Isnull(Count(*),0)", "COALESCE(Count(*),0)") & " As Quanti From [Generale].[dbo].[Utenti] A " &
-					"Left Join [Generale].[dbo].[Tipologie] B On A.idTipologia = B.idTipologia  " &
-					"Where Eliminato = 'N' And B.idTipologia > 2 And idSquadra = " & codSquadra & " " &
-					"Group By A.idTipologia, B.Descrizione " &
-					"Order By Descrizione"
-				Ritorno = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
-			End If
-		End If
+		Sql = "Insert Into WidgetConteggi Select A.idTipologia, B.Descrizione, " & IIf(TipoDB = "SQLSERVER", "Isnull(Count(*),0)", "COALESCE(Count(*),0)") & " As Quanti From [Generale].[dbo].[Utenti] A " &
+			"Left Join [Generale].[dbo].[Tipologie] B On A.idTipologia = B.idTipologia  " &
+			"Where Eliminato = 'N' And B.idTipologia > 2 And idSquadra = " & codSquadra & " " &
+			"Group By A.idTipologia, B.Descrizione " &
+			"Order By Descrizione"
+		Ritorno = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
 
 		Return Ritorno
 	End Function
@@ -223,6 +208,9 @@ Public Class wsWidget
 	<WebMethod()>
 	Public Function RitornaFirmeDaValidare(Squadra As String, Tutte As String) As String
 		Dim Ritorno As String = ""
+
+		CreaFirmeDaValidare(Squadra, Tutte)
+
 		Dim Connessione As String = LeggeImpostazioniDiBase(Server.MapPath("."), Squadra)
 
 		If Connessione = "" Then
@@ -239,8 +227,8 @@ Public Class wsWidget
 				Dim Altro As String = ""
 				Dim Altro2 As String = ""
 				If Tutte = "" Or Tutte = "N" Or Tutte = "NO" Then
-					Altro = IIf(TipoDB = "SQLSERVER", "Top 3", "")
-					Altro2 = IIf(TipoDB = "SQLSERVER", "", "Limit 3")
+					Altro = IIf(TipoDB = "SQLSERVER", "Top 5", "")
+					Altro2 = IIf(TipoDB = "SQLSERVER", "", "Limit 5")
 				End If
 
 				Dim Sql As String = "Select " & Altro & " * From WidgetFirme " & Altro2
@@ -257,6 +245,7 @@ Public Class wsWidget
 									Rec("DataFirma").Value.ToString.Trim & ";" &
 									Rec("Giocatore").Value.ToString.Trim & ";" &
 									Rec("Genitore").Value.ToString.Trim & ";" &
+									Rec("QualeFirma").Value.ToString.Trim & ";" &
 									"§"
 
 							Rec.MoveNext()
@@ -266,9 +255,9 @@ Public Class wsWidget
 				End If
 			End If
 
-			If Not Trovato Then
-				CreaFirmeDaValidare(Squadra, Tutte)
-			End If
+			'If Not Trovato Then
+			'	CreaFirmeDaValidare(Squadra, Tutte)
+			'End If
 		End If
 
 		Return Ritorno
@@ -306,7 +295,8 @@ Public Class wsWidget
 				Dim Sql As String = "Delete From widgetfirme"
 				Ritorno = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
 
-				Sql = "Insert Into widgetfirme (idGiocatore, idGenitore, Datella, DataFirma, Validazione, Giocatore, Genitore) Select " & Altro & " A.*, " & IIf(TipoDB = "SQLSERVER", "B.Cognome + ' ' + B.Nome", "CONCAT(B.Cognome, ' ', B.Nome)") & " As Giocatore, " &
+				Sql = "Insert Into widgetfirme (idGiocatore, idGenitore, Datella, DataFirma, Validazione, QualeFirma, Giocatore, Genitore) " &
+					"Select " & Altro & " A.*, " & IIf(TipoDB = "SQLSERVER", "B.Cognome + ' ' + B.Nome", "CONCAT(B.Cognome, ' ', B.Nome)") & " As Giocatore, " &
 					"CASE A.idGenitore " &
 					"     WHEN 1 THEN C.Genitore1 " &
 					"     WHEN 2 THEN C.Genitore2 " &
