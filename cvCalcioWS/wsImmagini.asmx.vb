@@ -589,7 +589,7 @@ Public Class wsImmagini
 
 						Altro = " And idGenitore=" & c(0) & " And Progressivo=" & c(1)
 					Else
-						Ritorno = "ERROR: Struttura quale firma non valida"
+						Ritorno = StringaErrore & " Struttura quale firma non valida"
 						Return Ritorno
 					End If
 				End If

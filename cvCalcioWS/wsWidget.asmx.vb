@@ -408,7 +408,7 @@ Public Class wsWidget
 				Ritorno = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
 
 				Dim Tutti As Integer = 0
-				Sql = "Insert Into widgetiscritti1 Select " & IIf(TipoDB = "SQLSERVER", "Isnull(Count(*),0)", "COALESCE(Count(*),0)") & " From gGiocatori Where Eliminato='N'" '  And RapportoCompleto='S'"
+				Sql = "Insert Into widgetiscritti1 Select " & IIf(TipoDB = "SQLSERVER", "Isnull(Count(*),0)", "COALESCE(Count(*),0)") & " From Giocatori Where Eliminato='N'" '  And RapportoCompleto='S'"
 				Ritorno = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione, False)
 
 				If Ok Then
@@ -944,6 +944,8 @@ Public Class wsWidget
 					End If
 				End If
 
+				Dim wsImm As New wsImmagini
+
 				Sql = "Select * From Giocatori A " &
 						"Left Join GiocatoriDettaglio B On A.idGiocatore = B.idGiocatore " &
 						"Where A.Eliminato = 'N' "
@@ -959,7 +961,7 @@ Public Class wsWidget
 						If "" & Rec("Maggiorenne").Value = "S" Then
 							If "" & Rec("AbilitaFirmaGenitore3").Value = "S" Then
 								urlFirma = pp & "\" & NomeSquadra.Replace(" ", "_") & "\Firme\" & idAnno & "_" & Rec("idGiocatore").Value & "_3.kgb"
-								If Not ControllaEsistenzaFile(urlFirma) Then
+								If wsImm.RitornaImmagineDB(Squadra, "Firme", Rec("idGiocatore").Value, "3_1").Contains(StringaErrore) Then
 									CiSonoFirme = False
 								End If
 							Else
@@ -972,7 +974,7 @@ Public Class wsWidget
 								If "" & Rec("AffidamentoCongiunto").Value = "S" Then
 									If "" & Rec("AbilitaFirmaGenitore1").Value = "S" Then
 										urlFirma = pp & "\" & NomeSquadra.Replace(" ", "_") & "\Firme\" & idAnno & "_" & Rec("idGiocatore").Value & "_1.kgb"
-										If Not ControllaEsistenzaFile(urlFirma) Then
+										If wsImm.RitornaImmagineDB(Squadra, "Firme", Rec("idGiocatore").Value, "1_1").Contains(StringaErrore) Then
 											CiSonoFirme = False
 										End If
 									Else
@@ -983,7 +985,7 @@ Public Class wsWidget
 
 									If "" & Rec("AbilitaFirmaGenitore2").Value = "S" Then
 										urlFirma = pp & "\" & NomeSquadra.Replace(" ", "_") & "\Firme\" & idAnno & "_" & Rec("idGiocatore").Value & "_2.kgb"
-										If Not ControllaEsistenzaFile(urlFirma) Then
+										If wsImm.RitornaImmagineDB(Squadra, "Firme", Rec("idGiocatore").Value, "2_1").Contains(StringaErrore) Then
 											CiSonoFirme = False
 										End If
 									Else
@@ -995,7 +997,7 @@ Public Class wsWidget
 									If "" & Rec("idTutore").Value = "1" Then
 										If "" & Rec("AbilitaFirmaGenitore1").Value = "S" Then
 											urlFirma = pp & "\" & NomeSquadra.Replace(" ", "_") & "\Firme\" & idAnno & "_" & Rec("idGiocatore").Value & "_1.kgb"
-											If Not ControllaEsistenzaFile(urlFirma) Then
+											If wsImm.RitornaImmagineDB(Squadra, "Firme", Rec("idGiocatore").Value, "1_1").Contains(StringaErrore) Then
 												CiSonoFirme = False
 											End If
 										Else
@@ -1006,7 +1008,7 @@ Public Class wsWidget
 									Else
 										If "" & Rec("AbilitaFirmaGenitore2").Value = "S" Then
 											urlFirma = pp & "\" & NomeSquadra.Replace(" ", "_") & "\Firme\" & idAnno & "_" & Rec("idGiocatore").Value & "_2.kgb"
-											If Not ControllaEsistenzaFile(urlFirma) Then
+											If wsImm.RitornaImmagineDB(Squadra, "Firme", Rec("idGiocatore").Value, "2_1").Contains(StringaErrore) Then
 												CiSonoFirme = False
 											End If
 										Else
@@ -1020,7 +1022,7 @@ Public Class wsWidget
 								If IscrFirmaEntrambi = "S" Then
 									If "" & Rec("AbilitaFirmaGenitore1").Value = "S" Then
 										urlFirma = pp & "\" & NomeSquadra.Replace(" ", "_") & "\Firme\" & idAnno & "_" & Rec("idGiocatore").Value & "_1.kgb"
-										If Not ControllaEsistenzaFile(urlFirma) Then
+										If wsImm.RitornaImmagineDB(Squadra, "Firme", Rec("idGiocatore").Value, "1_1").Contains(StringaErrore) Then
 											CiSonoFirme = False
 										End If
 									Else
@@ -1031,7 +1033,7 @@ Public Class wsWidget
 
 									If "" & Rec("AbilitaFirmaGenitore2").Value = "S" Then
 										urlFirma = pp & "\" & NomeSquadra.Replace(" ", "_") & "\Firme\" & idAnno & "_" & Rec("idGiocatore").Value & "_2.kgb"
-										If Not ControllaEsistenzaFile(urlFirma) Then
+										If wsImm.RitornaImmagineDB(Squadra, "Firme", Rec("idGiocatore").Value, "2_1").Contains(StringaErrore) Then
 											CiSonoFirme = False
 										End If
 									Else
@@ -1043,7 +1045,7 @@ Public Class wsWidget
 									If "" & Rec("Genitore1").Value <> "" Then
 										If "" & Rec("AbilitaFirmaGenitore1").Value = "S" Then
 											urlFirma = pp & "\" & NomeSquadra.Replace(" ", "_") & "\Firme\" & idAnno & "_" & Rec("idGiocatore").Value & "_1.kgb"
-											If Not ControllaEsistenzaFile(urlFirma) Then
+											If wsImm.RitornaImmagineDB(Squadra, "Firme", Rec("idGiocatore").Value, "1_1").Contains(StringaErrore) Then
 												CiSonoFirme = False
 											End If
 										Else
@@ -1054,7 +1056,7 @@ Public Class wsWidget
 									Else
 										If "" & Rec("AbilitaFirmaGenitore2").Value = "S" Then
 											urlFirma = pp & "\" & NomeSquadra.Replace(" ", "_") & "\Firme\" & idAnno & "_" & Rec("idGiocatore").Value & "_2.kgb"
-											If Not ControllaEsistenzaFile(urlFirma) Then
+											If wsImm.RitornaImmagineDB(Squadra, "Firme", Rec("idGiocatore").Value, "2_1").Contains(StringaErrore) Then
 												CiSonoFirme = False
 											End If
 										Else

@@ -25,6 +25,7 @@ Public Class GestioneTags
 	Dim idQuota As String = ""
 	Dim idRata As String = ""
 	Dim idPagatore As String = ""
+	Dim idOperatore As String = ""
 
 	Public Sub New(MP As String)
 		' Dim Ritorno As String = ""
@@ -223,7 +224,7 @@ Public Class GestioneTags
 			gf.EliminaFileFisico(fileDaCopiarePDF)
 			gf.EliminaFileFisico(fileLog)
 
-			Body = EsegueFunzione(MP, "Scheletri\associato.txt", CodSquadra, NomeSquadra, idGiocatore)
+			Body = EsegueFunzione(MP, "Scheletri\associato.txt", CodSquadra, NomeSquadra, idGiocatore, False)
 
 			gf.EliminaFileFisico(fileDaCopiare)
 			gf.ApreFileDiTestoPerScrittura(fileDaCopiare)
@@ -254,7 +255,7 @@ Public Class GestioneTags
 			ScriveLog(MP, CodSquadra, "GestioneTags", " - MAIL ASSOCIATO")
 			ScriveLog(MP, CodSquadra, "GestioneTags", "")
 
-			Body = EsegueFunzione(MP, "Scheletri\email_associato.txt", CodSquadra, NomeSquadra, idGiocatore)
+			Body = EsegueFunzione(MP, "Scheletri\email_associato.txt", CodSquadra, NomeSquadra, idGiocatore, False)
 
 			' <a href="%Percorso?firma=true&codSquadra=%Squadra&id=%idGiocatore&squadra=%NomeSquadra&anno=%Anno&genitore=%Genitore&privacy=%Privacy&tipoUtente=1">
 
@@ -321,7 +322,7 @@ Public Class GestioneTags
 			ScriveLog(MP, CodSquadra, "GestioneTags", " - MAIL SOLLECITO")
 			ScriveLog(MP, CodSquadra, "GestioneTags", "")
 
-			Body = EsegueFunzione(MP, "Scheletri\mail_sollecito.txt", CodSquadra, NomeSquadra, idGiocatore)
+			Body = EsegueFunzione(MP, "Scheletri\mail_sollecito.txt", CodSquadra, NomeSquadra, idGiocatore, False)
 		End If
 
 		Return Body
@@ -329,7 +330,7 @@ Public Class GestioneTags
 
 	Public Function EsegueStampaRicevuta(MP As String, NomeSquadra As String, idGiocatore As String, idAnno As String, Progressivo As String, Dati As String,
 										 NumeroRicevuta As String, DataRicevuta As String, Motivazione As String, Intero As String, Virgola As String,
-										 ImportoLettere As String, Nominativo As String, idPagatoreP As String) As String
+										 ImportoLettere As String, Nominativo As String, idPagatoreP As String, idOperatoreP As String) As String
 		Dim Body As String = ""
 		Dim PrendeDati As String = PrendeDatiDiBase(MP, NomeSquadra, idGiocatore, idAnno)
 
@@ -354,8 +355,9 @@ Public Class GestioneTags
 			gf.EliminaFileFisico(fileLog)
 
 			idPagatore = idPagatoreP
+			idOperatore = idOperatoreP
 
-			Body = EsegueFunzione(MP, "Scheletri\ricevuta_pagamento.txt", CodSquadra, NomeSquadra, idGiocatore)
+			Body = EsegueFunzione(MP, "Scheletri\ricevuta_pagamento.txt", CodSquadra, NomeSquadra, idGiocatore, False)
 
 			Body = Body.Replace("###Dati###", Dati)
 			Body = Body.Replace("###Numero Ricevuta###", NumeroRicevuta)
@@ -418,7 +420,7 @@ Public Class GestioneTags
 
 			idPagatore = idPagatoreP
 
-			Body = EsegueFunzione(MP, "Scheletri\ricevuta_scontrino.txt", CodSquadra, NomeSquadra, idGiocatore)
+			Body = EsegueFunzione(MP, "Scheletri\ricevuta_scontrino.txt", CodSquadra, NomeSquadra, idGiocatore, True)
 
 			Body = Body.Replace("###Dati###", Dati)
 			Body = Body.Replace("###Numero Ricevuta###", NumeroRicevuta)
@@ -476,7 +478,7 @@ Public Class GestioneTags
 			gf.EliminaFileFisico(fileDaCopiarePDF)
 			gf.EliminaFileFisico(fileLog)
 
-			Body = EsegueFunzione(MP, "Scheletri\base_iscrizione_.txt", CodSquadra, NomeSquadra, idGiocatore)
+			Body = EsegueFunzione(MP, "Scheletri\base_iscrizione_" & CodSquadra & ".txt", CodSquadra, NomeSquadra, idGiocatore, False)
 
 			If Maggiorenne = "S" Then
 				Body = Body.Replace("---HEIGHT_PADRE---", "0px")
@@ -601,7 +603,7 @@ Public Class GestioneTags
 			gf.EliminaFileFisico(fileDaCopiarePDF)
 			gf.EliminaFileFisico(fileLog)
 
-			Body = EsegueFunzione(MP, "Scheletri\base_privacy.txt", CodSquadra, NomeSquadra, idGiocatore)
+			Body = EsegueFunzione(MP, "Scheletri\base_privacy.txt", CodSquadra, NomeSquadra, idGiocatore, False)
 
 			gf.EliminaFileFisico(fileDaCopiare)
 			gf.ApreFileDiTestoPerScrittura(fileDaCopiare)
@@ -630,12 +632,12 @@ Public Class GestioneTags
 		Return Body
 	End Function
 
-	Public Function EsegueFunzione(MP As String, NomefileScheletro As String, CodSquadra As String, NomeSquadra As String, idGiocatore As String)
+	Public Function EsegueFunzione(MP As String, NomefileScheletro As String, CodSquadra As String, NomeSquadra As String, idGiocatore As String, Scontrino As Boolean)
 		Dim fileScheletro As String = PathAllegati & "\" & CodSquadra & "\" & NomefileScheletro
 		If Not ControllaEsistenzaFile(fileScheletro) Then
 			fileScheletro = MP & "\" & NomefileScheletro
 		End If
-		ScriveLog(MP, CodSquadra, "GestioneTags", " - File Scheletro: " & fileScheletro)
+		ScriveLog(MP, CodSquadra, "GestioneTags_Funzione", " - File Scheletro: " & fileScheletro)
 
 		'abc***123***def
 		'6
@@ -644,19 +646,27 @@ Public Class GestioneTags
 		'***123***
 		Dim Body As String = gf.LeggeFileIntero(fileScheletro)
 		While Body.Contains("***")
-			ScriveLog(MP, CodSquadra, "GestioneTags", "----------------------------------------------------------------------------")
+			ScriveLog(MP, CodSquadra, "GestioneTags_Funzione", "----------------------------------------------------------------------------")
 			Dim Inizio As Integer = Body.IndexOf("***") + 4
 			'ScriveLog(Mp, CodSquadra, "GestioneTags", "Tag da ricercare 1:" & Inizio)
 			Dim Parte1 As String = Mid(Body, Inizio, 75)
 			'ScriveLog(Mp, CodSquadra, "GestioneTags", "Tag da ricercare 2:" & Parte1)
-			Dim Altro As Integer = Parte1.IndexOf("***")
-			'ScriveLog(Mp, CodSquadra, "GestioneTags", "Tag da ricercare 3:" & Altro)
+			If Parte1.Contains("***") Then
+				Dim Altro As Integer = Parte1.IndexOf("***")
+				'ScriveLog(Mp, CodSquadra, "GestioneTags", "Tag da ricercare 3:" & Altro)
 
-			'If Parte1 > 0 And Altro > 0 Then
-			Dim Parte2 As String = "***" & Mid(Body, Inizio, Altro) & "***"
-			'ScriveLog(Mp, CodSquadra, "GestioneTags", "Tag da ricercare:" & Inizio & "-" & Altro & "-" & (Inizio + Altro) & ": " & Parte2)
+				If Altro > 0 Then
+					'If Parte1 > 0 And Altro > 0 Then
+					Dim Parte2 As String = "***" & Mid(Body, Inizio, Altro) & "***"
+					'ScriveLog(Mp, CodSquadra, "GestioneTags", "Tag da ricercare:" & Inizio & "-" & Altro & "-" & (Inizio + Altro) & ": " & Parte2)
 
-			Body = Body.Replace(Parte2, EsegueQuery(MP, Parte2))
+					Body = Body.Replace(Parte2, EsegueQuery(MP, Parte2, Scontrino))
+				Else
+					Body = "ERROR: Tag " & Parte1 & " vuoto"
+				End If
+			Else
+				Body = "ERROR: Tag " & Parte1 & " Non valido"
+			End If
 			'Else
 			'If Parte1 > 0 Then
 
@@ -669,12 +679,12 @@ Public Class GestioneTags
 		Return Body
 	End Function
 
-	Public Function EsegueQuery(MP As String, Tag As String) As String
+	Public Function EsegueQuery(MP As String, Tag As String, Scontrino As Boolean) As String
 		Dim Ritorno As String = ""
 		Dim Rec As Object ' = HttpContext.Current.Server.CreateObject("ADODB.Recordset")
 		Dim Sql As String = "Select idTag, Descrizione, Valore, " & IIf(TipoDB = "SQLSERVER", "IsNull(Query,'')", "Coalesce(Query,'')") & " As Query From Tags Where Trim(Upper(Valore))='" & Tag.Trim.ToUpper & "'"
 
-		ScriveLog(MP, CodSquadra, "GestioneTags", " - Tag: " & Tag & " / CodSquadra:" & CodSquadra & " / Squadra: " & NomeSquadra & " / Anno: " & Anno & " / Parametro: " & idGiocatore)
+		ScriveLog(MP, CodSquadra, "GestioneTags_Funzione", " - Tag: " & Tag & " / CodSquadra:" & CodSquadra & " / Squadra: " & NomeSquadra & " / Anno: " & Anno & " / Parametro: " & idGiocatore)
 
 		Dim Connessione As String = LeggeImpostazioniDiBase(MP, "")
 
@@ -685,13 +695,17 @@ Public Class GestioneTags
 
 			If TypeOf (Conn) Is String Then
 				Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
+
+				ScriveLog(MP, CodSquadra, "GestioneTags_Funzione", " - Ritorno: " & Ritorno)
 			Else
 				Rec = Conn.LeggeQuery(MP, Sql, Connessione)
 				If TypeOf (Rec) Is String Then
 					Ritorno = Rec
+
+					ScriveLog(MP, CodSquadra, "GestioneTags_Funzione", " - Ritorno: " & Ritorno)
 				Else
 					If Rec.Eof() Then
-						ScriveLog(MP, CodSquadra, "GestioneTags", " - Errore sql: " & Sql)
+						ScriveLog(MP, CodSquadra, "GestioneTags_Funzione", " - Errore sql: " & Sql)
 
 						Ritorno = "ERROR: Nessun tag rilevato"
 					Else
@@ -701,26 +715,41 @@ Public Class GestioneTags
 							Rec.Close()
 
 							If Query.Contains("IMMAGINE;") Then
-								ScriveLog(MP, CodSquadra, "GestioneTags", " - Query: " & Query)
+								ScriveLog(MP, CodSquadra, "GestioneTags_Funzione", " - Query: " & Query)
 
 								Dim campi() As String = Query.Split(";")
 								Dim altro1 As String = ""
 								Dim altro2 As String = ""
-								If campi.Length > 8 Then
-									altro2 = campi(8)
-								End If
-								If campi(5).Contains("_") Then
-									Dim a() As String = campi(5).Split("_")
-									If a.Length > 2 Then
-										altro1 = a(2)
+
+								If Query.Contains("%IDPagatore") Then
+									altro2 = idPagatore
+								Else
+									If Query.Contains("%IDOperatore") Then
+										altro1 = -1
+										altro2 = 99
+										idGiocatore = idOperatore
+									Else
+										If campi.Length > 8 Then
+											altro2 = campi(8)
+										End If
 									End If
 								End If
-								Ritorno = ConverteImmagine(MP, Query, idGiocatore, campi(7), altro2, altro1)
 
-								ScriveLog(MP, CodSquadra, "GestioneTags", " - Ritorno Immagine: " & Ritorno)
+								If Not Query.Contains("%IDOperatore") Then
+									If campi(5).Contains("_") Then
+										Dim a() As String = campi(5).Split("_")
+										If a.Length > 2 Then
+											altro1 = a(2)
+										End If
+									End If
+								End If
+
+								Ritorno = ConverteImmagine(MP, Query, idGiocatore, campi(7), altro2, altro1, Scontrino)
+
+								ScriveLog(MP, CodSquadra, "GestioneTags_Funzione", " - Ritorno Immagine: " & Ritorno)
 							Else
 								If Query.Contains("LINK;") Then
-									ScriveLog(MP, CodSquadra, "GestioneTags", " - Query: " & Query)
+									ScriveLog(MP, CodSquadra, "GestioneTags_Funzione", " - Query: " & Query)
 
 									' <a href="%Percorso?firma=true&codSquadra=%Squadra&id=%idGiocatore&squadra=%NomeSquadra&anno=%Anno&genitore=%Genitore&privacy=%Privacy&tipoUtente=1">Click per firmare</a>
 									'Ritorno = Query.Replace("%Percorso", Percorso)
@@ -732,7 +761,7 @@ Public Class GestioneTags
 									'Ritorno = Ritorno.Replace("%Privacy", Privacy)
 									Ritorno = Query.Replace("LINK;", "")
 
-									ScriveLog(MP, CodSquadra, "GestioneTags", " - Ritorno LINK: " & Ritorno)
+									ScriveLog(MP, CodSquadra, "GestioneTags_Funzione", " - Ritorno LINK: " & Ritorno)
 								Else
 									Query = Query.Replace("%CodSquadra", "[" & CodSquadra & "].[dbo]")
 									Query = Query.Replace("%Anno", idAnno)
@@ -740,22 +769,24 @@ Public Class GestioneTags
 									Query = Query.Replace("%idQuota", idQuota)
 									Query = Query.Replace("%idRata", idRata)
 
-									ScriveLog(MP, CodSquadra, "GestioneTags", " - Query: " & Query)
+									ScriveLog(MP, CodSquadra, "GestioneTags_Funzione", " - Query: " & Query)
 
 									Sql = Query
 									Rec = Conn.LeggeQuery(MP, Sql, Connessione)
 									If TypeOf (Rec) Is String Then
 										Ritorno = Rec
+
+										ScriveLog(MP, CodSquadra, "GestioneTags_Funzione", " - Ritorno: " & Ritorno)
 									Else
 										If Rec.Eof() Then
-											ScriveLog(MP, CodSquadra, "GestioneTags", " - Nessun tag query rilevato. Ritorno -----")
+											ScriveLog(MP, CodSquadra, "GestioneTags_Funzione", " - Nessun tag query rilevato. Ritorno -----")
 
 											Ritorno = ""
 											' Ritorno = "ERROR: Nessun tag query rilevato"
 										Else
 											Ritorno = "" & Rec(0).Value
 
-											ScriveLog(MP, CodSquadra, "GestioneTags", " - Ritorno: " & Ritorno)
+											ScriveLog(MP, CodSquadra, "GestioneTags_Funzione", " - Ritorno: " & Ritorno)
 
 											Rec.Close()
 										End If
@@ -763,7 +794,7 @@ Public Class GestioneTags
 								End If
 							End If
 						Else
-							ScriveLog(MP, CodSquadra, "GestioneTags", " - Query: Vuota. SQL: " & Sql)
+							ScriveLog(MP, CodSquadra, "GestioneTags_Funzione", " - Query: Vuota. SQL: " & Sql)
 
 							Ritorno = "ERROR: Query Vuota"
 						End If
@@ -776,7 +807,7 @@ Public Class GestioneTags
 		Return Ritorno
 	End Function
 
-	Private Function ConverteImmagine(Mp As String, Query As String, idGiocatore As String, MetteDefault As String, Progressivo As String, Progressivo2 As String) As String
+	Private Function ConverteImmagine(Mp As String, Query As String, idGiocatore As String, MetteDefault As String, Progressivo As String, Progressivo2 As String, Scontrino As Boolean) As String
 		Dim gf As New GestioneFilesDirectory
 		Dim Ritorno As String = ""
 		Dim Campi() As String = Query.Split(";")
@@ -800,7 +831,13 @@ Public Class GestioneTags
 		NomeImmagine = NomeImmagine.Replace("%IDGioc", idGiocatore)
 		NomeImmagine = NomeImmagine.Replace("%IDPagatore", idPagatore)
 
+		If Scontrino = True Then
+			DimensioneX = 100
+			DimensioneY = 100
+		End If
+
 		ScriveLog(Mp, CodSquadra, "GestioneTags", " - NomeImmagine: " & NomeImmagine)
+		ScriveLog(Mp, CodSquadra, "GestioneTags", " - Per Scontrino: " & Scontrino)
 		ScriveLog(Mp, CodSquadra, "GestioneTags", " - Dimensione: " & DimensioneX & "/" & DimensioneY)
 		ScriveLog(Mp, CodSquadra, "GestioneTags", " - Tipologia: " & Tipologia)
 		ScriveLog(Mp, CodSquadra, "GestioneTags", " - Criptata: " & Criptata)
@@ -809,6 +846,7 @@ Public Class GestioneTags
 		ScriveLog(Mp, CodSquadra, "GestioneTags", " - Squadra: " & CodSquadra)
 		ScriveLog(Mp, CodSquadra, "GestioneTags", " - ID 1: " & Progressivo)
 		ScriveLog(Mp, CodSquadra, "GestioneTags", " - ID 2: " & Progressivo2)
+		ScriveLog(Mp, CodSquadra, "GestioneTags", " - ID Pagatore: " & idPagatore)
 
 		'If Criptata = "S" Then
 		'Dim Esten As String = Format(Now.Second, "00") & "_" & Now.Millisecond & RitornaValoreRandom(55)
@@ -865,10 +903,18 @@ Public Class GestioneTags
 		'	End If
 		'End If
 
-		'If UrlImmagine <> "" Then
-		ScriveLog(Mp, CodSquadra, "GestioneTags", " - Immagine: " & Mid(urlImmagine, 1, 30) & "...")
-		Ritorno = "<img src=""data:image/png;base64," & urlImmagine & """ style=""width: " & DimensioneX & "px; height: " & DimensioneY & "px;"" />"
-		'End If
+		If urlImmagine <> "" Then
+			If urlImmagine.Contains("MDB ERROR:") Then
+				ScriveLog(Mp, CodSquadra, "GestioneTags", " - Errore su query: " & urlImmagine)
+				Ritorno = urlImmagine
+			Else
+				ScriveLog(Mp, CodSquadra, "GestioneTags", " - Immagine: " & Mid(urlImmagine, 1, 30) & "...")
+				Ritorno = "<img src=""data:image/png;base64," & urlImmagine & """ style=""width: " & DimensioneX & "px; height: " & DimensioneY & "px;"" />"
+			End If
+		Else
+			ScriveLog(Mp, CodSquadra, "GestioneTags", " - Immagine NON trovata")
+			Ritorno = "<img src=""data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs="" width=""0"" height=""" & DimensioneY & """ alt="""" />"
+		End If
 
 		Return Ritorno
 	End Function

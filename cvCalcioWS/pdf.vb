@@ -56,8 +56,8 @@ Public Class pdfGest
 			converter.Options.JpegCompressionEnabled = True
 			converter.Options.MarginLeft = 50
 			converter.Options.MarginRight = 50
-			converter.Options.MarginTop = 50
-			converter.Options.MarginBottom = 50
+			converter.Options.MarginTop = 10
+			converter.Options.MarginBottom = 5
 
 			converter.Footer.Height = 30
 			converter.Options.DisplayFooter = True

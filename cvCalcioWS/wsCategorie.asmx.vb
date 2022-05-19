@@ -177,7 +177,7 @@ Public Class wsCategorie
 
 					Try
 						Sql = "Select * From Utenti Where idUtente=" & idUtente
-						Rec = ConnU.LeggeQuery(Server.MapPath("."), Sql, Connessione)
+						Rec = ConnU.LeggeQuery(Server.MapPath("."), Sql, ConnessioneU)
 						If TypeOf (Rec) Is String Then
 							Ritorno = Rec
 						Else

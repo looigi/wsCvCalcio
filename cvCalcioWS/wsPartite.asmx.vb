@@ -2607,10 +2607,17 @@ Public Class wsPartite
 
 							Dim pp2 As New pdfGest
 							Dim Ritorno2 As String = pp2.ConverteHTMLInPDF(path1, pathPdf, pathLog)
+
 							If Ritorno = "*" Then
-								gf.EliminaFileFisico(path1)
-								gf.EliminaFileFisico(pathPdf)
-								gf.EliminaFileFisico(pathLog)
+								Ritorno = imm.SalvaAllegatoDB(Squadra, "partite", pathPdf, gf.TornaNomeFileDaPath(pathPdf), -1, idPartita)
+
+								If Ritorno = "*" Then
+									gf.EliminaFileFisico(path1)
+									' gf.EliminaFileFisico(pathPdf)
+									gf.EliminaFileFisico(pathLog)
+
+									Ritorno = "Appoggio/Convocazione_" & idPartita & ".pdf"
+								End If
 
 								'Ritorno = Ritorno2
 							End If
@@ -2641,16 +2648,29 @@ Public Class wsPartite
 		If Strings.Right(p(0), 1) <> "\" Then
 			p(0) &= "\"
 		End If
-		Dim pathLog As String = p(0) & Squadra & "\Convocazioni\Anno" & idAnno & "\Partite\Partita_" & idPartita & ".log"
-		Dim path1 As String = p(0) & Squadra & "\Convocazioni\Anno" & idAnno & "\Partite\Partita_" & idPartita & ".html"
-		Dim pathPdf As String = p(0) & Squadra & "\Convocazioni\Anno" & idAnno & "\Partite\Partita_" & idPartita & ".pdf"
+		'Dim pathLog As String = p(0) & Squadra & "\Convocazioni\Anno" & idAnno & "\Partite\Partita_" & idPartita & ".log"
+		'Dim path1 As String = p(0) & Squadra & "\Convocazioni\Anno" & idAnno & "\Partite\Partita_" & idPartita & ".html"
+		'Dim pathPdf As String = p(0) & Squadra & "\Convocazioni\Anno" & idAnno & "\Partite\Partita_" & idPartita & ".pdf"
+		Dim pathLog As String = Server.MapPath(".") & "\Appoggio\Convocazione_" & idPartita & ".log"
+		Dim path1 As String = Server.MapPath(".") & "\Appoggio\Convocazione_" & idPartita & ".html"
+		Dim pathPdf As String = Server.MapPath(".") & "\Appoggio\Convocazione_" & idPartita & ".pdf"
 		gf.CreaDirectoryDaPercorso(pathLog)
 		gf.CreaDirectoryDaPercorso(path1)
 		gf.CreaDirectoryDaPercorso(pathPdf)
 		Dim pp As New pdfGest
 		Ritorno = pp.ConverteHTMLInPDF(path1, pathPdf, pathLog)
 		If Ritorno = "*" Then
-			Ritorno = pathPdf
+			' Ritorno = pathPdf
+
+			Dim imm As New wsImmagini
+			Ritorno = imm.SalvaAllegatoDB(Squadra, "convocazioni", pathPdf, gf.TornaNomeFileDaPath(pathPdf), -1, idPartita)
+			If Ritorno = "*" Then
+				' gf.EliminaFileFisico(pathPdf)
+				gf.EliminaFileFisico(pathLog)
+				gf.EliminaFileFisico(path1)
+
+				Ritorno = "Appoggio/Convocazione_" & idPartita & ".pdf"
+			End If
 		End If
 
 		Return Ritorno
@@ -2660,29 +2680,33 @@ Public Class wsPartite
 	Public Function InviaFoglioConvocazionePDF(Squadra As String, idAnno As String, idPartita As String, Mittente As String) As String
 		Dim Ritorno As String = ""
 		Dim gf As New GestioneFilesDirectory
-		Dim filePaths As String = gf.LeggeFileIntero(Server.MapPath(".") & "\Impostazioni\PathAllegati.txt")
-		Dim p() As String = filePaths.Split(";")
-		If Strings.Right(p(0), 1) <> "\" Then
-			p(0) &= "\"
-		End If
-		Dim path1 As String = p(0) & Squadra & "\Convocazioni\Anno" & idAnno & "\Partite\Partita_" & idPartita & ".html"
-		Dim pathLog As String = p(0) & Squadra & "\Convocazioni\Anno" & idAnno & "\Partite\Partita_" & idPartita & ".log"
-		Dim pathPdf As String = p(0) & Squadra & "\Convocazioni\Anno" & idAnno & "\Partite\Partita_" & idPartita & ".pdf"
-		Dim IndirizzoWS As String = p(2)
-		p(2) = p(2).Replace(vbCrLf, "")
-		p(2) = p(2).Replace("Multimedia", "")
-		If Strings.Right(IndirizzoWS, 1) <> "/" Then
-			IndirizzoWS &= "/"
-		End If
+		'Dim filePaths As String = gf.LeggeFileIntero(Server.MapPath(".") & "\Impostazioni\PathAllegati.txt")
+		'Dim p() As String = filePaths.Split(";")
+		'If Strings.Right(p(0), 1) <> "\" Then
+		'	p(0) &= "\"
+		'End If
+		'Dim path1 As String = p(0) & Squadra & "\Convocazioni\Anno" & idAnno & "\Partite\Partita_" & idPartita & ".html"
+		'Dim pathLog As String = p(0) & Squadra & "\Convocazioni\Anno" & idAnno & "\Partite\Partita_" & idPartita & ".log"
+		'Dim pathPdf As String = p(0) & Squadra & "\Convocazioni\Anno" & idAnno & "\Partite\Partita_" & idPartita & ".pdf"
 
-		If Not ControllaEsistenzaFile(pathPdf) Then
-			Dim pp As New pdfGest
-			Ritorno = pp.ConverteHTMLInPDF(path1, pathPdf, pathLog)
-		Else
-			Ritorno = "*"
-		End If
+		'Dim IndirizzoWS As String = p(2)
+		'p(2) = p(2).Replace(vbCrLf, "")
+		'p(2) = p(2).Replace("Multimedia", "")
+		'If Strings.Right(IndirizzoWS, 1) <> "/" Then
+		'	IndirizzoWS &= "/"
+		'End If
 
-		If Ritorno = "*" Then
+		'If Not ControllaEsistenzaFile(pathPdf) Then
+		'	Dim pp As New pdfGest
+		'	Ritorno = pp.ConverteHTMLInPDF(path1, pathPdf, pathLog)
+		'Else
+		'	Ritorno = "*"
+		'End If
+
+		Dim wI As New wsImmagini()
+		Dim pathPdf As String = wI.RitornaAllegatoDB2(Squadra, "convocazioni", idPartita, -1)
+
+		If Not pathPdf.Contains("ERROR:") Then
 			Dim Connessione As String = LeggeImpostazioniDiBase(Server.MapPath("."), Squadra)
 
 			If Connessione = "" Then
@@ -2710,7 +2734,7 @@ Public Class wsPartite
 					Dim NomePolisportiva As String = ""
 
 					Sql = "Select B.Descrizione As Tipologia, C.Descrizione As Categoria, D.Descrizione As Avversario, DataOra, DataOraAppuntamento As Appuntamento, LuogoAppuntamento, " &
-						"E.Cognome + ' ' + E.Nome As Allenatore, Casa " &
+						IIf(TipoDB = "SQLSERVER", "E.Cognome + ' ' + E.Nome", "Concat(E.Cognome, ' ', E.Nome)") & " As Allenatore, Casa " &
 						"From Partite A " &
 						"Left Join [Generale].[dbo].[TipologiePartite] B On A.idTipologia = B.idTipologia " &
 						"Left Join Categorie C On A.idCategoria = C.idCategoria  " &
@@ -2728,6 +2752,7 @@ Public Class wsPartite
 						LuogoAppuntamento = Rec("LuogoAppuntamento").Value
 						Allenatore = Rec("Allenatore").Value
 					Else
+						gf.EliminaFileFisico(pathPdf)
 						Return "ERROR: Nessun dato trovato per la partita"
 					End If
 

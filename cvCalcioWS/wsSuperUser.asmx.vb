@@ -604,6 +604,8 @@ Public Class wsSuperUser
 					Sql = "commit"
 					Dim Ritorno2 As String = ConnGen.EsegueSql(Server.MapPath("."), Sql, ConnessioneGenerale)
 					gf.ScriveTestoSuFileAperto("Commit: " & Ritorno2)
+
+					gf.CopiaFileFisico(Server.MapPath(".") & "\Scheletri\base_iscrizione_.txt", Server.MapPath(".") & "\Scheletri\base_iscrizione_" & nomeDb & ".txt", True)
 				Else
 					Sql = "rollback"
 					Dim Ritorno2 As String = ConnGen.EsegueSql(Server.MapPath("."), Sql, ConnessioneGenerale)
@@ -856,6 +858,10 @@ Public Class wsSuperUser
 											"SELECT 'Allegati Iscrizioni' As Cosa, Coalesce(Sum(Lunghezza),0) As Lunghezza FROM `allegati_iscrizioni` " &
 											"Union All " &
 											"SELECT 'Allegati Privacy' As Cosa, Coalesce(Sum(Lunghezza),0) As Lunghezza FROM `allegati_privacy` " &
+											"Union All " &
+											"SELECT 'Allegati Partite' As Cosa, Coalesce(Sum(Lunghezza),0) As Lunghezza FROM `allegati_partite` " &
+											"Union All " &
+											"SELECT 'Allegati Convocazioni' As Cosa, Coalesce(Sum(Lunghezza),0) As Lunghezza FROM `allegati_convocazioni` " &
 											"Union All " &
 											"SELECT 'Allegati Scontrini' As Cosa, Coalesce(Sum(Lunghezza),0) As Lunghezza FROM `allegati_scontrini` " &
 											"Union All " &

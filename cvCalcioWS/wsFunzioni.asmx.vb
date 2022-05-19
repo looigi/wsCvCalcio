@@ -303,7 +303,7 @@ Public Class wsFunzioni
 
 				If Not Ritorno.Contains(StringaErrore) Then
 					Try
-						Sql = "Delete Permessi_Composizione Where idPermesso=" & IDfunzione & " And idTipologia=" & idTipologia
+						Sql = "Delete From Permessi_Composizione Where idPermesso=" & IDfunzione & " And idTipologia=" & idTipologia
 						Ritorno = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
 						If Ritorno.Contains(StringaErrore) Then
 							Ok = False

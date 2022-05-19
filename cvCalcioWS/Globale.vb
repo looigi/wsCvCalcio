@@ -6,7 +6,7 @@ Imports System.Windows.Forms
 
 Module Globale
 	Public effettuaLog As Boolean = True
-	Public effettuaLogMail As Boolean = True
+	'Public effettuaLogMail As Boolean = True
 
 	Public nomeFileLogMail As String = ""
 
@@ -2225,7 +2225,7 @@ Module Globale
 		Return Ritorno
 	End Function
 
-	Public Function GeneraRicevutaEScontrino(MP As String, Squadra As String, NomeSquadra As String, idAnno As String, idGiocatore As String, idPagamento As String, idUtente As String, vecchioID As String) As String
+	Public Function GeneraRicevutaEScontrino(MP As String, Squadra As String, NomeSquadra As String, idAnno As String, idGiocatore As String, idPagamento As String, idUtente As String, vecchioID As String, idOperatore As String) As String
 		Dim Ritorno As String = ""
 		Dim Ok As Boolean = True
 
@@ -2263,30 +2263,28 @@ Module Globale
 						'Rec.Close()
 
 						ScriveLog(MP, Squadra, "Pagamenti", "Dati ricevuta acquisiti: Pagamento " & Pagamento)
+						ScriveLog(MP, Squadra, "Pagamenti", "Dati ricevuta acquisiti: ID Tipo Pagamento " & Val(idTipoPagamento))
+						ScriveLog(MP, Squadra, "Pagamenti", "Dati ricevuta acquisiti: ID Pagatore " & idPagatore)
 
 						Dim nomeRate As String = ""
 						Dim rr As New List(Of String)
-						If idRata.Contains(";") Then
-							Dim r() As String = idRata.Split(";")
-							For Each r2 As String In r
-								rr.Add(r2)
-							Next
-						Else
-							Dim r As String = idRata
-							rr.Add(r)
-						End If
 
-						For Each r As String In rr
-							If r <> "" Then
-								Sql = "Select * From QuoteRate Where idQuota=" & idQuota & " And Progressivo=" & r
-								Rec = Conn.LeggeQuery(MP, Sql, Connessione)
-								If Not Rec.Eof() Then
-									nomeRate &= ("" & Rec("DescRata").Value) & "<br />"
-								End If
+						If Val(idTipoPagamento) = 1 Then
+							If idRata.Contains(";") Then
+								Dim r() As String = idRata.Split(";")
+								For Each r2 As String In r
+									rr.Add(r2)
+									ScriveLog(MP, Squadra, "Pagamenti", "ID Rata: " & r2)
+								Next
+							Else
+								Dim r As String = idRata
+								rr.Add(r)
+								ScriveLog(MP, Squadra, "Pagamenti", "ID Rata: " & r)
 							End If
-						Next
-
-						ScriveLog(MP, Squadra, "Pagamenti", "Nome rate " & nomeRate)
+						Else
+							ScriveLog(MP, Squadra, "Pagamenti", "Rata Altro: " & Commento)
+							rr.Add(Commento & "§" & Pagamento)
+						End If
 
 						Dim Cognome As String = ""
 						Dim CognomePagatore As String = ""
@@ -2377,6 +2375,70 @@ Module Globale
 							End If
 						End If
 
+						nomeRate = "<table style=""width: 100%; border: 0px;"" cellapdding=""0"" cellspacing=""0"">"
+						Dim conta As Integer = 1
+						For Each r As String In rr
+							If r <> "" Then
+								If Val(idTipoPagamento) = 1 Then
+									ScriveLog(MP, Squadra, "Pagamenti", "Scansione nomi rate " & conta & "/" & rr.Count - 1 & ": " & r)
+									If r = 9999 Then
+										nomeRate &= "<tr>"
+										nomeRate &= "<td style=""width: 70%; text-align: left;"">"
+										nomeRate &= ("Rata Manuale " & " - " & CognomeIscritto & " " & NomeIscritto & " " & CodFiscaleIscritto)
+										nomeRate &= "</td>"
+										nomeRate &= "<td style=""width: 30%; text-align: right;"">"
+										nomeRate &= Pagamento
+										nomeRate &= "</td>"
+										nomeRate &= "</tr>"
+										If conta < rr.Count - 1 Then
+											conta += 1
+											nomeRate &= "<tr>"
+											nomeRate &= "<td style=""width: 70%;"">&nbsp;"
+											nomeRate &= "</td>"
+											nomeRate &= "<td style=""width: 30%;"">&nbsp;"
+											nomeRate &= "</td>"
+											nomeRate &= "</tr>"
+										End If
+									Else
+										Sql = "Select * From QuoteRate Where idQuota=" & idQuota & " And Progressivo=" & r
+										Rec = Conn.LeggeQuery(MP, Sql, Connessione)
+										If Not Rec.Eof() Then
+											nomeRate &= "<tr>"
+											nomeRate &= "<td style=""width: 70%; text-align: left;"">"
+											nomeRate &= ("" & Rec("DescRata").Value) & " - " & CognomeIscritto & " " & NomeIscritto & " " & CodFiscaleIscritto
+											nomeRate &= "</td>"
+											nomeRate &= "<td style=""width: 30%; text-align: right;"">"
+											nomeRate &= Rec("Importo").Value
+											nomeRate &= "</td>"
+											nomeRate &= "</tr>"
+											If conta < rr.Count - 1 Then
+												conta += 1
+												nomeRate &= "<tr>"
+												nomeRate &= "<td style=""width: 70%;"">&nbsp;"
+												nomeRate &= "</td>"
+												nomeRate &= "<td style=""width: 30%;"">&nbsp;"
+												nomeRate &= "</td>"
+												nomeRate &= "</tr>"
+											End If
+										End If
+									End If
+								Else
+									ScriveLog(MP, Squadra, "Pagamenti", "Scansione nomi rate " & conta & "/" & rr.Count & ": " & r)
+									Dim rrr() As String = r.Split("§")
+									nomeRate &= "<tr>"
+									nomeRate &= "<td style=""width: 70%; text-align: left;"">"
+									nomeRate &= rrr(0) & " - " & CognomeIscritto & " " & NomeIscritto & " " & CodFiscaleIscritto
+									nomeRate &= "</td>"
+									nomeRate &= "<td style=""width: 30%; text-align: right;"">"
+									nomeRate &= rrr(1)
+									nomeRate &= "</td>"
+									nomeRate &= "</tr>"
+								End If
+							End If
+						Next
+						nomeRate &= "</table>"
+
+						ScriveLog(MP, Squadra, "Pagamenti", "Nome Rate: " & nomeRate)
 						ScriveLog(MP, Squadra, "Pagamenti", "Dati pagatore acquisiti: " & Cognome & " " & Nome)
 
 						If Ok Then
@@ -2420,7 +2482,7 @@ Module Globale
 
 							Dim Dati As String = "C.F.: " & CodiceFiscale & " P.I.:" & PIva & "<br />Telefono: " & Telefono & "<br />E-Mail: " & eMail
 							Dim Altro As String = ""
-							If Commento <> "" Then
+							If Commento <> "" And Trim(Commento) <> "0" Then
 								Altro = "- " & Commento
 							End If
 							Dim sDataRicevuta As String = ""
@@ -2430,7 +2492,7 @@ Module Globale
 							Else
 								sDataRicevuta = Format(Now.Day, "00") & "/" & Format(Now.Month, "00") & "/" & Now.Year
 							End If
-							Dim Motivazione As String = CognomeIscritto & " " & NomeIscritto & " " & CodFiscaleIscritto & " " & Altro
+							Dim Motivazione As String = nomeRate  '  & " " & Altro
 							Dim ssNumeroRicevuta As String = ""
 							If NumeroRicevuta <> "" Then
 								ssNumeroRicevuta = NumeroRicevuta
@@ -2441,13 +2503,13 @@ Module Globale
 									ssNumeroRicevuta = NumeroRicevuta & "/" & Now.Year
 								End If
 							End If
-							Dim NominativoRicevuta As String = CognomeIscritto & " " & NomeIscritto & "<br />" & CodFiscaleIscritto & " " & Altro & "<br />" & nomeRate
+							Dim NominativoRicevuta As String = CognomePagatore & " " & CodFiscalePagatore ' & " " & Altro & "<br />" & nomeRate
 
 							ScriveLog(MP, Squadra, "Pagamenti", "Nominativo ricevuta: " & NominativoRicevuta)
 
 							Dim gT1 As New GestioneTags(MP)
 							ScriveLog(MP, Squadra, "Pagamenti", "Eseguo stampa ricevuta")
-							gT1.EsegueStampaRicevuta(MP, Squadra, idGiocatore, idAnno, idPagamento, Dati, ssNumeroRicevuta, sDataRicevuta, Motivazione, Intero, Virgola, ImportoLettere, NominativoRicevuta, idPagatore)
+							gT1.EsegueStampaRicevuta(MP, Squadra, idGiocatore, idAnno, idPagamento, Dati, ssNumeroRicevuta, sDataRicevuta, Motivazione, Intero, Virgola, ImportoLettere, NominativoRicevuta, idPagatore, idOperatore)
 							gT1 = Nothing
 
 							Dim gT2 As New GestioneTags(MP)

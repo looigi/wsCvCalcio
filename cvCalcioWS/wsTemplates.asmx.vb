@@ -87,7 +87,7 @@ Public Class wsTemplates
 		If Strings.Right(p(0), 1) <> "\" Then
 			p(0) &= "\"
 		End If
-		Dim pathFilePosta As String = p(0) & Squadra & "\Scheletri\base_iscrizione_.txt"
+		Dim pathFilePosta As String = p(0) & Squadra & "\Scheletri\base_iscrizione_" & Squadra & ".txt"
 		Dim Ritorno As String = "*"
 		If ControllaEsistenzaFile(pathFilePosta) Then
 			File.Delete(pathFilePosta)
@@ -368,10 +368,10 @@ Public Class wsTemplates
 		If Strings.Right(p(0), 1) <> "\" Then
 			p(0) &= "\"
 		End If
-		Dim pathFilePosta As String = p(0) & Squadra & "\Scheletri\base_iscrizione_.txt"
+		Dim pathFilePosta As String = p(0) & Squadra & "\Scheletri\base_iscrizione_" & Squadra & ".txt"
 		Dim Ritorno As String = "MODIFICATO"
 		If Not ControllaEsistenzaFile(pathFilePosta) Then
-			pathFilePosta = HttpContext.Current.Server.MapPath(".") & "\Scheletri\base_iscrizione_.txt"
+			pathFilePosta = HttpContext.Current.Server.MapPath(".") & "\Scheletri\base_iscrizione_" & Squadra & ".txt"
 			Ritorno = "ORIGINALE"
 		End If
 

@@ -71,13 +71,17 @@ Public Class clsGestioneDB
 			If Strings.Right(pp(1), 1) <> "\" Then
 				pp(1) = pp(1) & "\"
 			End If
-			nomeFileLogExec = pp(1) & squadra & "\Exec_" & Now.Day & "_" & Now.Month & "_" & Now.Year & ".txt"
+			If Squadra = "" Then
+				nomeFileLogExec = pp(1) & "Generale\Exec_" & Now.Day & "_" & Now.Month & "_" & Now.Year & ".txt"
+			Else
+				nomeFileLogExec = pp(1) & Squadra & "\Exec_" & Now.Day & "_" & Now.Month & "_" & Now.Year & ".txt"
+			End If
 
 			ThreadScriveLog(Datella & "--------------------------------------------------------------------------", nomeFileLogExec)
 
 			Dim sql3 As String = Sql2
 			If sql3.Length > 1024 And (sql3.ToUpper.Contains("IMMAGINI_") Or sql3.ToUpper.Contains("ALLEGATI_")) Then
-				sql3 = Mid(sql3, 1, 1021) & "..."
+				sql3 = Mid(sql3, 1, 700) & "..." & Right(Sql2, 324)
 			End If
 			ThreadScriveLog(Datella & ": " & sql3, nomeFileLogExec)
 			' End If
@@ -112,9 +116,13 @@ Public Class clsGestioneDB
 				Ritorno = mdb.EsegueSql(Sql2, ModificaQuery)
 				If Ritorno.ToUpper <> "OK" Then
 					Ritorno = StringaErrore & " " & Ritorno
-				End If
-				If effettuaLog Then
-					ThreadScriveLog(Datella & ": OK", nomeFileLogExec)
+					If effettuaLog Then
+						ThreadScriveLog(Datella & ": " & Ritorno, nomeFileLogExec)
+					End If
+				Else
+					If effettuaLog Then
+						ThreadScriveLog(Datella & ": OK", nomeFileLogExec)
+					End If
 				End If
 			Catch ex As Exception
 				Ritorno = StringaErrore & " " & ex.Message
@@ -165,14 +173,18 @@ Public Class clsGestioneDB
 			If Strings.Right(pp(1), 1) <> "\" Then
 				pp(1) = pp(1) & "\"
 			End If
-			nomeFileLogQuery = pp(1) & squadra & "\Query_" & Now.Day & "_" & Now.Month & "_" & Now.Year & ".txt"
+			If Squadra = "" Then
+				nomeFileLogQuery = pp(1) & "Generale\Query_" & Now.Day & "_" & Now.Month & "_" & Now.Year & ".txt"
+			Else
+				nomeFileLogQuery = pp(1) & Squadra & "\Query_" & Now.Day & "_" & Now.Month & "_" & Now.Year & ".txt"
+			End If
 
 			ThreadScriveLog(Datella & "--------------------------------------------------------------------------", nomeFileLogQuery)
 			ThreadScriveLog(Datella & " Modifica Query: " & ModificaQuery, nomeFileLogQuery)
 			ThreadScriveLog(Datella & " TIPO DB: " & TipoDB, nomeFileLogQuery)
 			Dim sql3 As String = Sql2
 			If sql3.Length > 1024 And (sql3.ToUpper.Contains("IMMAGINI_") Or sql3.ToUpper.Contains("ALLEGATI_")) Then
-				sql3 = Mid(sql3, 1, 1021) & "..."
+				sql3 = Mid(sql3, 1, 700) & "..." & Right(Sql2, 324)
 			End If
 			ThreadScriveLog(Datella & ": " & sql3, nomeFileLogQuery)
 			'End If
@@ -210,6 +222,12 @@ Public Class clsGestioneDB
 				End If
 				' Return StringaErrore & " " & ex.Message
 			End Try
+		End If
+
+		If TypeOf (Rec) Is String Then
+			If effettuaLog Then
+				ThreadScriveLog(Datella & ": ERRORE SQL -> " & Rec, nomeFileLogQuery)
+			End If
 		End If
 
 		If effettuaLog And Not HttpContext.Current Is Nothing Then

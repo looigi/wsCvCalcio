@@ -475,6 +475,9 @@ Public Class wsReports
 				Dim IscrFirmaEntrambi As String = ""
 				Dim c As New CriptaFiles
 
+				ScriveLog(Server.MapPath("."), Squadra, "Anagrafica", "------------------------------------------")
+				ScriveLog(Server.MapPath("."), Squadra, "Anagrafica", "Eseguo stampa anagrafica")
+
 				Sql = "Select * From Anni"
 				Rec = Conn.LeggeQuery(Server.MapPath("."), Sql, Connessione)
 				If TypeOf (Rec) Is String Then
@@ -488,6 +491,8 @@ Public Class wsReports
 						Ok = False
 					End If
 				End If
+
+				ScriveLog(Server.MapPath("."), Squadra, "Anagrafica", "Iscrizione firma entrambi: " & IscrFirmaEntrambi)
 
 				If Ok Then
 					Sql = "Select * From [Generale].[dbo].[Squadre] Where idSquadra = " & idSquadra
@@ -505,6 +510,9 @@ Public Class wsReports
 						End If
 					End If
 				End If
+
+				ScriveLog(Server.MapPath("."), Squadra, "Anagrafica", "Anno attivazione: " & AnnoAttivazione)
+				ScriveLog(Server.MapPath("."), Squadra, "Anagrafica", "Nome Squadra: " & NomeSquadra)
 
 				If Ok Then
 					Dim Titolo As String = "Report Anagrafica"
@@ -561,6 +569,7 @@ Public Class wsReports
 					Rec = Conn.LeggeQuery(Server.MapPath("."), Sql, Connessione)
 					If TypeOf (Rec) Is String Then
 						Ritorno = Rec
+						ScriveLog(Server.MapPath("."), Squadra, "Anagrafica", Ritorno)
 					Else
 						Dim Output As String = ""
 						Dim gf As New GestioneFilesDirectory
@@ -620,11 +629,13 @@ Public Class wsReports
 						End If
 
 						Dim Quanti As Integer = 0
+						Dim wsImm As New wsImmagini
 
 						Do Until Rec.Eof()
 							Dim Stampa As Boolean = True
 
 							If FirmePresenti <> "0" Then
+								ScriveLog(Server.MapPath("."), Squadra, "Anagrafica", "Controllo per firme presenti: " & Rec("Cognome").Value & " " & Rec("Nome").Value)
 
 								Dim urlFirma As String = ""
 								Dim CiSonoFirme As Boolean = True
@@ -637,61 +648,94 @@ Public Class wsReports
 								'Where Cognome Like '%petr%' 
 
 								If "" & Rec("Maggiorenne").Value = "S" Then
+									ScriveLog(Server.MapPath("."), Squadra, "Anagrafica", "Giocatore Maggiorenne")
 									If "" & Rec("AbilitaFirmaGenitore3").Value = "S" Then
 										urlFirma = pp & "\" & NomeSquadra.Replace(" ", "_") & "\Firme\" & idAnno & "_" & Rec("idGiocatore").Value & "_3.kgb"
-										If Not ControllaEsistenzaFile(urlFirma) Then
+										If wsImm.RitornaImmagineDB(Squadra, "Firme", Rec("idGiocatore").Value, "3_1").Contains(StringaErrore) Then
+											ScriveLog(Server.MapPath("."), Squadra, "Anagrafica", "Firma elettronica giocatore NON presente")
 											CiSonoFirme = False
+										Else
+											ScriveLog(Server.MapPath("."), Squadra, "Anagrafica", "Firma elettronica giocatore presente")
 										End If
 									Else
+										ScriveLog(Server.MapPath("."), Squadra, "Anagrafica", "Firma analogica giocatore: " & Rec("FirmaAnalogicaGenitore3").Value)
 										If "" & Rec("FirmaAnalogicaGenitore3").Value = "N" Then
 											CiSonoFirme = False
 										End If
 									End If
 								Else
 									If "" & Rec("GenitoriSeparati").Value = "S" Then
+										Dim PadreCe As Boolean = True
+										Dim MadreCe As Boolean = True
+
+										ScriveLog(Server.MapPath("."), Squadra, "Anagrafica", "Genitori separati")
 										If "" & Rec("AffidamentoCongiunto").Value = "S" Then
+											ScriveLog(Server.MapPath("."), Squadra, "Anagrafica", "Affidamento congiunto")
 											If "" & Rec("AbilitaFirmaGenitore1").Value = "S" Then
 												urlFirma = pp & "\" & NomeSquadra.Replace(" ", "_") & "\Firme\" & idAnno & "_" & Rec("idGiocatore").Value & "_1.kgb"
-												If Not ControllaEsistenzaFile(urlFirma) Then
-													CiSonoFirme = False
+												If wsImm.RitornaImmagineDB(Squadra, "Firme", Rec("idGiocatore").Value, "1_1").Contains(StringaErrore) Then
+													ScriveLog(Server.MapPath("."), Squadra, "Anagrafica", "Firma Elettronica Padre NON presente")
+													PadreCe = False
+												Else
+													ScriveLog(Server.MapPath("."), Squadra, "Anagrafica", "Firma Elettronica Padre presente")
 												End If
 											Else
+												ScriveLog(Server.MapPath("."), Squadra, "Anagrafica", "Firma Analogica Padre: " & Rec("FirmaAnalogicaGenitore1").Value)
 												If "" & Rec("FirmaAnalogicaGenitore1").Value = "N" Then
-													CiSonoFirme = False
+													PadreCe = False
 												End If
 											End If
 
-											If Stampa Then
-												If "" & Rec("AbilitaFirmaGenitore2").Value = "S" Then
+											' If Stampa Then
+											'If CiSonoFirme Then
+											If "" & Rec("AbilitaFirmaGenitore2").Value = "S" Then
 													urlFirma = pp & "\" & NomeSquadra.Replace(" ", "_") & "\Firme\" & idAnno & "_" & Rec("idGiocatore").Value & "_2.kgb"
-													If Not ControllaEsistenzaFile(urlFirma) Then
-														CiSonoFirme = False
+												If wsImm.RitornaImmagineDB(Squadra, "Firme", Rec("idGiocatore").Value, "2_1").Contains(StringaErrore) Then
+													ScriveLog(Server.MapPath("."), Squadra, "Anagrafica", "Firma Elettronica Madre NON presente")
+													MadreCe = False
+												Else
+													ScriveLog(Server.MapPath("."), Squadra, "Anagrafica", "Firma Elettronica Madre presente")
 													End If
 												Else
 													If "" & Rec("FirmaAnalogicaGenitore2").Value = "N" Then
-														CiSonoFirme = False
+														MadreCe = False
 													End If
 												End If
+											'End If
+
+											If PadreCe = False Or MadreCe = False Then
+												ScriveLog(Server.MapPath("."), Squadra, "Anagrafica", "Nessun firma presente")
+												CiSonoFirme = False
 											End If
 										Else
 											If "" & Rec("idTutore").Value = "1" Then
+												ScriveLog(Server.MapPath("."), Squadra, "Anagrafica", "Tutore Padre")
 												If "" & Rec("AbilitaFirmaGenitore1").Value = "S" Then
 													urlFirma = pp & "\" & NomeSquadra.Replace(" ", "_") & "\Firme\" & idAnno & "_" & Rec("idGiocatore").Value & "_1.kgb"
-													If Not ControllaEsistenzaFile(urlFirma) Then
+													If wsImm.RitornaImmagineDB(Squadra, "Firme", Rec("idGiocatore").Value, "1_1").Contains(StringaErrore) Then
+														ScriveLog(Server.MapPath("."), Squadra, "Anagrafica", "Firma Elettronica Padre NON presente")
 														CiSonoFirme = False
+													Else
+														ScriveLog(Server.MapPath("."), Squadra, "Anagrafica", "Firma Elettronica Padre presente")
 													End If
 												Else
+													ScriveLog(Server.MapPath("."), Squadra, "Anagrafica", "Firma Analogica Padre: " & Rec("FirmaAnalogicaGenitore1").Value)
 													If "" & Rec("FirmaAnalogicaGenitore1").Value = "N" Then
 														CiSonoFirme = False
 													End If
 												End If
 											Else
+												ScriveLog(Server.MapPath("."), Squadra, "Anagrafica", "Tutore Madre")
 												If "" & Rec("AbilitaFirmaGenitore2").Value = "S" Then
 													urlFirma = pp & "\" & NomeSquadra.Replace(" ", "_") & "\Firme\" & idAnno & "_" & Rec("idGiocatore").Value & "_2.kgb"
-													If Not ControllaEsistenzaFile(urlFirma) Then
+													If wsImm.RitornaImmagineDB(Squadra, "Firme", Rec("idGiocatore").Value, "2_1").Contains(StringaErrore) Then
+														ScriveLog(Server.MapPath("."), Squadra, "Anagrafica", "Firma Elettronica Madre NON presente")
 														CiSonoFirme = False
+													Else
+														ScriveLog(Server.MapPath("."), Squadra, "Anagrafica", "Firma Elettronica Madre presente")
 													End If
 												Else
+													ScriveLog(Server.MapPath("."), Squadra, "Anagrafica", "Firma Analogica Madre: " & Rec("FirmaAnalogicaGenitore2").Value)
 													If "" & Rec("FirmaAnalogicaGenitore2").Value = "N" Then
 														CiSonoFirme = False
 													End If
@@ -699,38 +743,59 @@ Public Class wsReports
 											End If
 										End If
 									Else
+										ScriveLog(Server.MapPath("."), Squadra, "Anagrafica", "Genitori non separati")
 										If IscrFirmaEntrambi = "S" Then
+											Dim PadreCe As Boolean = True
+											Dim MadreCe As Boolean = True
+
+											ScriveLog(Server.MapPath("."), Squadra, "Anagrafica", "Iscrizione firma entrambi")
 											If "" & Rec("AbilitaFirmaGenitore1").Value = "S" Then
 												urlFirma = pp & "\" & NomeSquadra.Replace(" ", "_") & "\Firme\" & idAnno & "_" & Rec("idGiocatore").Value & "_1.kgb"
-												If Not ControllaEsistenzaFile(urlFirma) Then
-													CiSonoFirme = False
+												If wsImm.RitornaImmagineDB(Squadra, "Firme", Rec("idGiocatore").Value, "1_1").Contains(StringaErrore) Then
+													ScriveLog(Server.MapPath("."), Squadra, "Anagrafica", "Firma Elettronica Padre NON presente")
+													PadreCe = False
+												Else
+													ScriveLog(Server.MapPath("."), Squadra, "Anagrafica", "Firma Elettronica Padre presente")
 												End If
 											Else
+												ScriveLog(Server.MapPath("."), Squadra, "Anagrafica", "Firma Analogica Padre: " & Rec("FirmaAnalogicaGenitore1").Value)
 												If "" & Rec("FirmaAnalogicaGenitore1").Value = "N" Then
-													CiSonoFirme = False
+													PadreCe = False
 												End If
 											End If
 
-											If Stampa Then
-												If "" & Rec("AbilitaFirmaGenitore2").Value = "S" Then
-													urlFirma = pp & "\" & NomeSquadra.Replace(" ", "_") & "\Firme\" & idAnno & "_" & Rec("idGiocatore").Value & "_2.kgb"
-													If Not ControllaEsistenzaFile(urlFirma) Then
-														CiSonoFirme = False
-													End If
+											If "" & Rec("AbilitaFirmaGenitore2").Value = "S" Then
+												urlFirma = pp & "\" & NomeSquadra.Replace(" ", "_") & "\Firme\" & idAnno & "_" & Rec("idGiocatore").Value & "_2.kgb"
+												If wsImm.RitornaImmagineDB(Squadra, "Firme", Rec("idGiocatore").Value, "2_1").Contains(StringaErrore) Then
+													ScriveLog(Server.MapPath("."), Squadra, "Anagrafica", "Firma Elettronica Madre NON presente")
+													MadreCe = False
 												Else
-													If "" & Rec("FirmaAnalogicaGenitore2").Value = "N" Then
-														CiSonoFirme = False
-													End If
+													ScriveLog(Server.MapPath("."), Squadra, "Anagrafica", "Firma Elettronica Madre presente")
+												End If
+											Else
+												ScriveLog(Server.MapPath("."), Squadra, "Anagrafica", "Firma Analogica Madre: " & Rec("FirmaAnalogicaGenitore2").Value)
+												If "" & Rec("FirmaAnalogicaGenitore2").Value = "N" Then
+													MadreCe = False
 												End If
 											End If
+
+											If PadreCe = False Or MadreCe = False Then
+												ScriveLog(Server.MapPath("."), Squadra, "Anagrafica", "Nessun firma presente")
+												CiSonoFirme = False
+											End If
 										Else
+											ScriveLog(Server.MapPath("."), Squadra, "Anagrafica", "Iscrizione firma NON entrambi")
 											If "" & Rec("Genitore1").Value <> "" Then
 												If "" & Rec("AbilitaFirmaGenitore1").Value = "S" Then
 													urlFirma = pp & "\" & NomeSquadra.Replace(" ", "_") & "\Firme\" & idAnno & "_" & Rec("idGiocatore").Value & "_1.kgb"
-													If Not ControllaEsistenzaFile(urlFirma) Then
+													If wsImm.RitornaImmagineDB(Squadra, "Firme", Rec("idGiocatore").Value, "1_1").Contains(StringaErrore) Then
+														ScriveLog(Server.MapPath("."), Squadra, "Anagrafica", "Firma Elettronica Padre NON presente")
 														CiSonoFirme = False
+													Else
+														ScriveLog(Server.MapPath("."), Squadra, "Anagrafica", "Firma Elettronica Padre presente")
 													End If
 												Else
+													ScriveLog(Server.MapPath("."), Squadra, "Anagrafica", "Firma Analogica Padre: " & Rec("FirmaAnalogicaGenitore1").Value)
 													If "" & Rec("FirmaAnalogicaGenitore1").Value = "N" Then
 														CiSonoFirme = False
 													End If
@@ -738,10 +803,14 @@ Public Class wsReports
 											Else
 												If "" & Rec("AbilitaFirmaGenitore2").Value = "S" Then
 													urlFirma = pp & "\" & NomeSquadra.Replace(" ", "_") & "\Firme\" & idAnno & "_" & Rec("idGiocatore").Value & "_2.kgb"
-													If Not ControllaEsistenzaFile(urlFirma) Then
+													If wsImm.RitornaImmagineDB(Squadra, "Firme", Rec("idGiocatore").Value, "2_1").Contains(StringaErrore) Then
+														ScriveLog(Server.MapPath("."), Squadra, "Anagrafica", "Firma Elettronica Madre NON presente")
 														CiSonoFirme = False
+													Else
+														ScriveLog(Server.MapPath("."), Squadra, "Anagrafica", "Firma Elettronica Madre presente")
 													End If
 												Else
+													ScriveLog(Server.MapPath("."), Squadra, "Anagrafica", "Firma Analogica Madre: " & Rec("FirmaAnalogicaGenitore2").Value)
 													If "" & Rec("FirmaAnalogicaGenitore2").Value = "N" Then
 														CiSonoFirme = False
 													End If
@@ -750,6 +819,9 @@ Public Class wsReports
 										End If
 									End If
 								End If
+
+								ScriveLog(Server.MapPath("."), Squadra, "Anagrafica", "Firme presenti: " & CiSonoFirme)
+								ScriveLog(Server.MapPath("."), Squadra, "Anagrafica", "")
 
 								If FirmePresenti = "1" Then
 									If CiSonoFirme = False Then
@@ -1008,9 +1080,10 @@ Public Class wsReports
 						'If Ritorno = "*" Then
 						'End If
 					End If
-					End If
+				End If
 			End If
 		End If
+		ScriveLog(Server.MapPath("."), Squadra, "Anagrafica", "------------------------------------------")
 
 		Return Ritorno
 	End Function

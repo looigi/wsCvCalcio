@@ -258,6 +258,81 @@ Public Class wsGiocatori
 	End Function
 
 	<WebMethod()>
+	Public Function EliminaFirme(Squadra As String, idGiocatore As String, idGenitore As String) As String
+		Dim Ritorno As String = ""
+		Dim Connessione As String = LeggeImpostazioniDiBase(Server.MapPath("."), Squadra)
+
+		If Connessione = "" Then
+			Ritorno = ErroreConnessioneNonValida
+		Else
+			Dim Conn As Object = New clsGestioneDB(Squadra)
+
+			If TypeOf (Conn) Is String Then
+				Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
+			Else
+				Dim Rec As Object
+				Dim Sql As String = ""
+
+				Dim c() As String = Squadra.Split("_")
+				Dim Anno As String = Str(Val(c(0))).Trim
+				Dim codSquadra As String = c(1)
+				Dim NomeSquadra As String = ""
+
+				Sql = "Select NomeSquadra, Descrizione From Anni Where idAnno = " & Anno
+				Rec = Conn.LeggeQuery(Server.MapPath("."), Sql, Connessione)
+				If TypeOf (Rec) Is String Then
+					Ritorno = Rec
+				Else
+					If Rec.Eof() Then
+						Ritorno = StringaErrore & " Nessuna squadra rilevata"
+					Else
+						NomeSquadra = Rec("NomeSquadra").Value
+					End If
+				End If
+				Rec.Close()
+
+				If Ritorno = "" Then
+					Dim gf As New GestioneFilesDirectory
+					Dim Percorso As String = gf.LeggeFileIntero(Server.MapPath(".") & "\Impostazioni\Paths.txt")
+					gf = Nothing
+					Percorso = Percorso.Trim()
+					If Strings.Right(Percorso, 1) <> "\" Then
+						Percorso &= "\"
+					End If
+					'Dim path1 As String = Percorso & NomeSquadra.Replace(" ", "_") & "\Firme\" & Anno & "_" & idGiocatore & "_" & idGenitore & ".kgb"
+					'If ControllaEsistenzaFile(Server.MapPath("."), Conn, Connessione, idGiocatore, idGenitore, "N") Then
+					Try
+						Sql = "Delete From immagini_firme Where id=" & idGiocatore & " And idGenitore=" & idGenitore
+						Ritorno = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
+					Catch ex As Exception
+						Ritorno = StringaErrore & ": " & ex.Message
+					End Try
+
+					'Try
+					'	Sql = "Delete From immagini_firme Where id=" & idGiocatore & " And Progressivo=" & idGenitore & " And Privacy='S'"
+					'	Ritorno = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
+					'Catch ex As Exception
+					'	Ritorno = StringaErrore & ": " & ex.Message
+					'End Try
+					'Else
+					'	Ritorno = StringaErrore & "Firma non esistente"
+					'End If
+				End If
+
+				If Ritorno = "*" Or Ritorno = "OK" Then
+					Sql = "Delete From GiocatoriFirme Where idGiocatore=" & idGiocatore & " And idGenitore=" & idGenitore
+					Ritorno = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
+
+					'Sql = "Delete From GiocatoriFirme Where idGiocatore=" & idGiocatore & " And idGenitore=" & idGenitore + 100
+					'Ritorno = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
+				End If
+			End If
+		End If
+
+		Return Ritorno
+	End Function
+
+	<WebMethod()>
 	Public Function EliminaFirma(Squadra As String, idGiocatore As String, idGenitore As String, QualeFirma As String) As String
 		Dim Ritorno As String = ""
 		Dim Connessione As String = LeggeImpostazioniDiBase(Server.MapPath("."), Squadra)
@@ -1691,7 +1766,7 @@ Public Class wsGiocatori
 								"Left Join [Generale].[dbo].[GiocatoriTessereNFC] As NFC On NFC.idGiocatore=Giocatori.idGiocatore And NFC.CodSquadra = '" & Squadra & "' " &
 								"Left Join GiocatoriDettaglio On GiocatoriDettaglio.idGiocatore = Giocatori.idGiocatore " &
 								"Left Join [Generale].[dbo].[Utenti] As UtentiPadre On GiocatoriDettaglio.MailGenitore1=UtentiPadre.Utente " &
-								"Left Join [Generale].[dbo].[Utenti] As UtentiMadre On GiocatoriDettaglio.MailGenitore2=UtentiPadre.Utente " &
+								"Left Join [Generale].[dbo].[Utenti] As UtentiMadre On GiocatoriDettaglio.MailGenitore2=UtentiMadre.Utente " &
 								"Where Giocatori.Eliminato='N' And Giocatori.idAnno=" & idAnno & " " &
 								"Group By Giocatori.idGiocatore, Ruoli.idRuolo, Giocatori.Cognome, Giocatori.Nome, Ruoli.Descrizione, Giocatori.EMail, Giocatori.Telefono, Giocatori.Soprannome, Giocatori.DataDiNascita, Giocatori.Indirizzo, CodFiscale, Maschio, " &
 								"Citta, Matricola, NumeroMaglia, Giocatori.idCategoria, Giocatori.idCategoria2, Categorie2.Descrizione, Giocatori.idCategoria3, Categorie3.Descrizione, Categorie.Descrizione, " &
@@ -2124,7 +2199,7 @@ Public Class wsGiocatori
 			ScriveLog(Server.MapPath("."), Squadra, "CalcolaSemafori", "Iscrizione firma entrambi: " & iscrFirmaEntrambi)
 
 			' Semaforo 1: Iscrizione
-			Sql = "Select * From Giocatori Where idGiocatore=" & idGiocatore
+			Sql = "Select * From Giocatori Where idGiocatore=" & idGiocatore & " "
 			Rec2 = Conn.LeggeQuery(Server.MapPath("."), Sql, Connessione)
 			If TypeOf (Rec2) Is String Then
 				Ritorno = Rec2
@@ -2186,7 +2261,7 @@ Public Class wsGiocatori
 
 			ScriveLog(Server.MapPath("."), Squadra, "CalcolaSemafori", "Quante Firme per validazione: " & quanteFirme)
 
-			Sql = "Select * From GiocatoriDettaglio Where idGiocatore=" & idGiocatore
+			Sql = "Select * From GiocatoriDettaglio Where idGiocatore=" & idGiocatore & " "
 			Rec2 = Conn.LeggeQuery(Server.MapPath("."), Sql, Connessione)
 			If TypeOf (Rec2) Is String Then
 				Ritorno = Rec2
@@ -2274,7 +2349,7 @@ Public Class wsGiocatori
 				'		Rec2.Close()
 				'	End If
 				'End If
-				Sql = "Select Count(*) As QuanteFirme From GiocatoriFirme Where idGiocatore=" & idGiocatore & " And idGenitore=1"
+				Sql = "Select Count(*) As QuanteFirme From GiocatoriFirme Where idGiocatore=" & idGiocatore & " And idGenitore=1 And QualeFirma < 10 And Validazione Is Not Null And Validazione <> ''"
 				Rec2 = Conn.LeggeQuery(Server.MapPath("."), Sql, Connessione)
 				If TypeOf (Rec2) Is String Then
 					Ritorno = Rec2
@@ -2323,7 +2398,7 @@ Public Class wsGiocatori
 				'		Rec2.Close()
 				'	End If
 				'End If
-				Sql = "Select Count(*) As QuanteFirme From GiocatoriFirme Where idGiocatore=" & idGiocatore & " And idGenitore=2"
+				Sql = "Select Count(*) As QuanteFirme From GiocatoriFirme Where idGiocatore=" & idGiocatore & " And idGenitore=2 And QualeFirma < 10 And Validazione Is Not Null And Validazione <> ''"
 				Rec2 = Conn.LeggeQuery(Server.MapPath("."), Sql, Connessione)
 				If TypeOf (Rec2) Is String Then
 					Ritorno = Rec2
@@ -2372,7 +2447,7 @@ Public Class wsGiocatori
 				'		Rec2.Close()
 				'	End If
 				'End If
-				Sql = "Select Count(*) As QuanteFirme From GiocatoriFirme Where idGiocatore=" & idGiocatore & " And idGenitore=3"
+				Sql = "Select Count(*) As QuanteFirme From GiocatoriFirme Where idGiocatore=" & idGiocatore & " And idGenitore=3 And QualeFirma < 10 And Validazione Is Not Null And Validazione <> ''"
 				Rec2 = Conn.LeggeQuery(Server.MapPath("."), Sql, Connessione)
 				If TypeOf (Rec2) Is String Then
 					Ritorno = Rec2
@@ -2760,6 +2835,57 @@ Public Class wsGiocatori
 				End Try
 
 				Conn.Close()
+			End If
+		End If
+
+		Return Ritorno
+	End Function
+
+	<WebMethod()>
+	Public Function InviaIscrizione(Squadra As String, idAnno As String, idGiocatore As String, Mittente As String, Destinatario As String, NomeSquadra As String, Giocatore As String) As String
+		Dim Ritorno As String = ""
+		Dim Connessione As String = LeggeImpostazioniDiBase(Server.MapPath("."), Squadra)
+
+		If Connessione = "" Then
+			Ritorno = ErroreConnessioneNonValida
+		Else
+			Dim Conn As Object = New clsGestioneDB(Squadra)
+
+			If TypeOf (Conn) Is String Then
+				Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
+			Else
+				Dim Rec As Object
+				Dim Sql As String = ""
+				Dim Ok As Boolean = True
+				Dim fileDaInviarePDF As String = ""
+
+				ScriveLog(Server.MapPath("."), Squadra, "InvioIscrizione", "-------------------------------")
+				Dim imm As New wsImmagini
+				fileDaInviarePDF = imm.RitornaAllegatoDB2(Squadra, "iscrizioni", idGiocatore, 1)
+				ScriveLog(Server.MapPath("."), Squadra, "InvioIscrizione", "File da inviare: " & fileDaInviarePDF)
+				If Ritorno.Contains("ERROR:") Then
+					If Ritorno.Contains("Nessun dato ricevuto") Then
+					Else
+						Ok = False
+					End If
+				End If
+
+				If Ok Then
+					Dim filesDaAllegare() As String = {Server.MapPath(".") & "\" & fileDaInviarePDF}
+					Dim Corpo As String = Giocatore & " e' stato iscritto. In allegato si inoltra copia del modulo d'iscrizione.<br /><br />La segreteria " & NomeSquadra
+					Dim Oggetto As String = NomeSquadra & ": Iscrizione di " & Giocatore
+					Dim m As New mail
+
+					ScriveLog(Server.MapPath("."), Squadra, "InvioIscrizione", "Invio mail")
+					Ritorno = m.SendEmail(Server.MapPath("."), Squadra, Mittente, Oggetto, Corpo, Destinatario, filesDaAllegare)
+					If Ritorno = "*" Then
+						Dim gf As New GestioneFilesDirectory
+						gf.EliminaFileFisico(fileDaInviarePDF)
+						gf = Nothing
+					End If
+					ScriveLog(Server.MapPath("."), Squadra, "InvioIscrizione", "Ritorno mail: " & Ritorno)
+				End If
+				ScriveLog(Server.MapPath("."), Squadra, "InvioIscrizione", "-------------------------------")
 			End If
 		End If
 
@@ -3366,7 +3492,7 @@ Public Class wsGiocatori
 							Else
 								Dim gf As New GestioneFilesDirectory
 								Dim Percorso As String = gf.LeggeFileIntero(Server.MapPath(".") & "\Impostazioni\Paths.txt")
-								gf = Nothing
+								'gf = Nothing
 								Percorso = Percorso.Trim()
 								If Strings.Right(Percorso, 1) <> "\" Then
 									Percorso &= "\"
@@ -3397,11 +3523,15 @@ Public Class wsGiocatori
 								'gf.CreaDirectoryDaPercorso(Percorso & NomeSquadra.Replace(" ", "_") & "\Firme\")
 
 								Dim firma1(NumeroFirme - 1) As String
+								Dim QuanteFirmeValidate1 As Integer = 0
+								Dim QuanteFirmeValidate2 As Integer = 0
+								Dim QuanteFirmeValidate3 As Integer = 0
+								Dim QuanteFirmeValidate4 As Integer = 0
 
 								For i As Integer = 0 To NumeroFirme - 1
 									firma1(i) = "N"
 								Next
-								Sql = "Select * From GiocatoriFirme Where idGiocatore=" & idGiocatore & " And idGenitore=1 Order By QualeFirma"
+								Sql = "Select * From GiocatoriFirme Where idGiocatore=" & idGiocatore & " And idGenitore=1 And Validazione Is Not Null And Validazione <> '' Order By QualeFirma"
 								Rec2 = Conn.LeggeQuery(Server.MapPath("."), Sql, Connessione)
 								If TypeOf (Rec2) Is String Then
 									Ritorno = Rec2
@@ -3410,6 +3540,7 @@ Public Class wsGiocatori
 										If Rec2("QualeFirma").Value <= firma1.Length Then
 											firma1(Rec2("QualeFirma").Value - 1) = "S"
 											dataFirma1 &= "" & Rec2("DataFirma").Value & "%"
+											QuanteFirmeValidate1 += 1
 										End If
 
 										Rec2.MoveNext
@@ -3422,7 +3553,7 @@ Public Class wsGiocatori
 								For i As Integer = 0 To NumeroFirme - 1
 									firma2(i) = "N"
 								Next
-								Sql = "Select * From GiocatoriFirme Where idGiocatore=" & idGiocatore & " And idGenitore=2 Order By QualeFirma"
+								Sql = "Select * From GiocatoriFirme Where idGiocatore=" & idGiocatore & " And idGenitore=2 And Validazione Is Not Null And Validazione <> '' Order By QualeFirma"
 								Rec2 = Conn.LeggeQuery(Server.MapPath("."), Sql, Connessione)
 								If TypeOf (Rec2) Is String Then
 									Ritorno = Rec2
@@ -3430,6 +3561,7 @@ Public Class wsGiocatori
 									Do Until Rec2.Eof
 										firma2(Rec2("QualeFirma").Value - 1) = "S"
 										dataFirma2 &= "" & Rec2("DataFirma").Value & "%"
+										QuanteFirmeValidate2 += 1
 
 										Rec2.MoveNext
 									Loop
@@ -3441,7 +3573,7 @@ Public Class wsGiocatori
 								For i As Integer = 0 To NumeroFirme - 1
 									firma3(i) = "N"
 								Next
-								Sql = "Select * From GiocatoriFirme Where idGiocatore=" & idGiocatore & " And idGenitore=3 Order By QualeFirma"
+								Sql = "Select * From GiocatoriFirme Where idGiocatore=" & idGiocatore & " And idGenitore=3 And Validazione Is Not Null And Validazione <> '' Order By QualeFirma"
 								Rec2 = Conn.LeggeQuery(Server.MapPath("."), Sql, Connessione)
 								If TypeOf (Rec2) Is String Then
 									Ritorno = Rec2
@@ -3449,6 +3581,7 @@ Public Class wsGiocatori
 									Do Until Rec2.Eof
 										firma3(Rec2("QualeFirma").Value - 1) = "S"
 										dataFirma3 &= "" & Rec2("DataFirma").Value & "%"
+										QuanteFirmeValidate3 += 1
 
 										Rec2.MoveNext
 									Loop
@@ -3460,7 +3593,7 @@ Public Class wsGiocatori
 								For i As Integer = 0 To NumeroFirme - 1
 									firma4(i) = "N"
 								Next
-								Sql = "Select * From GiocatoriFirme Where idGiocatore=" & idGiocatore & " And idGenitore=4 Order By QualeFirma"
+								Sql = "Select * From GiocatoriFirme Where idGiocatore=" & idGiocatore & " And idGenitore=4 And Validazione Is Not Null And Validazione <> '' Order By QualeFirma"
 								Rec2 = Conn.LeggeQuery(Server.MapPath("."), Sql, Connessione)
 								If TypeOf (Rec2) Is String Then
 									Ritorno = Rec2
@@ -3468,6 +3601,7 @@ Public Class wsGiocatori
 									Do Until Rec2.Eof
 										firma4(Rec2("QualeFirma").Value - 1) = "S"
 										dataFirma4 &= "" & Rec2("DataFirma").Value & "%"
+										QuanteFirmeValidate4 += 1
 
 										Rec2.MoveNext
 									Loop
@@ -3667,6 +3801,21 @@ Public Class wsGiocatori
 								Ritorno &= Rec2(0).Value & ";"
 								'End If
 								Rec2.Close()
+
+								Dim wI As New wsImmagini()
+								Dim pathPdf As String = wI.RitornaAllegatoDB2(Squadra, "iscrizioni", idGiocatore, 1)
+								If pathPdf.Contains("ERROR:") Then
+									pathPdf = "N"
+								Else
+									gf.EliminaFileFisico(Server.MapPath(".") & "\" & pathPdf)
+									pathPdf = "S"
+								End If
+
+								Ritorno &= pathPdf & ";"
+								Ritorno &= QuanteFirmeValidate1 & ";"
+								Ritorno &= QuanteFirmeValidate2 & ";"
+								Ritorno &= QuanteFirmeValidate3 & ";"
+								Ritorno &= QuanteFirmeValidate4 & ";"
 
 								Rec.Close()
 							End If
@@ -4567,7 +4716,8 @@ Public Class wsGiocatori
 	Public Function ModificaPagamento(Squadra As String, idPagamento As String, idAnno As String, idGiocatore As String, Pagamento As String, Commento As String,
 								   idPagatore As String, idRegistratore As String, Note As String, Validato As String, idTipoPagamento As String,
 								   idRata As String, idQuota As String, Suffisso As String, NumeroRicevuta As String, DataRicevuta As String, idUtente As String,
-								   idModalitaPagamento As String, Stato As String, Modifica As String, ImportoManuale As String, DescrizioneManuale As String, DataManuale As String) As String
+								   idModalitaPagamento As String, Stato As String, Modifica As String, ImportoManuale As String, DescrizioneManuale As String, DataManuale As String,
+									  idOperatore As String) As String
 		Dim Ritorno As String = ""
 		Dim Connessione As String = LeggeImpostazioniDiBase(Server.MapPath("."), Squadra)
 
@@ -4837,7 +4987,7 @@ Public Class wsGiocatori
 						ScriveLog(Server.MapPath("."), Squadra, "Pagamenti", "---------------------------------------------------")
 						ScriveLog(Server.MapPath("."), Squadra, "Pagamenti", "Genera Ricevute e scontrini per numero ricevuta " & NumeroRicevuta)
 						If NumeroRicevuta <> "Bozza" Then
-							Ritorno = GeneraRicevutaEScontrino(Server.MapPath("."), Squadra, NomeSquadra, idAnno, idGiocatore, nuovoIdPagamento, idUtente, nuovoIdPagamento)
+							Ritorno = GeneraRicevutaEScontrino(Server.MapPath("."), Squadra, NomeSquadra, idAnno, idGiocatore, nuovoIdPagamento, idUtente, nuovoIdPagamento, idOperatore)
 							If Ritorno = "*" Or Ritorno = "OK" Then
 								Ritorno = nuovoIdPagamento
 							End If
@@ -4867,10 +5017,10 @@ Public Class wsGiocatori
 	End Function
 
 	<WebMethod()>
-	Public Function RistampaRicevutaScontrino(Squadra As String, NomeSquadra As String, idAnno As String, idGiocatore As String, idPagamento As String, idUtente As String) As String
+	Public Function RistampaRicevutaScontrino(Squadra As String, NomeSquadra As String, idAnno As String, idGiocatore As String, idPagamento As String, idUtente As String, idOperatore As String) As String
 		Dim Ritorno As String = ""
 
-		Ritorno = GeneraRicevutaEScontrino(Server.MapPath("."), Squadra, NomeSquadra, idAnno, idGiocatore, idPagamento, idUtente, "-1")
+		Ritorno = GeneraRicevutaEScontrino(Server.MapPath("."), Squadra, NomeSquadra, idAnno, idGiocatore, idPagamento, idUtente, idPagamento, idOperatore)
 
 		Return Ritorno
 	End Function

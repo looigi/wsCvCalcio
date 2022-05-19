@@ -927,18 +927,22 @@ Public Class wsUtentiLocali
 				Dim Rec As Object
 				Dim Sql As String = ""
 				'Dim idUtente As String = ""
+				Dim Ok As Boolean = True
+
+				Sql = IIf(TipoDB = "SQLSERVER", "Begin transaction", "Start transaction")
+				Ritorno = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
 
 				Sql = "SELECT * FROM [Generale].[dbo].Utenti Where Upper(Utente)='" & Utente.Trim.ToUpper & "' And Eliminato='N'"
 				Rec = Conn.LeggeQuery(Server.MapPath("."),   Sql, Connessione)
 				If TypeOf (Rec) Is String Then
 					Ritorno = Rec
+					Ok = False
 				Else
 					If Rec.Eof() Then
 						Try
 							If idUtente <> "" Then
 								Dim sq() As String = Squadra.Split("_")
 								Dim idSquadra As Integer = sq(1)
-								Dim Ok As Boolean = True
 
 								'Sql = "Select idSquadra From Squadre Where Descrizione='" & Squadra.Replace("_", " ").Replace("'", "''") & "'"
 								'Rec = Conn.LeggeQuery(Server.MapPath("."),   Sql, Connessione)
@@ -976,10 +980,10 @@ Public Class wsUtentiLocali
 
 								If Ok Then
 									Sql = "Insert Into [Generale].[dbo].UtentiMails Values (" &
+										" " & idAnno & ", " &
 										" " & idUtente & ", " &
 										"'" & Mail.Replace("'", "''") & "', " &
 										"'" & PWD.Replace("'", "''") & "', " &
-										"'', " &
 										"'' " &
 										")"
 									Ritorno = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
@@ -988,13 +992,13 @@ Public Class wsUtentiLocali
 									End If
 								End If
 
-								If Ok = False Then
-									Sql = "Delete From [Generale].[dbo].[Utenti] Where idUtente=" & idUtente
-									Dim Ritorno2 As String = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
+								'If Ok = False Then
+								'	Sql = "Delete From [Generale].[dbo].[Utenti] Where idUtente=" & idUtente
+								'	Dim Ritorno2 As String = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
 
-									Sql = "Delete From [Generale].[dbo].UtentiMails Where idUtente=" & idUtente
-									Ritorno2 = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
-								End If
+								'	Sql = "Delete From [Generale].[dbo].UtentiMails Where idUtente=" & idUtente
+								'	Ritorno2 = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
+								'End If
 								'End If
 								'End If
 
@@ -1036,11 +1040,21 @@ Public Class wsUtentiLocali
 								'End If
 							End If
 						Catch ex As Exception
+							Ok = False
 							Ritorno = StringaErrore & " " & ex.Message
 						End Try
 					Else
+						Ok = False
 						Ritorno = StringaErrore & " Utente già esistente"
 					End If
+				End If
+
+				If Ok = True Then
+					Sql = "commit"
+					Dim Ritorno2 As String = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
+				Else
+					Sql = "rollback"
+					Dim Ritorno2 As String = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
 				End If
 
 				Conn.Close()
