@@ -1591,7 +1591,7 @@ Public Class wsGenerale
 	End Function
 
 	<WebMethod()>
-	Public Function CreaPartitaHTML(Squadra As String, idAnno As String, idPartita As String) As String
+	Public Function CreaPartitaHTML(Squadra As String, idAnno As String, idPartita As String, TipoPDFPassato As String) As String
 		Dim Ritorno As String = ""
 
 		Dim Connessione As String = LeggeImpostazioniDiBase(Server.MapPath("."), Squadra)
@@ -1604,7 +1604,7 @@ Public Class wsGenerale
 			If TypeOf (Conn) Is String Then
 				Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
 			Else
-				Ritorno = CreaHtmlPartita(Server.MapPath("."), Squadra, Conn, Connessione, idAnno, idPartita)
+				Ritorno = CreaHtmlPartita(Server.MapPath("."), Squadra, Conn, Connessione, idAnno, idPartita, TipoPDFPassato)
 			End If
 		End If
 

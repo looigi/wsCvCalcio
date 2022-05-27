@@ -122,7 +122,7 @@ Public Class wsImmagini
 			Else
 				Dim NomePrefisso As String = ""
 
-				If Tipologia = "Partite" Then
+				If Tipologia = "Partite" Then ' Questo nome Partite DEVE essere sempre scritto in questa maniera altrimenti non fa match con gli allegati delle partite
 					NomePrefisso = "immagini"
 				Else
 					NomePrefisso = "allegati"
@@ -602,6 +602,41 @@ Public Class wsImmagini
 						Ritorno = Rec("Dati").Value
 					Else
 						Ritorno = StringaErrore & " Nessuna immagine rilevata"
+					End If
+					Rec.Close()
+				End If
+
+			End If
+		End If
+
+		Return Ritorno
+	End Function
+
+	<WebMethod()>
+	Public Function RitornaQuanteImmaginePartita(Squadra As String, IdPartita As String) As String
+		Dim Ritorno As String = ""
+		Dim Connessione As String = LeggeImpostazioniDiBase(Server.MapPath("."), Squadra)
+
+		If Connessione = "" Then
+			Ritorno = ErroreConnessioneNonValida
+		Else
+			Dim Conn As Object = New clsGestioneDB(Squadra)
+
+			If TypeOf (Conn) Is String Then
+				Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
+			Else
+				Dim Sql As String = ""
+				Dim Rec As Object
+
+				Sql = "Select " & IIf(TipoDB = "SQLSERVER", "Isnull(Count(*),0)", "Coalesce(Count(*),0)") & " As Quante From immagini_partite Where id=" & IdPartita
+				Rec = Conn.LeggeQuery(Server.MapPath("."), Sql, Connessione)
+				If TypeOf (Rec) Is String Then
+					Ritorno = Rec
+				Else
+					If Not Rec.Eof Then
+						Ritorno = Rec("Quante").Value
+					Else
+						Ritorno = 0
 					End If
 					Rec.Close()
 				End If

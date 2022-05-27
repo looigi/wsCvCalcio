@@ -666,11 +666,16 @@ Public Class wsSuperUser
 
 				If TypeOf (Rec) Is String Then
 					Ritorno = Rec
+					ScriveLog(Server.MapPath("."), "Generale", "RitornaSquadre", "Errore rilevamento squadre: " & Ritorno)
 				Else
 					If Rec.Eof() Then
 						Ritorno = StringaErrore & " Nessuna squadra rilevata"
+						ScriveLog(Server.MapPath("."), "Generale", "RitornaSquadre", Ritorno)
 					Else
 						Do Until Rec.Eof()
+							ScriveLog(Server.MapPath("."), "Generale", "RitornaSquadre", "Squadra: " & Rec("Descrizione").Value)
+							ScriveLog(Server.MapPath("."), "Generale", "RitornaSquadre", "Tipologia: " & Rec("idTipologia").Value)
+
 							Dim Tipologia As String = ""
 							Dim Licenza As String = ""
 
@@ -696,6 +701,7 @@ Public Class wsSuperUser
 							Catch ex As Exception
 
 							End Try
+							ScriveLog(Server.MapPath("."), "Generale", "RitornaSquadre", "Scadenza: " & Rec("DataScadenza").Value)
 
 							Dim Semaforo1 As String = "" : Dim Titolo1 As String = ""
 							Dim Semaforo2 As String = "" : Dim Titolo2 As String = ""
@@ -741,6 +747,7 @@ Public Class wsSuperUser
 								End Select
 
 								Titolo1 = "Giorni alla scadenza: " & diff
+								ScriveLog(Server.MapPath("."), "Generale", "RitornaSquadre", "Giorni alla Scadenza: " & diff)
 							End If
 
 							If Ok = True Then
@@ -752,16 +759,19 @@ Public Class wsSuperUser
 								Rec2 = ConnGen.LeggeQuery(Server.MapPath("."), Sql, ConnessioneGenerale)
 								If TypeOf (Rec2) Is String Then
 									Ritorno = Rec2
+									ScriveLog(Server.MapPath("."), "Generale", "RitornaSquadre", Ritorno)
 								Else
 									Anni = Rec2(0).Value
 									'End If
 									Rec2.Close()
 								End If
+								ScriveLog(Server.MapPath("."), "Generale", "RitornaSquadre", "Anni: " & Anni)
 
 								Sql = "Select " & IIf(TipoDB = "SQLSERVER", "Top 1", "") & " * From SquadraAnni Where idSquadra = " & Rec("idSquadra").Value & " Order By idAnno Desc" & IIf(TipoDB = "SQLSERVER", "", " Limit 1")
 								Rec2 = ConnGen.LeggeQuery(Server.MapPath("."), Sql, ConnessioneGenerale)
 								If TypeOf (Rec2) Is String Then
 									Ritorno = Rec2
+									ScriveLog(Server.MapPath("."), "Generale", "RitornaSquadre", Ritorno)
 								Else
 									If Not Rec2.Eof() Then
 										maxAnno = Rec2("idAnno").Value
@@ -769,6 +779,8 @@ Public Class wsSuperUser
 									End If
 									Rec2.Close()
 								End If
+								ScriveLog(Server.MapPath("."), "Generale", "RitornaSquadre", "Max Anno: " & maxAnno)
+								ScriveLog(Server.MapPath("."), "Generale", "RitornaSquadre", "Stato: " & Stato)
 
 								If Stato = "S" Then
 									Semaforo2 = "verde" : Titolo2 = "Database in linea"
@@ -780,6 +792,7 @@ Public Class wsSuperUser
 								For i As Integer = id.Length To 4
 									id = "0" & id
 								Next
+								ScriveLog(Server.MapPath("."), "Generale", "RitornaSquadre", "ID Squadra: " & id)
 								For i As Integer = maxAnno.Length To 3
 									maxAnno = "0" & maxAnno
 								Next
@@ -787,11 +800,13 @@ Public Class wsSuperUser
 								Dim RateManuali As String = "N"
 								Dim Cashback As String = "N"
 								Dim GestioneGenitori As String = "N"
+								ScriveLog(Server.MapPath("."), "Generale", "RitornaSquadre", "Codice Squadra: " & CodiceSquadra)
 
 								Sql = "Select RateManuali, Cashback From [" & CodiceSquadra & "].[dbo].[Anni]"
 								Rec2 = ConnGen.LeggeQuery(Server.MapPath("."), Sql, ConnessioneGenerale)
 								If TypeOf (Rec2) Is String Then
 									Ritorno = Rec2
+									ScriveLog(Server.MapPath("."), "RitornaSquadre", "Generale", Ritorno)
 								Else
 									If Not Rec2.Eof() Then
 										RateManuali = "" & Rec2("RateManuali").Value
@@ -799,6 +814,8 @@ Public Class wsSuperUser
 									End If
 									Rec2.Close()
 								End If
+								ScriveLog(Server.MapPath("."), "Generale", "RitornaSquadre", "Rate manuali: " & RateManuali)
+								ScriveLog(Server.MapPath("."), "Generale", "RitornaSquadre", "CashBack: " & Cashback)
 
 								Sql = "Select * From GestioneGenitori Where idSquadra = " & Val(id)
 								Rec2 = ConnGen.LeggeQuery(Server.MapPath("."), Sql, ConnessioneGenerale)
@@ -810,6 +827,7 @@ Public Class wsSuperUser
 									End If
 									Rec2.Close()
 								End If
+								ScriveLog(Server.MapPath("."), "Generale", "RitornaSquadre", "Gestione Genitori: " & GestioneGenitori)
 
 								Dim SpazioTotale As String = ""
 
@@ -823,6 +841,7 @@ Public Class wsSuperUser
 									End If
 									Rec2.Close()
 								End If
+								ScriveLog(Server.MapPath("."), "Generale", "RitornaSquadre", "Spazio DB: " & SpazioTotale)
 
 								Dim Occupazione As Double = 0
 								Dim DettaglioLunghezze As String = ""
@@ -836,9 +855,11 @@ Public Class wsSuperUser
 									Ritorno = ErroreConnessioneNonValida
 								Else
 									Dim ConnSq As Object = New clsGestioneDB(CodiceSquadra)
+									ScriveLog(Server.MapPath("."), "Generale", "RitornaSquadre", "Connessione squadra: " & CodiceSquadra)
 
 									If TypeOf (ConnSq) Is String Then
 										Ritorno = ErroreConnessioneDBNonValida & ":" & ConnGen
+										ScriveLog(Server.MapPath("."), "Generale", "RitornaSquadre", Ritorno)
 									Else
 										Sql = " " &
 											"SELECT 'Allegati Allenatori' As Cosa, Coalesce(Sum(Lunghezza),0) As Lunghezza FROM `allegati_allenatori` " &
@@ -893,6 +914,7 @@ Public Class wsSuperUser
 										Rec2 = ConnSq.LeggeQuery(Server.MapPath("."), Sql, ConnessioneSquadra)
 										If TypeOf (Rec2) Is String Then
 											Ritorno = Rec2
+											ScriveLog(Server.MapPath("."), "Generale", "RitornaSquadre", Ritorno)
 										Else
 											If Not Rec2.Eof() Then
 												Dim Cosa As String = ""
@@ -900,6 +922,8 @@ Public Class wsSuperUser
 												Dim Dime As New List(Of Double)
 
 												Do Until Rec2.eof
+													ScriveLog(Server.MapPath("."), "Generale", "RitornaSquadre", "Spazio occupato da " & Rec2("Cosa").Value & ": " & Rec2("Lunghezza").Value)
+
 													Occupazione += Rec2("Lunghezza").Value
 
 													Tipo.Add(Rec2("Cosa").Value)
@@ -908,6 +932,7 @@ Public Class wsSuperUser
 													Rec2.MoveNext
 												Loop
 												Rec2.Close()
+
 
 												'Dim gf As New GestioneFilesDirectory
 												'Dim PathAllegati As String = gf.LeggeFileIntero(Server.MapPath(".") & "\Impostazioni\PathAllegati.txt")
@@ -949,8 +974,9 @@ Public Class wsSuperUser
 												Dim pp As Integer = 0
 												For Each t As String In Tipo
 													Dim v As FormatoByte = ConverteInByte(Dime(pp))
+													ScriveLog(Server.MapPath("."), "Generale", "RitornaSquadre", "Dettaglio occupazione: " & v.Occupazione & " Cosa " & v.Cosa)
 
-													DettaglioLunghezze &= t & ": " & v.Occupazione & " " & v.Cosa & "^" & Val(v.Occupazione) & "|"
+													DettaglioLunghezze &= t & ": " & v.Occupazione & " " & v.Cosa & "^" & v.Occupazione & "|"
 
 													pp += 1
 												Next
@@ -968,6 +994,7 @@ Public Class wsSuperUser
 										'ConnSq.ChiudeDB(ConnessioneSquadra)
 									End If
 								End If
+								ScriveLog(Server.MapPath("."), "Generale", "RitornaSquadre", "Spazio Totale: " & SpazioTotale)
 
 								Dim st As Double = Val(SpazioTotale) * giga
 								Dim stm As Double = st * 75 / 100
@@ -983,6 +1010,7 @@ Public Class wsSuperUser
 										Semaforo3 = "rosso" : Titolo3 = "Spazio DB in esaurimento"
 									End If
 								End If
+								ScriveLog(Server.MapPath("."), "Generale", "RitornaSquadre", "Semaforo Spazio DB: " & Semaforo3)
 
 								Dim NumeroFirme As String = ""
 
@@ -998,6 +1026,7 @@ Public Class wsSuperUser
 									End If
 									Rec2.Close()
 								End If
+								ScriveLog(Server.MapPath("."), "Generale", "RitornaSquadre", "Numero firme: " & NumeroFirme)
 
 								Ritorno &= Rec("idSquadra").Value & ";" &
 										Rec("Descrizione").Value & ";" &
@@ -1019,6 +1048,7 @@ Public Class wsSuperUser
 										DettaglioLunghezze & ";" &
 										numeroFirme & ";" &
 										"§"
+								ScriveLog(Server.MapPath("."), "Generale", "RitornaSquadre", "--------------------------------------------------")
 
 								Rec.MoveNext()
 							Else

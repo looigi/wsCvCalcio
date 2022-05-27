@@ -584,7 +584,8 @@ Public Class wsPartite
 									End If
 									Dim Rigore As String = Campi(6)
 
-									If Minuto = "" Then Minuto = "null"
+									If Minuto = "" Then Minuto = "0"
+									If Minuto = "undefined" Then Minuto = "0"
 
 									Dim Progressivo As Integer = -1
 
@@ -1265,7 +1266,7 @@ Public Class wsPartite
 	End Function
 
 	<WebMethod()>
-	Public Function CreaHtmlPerPartita(Squadra As String, idAnno As String, idPartita As String) As String
+	Public Function CreaHtmlPerPartita(Squadra As String, idAnno As String, idPartita As String, TipoPDFPassato As String) As String
 		Dim Ritorno As String = ""
 		Dim Connessione As String = LeggeImpostazioniDiBase(Server.MapPath("."), Squadra)
 
@@ -1277,7 +1278,7 @@ Public Class wsPartite
 			If TypeOf (Conn) Is String Then
 				Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
 			Else
-				Ritorno = CreaHtmlPartita(Server.MapPath("."), Squadra, Conn, Connessione, idAnno, idPartita)
+				Ritorno = CreaHtmlPartita(Server.MapPath("."), Squadra, Conn, Connessione, idAnno, idPartita, TipoPDFPassato)
 			End If
 		End If
 

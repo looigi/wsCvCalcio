@@ -10,6 +10,12 @@ Public Class wsUtentiLocali
 	Inherits System.Web.Services.WebService
 
 	<WebMethod()>
+	Public Function ProvaWS(Cosa As String) As String
+		Dim Ritorno As String = "Tiè... : " & Cosa
+		Return Ritorno
+	End Function
+
+	<WebMethod()>
 	Public Function ErroriLogin(idUtente As String, Errore As String) As String
 		Dim Ritorno As String = ""
 		Dim Connessione As String = LeggeImpostazioniDiBase(Server.MapPath("."), "")

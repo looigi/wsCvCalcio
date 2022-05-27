@@ -398,7 +398,7 @@ Module Globale
 		Return Ritorno
 	End Function
 
-	Public Function CreaHtmlPartita(MP As String, Squadra As String, Conn As Object, Connessione As String, idAnno As String, idPartita As String) As String
+	Public Function CreaHtmlPartita(MP As String, Squadra As String, Conn As Object, Connessione As String, idAnno As String, idPartita As String, TipoPDFPassato As String) As String
 		Dim Sql As String
 		Dim Rec As Object
 		Dim Rec2 As Object
@@ -429,7 +429,7 @@ Module Globale
 		If Strings.Right(P(2), 1) <> Barra Then
 			P(2) &= Barra
 		End If
-		Dim pathMultimedia As String = P(0).Replace(vbCrLf, "")
+		Dim pathMultimedia As String = P(2).Replace(vbCrLf, "")
 
 		P(4) = P(4).Trim.Replace(vbCrLf, "")
 		If Strings.Right(P(4), 1) <> Barra Then
@@ -437,10 +437,10 @@ Module Globale
 		End If
 		Dim urlAllegati As String = P(4)
 
-		Dim PathBaseImmagini As String = pathMultimedia
-		Dim PathBaseMultimedia As String = pathMultimedia.Replace("Allegati", "Multimedia")
-		Dim PathBaseImmScon As String = pathMultimedia & "Sconosciuto.png"
-		Dim PathLog As String = pathLogG & "Pdf.txt"
+		'Dim PathBaseImmagini As String = pathMultimedia
+		'Dim PathBaseMultimedia As String = pathMultimedia.Replace("Allegati", "Multimedia")
+		'Dim PathBaseImmScon As String = pathMultimedia & "Sconosciuto.png"
+		Dim PathLog As String = pathLogG & Squadra & "\Pdf.txt"
 		Dim Ritorno As String = "*"
 
 		Dim Filone As String = gf.LeggeFileIntero(MP & "\Scheletri\base_partita.txt")
@@ -448,9 +448,9 @@ Module Globale
 		For i As Integer = sIdPartita.Length - 1 To 3
 			sIdPartita = "0" & sIdPartita
 		Next
-		Dim NomeFileFinale As String = pathAllegati & Squadra & "\Partite\Anno" & idAnno & "\" & sIdPartita & "\" & idPartita & ".html"
-		Dim NomeFileFinalePDF As String = pathAllegati & Squadra & "\Partite\Anno" & idAnno & "\" & sIdPartita & "\" & idPartita & ".pdf"
-		Dim PathPerMultimedia As String = pathAllegati & Squadra & "\Partite\Anno" & idAnno & "\" & sIdPartita & "\"
+		Dim NomeFileFinale As String = pathAllegati & Squadra & "\Partite\" & sIdPartita & "\" & idPartita & ".html"
+		Dim NomeFileFinalePDF As String = pathAllegati & Squadra & "\Partite\" & sIdPartita & "\" & idPartita & ".pdf"
+		Dim PathPerMultimedia As String = pathAllegati & Squadra & "\Partite\" & sIdPartita & "\"
 
 		Dim altezzaReport As Integer = 350 ' Intestazione
 		Dim altezzaConvocati As Integer = 0
@@ -464,39 +464,43 @@ Module Globale
 		'gf.ScriveTestoSuFileAperto("ppp")
 		'gf.ChiudeFileDiTestoDopoScrittura()
 
-		If TipoPATH <> "SQLSERVER" Then
-			PathPerMultimedia = PathPerMultimedia.Replace("\", "/")
-			PathPerMultimedia = PathPerMultimedia.Replace("//", "/")
+		'If TipoPATH <> "SQLSERVER" Then
+		'	PathPerMultimedia = PathPerMultimedia.Replace("\", "/")
+		'	PathPerMultimedia = PathPerMultimedia.Replace("//", "/")
 
-			PathBaseImmagini = PathBaseImmagini.Replace("Multimedia/allegati", "Multimedia/multimedia")
-		End If
+		'	PathBaseImmagini = PathBaseImmagini.Replace("Multimedia/allegati", "Multimedia/multimedia")
+		'End If
+		Dim PathBaseImmagini As String = pathMultimedia & "ImmaginiLocali"
 
 		'Return PathBaseImmagini
 
-		gf.ScansionaDirectorySingola(PathPerMultimedia)
-		Dim Multimedia() As String = gf.RitornaFilesRilevati
-		Dim qMultimedia As Integer = gf.RitornaQuantiFilesRilevati
+		'gf.ScansionaDirectorySingola(PathPerMultimedia)
+		'Dim Multimedia() As String = gf.RitornaFilesRilevati
+		'Dim qMultimedia As Integer = gf.RitornaQuantiFilesRilevati
+		Dim wsImm As New wsImmagini
+		Dim qMultimedia As Integer = wsImm.RitornaQuanteImmaginePartita(Squadra, idPartita)
+
 		Dim mmu As String = ""
 		For i As Integer = 1 To qMultimedia
-			Dim este As String = gf.TornaEstensioneFileDaPath(Multimedia(i)).ToUpper.Trim.Replace(".", "")
-			Dim PathEsternoMM As String = Multimedia(i).Replace(pathAllegati, pathMultimedia) ' .Replace("Multimedia", "Allegati").Replace("\", "/")
-			Dim Nome As String = gf.TornaNomeFileDaPath(Multimedia(i))
-			Dim e As String = gf.TornaEstensioneFileDaPath(Nome)
+			'Dim este As String = gf.TornaEstensioneFileDaPath(Multimedia(i)).ToUpper.Trim.Replace(".", "")
+			'Dim PathEsternoMM As String = Multimedia(i).Replace(pathAllegati, pathMultimedia) ' .Replace("Multimedia", "Allegati").Replace("\", "/")
+			'Dim Nome As String = gf.TornaNomeFileDaPath(Multimedia(i))
+			'Dim e As String = gf.TornaEstensioneFileDaPath(Nome)
 
-			Nome = Nome.Replace(e, "")
-			If Nome.Length > 14 Then
-				Nome = Mid(Nome, 1, 6) & "..." & Mid(Nome, Nome.Length - 6, 6)
-			End If
+			'Nome = Nome.Replace(e, "")
+			'If Nome.Length > 14 Then
+			'	Nome = Mid(Nome, 1, 6) & "..." & Mid(Nome, Nome.Length - 6, 6)
+			'End If
 
-			If este = "JPG" Or este = "JPEG" Or este = "JFIF" Or este = "BMP" Or este = "GIF" Or este = "PNG" Then
-				' Immagine
-				mmu &= "<div class=""multimedia""><a href=""" & PathEsternoMM & """ target=""_blank""><img src=""" & PathEsternoMM & """ width=""100%"" height=""100%""><br /><span class=""testo nero"" style=""font-size: 10px; white-space: nowrap;"">" & Nome & "</span></a></div>" & vbCrLf
-			Else
-				If este = "MP4" Or este = "WMV" Or este = "MPG" Then
-					' Filmato
-					mmu &= "<div class=""multimedia""><a href=""" & PathEsternoMM & """ target=""_blank""><img src=""" & PathBaseImmagini & "/video.png"" width=""100%"" height=""100%""><br /><span class=""testo nero"" style=""font-size: 10px; white-space: nowrap;"">" & Nome & "</span></a></div>" & vbCrLf
-				End If
-			End If
+			'If este = "JPG" Or este = "JPEG" Or este = "JFIF" Or este = "BMP" Or este = "GIF" Or este = "PNG" Then
+			' Immagine
+			mmu &= "<div class=""multimedia""><img src=""" & PathBaseImmagini & "/foto.png"" width=""150px"" height=""150px""></div>" & vbCrLf
+			'Else
+			'	If este = "MP4" Or este = "WMV" Or este = "MPG" Then
+			'		' Filmato
+			'		mmu &= "<div class=""multimedia""><a href=""" & PathEsternoMM & """ target=""_blank""><img src=""" & PathBaseImmagini & "/video.png"" width=""100%"" height=""100%""><br /><span class=""testo nero"" style=""font-size: 10px; white-space: nowrap;"">" & Nome & "</span></a></div>" & vbCrLf
+			'	End If
+			'End If
 		Next
 		If mmu <> "" Then
 			Filone = Filone.Replace("***MMVISIBILE***", "block")
@@ -604,7 +608,7 @@ Module Globale
 				idCapitano = Rec("idCapitano").Value
 				'End If
 
-				Dim immMeteo As String = "<img src=""" & Rec("Icona").Value & """ style=""width: 50px; height: 50px;"" onerror=""this.src='http://192.168.0.227:92/MultiMedia/Sconosciuto.png'""  />"
+				Dim immMeteo As String = "<img src=""" & Rec("Icona").Value & """ style=""width: 50px; height: 50px;"" onerror=""this.src='" & PathBaseImmagini & "/Sconosciuto.png'""  />"
 				Dim sMeteo As String = " '" & MetteMaiuscoleDopoOgniSpazio("" & Rec("Tempo").Value) & "'<br />Gradi: " & Rec("Gradi").Value & " Umidità: " & Rec("Umidita").Value & " Pressione: " & Rec("Pressione").Value
 				Dim Casa As String = "" & Rec("Casa").Value
 
@@ -691,17 +695,37 @@ Module Globale
 				End If
 				Rec2.Close()
 
-				Dim ImmAll As String = PathBaseMultimedia & "/" & NomeSquadra & "/Allenatori/" & idAnno & "_" & Rec("idAllenatore").Value & ".kgb"
-				ImmAll = DecriptaImmagine(MP, ImmAll)
+				'Dim ImmAll As String = PathBaseMultimedia & "/" & NomeSquadra & "/Allenatori/" & idAnno & "_" & Rec("idAllenatore").Value & ".kgb"
+				Dim ImmagineSconosciuta As String = PathBaseImmagini & "/Sconosciuto.png"
+
+				Dim ImmAll As String = wsImm.RitornaImmagineDB(Squadra, "Allenatori", Rec("idAllenatore").Value, "")
+				If ImmAll.Contains(StringaErrore) Then
+					ImmAll = ImmagineSconosciuta
+				Else
+					ImmAll = "data:image/png;base64,'" + ImmAll
+				End If
 				'Return ImmAll
 
 				Filone = Filone.Replace("***IMMAGINE ALL***", ImmAll)
 				Filone = Filone.Replace("***ALLENATORE***", "" & Rec("Allenatore").Value)
 
-				Dim Imm1 As String = PathBaseMultimedia & "/" & NomeSquadra & "/Categorie/" & idAnno & "_" & Rec("idCategoria").Value & ".kgb"
-				Imm1 = DecriptaImmagine(MP, Imm1)
-				Dim Imm2 As String = PathBaseMultimedia & "/" & NomeSquadra & "/Avversari/" & Rec("idAvversario").Value & ".kgb"
-				Imm2 = DecriptaImmagine(MP, Imm2)
+				'Dim Imm1 As String = PathBaseMultimedia & "/" & NomeSquadra & "/Categorie/" & idAnno & "_" & Rec("idCategoria").Value & ".kgb"
+				'Imm1 = DecriptaImmagine(MP, Imm1)
+				'Dim Imm2 As String = PathBaseMultimedia & "/" & NomeSquadra & "/Avversari/" & Rec("idAvversario").Value & ".kgb"
+				'Imm2 = DecriptaImmagine(MP, Imm2)
+
+				Dim Imm1 As String = wsImm.RitornaImmagineDB(Squadra, "Categorie", Rec("idCategoria").Value, "")
+				If Imm1.Contains(StringaErrore) Then
+					Imm1 = ImmagineSconosciuta
+				Else
+					Imm1 = "data:image/png;base64,'" + Imm1
+				End If
+				Dim Imm2 As String = wsImm.RitornaImmagineDB(Squadra, "Avversari", Rec("idAvversario").Value, "")
+				If Imm2.Contains(StringaErrore) Then
+					Imm2 = ImmagineSconosciuta
+				Else
+					Imm2 = "data:image/png;base64,'" + Imm2
+				End If
 
 				If Casa = "S" Then
 					Filone = Filone.Replace("***IMMAGINE SQ1***", Imm1)
@@ -744,13 +768,20 @@ Module Globale
 					Ritorno = "Problemi lettura arbitro"
 				Else
 					If Not Rec.Eof() Then
-						Dim PathArb As String = PathBaseImmagini & "/Arbitri/" & Rec("idArbitro").Value & ".kgb"
-						PathArb = DecriptaImmagine(MP, PathArb)
+						'Dim PathArb As String = PathBaseImmagini & "/Arbitri/" & Rec("idArbitro").Value & ".kgb"
+						'PathArb = DecriptaImmagine(MP, PathArb)
+
+						Dim PathArb As String = wsImm.RitornaImmagineDB(Squadra, "Arbitri", Rec("idArbitro").Value, "")
+						If PathArb.Contains(StringaErrore) Then
+							PathArb = ImmagineSconosciuta
+						Else
+							PathArb = "data:image/png;base64,'" + PathArb
+						End If
 
 						Filone = Filone.Replace("***IMMAGINE ARB***", PathArb)
 						Filone = Filone.Replace("***ARBITRO***", Rec("Cognome").Value & " " & Rec("Nome").Value)
 					Else
-						Filone = Filone.Replace("***IMMAGINE ARB***", PathBaseImmScon)
+						Filone = Filone.Replace("***IMMAGINE ARB***", ImmagineSconosciuta)
 						Filone = Filone.Replace("***ARBITRO***", "Arbitro non impostato")
 					End If
 				End If
@@ -771,12 +802,19 @@ Module Globale
 					Dirigenti.Append("<table style=""width: 99%; text-align: center;"" cellpadding=""0"" cellspacing=""0"">")
 
 					Do Until Rec.Eof()
-						Dim Path As String = PathBaseImmagini & "/" & NomeSquadra & "/Dirigenti/" & idAnno & "_" & Rec("idDirigente").Value & ".kgb"
-						Path = DecriptaImmagine(MP, Path)
+						'Dim Path As String = PathBaseImmagini & "/" & NomeSquadra & "/Dirigenti/" & idAnno & "_" & Rec("idDirigente").Value & ".kgb"
+						'Path = DecriptaImmagine(MP, Path)
+
+						Dim Path As String = wsImm.RitornaImmagineDB(Squadra, "Dirigenti", Rec("idDirigente").Value, "")
+						If Path.Contains(StringaErrore) Then
+							Path = ImmagineSconosciuta
+						Else
+							Path = "data:image/png;base64,'" + Path
+						End If
 
 						Dirigenti.Append("<tr>")
 						Dirigenti.Append("<td>")
-						Dirigenti.Append("<img src=""" & Path & """ style=""width: 50px; height: 50px;"" onerror=""this.src='" & PathBaseImmScon & "'"" />")
+						Dirigenti.Append("<img src=""" & Path & """ style=""width: 50px; height: 50px;"" />")
 						Dirigenti.Append("</td>")
 						Dirigenti.Append("<td>")
 						Dirigenti.Append("<span class=""testo nero"" style=""font-size: 13px;"">" & Rec("Cognome").Value & " " & Rec("Nome").Value & "</span>")
@@ -846,8 +884,15 @@ Module Globale
 
 					Do Until Rec.Eof()
 						Dim C As String = Rec("Cognome").Value & " " & Rec("Nome").Value & "<br />" & Rec("Ruolo").Value
-						Dim Path As String = PathBaseMultimedia & "/" & NomeSquadra & "/Giocatori/" & idAnno & "_" & Rec("idGiocatore").Value & ".kgb"
-						Path = DecriptaImmagine(MP, Path)
+						'Dim Path As String = PathBaseMultimedia & "/" & NomeSquadra & "/Giocatori/" & idAnno & "_" & Rec("idGiocatore").Value & ".kgb"
+						'Path = DecriptaImmagine(MP, Path)
+
+						Dim Path As String = wsImm.RitornaImmagineDB(Squadra, "Giocatori", Rec("idGiocatore").Value, "")
+						If Path.Contains(StringaErrore) Then
+							Path = ImmagineSconosciuta
+						Else
+							Path = "data:image/png;base64,'" + Path
+						End If
 
 						Dim messoTit As Boolean = False
 
@@ -922,7 +967,7 @@ Module Globale
 						Convocati.Append("<td>")
 
 						Convocati.Append("<td>")
-						Convocati.Append("<img src=""" & Path & """ style=""width: 50px; height: 50px;"" onerror=""this.src='" & PathBaseImmScon & "'"" />")
+						Convocati.Append("<img src=""" & Path & """ style=""width: 50px; height: 50px;"" />")
 						Convocati.Append("</td>")
 						Convocati.Append("<td style=""text-align: center;"">")
 						Convocati.Append("<span class=""testo nero"" style=""font-size: 13px;"">" & Rec("NumeroMaglia").Value & "</span>")
@@ -1005,6 +1050,7 @@ Module Globale
 									Dim minuti() As String = Rec22("Minuti").Value.split(";")
 									For Each m As String In minuti
 										If m <> "" Then
+											If m = "undefined" Then m = "0"
 											Sql = "Insert Into RisAvvMin Values (" & i & ", " & m & ")"
 											Ritorno = Conn.EsegueSql(MP, Sql, Connessione)
 											If Ritorno <> "OK" Then
@@ -1050,6 +1096,7 @@ Module Globale
 						Do Until Rec.Eof()
 							ReDim Preserve Marc(QuantiGoal)
 							Dim Minuto As String = "" & Rec("Minuto").Value
+
 							If Minuto.Length = 1 Then Minuto = "0" & Minuto
 							Marc(QuantiGoal) = "0" & Rec("idTempo").Value & ";" & Minuto & ";" & Rec("idGiocatore").Value & ";" & Rec("Cognome").Value & ";" & Rec("Nome").Value & ";" & Rec("Ruolo").Value & ";" & Rec("Rigore").Value & ";"
 							If Rec("idGiocatore").Value <> -2 Then
@@ -1138,6 +1185,7 @@ Module Globale
 								GoalPropri = Rec(0).Value
 								'End If
 								Rec.Close()
+
 								Sql = "Select " & IIf(TipoDB = "SQLSERVER", "Isnull(Sum(" & NomiCampi(i) & "),0)", "Colaesce(Sum(" & NomiCampi(i) & "),0)") & " From RisultatiAggiuntivi Where idPartita=" & idPartita & " And " & NomiCampi(i) & "<>-1"
 								Rec = Conn.LeggeQuery(MP, Sql, Connessione)
 								'If Rec(0).Value Is DBNull.Value Then
@@ -1364,10 +1412,10 @@ Module Globale
 							Dim Path As String
 
 							If m.Contains("Goal avversario") Then
-								Path = PathBaseMultimedia & "/goal.png"
+								Path = PathBaseImmagini & "/goal.png"
 							Else
 								If m.Contains("Autorete") Then
-									Path = PathBaseMultimedia & "/autorete.png"
+									Path = PathBaseImmagini & "/autorete.png"
 								Else
 									If m.Contains("Avversario") Then
 										If Casa = "S" Then
@@ -1376,8 +1424,14 @@ Module Globale
 											Path = Imm2
 										End If
 									Else
-										Path = PathBaseMultimedia & "/" & NomeSquadra & "/Giocatori/" & idAnno & "_" & Mm(2) & ".kgb"
-										Path = DecriptaImmagine(MP, Path)
+										'Path = PathBaseMultimedia & "/" & NomeSquadra & "/Giocatori/" & idAnno & "_" & Mm(2) & ".kgb"
+										'Path = DecriptaImmagine(MP, Path)
+										Path = wsImm.RitornaImmagineDB(Squadra, "Giocatori", Mm(2), "")
+										If Path.Contains(StringaErrore) Then
+											Path = ImmagineSconosciuta
+										Else
+											Path = "data:image/png;base64,'" + Path
+										End If
 									End If
 								End If
 							End If
@@ -1397,7 +1451,7 @@ Module Globale
 							Marcatori.Append("<span class=""testo nero"" style=""font-size: 13px;"">" & Mm(1) & "°</span>")
 							Marcatori.Append("</td>")
 							Marcatori.Append("<td>")
-							Marcatori.Append("<img src=""" & Path & """ style=""width: 50px; height: 50px;"" onerror=""this.src='" & PathBaseImmScon & "'"" />")
+							Marcatori.Append("<img src=""" & Path & """ style=""width: 50px; height: 50px;"" />")
 							Marcatori.Append("</td>")
 							Marcatori.Append("<td style=""text-align: left;"">")
 							Marcatori.Append("<span class=""testo nero"" style=""font-size: 13px;"">" & Mm(3) & " " & Mm(4) & "<br />" & Mm(5) & "</span>")
@@ -1452,10 +1506,16 @@ Module Globale
 								Dim Path As String
 
 								If Rec2("Giocatore").Value.Contains("Avversario") Then
-									Path = PathBaseImmScon
+									Path = ImmagineSconosciuta
 								Else
-									Path = PathBaseMultimedia & "/" & NomeSquadra & "/Giocatori/" & idAnno & "_" & Rec2("idGiocatore").Value & ".kgb"
-									Path = DecriptaImmagine(MP, Path)
+									'Path = PathBaseMultimedia & "/" & NomeSquadra & "/Giocatori/" & idAnno & "_" & Rec2("idGiocatore").Value & ".kgb"
+									'Path = DecriptaImmagine(MP, Path)
+									Path = wsImm.RitornaImmagineDB(Squadra, "Giocatori", Rec2("idGiocatore").Value, "")
+									If Path.Contains(StringaErrore) Then
+										Path = ImmagineSconosciuta
+									Else
+										Path = "data:image/png;base64,'" + Path
+									End If
 								End If
 
 								If Val(tempoAtt) <> Val(Rec2("idTempo").Value) Then
@@ -1497,7 +1557,7 @@ Module Globale
 								Eventi.Append("<span class=""testo nero"" style=""font-size: 13px;"">" & Rec2("Descrizione").Value & "</span>")
 								Eventi.Append("</td>")
 								Eventi.Append("<td>")
-								Eventi.Append("<img src=""" & Path & """ style=""width: 30px; height: 30px;"" onerror=""this.src='" & PathBaseImmScon & "'"" />")
+								Eventi.Append("<img src=""" & Path & """ style=""width: 30px; height: 30px;"" />")
 								Eventi.Append("</td>")
 								Eventi.Append("<td align=""left"">")
 
@@ -1634,12 +1694,13 @@ Module Globale
 
 						gf.CreaAggiornaFile(NomeFileFinale, Filone)
 
-						If TipoPDF = "WINDOWS" Then
+						If TipoPDFPassato = "WINDOWS" Then
 							Dim pp As New pdfGest
 							Ritorno = pp.ConverteHTMLInPDF(NomeFileFinale, NomeFileFinalePDF, PathLog, True,, altezzaReport)
 
 							If Ritorno = "OK" Then
 								Ritorno = NomeFileFinalePDF.Replace(pathAllegati, pathMultimedia).Replace("Multimedia", "Allegati").Replace("\", "/")
+								gf.EliminaFileFisico(NomeFileFinale)
 							End If
 						Else
 							If Ritorno = "OK" Then
@@ -1651,6 +1712,7 @@ Module Globale
 								Ritorno = ConvertePDF(nomeFileDaConvertire, nomeFileConvertito)
 								If Ritorno = "*" Then
 									Ritorno = NomeFileFinalePDF.Replace(pathAllegati, urlAllegati).Replace("Multimedia", "Allegati").Replace("\", "/")
+									gf.EliminaFileFisico(nomeFileDaConvertire)
 								End If
 
 								' Ritorno = "html2pdf " & nomeFileDaConvertire & "  " & nomeFileConvertito
