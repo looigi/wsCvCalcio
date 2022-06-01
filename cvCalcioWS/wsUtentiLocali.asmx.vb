@@ -349,7 +349,7 @@ Public Class wsUtentiLocali
 				' Pulisce Cartella temporanea
 
 				Try
-					Sql = "SELECT A.idAnno, A.idUtente, Utente, Cognome, Nome, " &
+					Sql = "SELECT (Select max(idanno) from squadraanni where idsquadra=a.idsquadra) as idAnno, A.idUtente, Utente, Cognome, Nome, " &
 						"Password, EMail, idCategoria, A.idTipologia As idTipologia, A.idSquadra, Descrizione As Squadra, PasswordScaduta, Telefono, " &
 						" " & IIf(TipoDB = "SQLSERVER", "ISNULL(B.Eliminata, 'N')", "COALESCE(B.Eliminata, 'N')") & " As Eliminata, B.idTipologia As idTipo2, B.idLicenza, A.idSquadra, A.AmmOriginale, C.Mail, C.PwdMail, D.AggiornaWidgets As AggiornaWidget " &
 						"FROM Utenti A Left Join Squadre B On A.idSquadra = B.idSquadra " &
@@ -357,7 +357,7 @@ Public Class wsUtentiLocali
 						"Left Join AggiornamentoWidgets D On A.idSquadra = D.idSquadra " &
 						"Left Join NumeroFirme E On A.idSquadra = E.idSquadra " &
 						"Where Upper(Utente)='" & Utente.ToUpper.Replace("'", "''") & "' And A.Eliminato = 'N' " &
-						"Order By A.idTipologia"
+						"Order By A.idAnno Desc, A.idTipologia"
 					Rec = Conn.LeggeQuery(Server.MapPath("."), Sql, Connessione)
 					If TypeOf (Rec) Is String Then
 						Ritorno = Rec

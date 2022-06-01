@@ -11,6 +11,10 @@ Imports System.Linq
 Public Class wsSuperUser
 	Inherits System.Web.Services.WebService
 
+	Protected Overrides Sub Finalize()
+		MyBase.Finalize()
+	End Sub
+
 	<WebMethod()>
 	Public Function PulisceDBDaTrial(NomeDb As String) As String
 		Dim Ritorno As String = ""
@@ -1268,6 +1272,11 @@ Public Class wsSuperUser
 		Dim ConnessioneGenerale As String = LeggeImpostazioniDiBase(Server.MapPath("."), "")
 		Dim ConnessioneDBOrigine As String = LeggeImpostazioniDiBase(Server.MapPath("."), "DBVUOTO")
 
+		ScriveLog(Server.MapPath("."), Squadra, "CreaNuovoAnno", "-----------------------------------")
+		ScriveLog(Server.MapPath("."), Squadra, "CreaNuovoAnno", "Squadra: " & Squadra)
+		ScriveLog(Server.MapPath("."), Squadra, "CreaNuovoAnno", "ID Squadra: " & idSquadra)
+		ScriveLog(Server.MapPath("."), Squadra, "CreaNuovoAnno", "Nuovo Anno: " & NuovoAnno)
+
 		If ConnessioneGenerale = "" Then
 			Ritorno = ErroreConnessioneNonValida
 		Else
@@ -1302,6 +1311,7 @@ Public Class wsSuperUser
 					idAnno = Rec(0).Value
 					'End If
 				End If
+				ScriveLog(Server.MapPath("."), Squadra, "CreaNuovoAnno", "Id Nuovo Anno: " & idAnno)
 
 				Sql = "Select Descrizione From Squadre Where idSquadra=" & idSquadra
 				Rec = ConnGen.LeggeQuery(Server.MapPath("."), Sql, ConnessioneGenerale)
@@ -1316,6 +1326,8 @@ Public Class wsSuperUser
 					End If
 				End If
 
+				ScriveLog(Server.MapPath("."), Squadra, "CreaNuovoAnno", "Nome Squadra: " & NomeSquadra)
+
 				Dim sAnno As String = Format(idAnno, "0000")
 				Dim sCodSquadra As String = idSquadra.Trim
 				While sCodSquadra.Length <> 5
@@ -1323,9 +1335,12 @@ Public Class wsSuperUser
 				End While
 				Dim nomeDb As String = sAnno & "_" & sCodSquadra
 
+				ScriveLog(Server.MapPath("."), Squadra, "CreaNuovoAnno", "Nome DB: " & nomeDb)
+
 				Sql = "Create Database [" & nomeDb & "]"
 				Ritorno = ConnGen.EsegueSql(Server.MapPath("."), Sql, ConnessioneGenerale)
 				If Ritorno.Contains(StringaErrore) Then
+					ScriveLog(Server.MapPath("."), Squadra, "CreaNuovoAnno", "Creazione DB: " & Ritorno)
 					Ok = False
 				End If
 
@@ -1336,7 +1351,8 @@ Public Class wsSuperUser
 					Dim Tabelle(0) As String
 					Dim q As Integer = 0
 
-					Sql = "SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_TYPE='BASE TABLE'"
+					' Sql = "SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_TYPE='BASE TABLE'"
+					Sql = "SELECT Distinct TABLE_NAME FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_TYPE='BASE TABLE' And TABLE_SCHEMA='" & Squadra & "'"
 					Rec = ConnDbOrigine.LeggeQuery(Server.MapPath("."), Sql, ConnessioneDBOrigine)
 					If TypeOf (Rec) Is String Then
 						Ritorno = Rec
@@ -1345,6 +1361,7 @@ Public Class wsSuperUser
 						Do Until Rec.Eof()
 							ReDim Preserve Tabelle(q)
 							Tabelle(q) = Rec("TABLE_NAME").Value
+							ScriveLog(Server.MapPath("."), Squadra, "CreaNuovoAnno", "Lettura Tabella " & q + 1 & ": " & Tabelle(q))
 
 							q += 1
 							Rec.MoveNext()
@@ -1355,58 +1372,73 @@ Public Class wsSuperUser
 					If Ok Then
 						For i As Integer = 0 To q - 1
 							Try
-								Sql = "Select * Into [" & nomeDb & "].[dbo].[" & Tabelle(i) & "] From " & Tabelle(i)
+								' Sql = "Select * Into [" & nomeDb & "].[dbo].[" & Tabelle(i) & "] From " & Tabelle(i)
+								If TipoDB = "SQLSERVER" Then
+									Sql = "Select * Into [" & nomeDb & "].[dbo].[" & Tabelle(i) & "] From " & Tabelle(i)
+								Else
+									Sql = "CREATE TABLE " & nomeDb & "." & Tabelle(i) & " SELECT * FROM " & Tabelle(i)
+								End If
 								Ritorno = ConnDbOrigine.EsegueSql(Server.MapPath("."), Sql, ConnessioneDBOrigine)
 								If Ritorno.Contains(StringaErrore) Then
+									ScriveLog(Server.MapPath("."), Squadra, "CreaNuovoAnno", "Creazione tabella " & Tabelle(i) & ". " & Sql & " -> " & StringaErrore)
 									Ok = False
 								End If
 							Catch ex As Exception
 								Ritorno = StringaErrore & " " & ex.Message
+								ScriveLog(Server.MapPath("."), Squadra, "CreaNuovoAnno", "Creazione tabella " & Tabelle(i) & ". " & Ritorno)
 								Ok = False
 							End Try
 						Next
+						ScriveLog(Server.MapPath("."), Squadra, "CreaNuovoAnno", "Creazione tabelle effettuato: " & Ok)
+
+						Dim ConnessioneNuovo As String = LeggeImpostazioniDiBase(Server.MapPath("."), nomeDb)
+						Dim ConnNuovo As Object = New clsGestioneDB(Squadra)
 
 						If Ok Then
-							Dim ConnessioneNuovo As String = LeggeImpostazioniDiBase(Server.MapPath("."), nomeDb)
-							Dim ConnNuovo As Object = New clsGestioneDB(Squadra)
-
 							If TypeOf (ConnNuovo) Is String Then
 								Ritorno = ErroreConnessioneDBNonValida & ":" & ConnNuovo
 								Ok = False
 							Else
 								For i As Integer = 0 To q - 1
+									ScriveLog(Server.MapPath("."), Squadra, "CreaNuovoAnno", "Creazione Chiave su Tabella: " & Tabelle(i))
 									Sql = "Select Chiave From _CHIAVI_ Where Upper(lTrim(rTrim(Tabella)))='" & Tabelle(i).Trim.ToUpper & "'"
-									Rec = ConnNuovo.LeggeQuery(Server.MapPath("."), Sql, ConnessioneNuovo)
+									Rec = ConnDbOrigine.LeggeQuery(Server.MapPath("."), Sql, ConnessioneDBOrigine)
 									If TypeOf (Rec) Is String Then
 										Ritorno = Rec
 										Ok = False
+										ScriveLog(Server.MapPath("."), Squadra, "CreaNuovoAnno", "Creazione Chiave su Tabella: " & Tabelle(i) & ". ERRORE: " & Ritorno)
 										Exit For
 									Else
 										If Not Rec.Eof() Then
 											Dim Query As String = Rec(0).Value
 
-											Ritorno = ConnNuovo.EsegueSql(Server.MapPath("."), Query, ConnessioneNuovo)
-											If Ritorno.Contains(StringaErrore) Then
-												Ok = False
-												Exit For
+											If Query <> "" Then
+												Ritorno = ConnNuovo.EsegueSql(Server.MapPath("."), Query, ConnessioneNuovo)
+												If Ritorno.Contains(StringaErrore) Then
+													ScriveLog(Server.MapPath("."), Squadra, "CreaNuovoAnno", "Creazione Chiave su Tabella: " & Tabelle(i) & ". " & Ritorno)
+													Ok = False
+													Exit For
+												End If
 											End If
 
 											Rec.Close()
 										End If
 									End If
 								Next
+								ScriveLog(Server.MapPath("."), Squadra, "CreaNuovoAnno", "Creazione Chiavi Tabelle effettuato: " & Ok)
 
-								If Ok Then
-									Sql = "Drop Table _CHIAVI_"
-									Ritorno = ConnNuovo.EsegueSql(Server.MapPath("."), Sql, ConnessioneNuovo)
-									If Ritorno.Contains(StringaErrore) Then
-										Ok = False
-									End If
-								End If
+								'If Ok Then
+								'	Sql = "Drop Table _CHIAVI_"
+								'	Ritorno = ConnNuovo.EsegueSql(Server.MapPath("."), Sql, ConnessioneNuovo)
+								'	If Ritorno.Contains(StringaErrore) Then
+								'		Ok = False
+								'	End If
+								'End If
 							End If
 						End If
 
 						If Ok Then
+							ScriveLog(Server.MapPath("."), Squadra, "CreaNuovoAnno", "Inserimento nuovo recordset su tabella Anni")
 							Sql = "Insert Into [" & nomeDb & "].[dbo].[Anni] Values (" &
 								" " & idAnno & ", " &
 								"'" & NuovoAnno & "', " &
@@ -1414,8 +1446,8 @@ Public Class wsSuperUser
 								"null, " & ' Lat
 								"null, " & ' Lon
 								"'', " &
-								"'Campo " & Squadra.Replace("'", "''") & "', " & ' CampoSquadra
-								"'" & Squadra.Replace("'", "''") & "', " & ' NomePolisportiva
+								"'', " & ' CampoSquadra
+								"'" & NomeSquadra.Replace("'", "''") & "', " & ' NomePolisportiva
 								"'', " &
 								"null, " & ' PEC
 								"'', " &
@@ -1433,14 +1465,17 @@ Public Class wsSuperUser
 								"'N', " & ' Rate Manuali
 								"'N' " & ' Cashback
 								")"
-							Ritorno = ConnDbOrigine.EsegueSql(Server.MapPath("."), Sql, ConnessioneDBOrigine)
+							Ritorno = ConnNuovo.EsegueSql(Server.MapPath("."), Sql, ConnessioneNuovo)
 							If Ritorno.Contains(StringaErrore) Then
 								Ok = False
 							Else
+								ScriveLog(Server.MapPath("."), Squadra, "CreaNuovoAnno", "Inserimento nuovo recordset su tabella Squadra Anni")
 								Sql = "Insert SquadraAnni Values (" &
 									" " & idSquadra & ", " &
 									" " & idAnno & ", " &
-									"'" & NuovoAnno & "' " &
+									"'" & NuovoAnno & "', " &
+									"'S', " &
+									"'N' " &
 									")"
 								Ritorno = ConnGen.EsegueSql(Server.MapPath("."), Sql, ConnessioneGenerale)
 								If Ritorno.Contains(StringaErrore) Then
@@ -1455,9 +1490,11 @@ Public Class wsSuperUser
 				If Ok Then
 					Sql = "commit"
 					Dim Ritorno2 As String = ConnGen.EsegueSql(Server.MapPath("."), Sql, ConnessioneGenerale)
+					ScriveLog(Server.MapPath("."), Squadra, "CreaNuovoAnno", "Commit")
 				Else
 					Sql = "rollback"
 					Dim Ritorno2 As String = ConnGen.EsegueSql(Server.MapPath("."), Sql, ConnessioneGenerale)
+					ScriveLog(Server.MapPath("."), Squadra, "CreaNuovoAnno", "Rollback")
 
 					Sql = "Drop Database [" & nomeDb & "]"
 					Ritorno2 = ConnGen.EsegueSql(Server.MapPath("."), Sql, ConnessioneGenerale)
