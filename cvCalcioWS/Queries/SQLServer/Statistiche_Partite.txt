@@ -1,0 +1,11 @@
+Select A.idPartita, D.categorie, E.Descrizione As Avversario, Risultato, B.Casa As Dove, 
+Substring(Risultato, 0, Instr(Risultato, '-')) As Casa, 
+Substring(Risultato, Instr(Risultato, '-') + 1, 2) As Fuori,
+F.Descrizione + ' ' + F.AnnoCategoria As Categoria, E.idAvversario
+From Risultati A
+Left Join Partite B On A.idPartita = B.idPartita
+Left Join SquadreAvversarie E On B.idAvversario = E.idAvversario 
+Left Join Convocati C On A.idPartita = C.idPartita And C.idProgressivo = 1
+Left Join Giocatori D On C.idGiocatore = D.idGiocatore 
+Left Join Categorie F On F.idCategoria = %idCategoria%
+Where Casa Is Not Null

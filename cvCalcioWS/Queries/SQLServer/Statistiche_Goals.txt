@@ -2,23 +2,21 @@ SELECT        Categorie, idGiocatore, Cognome, Nome, Ruolo, SUM(SommaGoalAmichev
               Sum(Rigori) As Rigori, Soprannome
 FROM            (SELECT        Categorie, idGiocatore, Cognome, Nome, Ruolo, Tipologia, SUM(Goal) AS SommaGoalAmichevole, 0 AS SommaGoalCampionato, Sum(Rigore) As Rigori, Soprannome
                           FROM            (SELECT        D.Categorie, D.idGiocatore, D.Cognome, D.Nome, E.Descrizione AS Ruolo, 1 AS Goal, C.Descrizione AS Tipologia, D.Soprannome, IF(A.Rigore = 'S', 1, 0) As Rigore
-                                                    FROM            risultatiaggiuntivimarcatori AS A LEFT OUTER JOIN
-                                                                              partite AS B ON A.idPartita = B.idPartita LEFT OUTER JOIN
-                                                                              Generale.tipologiepartite AS C ON B.idTipologia = C.idTipologia LEFT OUTER JOIN
-                                                                              giocatori AS D ON D.idGiocatore = A.idGiocatore LEFT OUTER JOIN
-                                                                              Generale.ruoli AS E ON D.idRuolo = E.idRuolo
+                                                    FROM            RisultatiAggiuntiviMarcatori AS A LEFT OUTER JOIN
+                                                                              Partite AS B ON A.idPartita = B.idPartita LEFT OUTER JOIN
+                                                                              Generale.TipologiePartite AS C ON B.idTipologia = C.idTipologia LEFT OUTER JOIN
+                                                                              Giocatori AS D ON D.idGiocatore = A.idGiocatore LEFT OUTER JOIN
+                                                                              Generale.Ruoli AS E ON D.idRuolo = E.idRuolo
                                                     WHERE        (B.Giocata = 'S') AND (C.idTipologia = 2)) AS A_2
                           GROUP BY Categorie, idGiocatore, Cognome, Nome, Tipologia, Ruolo, Soprannome
                           UNION ALL
-                          
                           SELECT        Categorie, idGiocatore, Cognome, Nome, Ruolo, Tipologia, 0 AS SommaGoalAmichevole, SUM(Goal) AS SommaGoalCampionato, Sum(Rigore) As Rigori, Soprannome
                           FROM            (SELECT        D.Categorie, D.idGiocatore, D.Cognome, D.Nome, E.Descrizione AS Ruolo, 1 AS Goal, C.Descrizione AS Tipologia, D.Soprannome, IF(A.Rigore = 'S', 1, 0) As Rigore
-                                                    FROM            risultatiaggiuntivimarcatori AS A LEFT OUTER JOIN
-                                                                              partite AS B ON A.idPartita = B.idPartita LEFT OUTER JOIN
-                                                                              Generale.tipologiepartite AS C ON B.idTipologia = C.idTipologia LEFT OUTER JOIN
-                                                                              giocatori AS D ON D.idGiocatore = A.idGiocatore LEFT OUTER JOIN
-                                                                              Generale.ruoli AS E ON D.idRuolo = E.idRuolo
+                                                    FROM            RisultatiAggiuntiviMarcatori AS A LEFT OUTER JOIN
+                                                                              Partite AS B ON A.idPartita = B.idPartita LEFT OUTER JOIN
+                                                                              Generale.TipologiePartite AS C ON B.idTipologia = C.idTipologia LEFT OUTER JOIN
+                                                                              Giocatori AS D ON D.idGiocatore = A.idGiocatore LEFT OUTER JOIN
+                                                                              Generale.Ruoli AS E ON D.idRuolo = E.idRuolo
                                                     WHERE        (B.Giocata = 'S') AND (C.idTipologia = 1)) AS A_1
                           GROUP BY Categorie, idGiocatore, Cognome, Nome, Tipologia, Ruolo, Soprannome) AS B_1
 GROUP BY Categorie, idGiocatore, Cognome, Nome, Ruolo, Soprannome
-

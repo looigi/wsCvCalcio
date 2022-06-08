@@ -173,9 +173,22 @@
   <ItemGroup>
     <Content Include="App_Themes\Standard\bg.jpg" />
     <Content Include="pdf.asmx" />
+    <Content Include="Queries\SQLServer\Statistiche_Eventi.txt" />
+    <Content Include="Queries\SQLServer\Statistiche_FasceGoalFatti.txt" />
+    <Content Include="Queries\SQLServer\Statistiche_Goals.txt" />
+    <Content Include="Queries\SQLServer\Statistiche_Meteo.txt" />
+    <Content Include="Queries\SQLServer\Statistiche_Partite.txt" />
+    <Content Include="Queries\SQLServer\Statistiche_Presenze.txt" />
+    <Content Include="Queries\SQLServer\Statistiche_Sostituzioni.txt" />
+    <Content Include="Queries\SQLServer\Statistiche_TipologiePartite.txt" />
+    <Content Include="Queries\Statistiche_Eventi.txt" />
     <Content Include="Queries\Statistiche_FasceGoalFatti.txt" />
     <Content Include="Queries\Statistiche_Goals.txt" />
+    <Content Include="Queries\Statistiche_Meteo.txt" />
+    <Content Include="Queries\Statistiche_Partite.txt" />
     <Content Include="Queries\Statistiche_Presenze.txt" />
+    <Content Include="Queries\Statistiche_Sostituzioni.txt" />
+    <Content Include="Queries\Statistiche_TipologiePartite.txt" />
     <Content Include="Scheletri\base_convocazioni.txt" />
     <Content Include="Scheletri\base_partita.txt" />
     <Content Include="Scheletri\base_statistiche.txt" />

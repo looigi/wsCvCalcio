@@ -1,20 +1,20 @@
 SELECT        Categorie, idGiocatore, Cognome, Nome, Soprannome, Ruolo, SUM(PresenzaAmichevole) AS PresenzeAmichevole, SUM(PresenzaCampionato) AS PresenzeCampionato, SUM(PresenzaAmichevole) + SUM(PresenzaCampionato) 
                          AS Totale
-FROM            (SELECT        C.Categorie, C.idGiocatore, C.Cognome, C.Nome, C.Soprannome, E.Descrizione AS Ruolo, COALESCE(Count(*),0) AS PresenzaAmichevole, 0 AS PresenzaCampionato
-                          FROM            dbo.Convocati AS A LEFT OUTER JOIN
-                                                    dbo.Partite AS B ON A.idPartita = B.idPartita LEFT OUTER JOIN
-                                                    dbo.Giocatori AS C ON A.idGiocatore = C.idGiocatore LEFT OUTER JOIN
-                                                    Generale.dbo.TipologiePartite AS D ON B.idTipologia = D.idTipologia LEFT OUTER JOIN
-                                                    Generale.dbo.Ruoli AS E ON C.idRuolo = E.idRuolo
+FROM            (SELECT        C.Categorie, C.idGiocatore, C.Cognome, C.Nome, C.Soprannome, E.Descrizione AS Ruolo, COUNT(*) AS PresenzaAmichevole, 0 AS PresenzaCampionato
+                          FROM            convocati AS A LEFT OUTER JOIN
+                                                    partite AS B ON A.idPartita = B.idPartita LEFT OUTER JOIN
+                                                    giocatori AS C ON A.idGiocatore = C.idGiocatore LEFT OUTER JOIN
+                                                    Generale.tipologiepartite AS D ON B.idTipologia = D.idTipologia LEFT OUTER JOIN
+                                                    Generale.ruoli AS E ON C.idRuolo = E.idRuolo
                           WHERE        (D.idTipologia = 1) And Giocata = 'S'
                           GROUP BY C.Categorie, C.idGiocatore, C.Cognome, C.Nome, C.Soprannome, E.Descrizione
                           UNION ALL
-                          SELECT        C.Categorie, C.idGiocatore, C.Cognome, C.Nome, C.Soprannome, E.Descrizione AS Ruolo, 0 AS PresenzAmichevole, COALESCE(Count(*),0) AS PresenzaCampionato
-                          FROM            dbo.Convocati AS A LEFT OUTER JOIN
-                                                   dbo.Partite AS B ON A.idPartita = B.idPartita LEFT OUTER JOIN
-                                                   dbo.Giocatori AS C ON A.idGiocatore = C.idGiocatore LEFT OUTER JOIN
-                                                   Generale.dbo.TipologiePartite AS D ON B.idTipologia = D.idTipologia LEFT OUTER JOIN
-                                                   Generale.dbo.Ruoli AS E ON C.idRuolo = E.idRuolo
+                          SELECT        C.Categorie, C.idGiocatore, C.Cognome, C.Nome, C.Soprannome, E.Descrizione AS Ruolo, 0 AS PresenzAmichevole, COUNT(*) AS PresenzaCampionato
+                          FROM            convocati AS A LEFT OUTER JOIN
+                                                   partite AS B ON A.idPartita = B.idPartita LEFT OUTER JOIN
+                                                   giocatori AS C ON A.idGiocatore = C.idGiocatore LEFT OUTER JOIN
+                                                   Generale.tipologiepartite AS D ON B.idTipologia = D.idTipologia LEFT OUTER JOIN
+                                                   Generale.ruoli AS E ON C.idRuolo = E.idRuolo
                           WHERE        (D.idTipologia = 2) And Giocata = 'S'
                           GROUP BY C.Categorie, C.idGiocatore, C.Cognome, C.Nome, C.Soprannome, E.Descrizione) AS A_1
 GROUP BY Categorie, idGiocatore, Cognome, Nome, Soprannome, Ruolo

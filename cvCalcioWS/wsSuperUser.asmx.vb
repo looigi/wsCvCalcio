@@ -786,7 +786,7 @@ Public Class wsSuperUser
 								ScriveLog(Server.MapPath("."), "Generale", "RitornaSquadre", "Max Anno: " & maxAnno)
 								ScriveLog(Server.MapPath("."), "Generale", "RitornaSquadre", "Stato: " & Stato)
 
-								If Stato = "S" Then
+								If Stato.ToUpper = "S" Then
 									Semaforo2 = "verde" : Titolo2 = "Database in linea"
 								Else
 									Semaforo2 = "rosso" : Titolo2 = "Database fuori linea"

@@ -1,0 +1,5 @@
+Select D.Categorie, Tempo, Icona, Count(*) As Quante From MeteoPartite A
+Left Join Partite B On A.idPartita = B.idPartita 
+Left Join Convocati C On A.idPartita = C.idPartita And C.idProgressivo = 1
+Left Join Giocatori D On C.idGiocatore = D.idGiocatore 
+Group By D.Categorie, Tempo, Icona

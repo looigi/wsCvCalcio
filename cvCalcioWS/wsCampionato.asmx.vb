@@ -1616,19 +1616,50 @@ Public Class wsCampionato
 		Dim StampaMeteo As String = ""
 		Dim StampaAmmEsp As String = ""
 		Dim StampaSostituzioni As String = ""
+		Dim Barra As String = "\"
+
+		If TipoDB <> "SQLSERVER" Then
+			Barra = "/"
+		End If
+
+		'Dim paths As String = gf.LeggeFileIntero(Server.MapPath(".") & "\Impostazioni\PathAllegati.txt")
+		'Dim P() As String = paths.Split(";")
+		'If Strings.Right(P(0), 1) <> "\" Then
+		'	P(0) &= "\"
+		'End If
+		'Dim pathAllegati As String = P(0).Replace(vbCrLf, "")
+		'If Strings.Right(P(2), 1) <> "/" Then
+		'	P(2) &= "/"
+		'End If
+		'Dim pathMultimedia As String = P(2).Replace(vbCrLf, "")
+		'Dim PathBaseMultimedia As String = pathMultimedia.Replace("Allegati", "Multimedia")
+		Dim Colore As String = "#ccc"
+		Dim wsImm As New wsImmagini
 
 		Dim paths As String = gf.LeggeFileIntero(Server.MapPath(".") & "\Impostazioni\PathAllegati.txt")
 		Dim P() As String = paths.Split(";")
-		If Strings.Right(P(0), 1) <> "\" Then
-			P(0) &= "\"
+		P(0) = P(0).Trim.Replace(vbCrLf, "")
+		If Strings.Right(P(0), 1) <> Barra Then
+			P(0) &= Barra
 		End If
 		Dim pathAllegati As String = P(0).Replace(vbCrLf, "")
-		If Strings.Right(P(2), 1) <> "/" Then
-			P(2) &= "/"
+
+		P(1) = P(1).Trim.Replace(vbCrLf, "")
+		If Strings.Right(P(1), 1) <> Barra Then
+			P(1) &= Barra
+		End If
+		Dim pathLogG As String = P(1).Replace(vbCrLf, "")
+
+		P(2) = P(2).Trim.Replace(vbCrLf, "")
+		If Strings.Right(P(2), 1) <> Barra Then
+			P(2) &= Barra
 		End If
 		Dim pathMultimedia As String = P(2).Replace(vbCrLf, "")
-		Dim PathBaseMultimedia As String = pathMultimedia.Replace("Allegati", "Multimedia")
-		Dim Colore As String = "#ccc"
+		Dim PathBaseImmagini As String = pathMultimedia & "ImmaginiLocali"
+		Dim ImmagineSconosciuta As String = PathBaseImmagini & "/Sconosciuto.png"
+
+		ScriveLog(Server.MapPath("."), Squadra, "Statistiche", "Stampa statistiche")
+		ScriveLog(Server.MapPath("."), Squadra, "Statistiche", "------------------------------------------------------")
 
 		If Connessione = "" Then
 			Ritorno = ErroreConnessioneNonValida
@@ -1649,10 +1680,12 @@ Public Class wsCampionato
 				If TypeOf (Rec) Is String Then
 					Ok = False
 					Ritorno = "Problemi lettura squadra"
+					ScriveLog(Server.MapPath("."), Squadra, "Statistiche", Ritorno)
 				Else
 					If Rec.Eof() Then
 					Else
 						NomeSquadra = "" & Rec("Descrizione").Value
+						ScriveLog(Server.MapPath("."), Squadra, "Statistiche", "Nome Squadra: " & NomeSquadra)
 					End If
 					Rec.Close()
 				End If
@@ -1660,6 +1693,8 @@ Public Class wsCampionato
 				Dim filetto As String = gf.LeggeFileIntero(Server.MapPath(".") & "\Queries\Statistiche_Goals.txt")
 
 				If Ok Then
+					ScriveLog(Server.MapPath("."), Squadra, "Statistiche", "Calcolo statistiche sui goals")
+
 					Sql = "Select * From (" & filetto & ") As B Where Categorie Like '%" & idCategoria & "-%' Order By Totale Desc, GoalCampionato Desc, GoalAmichevole Desc"
 					Sql = ConverteStringaSQL(Sql)
 
@@ -1667,6 +1702,7 @@ Public Class wsCampionato
 						Rec = Conn.LeggeQuery(Server.MapPath("."), Sql, Connessione, False)
 						If TypeOf (Rec) Is String Then
 							Ritorno = Rec
+							ScriveLog(Server.MapPath("."), Squadra, "Statistiche", "Calcolo statistiche sui goals. " & Ritorno)
 						Else
 							If Stampa = "S" Then
 								StampaMarcatori &= "<table style=""width: 100%;"" cellpading=""0"" cellspacing=""0"">" & vbCrLf
@@ -1697,9 +1733,15 @@ Public Class wsCampionato
 									Dim Soprannome As String = Rec("Soprannome").Value
 									If Soprannome <> "" Then Soprannome = "'" & Soprannome & "' "
 									Dim Nominativo As String = Rec("Nome").Value & " " & Soprannome & Rec("Cognome").Value
-									Dim Path As String = PathBaseMultimedia & "/" & NomeSquadra & "/Giocatori/" & idAnno & "_" & Rec("idGiocatore").Value & ".kgb"
+									' Dim Path As String = PathBaseMultimedia & "/" & NomeSquadra & "/Giocatori/" & idAnno & "_" & Rec("idGiocatore").Value & ".kgb"
+									Dim Path As String = wsImm.RitornaImmagineDB(Squadra, "Giocatori", Rec("idGiocatore").Value, "")
+									If Path.Contains(StringaErrore) Then
+										Path = ImmagineSconosciuta
+									Else
+										Path = "data:image/png;base64,'" + Path
+									End If
 
-									Path = DecriptaImmagine(Server.MapPath("."), Path)
+									' Path = DecriptaImmagine(Server.MapPath("."), Path)
 
 									StampaMarcatori &= "<tr style=""background-color: " & Colore & ";"">" & vbCrLf
 									If Colore = "#ccc" Then Colore = "#fff" Else Colore = "#ccc"
@@ -1724,12 +1766,14 @@ Public Class wsCampionato
 					Catch ex As Exception
 						Ritorno = "ERROR: " & ex.Message
 						Ok = False
+						ScriveLog(Server.MapPath("."), Squadra, "Statistiche", "Calcolo statistiche sui goals. CATCH: " & Ritorno)
 					End Try
 				End If
 
 				Dim RitornoSost As String = ""
 
 				If Ok Then
+					ScriveLog(Server.MapPath("."), Squadra, "Statistiche", "Calcolo statistiche sulle sostituzioni")
 					filetto = gf.LeggeFileIntero(Server.MapPath(".") & "\Queries\Statistiche_Sostituzioni.txt")
 					Sql = "Select idGiocatore, Cosa, Cognome, Nome, Soprannome, Ruolo, Volte From (" & filetto & ") As B Where Categorie Like '%" & idCategoria & "-%' Order By Cosa, Volte Desc"
 					Sql = ConverteStringaSQL(Sql)
@@ -1738,6 +1782,7 @@ Public Class wsCampionato
 						Rec = Conn.LeggeQuery(Server.MapPath("."), Sql, Connessione)
 						If TypeOf (Rec) Is String Then
 							Ritorno = Rec
+							ScriveLog(Server.MapPath("."), Squadra, "Statistiche", "Calcolo statistiche sulle sostituzioni: " & Ritorno)
 						Else
 							If Stampa = "S" Then
 								StampaSostituzioni &= "<table style=""width: 100%;"" cellpading=""0"" cellspacing=""0"">" & vbCrLf
@@ -1764,8 +1809,14 @@ Public Class wsCampionato
 									Dim Soprannome As String = Rec("Soprannome").Value
 									If Soprannome <> "" Then Soprannome = "'" & Soprannome & "' "
 									Dim Nominativo As String = Rec("Nome").Value & " " & Soprannome & Rec("Cognome").Value
-									Dim Path As String = PathBaseMultimedia & "/" & NomeSquadra & "/Giocatori/" & idAnno & "_" & Rec("idGiocatore").Value & ".kgb"
-									Path = DecriptaImmagine(Server.MapPath("."), Path)
+									'Dim Path As String = PathBaseMultimedia & "/" & NomeSquadra & "/Giocatori/" & idAnno & "_" & Rec("idGiocatore").Value & ".kgb"
+									'Path = DecriptaImmagine(Server.MapPath("."), Path)
+									Dim Path As String = wsImm.RitornaImmagineDB(Squadra, "Giocatori", Rec("idGiocatore").Value, "")
+									If Path.Contains(StringaErrore) Then
+										Path = ImmagineSconosciuta
+									Else
+										Path = "data:image/png;base64,'" + Path
+									End If
 
 									StampaSostituzioni &= "<tr style=""background-color: " & Colore & ";"">" & vbCrLf
 									If Colore = "#ccc" Then Colore = "#fff" Else Colore = "#ccc"
@@ -1787,11 +1838,13 @@ Public Class wsCampionato
 						End If
 					Catch ex As Exception
 						Ritorno = "ERROR: " & ex.Message
+						ScriveLog(Server.MapPath("."), Squadra, "Statistiche", "Calcolo statistiche sulle sostituzioni. CATCH: " & Ritorno)
 						Ok = False
 					End Try
 				End If
 
 				If Ok Then
+					ScriveLog(Server.MapPath("."), Squadra, "Statistiche", "Calcolo statistiche sulle presenze")
 					filetto = gf.LeggeFileIntero(Server.MapPath(".") & "\Queries\Statistiche_Presenze.txt")
 					Sql = "Select * From (" & filetto & ") As B Where Categorie Like '%" & idCategoria & "-%' Order By Totale Desc, PresenzeCampionato Desc, PresenzeAmichevole Desc"
 					Sql = ConverteStringaSQL(Sql)
@@ -1800,6 +1853,7 @@ Public Class wsCampionato
 						Rec = Conn.LeggeQuery(Server.MapPath("."), Sql, Connessione)
 						If TypeOf (Rec) Is String Then
 							Ritorno = Rec
+							ScriveLog(Server.MapPath("."), Squadra, "Statistiche", "Calcolo statistiche sulle presenze: " & Ritorno)
 						Else
 							Ritorno &= "|"
 
@@ -1830,8 +1884,14 @@ Public Class wsCampionato
 									Dim Soprannome As String = Rec("Soprannome").Value
 									If Soprannome <> "" Then Soprannome = "'" & Soprannome & "' "
 									Dim Nominativo As String = Rec("Nome").Value & " " & Soprannome & Rec("Cognome").Value
-									Dim Path As String = PathBaseMultimedia & "/" & NomeSquadra & "/Giocatori/" & idAnno & "_" & Rec("idGiocatore").Value & ".kgb"
-									Path = DecriptaImmagine(Server.MapPath("."), Path)
+									'Dim Path As String = PathBaseMultimedia & "/" & NomeSquadra & "/Giocatori/" & idAnno & "_" & Rec("idGiocatore").Value & ".kgb"
+									'Path = DecriptaImmagine(Server.MapPath("."), Path)
+									Dim Path As String = wsImm.RitornaImmagineDB(Squadra, "Giocatori", Rec("idGiocatore").Value, "")
+									If Path.Contains(StringaErrore) Then
+										Path = ImmagineSconosciuta
+									Else
+										Path = "data:image/png;base64,'" + Path
+									End If
 
 									StampaPresenze &= "<tr style=""background-color: " & Colore & ";"">" & vbCrLf
 									If Colore = "#ccc" Then Colore = "#fff" Else Colore = "#ccc"
@@ -1854,11 +1914,13 @@ Public Class wsCampionato
 						End If
 					Catch ex As Exception
 						Ritorno = "ERROR: " & ex.Message
+						ScriveLog(Server.MapPath("."), Squadra, "Statistiche", "Calcolo statistiche sulle presenze: CATCH: " & Ritorno)
 						Ok = False
 					End Try
 				End If
 
 				If Ok Then
+					ScriveLog(Server.MapPath("."), Squadra, "Statistiche", "Calcolo statistiche sulle fasce goal fatti")
 					filetto = gf.LeggeFileIntero(Server.MapPath(".") & "\Queries\Statistiche_FasceGoalFatti.txt")
 					Sql = "Select * From (" & filetto & ") As B Where Categorie Like '%" & idCategoria & "-%'"
 					Sql = ConverteStringaSQL(Sql)
@@ -1867,6 +1929,7 @@ Public Class wsCampionato
 						Rec = Conn.LeggeQuery(Server.MapPath("."), Sql, Connessione)
 						If TypeOf (Rec) Is String Then
 							Ritorno = Rec
+							ScriveLog(Server.MapPath("."), Squadra, "Statistiche", "Calcolo statistiche sulle fasce goal fatti: " & Ritorno)
 						Else
 							Ritorno &= "|"
 
@@ -1907,11 +1970,14 @@ Public Class wsCampionato
 						End If
 					Catch ex As Exception
 						Ritorno = "ERROR: " & ex.Message
+						ScriveLog(Server.MapPath("."), Squadra, "Statistiche", "Calcolo statistiche sulle fasce goal fatti. CATCH: " & Ritorno)
 						Ok = False
 					End Try
 				End If
 
 				If Ok Then
+					ScriveLog(Server.MapPath("."), Squadra, "Statistiche", "Calcolo statistiche sulle fasce goal subiti")
+
 					Sql = "Select C.idTipologia, idTempo, Minuti " &
 						"From RisultatiAvversariMinuti A " &
 						"Left Join Partite B On A.idPartita = B.idPartita " &
@@ -1923,6 +1989,7 @@ Public Class wsCampionato
 						Rec = Conn.LeggeQuery(Server.MapPath("."), Sql, Connessione)
 						If TypeOf (Rec) Is String Then
 							Ritorno = Rec
+							ScriveLog(Server.MapPath("."), Squadra, "Statistiche", "Calcolo statistiche sulle fasce goal subiti: " & Ritorno)
 						Else
 							Dim Fascia1(1, 2) As Integer
 							Dim Fascia2(1, 2) As Integer
@@ -2055,11 +2122,13 @@ Public Class wsCampionato
 						End If
 					Catch ex As Exception
 						Ritorno = "ERROR: " & ex.Message
+						ScriveLog(Server.MapPath("."), Squadra, "Statistiche", "Calcolo statistiche sulle fasce goal subiti. CATCH: " & Ritorno)
 						Ok = False
 					End Try
 				End If
 
 				If Ok Then
+					ScriveLog(Server.MapPath("."), Squadra, "Statistiche", "Calcolo statistiche sugli eventi")
 					filetto = gf.LeggeFileIntero(Server.MapPath(".") & "\Queries\Statistiche_Eventi.txt")
 					Sql = "Select " & IIf(TipoDB = "SQLSERVER", "Top 25", "") & " * From (" & filetto & ") As B Where Categorie Like '%" & idCategoria & "-%' Order By Quanti Desc" & IIf(TipoDB = "SQLSERVER", "", " Limit 25")
 					Sql = ConverteStringaSQL(Sql)
@@ -2068,6 +2137,7 @@ Public Class wsCampionato
 						Rec = Conn.LeggeQuery(Server.MapPath("."), Sql, Connessione)
 						If TypeOf (Rec) Is String Then
 							Ritorno = Rec
+							ScriveLog(Server.MapPath("."), Squadra, "Statistiche", "Calcolo statistiche sugli eventi: " & Ritorno)
 						Else
 							Ritorno &= "|"
 
@@ -2094,8 +2164,14 @@ Public Class wsCampionato
 									Dim Soprannome As String = Rec("Soprannome").Value
 									If Soprannome <> "" Then Soprannome = "'" & Soprannome & "' "
 									Dim Nominativo As String = Rec("Nome").Value & " " & Soprannome & Rec("Cognome").Value
-									Dim Path As String = PathBaseMultimedia & "/" & NomeSquadra & "/Giocatori/" & idAnno & "_" & Rec("idGiocatore").Value & ".kgb"
-									Path = DecriptaImmagine(Server.MapPath("."), Path)
+									'Dim Path As String = PathBaseMultimedia & "/" & NomeSquadra & "/Giocatori/" & idAnno & "_" & Rec("idGiocatore").Value & ".kgb"
+									'Path = DecriptaImmagine(Server.MapPath("."), Path)
+									Dim Path As String = wsImm.RitornaImmagineDB(Squadra, "Giocatori", Rec("idGiocatore").Value, "")
+									If Path.Contains(StringaErrore) Then
+										Path = ImmagineSconosciuta
+									Else
+										Path = "data:image/png;base64,'" + Path
+									End If
 
 									StampaEventi &= "<tr style=""background-color: " & Colore & ";"">" & vbCrLf
 									If Colore = "#ccc" Then Colore = "#fff" Else Colore = "#ccc"
@@ -2116,11 +2192,13 @@ Public Class wsCampionato
 						End If
 					Catch ex As Exception
 						Ritorno = "ERROR: " & ex.Message
+						ScriveLog(Server.MapPath("."), Squadra, "Statistiche", "Calcolo statistiche sugli eventi. CATCH: " & Ritorno)
 						Ok = False
 					End Try
 				End If
 
 				If Ok Then
+					ScriveLog(Server.MapPath("."), Squadra, "Statistiche", "Calcolo statistiche sulle tipologie delle partite")
 					filetto = gf.LeggeFileIntero(Server.MapPath(".") & "\Queries\Statistiche_TipologiePartite.txt")
 					Sql = "Select * From (" & filetto & ") As B Where Categorie Like '%" & idCategoria & "-%'"
 					Sql = ConverteStringaSQL(Sql)
@@ -2129,6 +2207,7 @@ Public Class wsCampionato
 						Rec = Conn.LeggeQuery(Server.MapPath("."), Sql, Connessione)
 						If TypeOf (Rec) Is String Then
 							Ritorno = Rec
+							ScriveLog(Server.MapPath("."), Squadra, "Statistiche", "Calcolo statistiche sulle tipologie delle partite: " & Ritorno)
 						Else
 							Ritorno &= "|"
 
@@ -2176,11 +2255,13 @@ Public Class wsCampionato
 						End If
 					Catch ex As Exception
 						Ritorno = "ERROR: " & ex.Message
+						ScriveLog(Server.MapPath("."), Squadra, "Statistiche", "Calcolo statistiche sulle tipologie delle partite. CATCH: " & Ritorno)
 						Ok = False
 					End Try
 				End If
 
 				If Ok Then
+					ScriveLog(Server.MapPath("."), Squadra, "Statistiche", "Calcolo statistiche sulle partite")
 					filetto = gf.LeggeFileIntero(Server.MapPath(".") & "\Queries\Statistiche_Partite.txt")
 					filetto = filetto.Replace("%idCategoria%", idCategoria)
 					Sql = "Select * From (" & filetto & ") As B Where Categorie Like '%" & idCategoria & "-%'"
@@ -2190,6 +2271,7 @@ Public Class wsCampionato
 						Rec = Conn.LeggeQuery(Server.MapPath("."), Sql, Connessione)
 						If TypeOf (Rec) Is String Then
 							Ritorno = Rec
+							ScriveLog(Server.MapPath("."), Squadra, "Statistiche", "Calcolo statistiche sulle partite: " & Ritorno)
 						Else
 							Dim MaxGoals As Integer = 0
 							Dim MaxGoalsCasa As Integer = 0
@@ -2224,118 +2306,124 @@ Public Class wsCampionato
 
 							Do Until Rec.Eof()
 								Dim Avversario As String = Rec("Avversario").Value
-								Dim Categoria As String = Rec("Categoria").Value
-								Dim Risultato As String = Rec("Risultato").Value
-								Dim GCasa As Integer = Val(Rec("Casa").Value)
-								Dim GFuori As Integer = Val(Rec("Fuori").Value)
+								If Avversario <> "" Then
+									Dim Categoria As String = Rec("Categoria").Value
+									Dim Risultato As String = Rec("Risultato").Value
+									Dim GCasa As Integer = Val(Rec("Casa").Value)
+									Dim GFuori As Integer = Val(Rec("Fuori").Value)
+									ScriveLog(Server.MapPath("."), Squadra, "Statistiche", "Calcolo statistiche sulle partite: Avversario: " & Avversario & " - Categoria " & Categoria & " - Risultato " & Risultato & " - GCasa " & GCasa & " - GFuori" & GFuori)
 
-								Dim OkAvv As Boolean = True
-								Dim ii As Integer = 0
-								For Each a As String In Avversari
-									If a = Avversario Then
-										OkAvv = False
-										Incontrati.Item(ii) += 1
-										Exit For
+									Dim OkAvv As Boolean = True
+									Dim ii As Integer = 0
+									For Each a As String In Avversari
+										If a = Avversario Then
+											OkAvv = False
+											Incontrati.Item(ii) += 1
+											Exit For
+										End If
+										ii += 1
+									Next
+									If OkAvv Then
+										Avversari.Add(Avversario)
+										idAvversario.Add(Rec("idAvversario").Value)
+										Incontrati.Add(1)
 									End If
-									ii += 1
-								Next
-								If OkAvv Then
-									Avversari.Add(Avversario)
-									idAvversario.Add(Rec("idAvversario").Value)
-									Incontrati.Add(1)
-								End If
+									ScriveLog(Server.MapPath("."), Squadra, "Statistiche", "Calcolo statistiche sulle partite. Avversari: " & Avversari.Count)
 
-								Dim sqCasa As String = ""
-								Dim sqFuori As String = ""
-								Dim goalCasa As Integer
-								Dim goalFuori As Integer
+									Dim sqCasa As String = ""
+									Dim sqFuori As String = ""
+									Dim goalCasa As Integer
+									Dim goalFuori As Integer
 
-								Dim Dove As String = ""
-								Dim TotaleCasa As Integer = 0
-								Dim TotaleFuori As Integer = 0
+									Dim Dove As String = ""
+									Dim TotaleCasa As Integer = 0
+									Dim TotaleFuori As Integer = 0
 
-								Giocate += 1
+									Giocate += 1
 
-								Select Case Rec("Dove").Value
-									Case "S"
-										Dove = "In casa"
+									ScriveLog(Server.MapPath("."), Squadra, "Statistiche", "Calcolo statistiche sulle partite: Dove: " & Rec("Dove").Value)
+									Select Case Rec("Dove").Value
+										Case "S"
+											Dove = "In casa"
 
-										sqCasa = Categoria
-										sqFuori = Avversario
-										goalCasa = GCasa
-										goalFuori = GFuori
+											sqCasa = Categoria
+											sqFuori = Avversario
+											goalCasa = GCasa
+											goalFuori = GFuori
 
-										GoalTotali += goalCasa
-										SubitiTotali += goalFuori
+											GoalTotali += goalCasa
+											SubitiTotali += goalFuori
 
-										GoalTotaliCasa += goalCasa
-										SubitiTotaliCasa += goalFuori
+											GoalTotaliCasa += goalCasa
+											SubitiTotaliCasa += goalFuori
 
-										TotaleCasa = goalCasa + goalFuori
-										If TotaleCasa > MaxGoalsCasa Then
-											GoalMaxCasa = "Max goal per partita in casa: " & sqCasa & "-" & sqFuori & " " & goalCasa & "-" & goalFuori & " -> Totale: " & TotaleCasa
-											MaxGoalsCasa = TotaleCasa
-										End If
-
-										If goalCasa > goalFuori Then
-											Vittorie += 1
-											VittorieCasa += 1
-										Else
-											If goalCasa < goalFuori Then
-												Sconfitte += 1
-												SconfitteCasa += 1
-											Else
-												Pareggi += 1
-												PareggiCasa += 1
+											TotaleCasa = goalCasa + goalFuori
+											If TotaleCasa > MaxGoalsCasa Then
+												GoalMaxCasa = "Max goal per partita in casa: " & sqCasa & "-" & sqFuori & " " & goalCasa & "-" & goalFuori & " -> Totale: " & TotaleCasa
+												MaxGoalsCasa = TotaleCasa
 											End If
-										End If
 
-										GiocateCasa += 1
-									Case "N", "E"
-										If Rec("Dove").Value = "N" Then
-											Dove = "Fuori casa"
-										Else
-											Dove = "Campo esterno"
-										End If
-
-										sqCasa = Avversario
-										sqFuori = Categoria
-										goalCasa = GFuori
-										goalFuori = GCasa
-
-										GoalTotali += goalCasa
-										SubitiTotali += goalFuori
-
-										GoalTotaliFuori += goalCasa
-										SubitiTotaliFuori += goalFuori
-
-										TotaleFuori = goalCasa + goalFuori
-										If TotaleFuori > MaxGoalsFuori Then
-											GoalMaxFuori = "Max goal per partita fuori casa: " & sqCasa & "-" & sqFuori & " " & goalCasa & "-" & goalFuori & " -> Totale: " & TotaleFuori
-											MaxGoalsFuori = TotaleFuori
-										End If
-
-										If goalCasa < goalFuori Then
-											Vittorie += 1
-											VittorieFuori += 1
-										Else
 											If goalCasa > goalFuori Then
-												Sconfitte += 1
-												SconfitteFuori += 1
+												Vittorie += 1
+												VittorieCasa += 1
 											Else
-												Pareggi += 1
-												PareggiFuori += 1
+												If goalCasa < goalFuori Then
+													Sconfitte += 1
+													SconfitteCasa += 1
+												Else
+													Pareggi += 1
+													PareggiCasa += 1
+												End If
 											End If
-										End If
 
-										GiocateFuori += 1
-								End Select
+											GiocateCasa += 1
+										Case "N", "E"
+											If Rec("Dove").Value = "N" Then
+												Dove = "Fuori casa"
+											Else
+												Dove = "Campo esterno"
+											End If
 
-								Dim Totale As Integer = GCasa + GFuori
+											sqCasa = Avversario
+											sqFuori = Categoria
+											goalCasa = GFuori
+											goalFuori = GCasa
 
-								If Totale > MaxGoals Then
-									GoalMax = "Max goal totali: " & sqCasa & "-" & sqFuori & " " & goalCasa & "-" & goalFuori & " -> Totale: " & Totale
-									MaxGoals = Totale
+											GoalTotali += goalCasa
+											SubitiTotali += goalFuori
+
+											GoalTotaliFuori += goalCasa
+											SubitiTotaliFuori += goalFuori
+
+											TotaleFuori = goalCasa + goalFuori
+											If TotaleFuori > MaxGoalsFuori Then
+												GoalMaxFuori = "Max goal per partita fuori casa: " & sqCasa & "-" & sqFuori & " " & goalCasa & "-" & goalFuori & " -> Totale: " & TotaleFuori
+												MaxGoalsFuori = TotaleFuori
+											End If
+
+											If goalCasa < goalFuori Then
+												Vittorie += 1
+												VittorieFuori += 1
+											Else
+												If goalCasa > goalFuori Then
+													Sconfitte += 1
+													SconfitteFuori += 1
+												Else
+													Pareggi += 1
+													PareggiFuori += 1
+												End If
+											End If
+
+											GiocateFuori += 1
+									End Select
+
+									Dim Totale As Integer = GCasa + GFuori
+									ScriveLog(Server.MapPath("."), Squadra, "Statistiche", "Calcolo statistiche sulle partite: Totale " & Totale & " - GCasa " & GCasa & " - GFuori " & GFuori)
+
+									If Totale > MaxGoals Then
+										GoalMax = "Max goal totali: " & sqCasa & "-" & sqFuori & " " & goalCasa & "-" & goalFuori & " -> Totale: " & Totale
+										MaxGoals = Totale
+									End If
 								End If
 
 								Rec.MoveNext()
@@ -2361,6 +2449,8 @@ Public Class wsCampionato
 							Ritorno &= GoalMaxFuori & "§"
 							Lista.Add(GoalMaxFuori)
 
+							ScriveLog(Server.MapPath("."), Squadra, "Statistiche", "Calcolo statistiche sulle partite: Ritorno 1")
+
 							Ritorno &= "Giocate: " & Giocate & "§"
 							Lista.Add("Giocate: " & Giocate)
 							Ritorno &= "Vittorie: " & Vittorie & "§"
@@ -2379,6 +2469,8 @@ Public Class wsCampionato
 							Media = CInt((SubitiTotali / Giocate) * 100) / 100
 							Ritorno &= "Media goal subiti Totali: " & Media & "§"
 							Lista.Add("Media goal subiti Totali: " & Media)
+
+							ScriveLog(Server.MapPath("."), Squadra, "Statistiche", "Calcolo statistiche sulle partite: Ritorno 2")
 
 							Ritorno &= "Giocate Casa: " & GiocateCasa & "§"
 							Lista.Add("Giocate Casa: " & GiocateCasa)
@@ -2399,6 +2491,8 @@ Public Class wsCampionato
 							Ritorno &= "Media goal subiti Casa: " & Media & "§"
 							Lista.Add("Media goal subiti Casa: " & Media)
 
+							ScriveLog(Server.MapPath("."), Squadra, "Statistiche", "Calcolo statistiche sulle partite: Ritorno 3")
+
 							Ritorno &= "Giocate Fuori: " & GiocateFuori & "§"
 							Lista.Add("Giocate Fuori: " & GiocateFuori)
 							Ritorno &= "Vittorie Fuori: " & VittorieFuori & "§"
@@ -2418,6 +2512,8 @@ Public Class wsCampionato
 							Ritorno &= "Media goal subiti Fuori: " & Media & "§"
 							Lista.Add("Media goal subiti Fuori: " & Media)
 
+							ScriveLog(Server.MapPath("."), Squadra, "Statistiche", "Calcolo statistiche sulle partite: Ritorno 4")
+
 							If Stampa = "S" Then
 								For Each l As String In Lista
 									StampaStatistiche &= "<tr style=""background-color: " & Colore & ";"">" & vbCrLf
@@ -2430,6 +2526,8 @@ Public Class wsCampionato
 
 							Ritorno &= "|"
 
+							ScriveLog(Server.MapPath("."), Squadra, "Statistiche", "Calcolo statistiche sulle partite: Ritorno 5")
+
 							If Stampa = "S" Then
 								StampaAvversari &= "<table style=""width: 100%;"" cellpading=""0"" cellspacing=""0"">" & vbCrLf
 								StampaAvversari &= "<tr style=""background-color: gray;"">" & vbCrLf
@@ -2437,6 +2535,8 @@ Public Class wsCampionato
 								StampaAvversari &= "<th>Avversario</th>" & vbCrLf
 								StampaAvversari &= "</tr>" & vbCrLf
 							End If
+
+							ScriveLog(Server.MapPath("."), Squadra, "Statistiche", "Calcolo statistiche sulle partite: Incontrati: " & Incontrati.Count - 1)
 
 							For i As Integer = 0 To Incontrati.Count - 1
 								For k As Integer = i + 1 To Incontrati.Count - 1
@@ -2457,16 +2557,25 @@ Public Class wsCampionato
 							Next
 
 							Dim iii As Integer = 0
+
+							ScriveLog(Server.MapPath("."), Squadra, "Statistiche", "Calcolo statistiche sulle partite: Avversari: " & Avversari.Count - 1)
+
 							For Each a As String In Avversari
 								Ritorno &= idAvversario.Item(iii) & ";" & a & ";" & Incontrati.Item(iii) & "§"
 
 								If Stampa = "S" Then
-									Dim Imm2 As String = PathBaseMultimedia & "/" & NomeSquadra & "/Avversari/" & idAvversario.Item(iii) & ".kgb"
-									Imm2 = DecriptaImmagine(Server.MapPath("."), Imm2)
+									'Dim Imm2 As String = PathBaseMultimedia & "/" & NomeSquadra & "/Avversari/" & idAvversario.Item(iii) & ".kgb"
+									'Imm2 = DecriptaImmagine(Server.MapPath("."), Imm2)
+									Dim Path As String = wsImm.RitornaImmagineDB(Squadra, "Avversari", idAvversario.Item(iii), "")
+									If Path.Contains(StringaErrore) Then
+										Path = ImmagineSconosciuta
+									Else
+										Path = "data:image/png;base64,'" + Path
+									End If
 
 									StampaAvversari &= "<tr style=""background-color: " & Colore & ";"">" & vbCrLf
 									If Colore = "#ccc" Then Colore = "#fff" Else Colore = "#ccc"
-									StampaAvversari &= "<td><img src=""" & Imm2 & """ width=""50"" height=""50"" /></td>" & vbCrLf
+									StampaAvversari &= "<td><img src=""" & Path & """ width=""50"" height=""50"" /></td>" & vbCrLf
 									StampaAvversari &= "<td>" & a & ": " & Incontrati.Item(iii) & "</td>" & vbCrLf
 									StampaAvversari &= "</tr>" & vbCrLf
 								End If
@@ -2479,11 +2588,13 @@ Public Class wsCampionato
 						End If
 					Catch ex As Exception
 						Ritorno = "ERROR: " & ex.Message
+						ScriveLog(Server.MapPath("."), Squadra, "Statistiche", "Calcolo statistiche sulle partite. CATCH: " & Ritorno)
 						Ok = False
 					End Try
 				End If
 
 				If Ok Then
+					ScriveLog(Server.MapPath("."), Squadra, "Statistiche", "Calcolo statistiche sul meteo")
 					filetto = gf.LeggeFileIntero(Server.MapPath(".") & "\Queries\Statistiche_Meteo.txt")
 					Sql = "Select * From (" & filetto & ") As B Where Categorie Like '%" & idCategoria & "-%' Order By Quante Desc, Tempo"
 					Sql = ConverteStringaSQL(Sql)
@@ -2492,6 +2603,7 @@ Public Class wsCampionato
 						Rec = Conn.LeggeQuery(Server.MapPath("."), Sql, Connessione)
 						If TypeOf (Rec) Is String Then
 							Ritorno = Rec
+							ScriveLog(Server.MapPath("."), Squadra, "Statistiche", "Calcolo statistiche sul meteo: " & Ritorno)
 						Else
 							Ritorno &= "|"
 
@@ -2529,11 +2641,14 @@ Public Class wsCampionato
 						End If
 					Catch ex As Exception
 						Ritorno = "ERROR: " & ex.Message
+						ScriveLog(Server.MapPath("."), Squadra, "Statistiche", "Calcolo statistiche sul meteo. CATCH: " & Ritorno)
 						Ok = False
 					End Try
 				End If
 
 				If Ok Then
+					ScriveLog(Server.MapPath("."), Squadra, "Statistiche", "Ritorno statistiche")
+
 					Dim AmmoEspu As String = ""
 
 					If Stampa = "S" Then
@@ -2571,8 +2686,14 @@ Public Class wsCampionato
 								AmmoEspu &= Rec("Quante").Value & "§"
 
 								If Stampa = "S" Then
-									Dim Path As String = PathBaseMultimedia & "/" & NomeSquadra & "/Giocatori/" & idAnno & "_" & Rec("idGiocatore").Value & ".kgb"
-									Path = DecriptaImmagine(Server.MapPath("."), Path)
+									'Dim Path As String = PathBaseMultimedia & "/" & NomeSquadra & "/Giocatori/" & idAnno & "_" & Rec("idGiocatore").Value & ".kgb"
+									'Path = DecriptaImmagine(Server.MapPath("."), Path)
+									Dim Path As String = wsImm.RitornaImmagineDB(Squadra, "Giocatori", Rec("idGiocatore").Value, "")
+									If Path.Contains(StringaErrore) Then
+										Path = ImmagineSconosciuta
+									Else
+										Path = "data:image/png;base64,'" + Path
+									End If
 
 									StampaAmmEsp &= "<tr style=""background-color: " & Colore & ";"">" & vbCrLf
 									If Colore = "#ccc" Then Colore = "#fff" Else Colore = "#ccc"
@@ -2597,6 +2718,7 @@ Public Class wsCampionato
 					Catch ex As Exception
 						Ok = False
 						Ritorno = ex.Message
+						ScriveLog(Server.MapPath("."), Squadra, "Statistiche", "Ritorno statistiche. CATCH: " & Ritorno)
 					End Try
 				End If
 
@@ -2604,7 +2726,7 @@ Public Class wsCampionato
 
 				If Ok Then
 					If Stampa = "S" Then
-						Dim PathBaseImmagini As String = pathMultimedia
+						'Dim PathBaseImmagini As String = pathMultimedia
 
 						filetto = gf.LeggeFileIntero(Server.MapPath(".") & "\Scheletri\statistiche_nuove.txt")
 						filetto = filetto.Replace("***SFONDO***", PathBaseImmagini & "/bg.jpg")
@@ -2624,7 +2746,8 @@ Public Class wsCampionato
 						'Dim Altro As String = Now.Year & Format(Now.Month, "00") & Format(Now.Day, "00") ' & Format(Now.Hour, "00") & Format(Now.Minute, "00") & Format(Now.Second, "00")
 						Dim NomeFileFinale As String = pathAllegati & Squadra & "\Statistiche\Statistiche_Giornata_" & idGiornata & ".html"
 						Dim NomeFileFinalePDF As String = pathAllegati & Squadra & "\Statistiche\Statistiche_Giornata_" & idGiornata & ".pdf"
-						Dim PathLog As String = Server.MapPath(".") & "\Log\Pdf.txt"
+						Dim NomeFileLog As String = pathAllegati & Squadra & "\Statistiche\LogPDFStatistiche_" & idGiornata & ".txt"
+						'Dim PathLog As String = Server.MapPath(".") & "\Log\Pdf.txt"
 						gf.CreaDirectoryDaPercorso(NomeFileFinale)
 
 						gf.EliminaFileFisico(NomeFileFinale)
@@ -2634,11 +2757,16 @@ Public Class wsCampionato
 						'Dim pp As New pdfGest
 						'Ritorno = pp.ConverteHTMLInPDF(NomeFileFinale, NomeFileFinalePDF, PathLog, True)
 
-						Ritorno = ConvertePDF(NomeFileFinale, NomeFileFinalePDF)
+						' Ritorno = ConvertePDF(NomeFileFinale, NomeFileFinalePDF)
+						Dim pp As New pdfGest
+						Ritorno = pp.ConverteHTMLInPDF(NomeFileFinale, NomeFileFinalePDF, NomeFileLog)
 
 						If Ritorno = "*" Then
-							Ritorno = NomeFileFinalePDF.Replace(pathAllegati, pathMultimedia).Replace("Multimedia", "Allegati").Replace("\", "/")
+							Ritorno = NomeFileFinalePDF '.Replace(pathAllegati, pathMultimedia).Replace("Multimedia", "Allegati").Replace("\", "/")
+							gf.EliminaFileFisico(NomeFileFinale)
+							gf.EliminaFileFisico(NomeFileLog)
 						End If
+						ScriveLog(Server.MapPath("."), Squadra, "Statistiche", "Ritorno statistiche 1: " & Ritorno)
 
 					End If
 				End If
@@ -2657,18 +2785,48 @@ Public Class wsCampionato
 		Dim Righe() As String = Classifica.Split("§")
 		Dim Stampa As String = ""
 		Dim Connessione As String = LeggeImpostazioniDiBase(Server.MapPath("."), Squadra)
+		Dim Barra As String = "\"
+
+		If TipoDB <> "SQLSERVER" Then
+			Barra = "/"
+		End If
+
+		'Dim paths As String = gf.LeggeFileIntero(Server.MapPath(".") & "\Impostazioni\PathAllegati.txt")
+		'Dim P() As String = paths.Split(";")
+		'If Strings.Right(P(0), 1) <> "\" Then
+		'	P(0) &= "\"
+		'End If
+		'Dim pathAllegati As String = P(0).Replace(vbCrLf, "")
+		'If Strings.Right(P(2), 1) <> "/" Then
+		'	P(2) &= "/"
+		'End If
+		'Dim pathMultimedia As String = P(2).Replace(vbCrLf, "")
+		'Dim PathBaseMultimedia As String = pathMultimedia.Replace("Allegati", "Multimedia")
+
+		Dim wsImm As New wsImmagini
 
 		Dim paths As String = gf.LeggeFileIntero(Server.MapPath(".") & "\Impostazioni\PathAllegati.txt")
 		Dim P() As String = paths.Split(";")
-		If Strings.Right(P(0), 1) <> "\" Then
-			P(0) &= "\"
+		P(0) = P(0).Trim.Replace(vbCrLf, "")
+		If Strings.Right(P(0), 1) <> Barra Then
+			P(0) &= Barra
 		End If
 		Dim pathAllegati As String = P(0).Replace(vbCrLf, "")
-		If Strings.Right(P(2), 1) <> "/" Then
-			P(2) &= "/"
+
+		P(1) = P(1).Trim.Replace(vbCrLf, "")
+		If Strings.Right(P(1), 1) <> Barra Then
+			P(1) &= Barra
+		End If
+		Dim pathLogG As String = P(1).Replace(vbCrLf, "")
+
+		P(2) = P(2).Trim.Replace(vbCrLf, "")
+		If Strings.Right(P(2), 1) <> Barra Then
+			P(2) &= Barra
 		End If
 		Dim pathMultimedia As String = P(2).Replace(vbCrLf, "")
-		Dim PathBaseMultimedia As String = pathMultimedia.Replace("Allegati", "Multimedia")
+		Dim PathBaseImmagini As String = pathMultimedia & "ImmaginiLocali"
+		Dim ImmagineSconosciuta As String = PathBaseImmagini & "/Sconosciuto.png"
+
 		If Connessione = "" Then
 			Ritorno = ErroreConnessioneNonValida
 		Else
@@ -2732,13 +2890,26 @@ Public Class wsCampionato
 							Dim imm As String = ""
 
 							If Campi(0) = -1 Then
-								imm = PathBaseMultimedia & "/" & NomeSquadra & "/Categorie/" & idAnno & "_" & idCategoria & ".kgb"
-							Else
-								imm = PathBaseMultimedia & "/" & NomeSquadra & "/Avversari/" & Campi(0) & ".kgb"
-							End If
-							Dim Imm1 As String = DecriptaImmagine(Server.MapPath("."), imm)
+								'imm = PathBaseMultimedia & "/" & NomeSquadra & "/Categorie/" & idAnno & "_" & idCategoria & ".kgb"
 
-							Stampa &= "<td><img src=""" & Imm1 & """ width=""50"" height=""50"" /></td>" & vbCrLf
+								imm = wsImm.RitornaImmagineDB(Squadra, "Categorie", idCategoria, "")
+								If imm.Contains(StringaErrore) Then
+									imm = ImmagineSconosciuta
+								Else
+									imm = "data:image/png;base64,'" + imm
+								End If
+							Else
+								'imm = PathBaseMultimedia & "/" & NomeSquadra & "/Avversari/" & Campi(0) & ".kgb"
+								imm = wsImm.RitornaImmagineDB(Squadra, "Avversari", Campi(0), "")
+								If imm.Contains(StringaErrore) Then
+									imm = ImmagineSconosciuta
+								Else
+									imm = "data:image/png;base64,'" + imm
+								End If
+							End If
+							'Dim Imm1 As String = DecriptaImmagine(Server.MapPath("."), imm)
+
+							Stampa &= "<td><img src=""" & imm & """ width=""50"" height=""50"" /></td>" & vbCrLf
 							Stampa &= "<td>" & Campi(1) & "</td>"
 							If Campi(2) > 499 Then
 								Stampa &= "<td style=""text-align: right;"">*" & Campi(2) - 500 & "*</td>"
@@ -2757,7 +2928,7 @@ Public Class wsCampionato
 
 					Stampa &= "</table>"
 
-					Dim PathBaseImmagini As String = pathMultimedia
+					'Dim PathBaseImmagini As String = pathMultimedia
 
 					Dim filetto As String = gf.LeggeFileIntero(Server.MapPath(".") & "\Scheletri\statistiche_classifica.txt")
 					filetto = filetto.Replace("***SFONDO***", PathBaseImmagini & "/bg.jpg")
@@ -2767,7 +2938,8 @@ Public Class wsCampionato
 					'Dim Altro As String = Now.Year & Format(Now.Month, "00") & Format(Now.Day, "00") ' & Format(Now.Hour, "00") & Format(Now.Minute, "00") & Format(Now.Second, "00")
 					Dim NomeFileFinale As String = pathAllegati & Squadra & "\Statistiche\Classifica_Giornata_" & Giornata & ".html"
 					Dim NomeFileFinalePDF As String = pathAllegati & Squadra & "\Statistiche\Classifica_Giornata_" & Giornata & ".pdf"
-					Dim PathLog As String = Server.MapPath(".") & "\Log\Pdf.txt"
+					Dim NomeFileLog As String = pathAllegati & Squadra & "\Statistiche\LogPDFClassifica_" & Giornata & ".pdf"
+					' Dim PathLog As String = Server.MapPath(".") & "\Log\Pdf.txt"
 					gf.CreaDirectoryDaPercorso(NomeFileFinale)
 
 					gf.EliminaFileFisico(NomeFileFinale)
@@ -2777,11 +2949,21 @@ Public Class wsCampionato
 					'Dim pp As New pdfGest
 					'Ritorno = pp.ConverteHTMLInPDF(NomeFileFinale, NomeFileFinalePDF, PathLog, True)
 
-					Ritorno = ConvertePDF(NomeFileFinale, NomeFileFinalePDF)
+					'Ritorno = ConvertePDF(NomeFileFinale, NomeFileFinalePDF)
+
+					'If Ritorno = "*" Then
+					'	Ritorno = NomeFileFinalePDF.Replace(pathAllegati, pathMultimedia).Replace("Multimedia", "Allegati").Replace("\", "/")
+					'End If
+
+					Dim pp As New pdfGest
+					Ritorno = pp.ConverteHTMLInPDF(NomeFileFinale, NomeFileFinalePDF, NomeFileLog)
 
 					If Ritorno = "*" Then
-						Ritorno = NomeFileFinalePDF.Replace(pathAllegati, pathMultimedia).Replace("Multimedia", "Allegati").Replace("\", "/")
+						Ritorno = NomeFileFinalePDF '.Replace(pathAllegati, pathMultimedia).Replace("Multimedia", "Allegati").Replace("\", "/")
+						gf.EliminaFileFisico(NomeFileFinale)
+						gf.EliminaFileFisico(NomeFileLog)
 					End If
+
 				End If
 			End If
 		End If
@@ -2795,6 +2977,11 @@ Public Class wsCampionato
 		Dim Connessione As String = LeggeImpostazioniDiBase(Server.MapPath("."), Squadra)
 		Dim Stampa As String = ""
 		Dim gf As New GestioneFilesDirectory
+		Dim Barra As String = "\"
+
+		If TipoDB <> "SQLSERVER" Then
+			Barra = "/"
+		End If
 
 		If Connessione = "" Then
 			Ritorno = ErroreConnessioneNonValida
@@ -2809,17 +2996,41 @@ Public Class wsCampionato
 				Dim Ok As Boolean = True
 				Dim Colore As String = "#ccc"
 
+				'Dim paths As String = gf.LeggeFileIntero(Server.MapPath(".") & "\Impostazioni\PathAllegati.txt")
+				'Dim P() As String = paths.Split(";")
+				'If Strings.Right(P(0), 1) <> "\" Then
+				'	P(0) &= "\"
+				'End If
+				'Dim pathAllegati As String = P(0).Replace(vbCrLf, "")
+				'If Strings.Right(P(2), 1) <> "/" Then
+				'	P(2) &= "/"
+				'End If
+				'Dim pathMultimedia As String = P(2).Replace(vbCrLf, "")
+				'Dim PathBaseMultimedia As String = pathMultimedia.Replace("Allegati", "Multimedia")
+
+				Dim wsImm As New wsImmagini
+
 				Dim paths As String = gf.LeggeFileIntero(Server.MapPath(".") & "\Impostazioni\PathAllegati.txt")
 				Dim P() As String = paths.Split(";")
-				If Strings.Right(P(0), 1) <> "\" Then
-					P(0) &= "\"
+				P(0) = P(0).Trim.Replace(vbCrLf, "")
+				If Strings.Right(P(0), 1) <> Barra Then
+					P(0) &= Barra
 				End If
 				Dim pathAllegati As String = P(0).Replace(vbCrLf, "")
-				If Strings.Right(P(2), 1) <> "/" Then
-					P(2) &= "/"
+
+				P(1) = P(1).Trim.Replace(vbCrLf, "")
+				If Strings.Right(P(1), 1) <> Barra Then
+					P(1) &= Barra
+				End If
+				Dim pathLogG As String = P(1).Replace(vbCrLf, "")
+
+				P(2) = P(2).Trim.Replace(vbCrLf, "")
+				If Strings.Right(P(2), 1) <> Barra Then
+					P(2) &= Barra
 				End If
 				Dim pathMultimedia As String = P(2).Replace(vbCrLf, "")
-				Dim PathBaseMultimedia As String = pathMultimedia.Replace("Allegati", "Multimedia")
+				Dim PathBaseImmagini As String = pathMultimedia & "ImmaginiLocali"
+				Dim ImmagineSconosciuta As String = PathBaseImmagini & "/Sconosciuto.png"
 
 				Dim NomeSquadra As String = ""
 				Dim ss() As String = Squadra.Split("_")
@@ -2874,25 +3085,54 @@ Public Class wsCampionato
 							Stampa &= "</tr>" & vbCrLf
 
 							Do Until Rec.Eof()
-								Dim imm As String = ""
+								Dim imm1 As String = ""
+								Dim imm2 As String = ""
 								Dim Casa As String = "" & Rec("Casa").Value
 								Dim Fuori As String = "" & Rec("Fuori").Value
 
 								If Rec("idSqCasa").Value = -1 Or Rec("idSqCasa").Value = 9999 Then
-									imm = PathBaseMultimedia & "/" & NomeSquadra & "/Categorie/" & idAnno & "_" & idCategoria & ".kgb"
+									Imm1 = wsImm.RitornaImmagineDB(Squadra, "Categorie", idCategoria, "")
+									If Imm1.Contains(StringaErrore) Then
+										Imm1 = ImmagineSconosciuta
+									Else
+										Imm1 = "data:image/png;base64,'" + Imm1
+									End If
+
+									' imm = PathBaseMultimedia & "/" & NomeSquadra & "/Categorie/" & idAnno & "_" & idCategoria & ".kgb"
 									Casa = NomeCategoria
 								Else
-									imm = PathBaseMultimedia & "/" & NomeSquadra & "/Avversari/" & Rec("idSqCasa").Value & ".kgb"
+									imm1 = wsImm.RitornaImmagineDB(Squadra, "Avversari", Rec("idSqCasa").Value, "")
+									If imm1.Contains(StringaErrore) Then
+										imm1 = ImmagineSconosciuta
+									Else
+										imm1 = "data:image/png;base64,'" + imm1
+									End If
+
+									' imm = PathBaseMultimedia & "/" & NomeSquadra & "/Avversari/" & Rec("idSqCasa").Value & ".kgb"
 								End If
-								Dim Imm1 As String = DecriptaImmagine(Server.MapPath("."), imm)
+								'Dim Imm1 As String = DecriptaImmagine(Server.MapPath("."), imm)
 
 								If Rec("idSqFuori").Value = -1 Or Rec("idSqFuori").Value = 9999 Then
-									imm = PathBaseMultimedia & "/" & NomeSquadra & "/Categorie/" & idAnno & "_" & idCategoria & ".kgb"
+									imm2 = wsImm.RitornaImmagineDB(Squadra, "Categorie", idCategoria, "")
+									If imm2.Contains(StringaErrore) Then
+										imm2 = ImmagineSconosciuta
+									Else
+										imm2 = "data:image/png;base64,'" + imm2
+									End If
+
+									' imm = PathBaseMultimedia & "/" & NomeSquadra & "/Categorie/" & idAnno & "_" & idCategoria & ".kgb"
 									Fuori = NomeCategoria
 								Else
-									imm = PathBaseMultimedia & "/" & NomeSquadra & "/Avversari/" & Rec("idSqFuori").Value & ".kgb"
+									imm2 = wsImm.RitornaImmagineDB(Squadra, "Avversari", Rec("idSqFuori").Value, "")
+									If imm2.Contains(StringaErrore) Then
+										imm2 = ImmagineSconosciuta
+									Else
+										imm2 = "data:image/png;base64,'" + imm2
+									End If
+
+									' imm = PathBaseMultimedia & "/" & NomeSquadra & "/Avversari/" & Rec("idSqFuori").Value & ".kgb"
 								End If
-								Dim Imm2 As String = DecriptaImmagine(Server.MapPath("."), imm)
+								'Dim Imm2 As String = DecriptaImmagine(Server.MapPath("."), imm)
 
 								Stampa &= "<tr style=""background-color: " & Colore & ";"">" & vbCrLf
 								If Colore = "#ccc" Then Colore = "#fff" Else Colore = "#ccc"
@@ -2909,7 +3149,7 @@ Public Class wsCampionato
 
 							Stampa &= "</table>"
 
-							Dim PathBaseImmagini As String = pathMultimedia
+							'Dim PathBaseImmagini As String = pathMultimedia
 
 							Dim filetto As String = gf.LeggeFileIntero(Server.MapPath(".") & "\Scheletri\statistiche_giornata.txt")
 							filetto = filetto.Replace("***SFONDO***", PathBaseImmagini & "/bg.jpg")
@@ -2919,7 +3159,8 @@ Public Class wsCampionato
 							'Dim Altro As String = Now.Year & Format(Now.Month, "00") & Format(Now.Day, "00") ' & Format(Now.Hour, "00") & Format(Now.Minute, "00") & Format(Now.Second, "00")
 							Dim NomeFileFinale As String = pathAllegati & Squadra & "\Statistiche\Giornata_" & idGiornata & ".html"
 							Dim NomeFileFinalePDF As String = pathAllegati & Squadra & "\Statistiche\Giornata_" & idGiornata & ".pdf"
-							Dim PathLog As String = Server.MapPath(".") & "\Log\Pdf.txt"
+							Dim NomeFileLog As String = pathAllegati & Squadra & "\Statistiche\LogPDFGiornata_" & idGiornata & ".txt"
+							'Dim PathLog As String = Server.MapPath(".") & "\Log\Pdf.txt"
 							gf.CreaDirectoryDaPercorso(NomeFileFinale)
 
 							gf.EliminaFileFisico(NomeFileFinale)
@@ -2929,11 +3170,21 @@ Public Class wsCampionato
 							'Dim pp As New pdfGest
 							'Ritorno = pp.ConverteHTMLInPDF(NomeFileFinale, NomeFileFinalePDF, PathLog, True)
 
-							Ritorno = ConvertePDF(NomeFileFinale, NomeFileFinalePDF)
+							'Ritorno = ConvertePDF(NomeFileFinale, NomeFileFinalePDF)
+
+							'If Ritorno = "*" Then
+							'	Ritorno = NomeFileFinalePDF.Replace(pathAllegati, pathMultimedia).Replace("Multimedia", "Allegati").Replace("\", "/")
+							'End If
+
+							Dim pp As New pdfGest
+							Ritorno = pp.ConverteHTMLInPDF(NomeFileFinale, NomeFileFinalePDF, NomeFileLog)
 
 							If Ritorno = "*" Then
-								Ritorno = NomeFileFinalePDF.Replace(pathAllegati, pathMultimedia).Replace("Multimedia", "Allegati").Replace("\", "/")
+								Ritorno = NomeFileFinalePDF '.Replace(pathAllegati, pathMultimedia).Replace("Multimedia", "Allegati").Replace("\", "/")
+								gf.EliminaFileFisico(NomeFileFinale)
+								gf.EliminaFileFisico(NomeFileLog)
 							End If
+
 						End If
                     Catch ex As Exception
 						Ritorno = "ERROR: " & ex.Message

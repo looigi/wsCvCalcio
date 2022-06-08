@@ -1,0 +1,7 @@
+Select E.Categorie, D.Descrizione, E.idGiocatore, E.Cognome, E.Nome, E.Soprannome, Count(*) As Quanti  From EventiPartita A
+Left Join Partite B On A.idPartita = B.idPartita 
+Left Join [Generale].[dbo].[TipologiePartite] C On B.idTipologia = C.idTipologia 
+Left Join Eventi D On A.idEvento = D.idEvento 
+Left Join Giocatori E On A.idGiocatore = E.idGiocatore 
+Where C.idTipologia = 2
+Group By E.Categorie, D.Descrizione, E.idGiocatore, E.Cognome, E.Nome, E.Soprannome

@@ -1,141 +1,141 @@
 SELECT        Categorie, Tipologia, Fascia, idTempo, SUM(Goals) AS Goals
 FROM            (SELECT        D.Categorie, 'Amichevole' AS Tipologia, '0-9' AS Fascia, A.idTempo, 1 AS Goals
-                          FROM            dbo.RisultatiAggiuntiviMarcatori AS A LEFT OUTER JOIN
-                                                    dbo.Partite AS B ON A.idPartita = B.idPartita LEFT OUTER JOIN
-                                                    Generale.dbo.Tipologie AS C ON B.idTipologia = C.idTipologia LEFT OUTER JOIN
-                                                    dbo.Giocatori AS D ON A.idGiocatore = D.idGiocatore
+                          FROM            risultatiaggiuntivimarcatori AS A LEFT OUTER JOIN
+                                                    partite AS B ON A.idPartita = B.idPartita LEFT OUTER JOIN
+                                                    Generale.tipologie AS C ON B.idTipologia = C.idTipologia LEFT OUTER JOIN
+                                                    giocatori AS D ON A.idGiocatore = D.idGiocatore
                           WHERE        (B.idTipologia = 2) AND (A.Minuto < 10) AND (A.idTempo = 1)
                           UNION ALL
                           SELECT        D.Categorie, 'Amichevole' AS Tipologia, '10-19' AS Fascia, A.idTempo, 1 AS Goals
-                          FROM            dbo.RisultatiAggiuntiviMarcatori AS A LEFT OUTER JOIN
-                                                   dbo.Partite AS B ON A.idPartita = B.idPartita LEFT OUTER JOIN
-                                                   Generale.dbo.Tipologie AS C ON B.idTipologia = C.idTipologia LEFT OUTER JOIN
-                                                   dbo.Giocatori AS D ON A.idGiocatore = D.idGiocatore
+                          FROM            risultatiaggiuntivimarcatori AS A LEFT OUTER JOIN
+                                                   partite AS B ON A.idPartita = B.idPartita LEFT OUTER JOIN
+                                                   Generale.tipologie AS C ON B.idTipologia = C.idTipologia LEFT OUTER JOIN
+                                                   giocatori AS D ON A.idGiocatore = D.idGiocatore
                           WHERE        (B.idTipologia = 2) AND (A.Minuto > 9) AND (A.Minuto < 20) AND (A.idTempo = 1)
                           UNION ALL
                           SELECT        D.Categorie, 'Amichevole' AS Tipologia, '20-29' AS Fascia, A.idTempo, 1 AS Goals
-                          FROM            dbo.RisultatiAggiuntiviMarcatori AS A LEFT OUTER JOIN
-                                                   dbo.Partite AS B ON A.idPartita = B.idPartita LEFT OUTER JOIN
-                                                   Generale.dbo.Tipologie AS C ON B.idTipologia = C.idTipologia LEFT OUTER JOIN
-                                                   dbo.Giocatori AS D ON A.idGiocatore = D.idGiocatore
+                          FROM            risultatiaggiuntivimarcatori AS A LEFT OUTER JOIN
+                                                   partite AS B ON A.idPartita = B.idPartita LEFT OUTER JOIN
+                                                   Generale.tipologie AS C ON B.idTipologia = C.idTipologia LEFT OUTER JOIN
+                                                   giocatori AS D ON A.idGiocatore = D.idGiocatore
                           WHERE        (B.idTipologia = 2) AND (A.Minuto > 19) AND (A.Minuto < 30) AND (A.idTempo = 1)
                           UNION ALL
                           SELECT        D.Categorie, 'Amichevole' AS Tipologia, '30-39' AS Fascia, A.idTempo, 1 AS Goals
-                          FROM            dbo.RisultatiAggiuntiviMarcatori AS A LEFT OUTER JOIN
-                                                   dbo.Partite AS B ON A.idPartita = B.idPartita LEFT OUTER JOIN
-                                                   Generale.dbo.Tipologie AS C ON B.idTipologia = C.idTipologia LEFT OUTER JOIN
-                                                   dbo.Giocatori AS D ON A.idGiocatore = D.idGiocatore
+                          FROM            risultatiaggiuntivimarcatori AS A LEFT OUTER JOIN
+                                                   partite AS B ON A.idPartita = B.idPartita LEFT OUTER JOIN
+                                                   Generale.tipologie AS C ON B.idTipologia = C.idTipologia LEFT OUTER JOIN
+                                                   giocatori AS D ON A.idGiocatore = D.idGiocatore
                           WHERE        (B.idTipologia = 2) AND (A.Minuto > 29) AND (A.Minuto < 40) AND (A.idTempo = 1)
                           UNION ALL
                           SELECT        D.Categorie, 'Amichevole' AS Tipologia, '40-' AS Fascia, A.idTempo, 1 AS Goals
-                          FROM            dbo.RisultatiAggiuntiviMarcatori AS A LEFT OUTER JOIN
-                                                   dbo.Partite AS B ON A.idPartita = B.idPartita LEFT OUTER JOIN
-                                                   Generale.dbo.Tipologie AS C ON B.idTipologia = C.idTipologia LEFT OUTER JOIN
-                                                   dbo.Giocatori AS D ON A.idGiocatore = D.idGiocatore
+                          FROM            risultatiaggiuntivimarcatori AS A LEFT OUTER JOIN
+                                                   partite AS B ON A.idPartita = B.idPartita LEFT OUTER JOIN
+                                                   Generale.tipologie AS C ON B.idTipologia = C.idTipologia LEFT OUTER JOIN
+                                                   giocatori AS D ON A.idGiocatore = D.idGiocatore
                           WHERE        (B.idTipologia = 2) AND (A.Minuto > 39) AND (A.idTempo = 1)
                           UNION ALL
                           SELECT        D.Categorie, 'Amichevole' AS Tipologia, '0-9' AS Fascia, A.idTempo, 1 AS Goals
-                          FROM            dbo.RisultatiAggiuntiviMarcatori AS A LEFT OUTER JOIN
-                                                   dbo.Partite AS B ON A.idPartita = B.idPartita LEFT OUTER JOIN
-                                                   Generale.dbo.Tipologie AS C ON B.idTipologia = C.idTipologia LEFT OUTER JOIN
-                                                   dbo.Giocatori AS D ON A.idGiocatore = D.idGiocatore
+                          FROM            risultatiaggiuntivimarcatori AS A LEFT OUTER JOIN
+                                                   partite AS B ON A.idPartita = B.idPartita LEFT OUTER JOIN
+                                                   Generale.tipologie AS C ON B.idTipologia = C.idTipologia LEFT OUTER JOIN
+                                                   giocatori AS D ON A.idGiocatore = D.idGiocatore
                           WHERE        (B.idTipologia = 2) AND (A.Minuto < 10) AND (A.idTempo = 2)
                           UNION ALL
                           SELECT        D.Categorie, 'Amichevole' AS Tipologia, '10-19' AS Fascia, A.idTempo, 1 AS Goals
-                          FROM            dbo.RisultatiAggiuntiviMarcatori AS A LEFT OUTER JOIN
-                                                   dbo.Partite AS B ON A.idPartita = B.idPartita LEFT OUTER JOIN
-                                                   Generale.dbo.Tipologie AS C ON B.idTipologia = C.idTipologia LEFT OUTER JOIN
-                                                   dbo.Giocatori AS D ON A.idGiocatore = D.idGiocatore
+                          FROM            risultatiaggiuntivimarcatori AS A LEFT OUTER JOIN
+                                                   partite AS B ON A.idPartita = B.idPartita LEFT OUTER JOIN
+                                                   Generale.tipologie AS C ON B.idTipologia = C.idTipologia LEFT OUTER JOIN
+                                                   giocatori AS D ON A.idGiocatore = D.idGiocatore
                           WHERE        (B.idTipologia = 2) AND (A.Minuto > 9) AND (A.Minuto < 20) AND (A.idTempo = 2)
                           UNION ALL
                           SELECT        D.Categorie, 'Amichevole' AS Tipologia, '20-29' AS Fascia, A.idTempo, 1 AS Goals
-                          FROM            dbo.RisultatiAggiuntiviMarcatori AS A LEFT OUTER JOIN
-                                                   dbo.Partite AS B ON A.idPartita = B.idPartita LEFT OUTER JOIN
-                                                   Generale.dbo.Tipologie AS C ON B.idTipologia = C.idTipologia LEFT OUTER JOIN
-                                                   dbo.Giocatori AS D ON A.idGiocatore = D.idGiocatore
+                          FROM            risultatiaggiuntivimarcatori AS A LEFT OUTER JOIN
+                                                   partite AS B ON A.idPartita = B.idPartita LEFT OUTER JOIN
+                                                   Generale.tipologie AS C ON B.idTipologia = C.idTipologia LEFT OUTER JOIN
+                                                   giocatori AS D ON A.idGiocatore = D.idGiocatore
                           WHERE        (B.idTipologia = 2) AND (A.Minuto > 19) AND (A.Minuto < 30) AND (A.idTempo = 2)
                           UNION ALL
                           SELECT        D.Categorie, 'Amichevole' AS Tipologia, '30-39' AS Fascia, A.idTempo, 1 AS Goals
-                          FROM            dbo.RisultatiAggiuntiviMarcatori AS A LEFT OUTER JOIN
-                                                   dbo.Partite AS B ON A.idPartita = B.idPartita LEFT OUTER JOIN
-                                                   Generale.dbo.Tipologie AS C ON B.idTipologia = C.idTipologia LEFT OUTER JOIN
-                                                   dbo.Giocatori AS D ON A.idGiocatore = D.idGiocatore
+                          FROM            risultatiaggiuntivimarcatori AS A LEFT OUTER JOIN
+                                                   partite AS B ON A.idPartita = B.idPartita LEFT OUTER JOIN
+                                                   Generale.tipologie AS C ON B.idTipologia = C.idTipologia LEFT OUTER JOIN
+                                                   giocatori AS D ON A.idGiocatore = D.idGiocatore
                           WHERE        (B.idTipologia = 2) AND (A.Minuto > 29) AND (A.Minuto < 40) AND (A.idTempo = 2)
                           UNION ALL
                           SELECT        D.Categorie, 'Amichevole' AS Tipologia, '40-' AS Fascia, A.idTempo, 1 AS Goals
-                          FROM            dbo.RisultatiAggiuntiviMarcatori AS A LEFT OUTER JOIN
-                                                   dbo.Partite AS B ON A.idPartita = B.idPartita LEFT OUTER JOIN
-                                                   Generale.dbo.Tipologie AS C ON B.idTipologia = C.idTipologia LEFT OUTER JOIN
-                                                   dbo.Giocatori AS D ON A.idGiocatore = D.idGiocatore
+                          FROM            risultatiaggiuntivimarcatori AS A LEFT OUTER JOIN
+                                                   partite AS B ON A.idPartita = B.idPartita LEFT OUTER JOIN
+                                                   Generale.tipologie AS C ON B.idTipologia = C.idTipologia LEFT OUTER JOIN
+                                                   giocatori AS D ON A.idGiocatore = D.idGiocatore
                           WHERE        (B.idTipologia = 2) AND (A.Minuto > 39) AND (A.idTempo = 2)
                           UNION ALL
                           SELECT        D.Categorie, 'Campionato' AS Tipologia, '0-9' AS Fascia, A.idTempo, 1 AS Goals
-                          FROM            dbo.RisultatiAggiuntiviMarcatori AS A LEFT OUTER JOIN
-                                                   dbo.Partite AS B ON A.idPartita = B.idPartita LEFT OUTER JOIN
-                                                   Generale.dbo.Tipologie AS C ON B.idTipologia = C.idTipologia LEFT OUTER JOIN
-                                                   dbo.Giocatori AS D ON A.idGiocatore = D.idGiocatore
+                          FROM            risultatiaggiuntivimarcatori AS A LEFT OUTER JOIN
+                                                   partite AS B ON A.idPartita = B.idPartita LEFT OUTER JOIN
+                                                   Generale.tipologie AS C ON B.idTipologia = C.idTipologia LEFT OUTER JOIN
+                                                   giocatori AS D ON A.idGiocatore = D.idGiocatore
                           WHERE        (B.idTipologia = 1) AND (A.Minuto < 10) AND (A.idTempo = 1)
                           UNION ALL
                           SELECT        D.Categorie, 'Campionato' AS Tipologia, '10-19' AS Fascia, A.idTempo, 1 AS Goals
-                          FROM            dbo.RisultatiAggiuntiviMarcatori AS A LEFT OUTER JOIN
-                                                   dbo.Partite AS B ON A.idPartita = B.idPartita LEFT OUTER JOIN
-                                                   Generale.dbo.Tipologie AS C ON B.idTipologia = C.idTipologia LEFT OUTER JOIN
-                                                   dbo.Giocatori AS D ON A.idGiocatore = D.idGiocatore
+                          FROM            risultatiaggiuntivimarcatori AS A LEFT OUTER JOIN
+                                                   partite AS B ON A.idPartita = B.idPartita LEFT OUTER JOIN
+                                                   Generale.tipologie AS C ON B.idTipologia = C.idTipologia LEFT OUTER JOIN
+                                                   giocatori AS D ON A.idGiocatore = D.idGiocatore
                           WHERE        (B.idTipologia = 1) AND (A.Minuto > 9) AND (A.Minuto < 20) AND (A.idTempo = 1)
                           UNION ALL
                           SELECT        D.Categorie, 'Campionato' AS Tipologia, '20-29' AS Fascia, A.idTempo, 1 AS Goals
-                          FROM            dbo.RisultatiAggiuntiviMarcatori AS A LEFT OUTER JOIN
-                                                   dbo.Partite AS B ON A.idPartita = B.idPartita LEFT OUTER JOIN
-                                                   Generale.dbo.Tipologie AS C ON B.idTipologia = C.idTipologia LEFT OUTER JOIN
-                                                   dbo.Giocatori AS D ON A.idGiocatore = D.idGiocatore
+                          FROM            risultatiaggiuntivimarcatori AS A LEFT OUTER JOIN
+                                                   partite AS B ON A.idPartita = B.idPartita LEFT OUTER JOIN
+                                                   Generale.tipologie AS C ON B.idTipologia = C.idTipologia LEFT OUTER JOIN
+                                                   giocatori AS D ON A.idGiocatore = D.idGiocatore
                           WHERE        (B.idTipologia = 1) AND (A.Minuto > 19) AND (A.Minuto < 30) AND (A.idTempo = 1)
                           UNION ALL
                           SELECT        D.Categorie, 'Campionato' AS Tipologia, '30-39' AS Fascia, A.idTempo, 1 AS Goals
-                          FROM            dbo.RisultatiAggiuntiviMarcatori AS A LEFT OUTER JOIN
-                                                   dbo.Partite AS B ON A.idPartita = B.idPartita LEFT OUTER JOIN
-                                                   Generale.dbo.Tipologie AS C ON B.idTipologia = C.idTipologia LEFT OUTER JOIN
-                                                   dbo.Giocatori AS D ON A.idGiocatore = D.idGiocatore
+                          FROM            risultatiaggiuntivimarcatori AS A LEFT OUTER JOIN
+                                                   partite AS B ON A.idPartita = B.idPartita LEFT OUTER JOIN
+                                                   Generale.tipologie AS C ON B.idTipologia = C.idTipologia LEFT OUTER JOIN
+                                                   giocatori AS D ON A.idGiocatore = D.idGiocatore
                           WHERE        (B.idTipologia = 1) AND (A.Minuto > 29) AND (A.Minuto < 40) AND (A.idTempo = 1)
                           UNION ALL
                           SELECT        D.Categorie, 'Campionato' AS Tipologia, '40-' AS Fascia, A.idTempo, 1 AS Goals
-                          FROM            dbo.RisultatiAggiuntiviMarcatori AS A LEFT OUTER JOIN
-                                                   dbo.Partite AS B ON A.idPartita = B.idPartita LEFT OUTER JOIN
-                                                   Generale.dbo.Tipologie AS C ON B.idTipologia = C.idTipologia LEFT OUTER JOIN
-                                                   dbo.Giocatori AS D ON A.idGiocatore = D.idGiocatore
+                          FROM            risultatiaggiuntivimarcatori AS A LEFT OUTER JOIN
+                                                   partite AS B ON A.idPartita = B.idPartita LEFT OUTER JOIN
+                                                   Generale.tipologie AS C ON B.idTipologia = C.idTipologia LEFT OUTER JOIN
+                                                   giocatori AS D ON A.idGiocatore = D.idGiocatore
                           WHERE        (B.idTipologia = 1) AND (A.Minuto > 39) AND (A.idTempo = 1)
                           UNION ALL
                           SELECT        D.Categorie, 'Campionato' AS Tipologia, '0-9' AS Fascia, A.idTempo, 1 AS Goals
-                          FROM            dbo.RisultatiAggiuntiviMarcatori AS A LEFT OUTER JOIN
-                                                   dbo.Partite AS B ON A.idPartita = B.idPartita LEFT OUTER JOIN
-                                                   Generale.dbo.Tipologie AS C ON B.idTipologia = C.idTipologia LEFT OUTER JOIN
-                                                   dbo.Giocatori AS D ON A.idGiocatore = D.idGiocatore
+                          FROM            risultatiaggiuntivimarcatori AS A LEFT OUTER JOIN
+                                                   partite AS B ON A.idPartita = B.idPartita LEFT OUTER JOIN
+                                                   Generale.tipologie AS C ON B.idTipologia = C.idTipologia LEFT OUTER JOIN
+                                                   giocatori AS D ON A.idGiocatore = D.idGiocatore
                           WHERE        (B.idTipologia = 1) AND (A.Minuto < 10) AND (A.idTempo = 2)
                           UNION ALL
                           SELECT        D.Categorie, 'Campionato' AS Tipologia, '10-19' AS Fascia, A.idTempo, 1 AS Goals
-                          FROM            dbo.RisultatiAggiuntiviMarcatori AS A LEFT OUTER JOIN
-                                                   dbo.Partite AS B ON A.idPartita = B.idPartita LEFT OUTER JOIN
-                                                   Generale.dbo.Tipologie AS C ON B.idTipologia = C.idTipologia LEFT OUTER JOIN
-                                                   dbo.Giocatori AS D ON A.idGiocatore = D.idGiocatore
+                          FROM            risultatiaggiuntivimarcatori AS A LEFT OUTER JOIN
+                                                   partite AS B ON A.idPartita = B.idPartita LEFT OUTER JOIN
+                                                   Generale.tipologie AS C ON B.idTipologia = C.idTipologia LEFT OUTER JOIN
+                                                   giocatori AS D ON A.idGiocatore = D.idGiocatore
                           WHERE        (B.idTipologia = 1) AND (A.Minuto > 9) AND (A.Minuto < 20) AND (A.idTempo = 2)
                           UNION ALL
                           SELECT        D.Categorie, 'Campionato' AS Tipologia, '20-29' AS Fascia, A.idTempo, 1 AS Goals
-                          FROM            dbo.RisultatiAggiuntiviMarcatori AS A LEFT OUTER JOIN
-                                                   dbo.Partite AS B ON A.idPartita = B.idPartita LEFT OUTER JOIN
-                                                   Generale.dbo.Tipologie AS C ON B.idTipologia = C.idTipologia LEFT OUTER JOIN
-                                                   dbo.Giocatori AS D ON A.idGiocatore = D.idGiocatore
+                          FROM            risultatiaggiuntivimarcatori AS A LEFT OUTER JOIN
+                                                   partite AS B ON A.idPartita = B.idPartita LEFT OUTER JOIN
+                                                   Generale.tipologie AS C ON B.idTipologia = C.idTipologia LEFT OUTER JOIN
+                                                   giocatori AS D ON A.idGiocatore = D.idGiocatore
                           WHERE        (B.idTipologia = 1) AND (A.Minuto > 19) AND (A.Minuto < 30) AND (A.idTempo = 2)
                           UNION ALL
                           SELECT        D.Categorie, 'Campionato' AS Tipologia, '30-39' AS Fascia, A.idTempo, 1 AS Goals
-                          FROM            dbo.RisultatiAggiuntiviMarcatori AS A LEFT OUTER JOIN
-                                                   dbo.Partite AS B ON A.idPartita = B.idPartita LEFT OUTER JOIN
-                                                   Generale.dbo.Tipologie AS C ON B.idTipologia = C.idTipologia LEFT OUTER JOIN
-                                                   dbo.Giocatori AS D ON A.idGiocatore = D.idGiocatore
+                          FROM            risultatiaggiuntivimarcatori AS A LEFT OUTER JOIN
+                                                   partite AS B ON A.idPartita = B.idPartita LEFT OUTER JOIN
+                                                   Generale.tipologie AS C ON B.idTipologia = C.idTipologia LEFT OUTER JOIN
+                                                   giocatori AS D ON A.idGiocatore = D.idGiocatore
                           WHERE        (B.idTipologia = 1) AND (A.Minuto > 29) AND (A.Minuto < 40) AND (A.idTempo = 2)
                           UNION ALL
                           SELECT        D.Categorie, 'Campionato' AS Tipologia, '40-' AS Fascia, A.idTempo, 1 AS Goals
-                          FROM            dbo.RisultatiAggiuntiviMarcatori AS A LEFT OUTER JOIN
-                                                   dbo.Partite AS B ON A.idPartita = B.idPartita LEFT OUTER JOIN
-                                                   Generale.dbo.Tipologie AS C ON B.idTipologia = C.idTipologia LEFT OUTER JOIN
-                                                   dbo.Giocatori AS D ON A.idGiocatore = D.idGiocatore
+                          FROM            risultatiaggiuntivimarcatori AS A LEFT OUTER JOIN
+                                                   partite AS B ON A.idPartita = B.idPartita LEFT OUTER JOIN
+                                                   Generale.tipologie AS C ON B.idTipologia = C.idTipologia LEFT OUTER JOIN
+                                                   giocatori AS D ON A.idGiocatore = D.idGiocatore
                           WHERE        (B.idTipologia = 1) AND (A.Minuto > 39) AND (A.idTempo = 2)) AS A_1
 GROUP BY Categorie, Tipologia, Fascia, idTempo

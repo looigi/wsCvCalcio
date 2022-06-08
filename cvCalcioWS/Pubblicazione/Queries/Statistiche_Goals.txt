@@ -1,22 +1,24 @@
 SELECT        Categorie, idGiocatore, Cognome, Nome, Ruolo, SUM(SommaGoalAmichevole) AS GoalAmichevole, SUM(SommaGoalCampionato) AS GoalCampionato, SUM(SommaGoalAmichevole) + SUM(SommaGoalCampionato) AS Totale,
               Sum(Rigori) As Rigori, Soprannome
 FROM            (SELECT        Categorie, idGiocatore, Cognome, Nome, Ruolo, Tipologia, SUM(Goal) AS SommaGoalAmichevole, 0 AS SommaGoalCampionato, Sum(Rigore) As Rigori, Soprannome
-                          FROM            (SELECT        D.Categorie, D.idGiocatore, D.Cognome, D.Nome, E.Descrizione AS Ruolo, 1 AS Goal, C.Descrizione AS Tipologia, D.Soprannome, IIF(A.Rigore = 'S', 1, 0) As Rigore
-                                                    FROM            dbo.RisultatiAggiuntiviMarcatori AS A LEFT OUTER JOIN
-                                                                              dbo.Partite AS B ON A.idPartita = B.idPartita LEFT OUTER JOIN
-                                                                              Generale.dbo.TipologiePartite AS C ON B.idTipologia = C.idTipologia LEFT OUTER JOIN
-                                                                              dbo.Giocatori AS D ON D.idGiocatore = A.idGiocatore LEFT OUTER JOIN
-                                                                              Generale.dbo.Ruoli AS E ON D.idRuolo = E.idRuolo
+                          FROM            (SELECT        D.Categorie, D.idGiocatore, D.Cognome, D.Nome, E.Descrizione AS Ruolo, 1 AS Goal, C.Descrizione AS Tipologia, D.Soprannome, IF(A.Rigore = 'S', 1, 0) As Rigore
+                                                    FROM            risultatiaggiuntivimarcatori AS A LEFT OUTER JOIN
+                                                                              partite AS B ON A.idPartita = B.idPartita LEFT OUTER JOIN
+                                                                              Generale.tipologiepartite AS C ON B.idTipologia = C.idTipologia LEFT OUTER JOIN
+                                                                              giocatori AS D ON D.idGiocatore = A.idGiocatore LEFT OUTER JOIN
+                                                                              Generale.ruoli AS E ON D.idRuolo = E.idRuolo
                                                     WHERE        (B.Giocata = 'S') AND (C.idTipologia = 2)) AS A_2
                           GROUP BY Categorie, idGiocatore, Cognome, Nome, Tipologia, Ruolo, Soprannome
                           UNION ALL
+                          
                           SELECT        Categorie, idGiocatore, Cognome, Nome, Ruolo, Tipologia, 0 AS SommaGoalAmichevole, SUM(Goal) AS SommaGoalCampionato, Sum(Rigore) As Rigori, Soprannome
-                          FROM            (SELECT        D.Categorie, D.idGiocatore, D.Cognome, D.Nome, E.Descrizione AS Ruolo, 1 AS Goal, C.Descrizione AS Tipologia, D.Soprannome, IIF(A.Rigore = 'S', 1, 0) As Rigore
-                                                    FROM            dbo.RisultatiAggiuntiviMarcatori AS A LEFT OUTER JOIN
-                                                                              dbo.Partite AS B ON A.idPartita = B.idPartita LEFT OUTER JOIN
-                                                                              Generale.dbo.TipologiePartite AS C ON B.idTipologia = C.idTipologia LEFT OUTER JOIN
-                                                                              dbo.Giocatori AS D ON D.idGiocatore = A.idGiocatore LEFT OUTER JOIN
-                                                                              Generale.dbo.Ruoli AS E ON D.idRuolo = E.idRuolo
+                          FROM            (SELECT        D.Categorie, D.idGiocatore, D.Cognome, D.Nome, E.Descrizione AS Ruolo, 1 AS Goal, C.Descrizione AS Tipologia, D.Soprannome, IF(A.Rigore = 'S', 1, 0) As Rigore
+                                                    FROM            risultatiaggiuntivimarcatori AS A LEFT OUTER JOIN
+                                                                              partite AS B ON A.idPartita = B.idPartita LEFT OUTER JOIN
+                                                                              Generale.tipologiepartite AS C ON B.idTipologia = C.idTipologia LEFT OUTER JOIN
+                                                                              giocatori AS D ON D.idGiocatore = A.idGiocatore LEFT OUTER JOIN
+                                                                              Generale.ruoli AS E ON D.idRuolo = E.idRuolo
                                                     WHERE        (B.Giocata = 'S') AND (C.idTipologia = 1)) AS A_1
                           GROUP BY Categorie, idGiocatore, Cognome, Nome, Tipologia, Ruolo, Soprannome) AS B_1
 GROUP BY Categorie, idGiocatore, Cognome, Nome, Ruolo, Soprannome
+
