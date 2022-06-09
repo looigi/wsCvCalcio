@@ -1042,7 +1042,7 @@ Public Class wsReports
 								Dim PathLog As String = pathLogG & "Pdf.txt"
 
 								Dim ppp As New pdfGest
-								Ritorno = ppp.ConverteHTMLInPDF(nomeFileHtml, NomeFileFinalePDF, PathLog, True)
+								Ritorno = ppp.ConverteHTMLInPDF(Server.MapPath("."), nomeFileHtml, NomeFileFinalePDF, PathLog, True)
 
 								If Ritorno = "*" Then
 									Ritorno = "Appoggio/" & Esten & ".pdf"

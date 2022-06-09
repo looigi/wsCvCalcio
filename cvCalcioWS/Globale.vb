@@ -702,7 +702,7 @@ Module Globale
 				If ImmAll.Contains(StringaErrore) Then
 					ImmAll = ImmagineSconosciuta
 				Else
-					ImmAll = "data:image/png;base64,'" + ImmAll
+					ImmAll = "data:image/png;base64," + ImmAll
 				End If
 				'Return ImmAll
 
@@ -718,13 +718,13 @@ Module Globale
 				If Imm1.Contains(StringaErrore) Then
 					Imm1 = ImmagineSconosciuta
 				Else
-					Imm1 = "data:image/png;base64,'" + Imm1
+					Imm1 = "data:image/png;base64," + Imm1
 				End If
 				Dim Imm2 As String = wsImm.RitornaImmagineDB(Squadra, "Avversari", Rec("idAvversario").Value, "")
 				If Imm2.Contains(StringaErrore) Then
 					Imm2 = ImmagineSconosciuta
 				Else
-					Imm2 = "data:image/png;base64,'" + Imm2
+					Imm2 = "data:image/png;base64," + Imm2
 				End If
 
 				If Casa = "S" Then
@@ -775,7 +775,7 @@ Module Globale
 						If PathArb.Contains(StringaErrore) Then
 							PathArb = ImmagineSconosciuta
 						Else
-							PathArb = "data:image/png;base64,'" + PathArb
+							PathArb = "data:image/png;base64," + PathArb
 						End If
 
 						Filone = Filone.Replace("***IMMAGINE ARB***", PathArb)
@@ -809,7 +809,7 @@ Module Globale
 						If Path.Contains(StringaErrore) Then
 							Path = ImmagineSconosciuta
 						Else
-							Path = "data:image/png;base64,'" + Path
+							Path = "data:image/png;base64," + Path
 						End If
 
 						Dirigenti.Append("<tr>")
@@ -891,7 +891,7 @@ Module Globale
 						If Path.Contains(StringaErrore) Then
 							Path = ImmagineSconosciuta
 						Else
-							Path = "data:image/png;base64,'" + Path
+							Path = "data:image/png;base64," + Path
 						End If
 
 						Dim messoTit As Boolean = False
@@ -1430,7 +1430,7 @@ Module Globale
 										If Path.Contains(StringaErrore) Then
 											Path = ImmagineSconosciuta
 										Else
-											Path = "data:image/png;base64,'" + Path
+											Path = "data:image/png;base64," + Path
 										End If
 									End If
 								End If
@@ -1514,7 +1514,7 @@ Module Globale
 									If Path.Contains(StringaErrore) Then
 										Path = ImmagineSconosciuta
 									Else
-										Path = "data:image/png;base64,'" + Path
+										Path = "data:image/png;base64," + Path
 									End If
 								End If
 
@@ -1696,7 +1696,7 @@ Module Globale
 
 						If TipoPDFPassato = "WINDOWS" Then
 							Dim pp As New pdfGest
-							Ritorno = pp.ConverteHTMLInPDF(NomeFileFinale, NomeFileFinalePDF, PathLog, True,, altezzaReport)
+							Ritorno = pp.ConverteHTMLInPDF(MP, NomeFileFinale, NomeFileFinalePDF, PathLog, True,, altezzaReport)
 
 							If Ritorno = "OK" Then
 								Ritorno = NomeFileFinalePDF.Replace(pathAllegati, pathMultimedia).Replace("Multimedia", "Allegati").Replace("\", "/")

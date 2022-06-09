@@ -234,7 +234,7 @@ Public Class GestioneTags
 			'File.Copy(fileDaCopiare, fileDaCopiare2)
 			Dim pp As New pdfGest
 
-			Ritorno = pp.ConverteHTMLInPDF(fileDaCopiare, fileDaCopiarePDF, fileLog)
+			Ritorno = pp.ConverteHTMLInPDF(MP, fileDaCopiare, fileDaCopiarePDF, fileLog)
 
 			If Ritorno = "*" Then
 				gf.EliminaFileFisico(fileDaCopiare)
@@ -375,7 +375,7 @@ Public Class GestioneTags
 
 			Dim pp As New pdfGest
 
-			Dim Ritorno As String = pp.ConverteHTMLInPDF(fileAppoggio, fileFinale, fileLog)
+			Dim Ritorno As String = pp.ConverteHTMLInPDF(MP, fileAppoggio, fileFinale, fileLog)
 
 			If Ritorno = "*" Then
 				gf.EliminaFileFisico(fileAppoggio)
@@ -559,7 +559,7 @@ Public Class GestioneTags
 			Dim pp As New pdfGest
 			Dim Ritorno As String = ""
 
-			Ritorno = pp.ConverteHTMLInPDF(fileDaCopiare, fileDaCopiarePDF, fileLog)
+			Ritorno = pp.ConverteHTMLInPDF(MP, fileDaCopiare, fileDaCopiarePDF, fileLog)
 
 			Dim imm As New wsImmagini
 			Ritorno = imm.SalvaAllegatoDB(CodSquadra, "iscrizioni", fileDaCopiarePDF, gf.TornaNomeFileDaPath(fileDaCopiarePDF), idGiocatore, 1)
@@ -614,7 +614,7 @@ Public Class GestioneTags
 			Dim pp As New pdfGest
 			Dim Ritorno As String = ""
 
-			Ritorno = pp.ConverteHTMLInPDF(fileDaCopiare, fileDaCopiarePDF, fileLog)
+			Ritorno = pp.ConverteHTMLInPDF(MP, fileDaCopiare, fileDaCopiarePDF, fileLog)
 
 			Dim imm As New wsImmagini
 			Ritorno = imm.SalvaAllegatoDB(CodSquadra, "privacy", fileDaCopiarePDF, gf.TornaNomeFileDaPath(fileDaCopiarePDF), idGiocatore, 1)

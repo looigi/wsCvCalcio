@@ -13,7 +13,7 @@ Public Class pdfClass
 	Public Function ConverteHTMLToPDF(NomeHtml As String, PathSalvataggio As String) As String
 		Dim p As New pdfGest
 
-		Return p.ConverteHTMLInPDF(NomeHtml, PathSalvataggio, "")
+		Return p.ConverteHTMLInPDF(Server.MapPath("."), NomeHtml, PathSalvataggio, "")
 	End Function
 
 End Class

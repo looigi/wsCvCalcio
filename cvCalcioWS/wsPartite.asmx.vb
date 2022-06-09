@@ -2607,7 +2607,7 @@ Public Class wsPartite
 							Ritorno = "Appoggio/Partita_" & idPartita & ".pdf"
 
 							Dim pp2 As New pdfGest
-							Dim Ritorno2 As String = pp2.ConverteHTMLInPDF(path1, pathPdf, pathLog)
+							Dim Ritorno2 As String = pp2.ConverteHTMLInPDF(Server.MapPath("."), path1, pathPdf, pathLog)
 
 							If Ritorno = "*" Then
 								Ritorno = imm.SalvaAllegatoDB(Squadra, "partite", pathPdf, gf.TornaNomeFileDaPath(pathPdf), -1, idPartita)
@@ -2659,7 +2659,7 @@ Public Class wsPartite
 		gf.CreaDirectoryDaPercorso(path1)
 		gf.CreaDirectoryDaPercorso(pathPdf)
 		Dim pp As New pdfGest
-		Ritorno = pp.ConverteHTMLInPDF(path1, pathPdf, pathLog)
+		Ritorno = pp.ConverteHTMLInPDF(Server.MapPath("."), path1, pathPdf, pathLog)
 		If Ritorno = "*" Then
 			' Ritorno = pathPdf
 

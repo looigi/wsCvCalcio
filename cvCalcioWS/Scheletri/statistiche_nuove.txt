@@ -7,7 +7,6 @@
 
 		td {
 			font-size: 14px;
-			font-family: monospace;
 		}
 
 		.casella {
@@ -19,7 +18,7 @@
 			border: 1px solid #999;
 			border-radius: 3px;
 			background-color: white;
-			box-shadow: 0px 1px 14px 0px #000000;
+			/* box-shadow: 0px 1px 14px 0px #000000; */
 			page-break-after: always;
 		}
 
@@ -40,7 +39,7 @@
 </head>
 <body>
 	<div class="casella">
-                <div class="titolo"><span style="font-size: 17px; font-weight: bold; font-family: monospace;">Marcatori</span></div>
+                <div class="titolo"><span style="font-size: 17px; font-weight: bold;">Marcatori</span></div>
                 <div class="contenuto">
 		***MARCATORI***
 		</div>
@@ -48,7 +47,7 @@
 	</div>
 	<br />
 	<div class="casella">
-                <div class="titolo"><span style="font-size: 17px; font-weight: bold; font-family: monospace;">Presenze</span></div>
+                <div class="titolo"><span style="font-size: 17px; font-weight: bold;">Presenze</span></div>
                 <div class="contenuto">
 		***PRESENZE***
 		</div>
@@ -56,7 +55,23 @@
 	</div>
 	<br />
 	<div class="casella">
-                <div class="titolo"><span style="font-size: 17px; font-weight: bold; font-family: monospace;">Fasce Goal Fatti</span></div>
+                <div class="titolo"><span style="font-size: 17px; font-weight: bold;">Titolari</span></div>
+                <div class="contenuto">
+		***TITOLARI***
+		</div>
+		</div>
+	</div>
+	<br />
+	<div class="casella">
+                <div class="titolo"><span style="font-size: 17px; font-weight: bold;">Sostituzioni</span></div>
+                <div class="contenuto">
+		***SOSTITUZIONI***
+		</div>
+		</div>
+	</div>
+	<br />
+	<div class="casella">
+                <div class="titolo"><span style="font-size: 17px; font-weight: bold;">Fasce Goal Fatti</span></div>
                 <div class="contenuto">
 		***FGF***
 		</div>
@@ -64,7 +79,7 @@
 	</div>
 	<br />
 	<div class="casella">
-                <div class="titolo"><span style="font-size: 17px; font-weight: bold; font-family: monospace;">Fasce Goal Subiti</span></div>
+                <div class="titolo"><span style="font-size: 17px; font-weight: bold;">Fasce Goal Subiti</span></div>
                 <div class="contenuto">
 		***FGS***
 		</div>
@@ -72,7 +87,7 @@
 	</div>
 	<br />
 	<div class="casella">
-                <div class="titolo"><span style="font-size: 17px; font-weight: bold; font-family: monospace;">Eventi</span></div>
+                <div class="titolo"><span style="font-size: 17px; font-weight: bold;">Eventi</span></div>
                 <div class="contenuto">
 		***EVENTI***
 		</div>
@@ -80,7 +95,7 @@
 	</div>
 	<br />
 	<div class="casella">
-                <div class="titolo"><span style="font-size: 17px; font-weight: bold; font-family: monospace;">Statistiche</span></div>
+                <div class="titolo"><span style="font-size: 17px; font-weight: bold;">Statistiche</span></div>
                 <div class="contenuto">
 		***STATISTICHE***
 		</div>
@@ -88,7 +103,7 @@
 	</div>
 	<br />
 	<div class="casella">
-                <div class="titolo"><span style="font-size: 17px; font-weight: bold; font-family: monospace;">Tipologia Partite</span></div>
+                <div class="titolo"><span style="font-size: 17px; font-weight: bold;">Tipologia Partite</span></div>
                 <div class="contenuto">
 		***TIPOPARTITE***
 		</div>
@@ -96,7 +111,7 @@
 	</div>
 	<br />
 	<div class="casella">
-                <div class="titolo"><span style="font-size: 17px; font-weight: bold; font-family: monospace;">Avversari</span></div>
+                <div class="titolo"><span style="font-size: 17px; font-weight: bold;">Avversari</span></div>
                 <div class="contenuto">
 		***AVVERSARI***
 		</div>
@@ -104,9 +119,17 @@
 	</div>
 	<br />
 	<div class="casella">
-                <div class="titolo"><span style="font-size: 17px; font-weight: bold; font-family: monospace;">Meteo</span></div>
+                <div class="titolo"><span style="font-size: 17px; font-weight: bold;">Meteo</span></div>
                 <div class="contenuto">
 		***METEO***
+		</div>
+		</div>
+	</div>
+	<br />
+	<div class="casella">
+                <div class="titolo"><span style="font-size: 17px; font-weight: bold;">Ammonizioni / Espulsioni</span></div>
+                <div class="contenuto">
+		***AMMESP***
 		</div>
 		</div>
 	</div>

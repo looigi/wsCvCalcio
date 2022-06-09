@@ -1591,6 +1591,19 @@ Public Class wsGenerale
 	End Function
 
 	<WebMethod()>
+	Public Function ConverteHTML() As String
+		Dim Ritorno As String = ""
+
+		Dim NomeFileFinale As String = "C:\test_incalcio\Condivisione\Allegati\0001_00012\Statistiche\\Giornata_15.html"
+		Dim NomeFileFinalePDF As String = "C:\test_incalcio\Condivisione\Allegati\0001_00012\Statistiche\\Giornata_15.pdf"
+		Dim NomeFileLog As String = "C:\test_incalcio\Condivisione\Allegati\0001_00012\Statistiche\\LogPDFGiornata_15.txt"
+		Dim pp As New pdfGest
+		Ritorno = pp.ConverteHTMLInPDF(Server.MapPath("."), NomeFileFinale, NomeFileFinalePDF, NomeFileLog)
+
+		Return Ritorno
+	End Function
+
+	<WebMethod()>
 	Public Function CreaPartitaHTML(Squadra As String, idAnno As String, idPartita As String, TipoPDFPassato As String) As String
 		Dim Ritorno As String = ""
 

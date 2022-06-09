@@ -167,7 +167,7 @@ Public Class wsQuote
 						gf.CreaAggiornaFile(nomeFileHtml, filetto)
 
 						Dim pp2 As New pdfGest
-						Ritorno = pp2.ConverteHTMLInPDF(nomeFileHtml, nomeFilePDF, "",, True)
+						Ritorno = pp2.ConverteHTMLInPDF(Server.MapPath("."), nomeFileHtml, nomeFilePDF, "",, True)
 						If Ritorno = "*" Then
 							Ritorno = "Appoggio/" & Esten & ".pdf"
 							gf.EliminaFileFisico(nomeFileHtml)

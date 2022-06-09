@@ -2,6 +2,7 @@
 Imports System.Web.Services.Protocols
 Imports System.ComponentModel
 Imports ADODB
+Imports System.Net
 
 <System.Web.Services.WebService(Namespace:="http://cvcalcio_cam.org/")>
 <System.Web.Services.WebServiceBinding(ConformsTo:=WsiProfiles.BasicProfile1_1)>
@@ -41,7 +42,7 @@ Public Class wsCampionato
 				Dim NomeSquadra As String
 
 				Sql = "Select * From Anni Where idAnno=" & idAnno
-				Rec = Conn.LeggeQuery(Server.MapPath("."),  Sql, Connessione)
+				Rec = Conn.LeggeQuery(Server.MapPath("."), Sql, Connessione)
 				If TypeOf (Rec) Is String Then
 					Ritorno = StringaErrore & "" & Rec.ToString
 					Return Ritorno
@@ -59,7 +60,7 @@ Public Class wsCampionato
 						"Left Join AvversariCoord On SquadreAvversarie.idAvversario = AvversariCoord.idAvversario " &
 						"WHERE AvversariCalendario.idAnno=" & idAnno & " And AvversariCalendario.idCategoria=" & idCategoria & " " &
 						"ORDER BY AvversariCalendario.idProgressivo"
-					Rec = Conn.LeggeQuery(Server.MapPath("."),  Sql, Connessione)
+					Rec = Conn.LeggeQuery(Server.MapPath("."), Sql, Connessione)
 					If TypeOf (Rec) Is String Then
 						Ritorno = StringaErrore & "" & Rec.ToString
 						Return Ritorno
@@ -106,7 +107,7 @@ Public Class wsCampionato
 						"LEFT JOIN RisultatiAggiuntivi ON Partite.idPartita = RisultatiAggiuntivi.idPartita " &
 						"WHERE CalendarioPartite.idCategoria=" & idCategoria & " And CalendarioPartite.idAnno=" & idAnno & " " &
 						"ORDER BY CalendarioPartite.idGiornata, CalendarioPartite.idPartita"
-					Rec = Conn.LeggeQuery(Server.MapPath("."),  Sql, Connessione)
+					Rec = Conn.LeggeQuery(Server.MapPath("."), Sql, Connessione)
 					If TypeOf (Rec) Is String Then
 						Ritorno = StringaErrore & "" & Rec.ToString
 						Return Ritorno
@@ -255,7 +256,7 @@ Public Class wsCampionato
 				Dim NomeSquadra As String
 
 				Sql = "Select * From Anni Where idAnno=" & idAnno
-				Rec = Conn.LeggeQuery(Server.MapPath("."),  Sql, Connessione)
+				Rec = Conn.LeggeQuery(Server.MapPath("."), Sql, Connessione)
 				If TypeOf (Rec) Is String Then
 					Ritorno = StringaErrore & "" & Rec.ToString
 					Return Ritorno
@@ -267,7 +268,7 @@ Public Class wsCampionato
 				Sql = "Select SquadreAvversarie.idAvversario, SquadreAvversarie.Descrizione, SquadreAvversarie.FuoriClassifica From (AvversariCalendario " &
 					"LEFT JOIN SquadreAvversarie As SquadreAvversarie On AvversariCalendario.idAvversario = SquadreAvversarie.idAvversario) " &
 					"Where idAnno=" & idAnno & " And idCategoria=" & idCategoria
-				Rec = Conn.LeggeQuery(Server.MapPath("."),  Sql, Connessione)
+				Rec = Conn.LeggeQuery(Server.MapPath("."), Sql, Connessione)
 				If TypeOf (Rec) Is String Then
 					Ritorno = StringaErrore & "" & Rec.ToString
 					Return Ritorno
@@ -321,7 +322,7 @@ Public Class wsCampionato
 					"Left Join Risultati On Partite.idPartita = Risultati.idPartita) " &
 					"Left Join RisultatiAggiuntivi On Partite.idPartita = RisultatiAggiuntivi.idPartita) " &
 					"WHERE CalendarioPartite.idAnno=" & idAnno & " AND CalendarioPartite.idCategoria=" & idCategoria & " And (idSqFuori<0) And idGiornata<=" & idGiornata
-				Rec = Conn.LeggeQuery(Server.MapPath("."),  Sql, Connessione)
+				Rec = Conn.LeggeQuery(Server.MapPath("."), Sql, Connessione)
 				If TypeOf (Rec) Is String Then
 					Ritorno = StringaErrore & "" & Rec.ToString
 					Return Ritorno
@@ -569,7 +570,7 @@ Public Class wsCampionato
 				Dim ProgressivoSquadra As String = ""
 				Dim Ok As Boolean = True
 
-				Sql = iif(tipodb="SQLSERVER", "Begin transaction", "Start transaction")
+				Sql = IIf(TipoDB = "SQLSERVER", "Begin transaction", "Start transaction")
 				Ritorno = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
 
 				If Not Ritorno.Contains(StringaErrore) Then
@@ -664,7 +665,7 @@ Public Class wsCampionato
 				Dim Sql As String = ""
 				Dim Ok As Boolean = True
 
-				Sql = iif(tipodb="SQLSERVER", "Begin transaction", "Start transaction")
+				Sql = IIf(TipoDB = "SQLSERVER", "Begin transaction", "Start transaction")
 				Ritorno = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
 
 				If Not Ritorno.Contains(StringaErrore) Then
@@ -719,7 +720,7 @@ Public Class wsCampionato
 				Dim Sql As String = ""
 				Dim Ok As Boolean = True
 
-				Sql = iif(tipodb="SQLSERVER", "Begin transaction", "Start transaction")
+				Sql = IIf(TipoDB = "SQLSERVER", "Begin transaction", "Start transaction")
 				Ritorno = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
 
 				If Not Ritorno.Contains(StringaErrore) Then
@@ -801,7 +802,7 @@ Public Class wsCampionato
 									ProgressivoPartita = Rec(0).Value.ToString
 									'End If
 								End If
-							Rec.Close()
+								Rec.Close()
 							End If
 						Catch ex As Exception
 							Ritorno = StringaErrore & " " & ex.Message
@@ -885,7 +886,7 @@ Public Class wsCampionato
 										If Val(c(0)) = -1 Or Val(f(0)) = -1 Or Val(c(0)) = 9999 Or Val(f(0)) = 9999 Then
 											Try
 												Sql = "SELECT AnticipoConvocazione FROM Categorie Where idAnno=" & idAnno & " And idCategoria=" & idCategoria
-												Rec = Conn.LeggeQuery(Server.MapPath("."),  Sql, Connessione)
+												Rec = Conn.LeggeQuery(Server.MapPath("."), Sql, Connessione)
 												If TypeOf (Rec) Is String Then
 													Ritorno = Rec
 												Else
@@ -918,7 +919,7 @@ Public Class wsCampionato
 
 											Try
 												Sql = "SELECT idCampo, Descrizione FROM SquadreAvversarie Where idAvversario=" & idAvversario & " And Eliminato='N'"
-												Rec = Conn.LeggeQuery(Server.MapPath("."),  Sql, Connessione)
+												Rec = Conn.LeggeQuery(Server.MapPath("."), Sql, Connessione)
 												If TypeOf (Rec) Is String Then
 													Ritorno = Rec
 												Else
@@ -940,7 +941,7 @@ Public Class wsCampionato
 
 												Try
 													Sql = "SELECT idAllenatore FROM Allenatori Where idAnno=" & idAnno & " And idCategoria=" & idCategoria & " And Eliminato='N'"
-													Rec = Conn.LeggeQuery(Server.MapPath("."),  Sql, Connessione)
+													Rec = Conn.LeggeQuery(Server.MapPath("."), Sql, Connessione)
 													If TypeOf (Rec) Is String Then
 														Ritorno = Rec
 													Else
@@ -975,7 +976,7 @@ Public Class wsCampionato
 
 													Try
 														Sql = "Select * From CampiAvversari Where idCampo = " & idCampo
-														Rec = Conn.LeggeQuery(Server.MapPath("."),  Sql, Connessione)
+														Rec = Conn.LeggeQuery(Server.MapPath("."), Sql, Connessione)
 														If TypeOf (Rec) Is String Then
 															Ritorno = Rec
 														Else
@@ -1067,7 +1068,7 @@ Public Class wsCampionato
 													If Ok Then
 														Try
 															Sql = "Select * From Giocatori Where Categorie Like '%" & idCategoria & "-%' And Eliminato = 'N'"
-															Rec = Conn.LeggeQuery(Server.MapPath("."),  Sql, Connessione)
+															Rec = Conn.LeggeQuery(Server.MapPath("."), Sql, Connessione)
 															If TypeOf (Rec) Is String Then
 																Ritorno = Rec
 															Else
@@ -1179,7 +1180,7 @@ Public Class wsCampionato
 				Dim Sql As String = ""
 				Dim Ok As Boolean = True
 
-				Sql = iif(tipodb="SQLSERVER", "Begin transaction", "Start transaction")
+				Sql = IIf(TipoDB = "SQLSERVER", "Begin transaction", "Start transaction")
 				Ritorno = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
 
 				If Not Ritorno.Contains(StringaErrore) Then
@@ -1461,7 +1462,7 @@ Public Class wsCampionato
 				Dim Sql As String = "Select * From Partite Where idUnioneCalendario=" & idUnioneCalendario
 
 				Try
-					Rec = Conn.LeggeQuery(Server.MapPath("."),  Sql, Connessione)
+					Rec = Conn.LeggeQuery(Server.MapPath("."), Sql, Connessione)
 					If TypeOf (Rec) Is String Then
 						Ritorno = Rec
 					Else
@@ -1500,7 +1501,7 @@ Public Class wsCampionato
 				Dim Sql As String = ""
 				Dim Ok As Boolean = True
 
-				Sql = iif(tipodb="SQLSERVER", "Begin transaction", "Start transaction")
+				Sql = IIf(TipoDB = "SQLSERVER", "Begin transaction", "Start transaction")
 				Ritorno = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
 
 				If Not Ritorno.Contains(StringaErrore) Then
@@ -1566,7 +1567,7 @@ Public Class wsCampionato
 
 				Sql = "Select * From Giornata Where idUtente=" & idUtente & " And idAnno=" & idAnno & " And idCategoria=" & idCategoria
 				Try
-					Rec = Conn.LeggeQuery(Server.MapPath("."),  Sql, Connessione)
+					Rec = Conn.LeggeQuery(Server.MapPath("."), Sql, Connessione)
 					If TypeOf (Rec) Is String Then
 						Ritorno = Rec
 					Else
@@ -1616,6 +1617,7 @@ Public Class wsCampionato
 		Dim StampaMeteo As String = ""
 		Dim StampaAmmEsp As String = ""
 		Dim StampaSostituzioni As String = ""
+		Dim StampaTitolari As String = ""
 		Dim Barra As String = "\"
 
 		If TipoDB <> "SQLSERVER" Then
@@ -1656,7 +1658,9 @@ Public Class wsCampionato
 		End If
 		Dim pathMultimedia As String = P(2).Replace(vbCrLf, "")
 		Dim PathBaseImmagini As String = pathMultimedia & "ImmaginiLocali"
-		Dim ImmagineSconosciuta As String = PathBaseImmagini & "/Sconosciuto.png"
+		Dim PathImmagineSconosciuta As String = Server.MapPath(".") & "\ImmaginiLocali\Sconosciuto.png"
+		Dim data() As Byte = IO.File.ReadAllBytes(PathImmagineSconosciuta)
+		Dim ImmagineSconosciuta As String = "data:image/png;base64," + Convert.ToBase64String(data, 0, data.Length, Base64FormattingOptions.None)
 
 		ScriveLog(Server.MapPath("."), Squadra, "Statistiche", "Stampa statistiche")
 		ScriveLog(Server.MapPath("."), Squadra, "Statistiche", "------------------------------------------------------")
@@ -1738,7 +1742,7 @@ Public Class wsCampionato
 									If Path.Contains(StringaErrore) Then
 										Path = ImmagineSconosciuta
 									Else
-										Path = "data:image/png;base64,'" + Path
+										Path = "data:image/png;base64," + Path
 									End If
 
 									' Path = DecriptaImmagine(Server.MapPath("."), Path)
@@ -1815,7 +1819,7 @@ Public Class wsCampionato
 									If Path.Contains(StringaErrore) Then
 										Path = ImmagineSconosciuta
 									Else
-										Path = "data:image/png;base64,'" + Path
+										Path = "data:image/png;base64," + Path
 									End If
 
 									StampaSostituzioni &= "<tr style=""background-color: " & Colore & ";"">" & vbCrLf
@@ -1839,6 +1843,76 @@ Public Class wsCampionato
 					Catch ex As Exception
 						Ritorno = "ERROR: " & ex.Message
 						ScriveLog(Server.MapPath("."), Squadra, "Statistiche", "Calcolo statistiche sulle sostituzioni. CATCH: " & Ritorno)
+						Ok = False
+					End Try
+				End If
+
+				Dim RitornoTitolari As String = ""
+
+				If Ok Then
+					ScriveLog(Server.MapPath("."), Squadra, "Statistiche", "Calcolo statistiche sui titolari")
+					filetto = gf.LeggeFileIntero(Server.MapPath(".") & "\Queries\Statistiche_Titolari.txt")
+					Sql = "Select idGiocatore, Cognome, Nome, Soprannome, Ruolo, Quante From (" & filetto & ") As B Where Categorie Like '%" & idCategoria & "-%' Order By Quante Desc"
+					Sql = ConverteStringaSQL(Sql)
+
+					Try
+						Rec = Conn.LeggeQuery(Server.MapPath("."), Sql, Connessione)
+						If TypeOf (Rec) Is String Then
+							Ritorno = Rec
+							ScriveLog(Server.MapPath("."), Squadra, "Statistiche", "Calcolo statistiche sui titolari: " & Ritorno)
+						Else
+							If Stampa = "S" Then
+								StampaTitolari &= "<table style=""width: 100%;"" cellpading=""0"" cellspacing=""0"">" & vbCrLf
+								StampaTitolari &= "<tr style=""background-color: gray;"">" & vbCrLf
+								StampaTitolari &= "<th></th>" & vbCrLf
+								StampaTitolari &= "<th>Nominativo</th>" & vbCrLf
+								StampaTitolari &= "<th>Ruolo</th>" & vbCrLf
+								StampaTitolari &= "<th>Volte</th>" & vbCrLf
+								StampaTitolari &= "</tr>" & vbCrLf
+							End If
+
+							Do Until Rec.Eof()
+								RitornoTitolari &= Rec("Cognome").Value & ";"
+								RitornoTitolari &= Rec("Nome").Value & ";"
+								RitornoTitolari &= Rec("Soprannome").Value & ";"
+								RitornoTitolari &= Rec("Ruolo").Value & ";"
+								RitornoTitolari &= Rec("Quante").Value & ";"
+								RitornoTitolari &= Rec("idGiocatore").Value & ";"
+								RitornoTitolari &= "§"
+
+								If Stampa = "S" Then
+									Dim Soprannome As String = Rec("Soprannome").Value
+									If Soprannome <> "" Then Soprannome = "'" & Soprannome & "' "
+									Dim Nominativo As String = Rec("Nome").Value & " " & Soprannome & Rec("Cognome").Value
+									'Dim Path As String = PathBaseMultimedia & "/" & NomeSquadra & "/Giocatori/" & idAnno & "_" & Rec("idGiocatore").Value & ".kgb"
+									'Path = DecriptaImmagine(Server.MapPath("."), Path)
+									Dim Path As String = wsImm.RitornaImmagineDB(Squadra, "Giocatori", Rec("idGiocatore").Value, "")
+									If Path.Contains(StringaErrore) Then
+										Path = ImmagineSconosciuta
+									Else
+										Path = "data:image/png;base64," + Path
+									End If
+
+									StampaTitolari &= "<tr style=""background-color: " & Colore & ";"">" & vbCrLf
+									If Colore = "#ccc" Then Colore = "#fff" Else Colore = "#ccc"
+									StampaTitolari &= "<td><img src=""" & Path & """ width=""50"" height=""50"" /></td>" & vbCrLf
+									StampaTitolari &= "<td>" & Nominativo & "</td>" & vbCrLf
+									StampaTitolari &= "<td>" & Rec("Ruolo").Value & "</td>" & vbCrLf
+									StampaTitolari &= "<td style=""text-align: right;"">" & Rec("Quante").Value & "</td>" & vbCrLf
+									StampaTitolari &= "</tr>" & vbCrLf
+								End If
+
+								Rec.MoveNext()
+							Loop
+							Rec.Close()
+
+							If Stampa = "S" Then
+								StampaTitolari &= "</table>"
+							End If
+						End If
+					Catch ex As Exception
+						Ritorno = "ERROR: " & ex.Message
+						ScriveLog(Server.MapPath("."), Squadra, "Statistiche", "Calcolo statistiche sui titolari. CATCH: " & Ritorno)
 						Ok = False
 					End Try
 				End If
@@ -1890,7 +1964,7 @@ Public Class wsCampionato
 									If Path.Contains(StringaErrore) Then
 										Path = ImmagineSconosciuta
 									Else
-										Path = "data:image/png;base64,'" + Path
+										Path = "data:image/png;base64," + Path
 									End If
 
 									StampaPresenze &= "<tr style=""background-color: " & Colore & ";"">" & vbCrLf
@@ -2170,7 +2244,7 @@ Public Class wsCampionato
 									If Path.Contains(StringaErrore) Then
 										Path = ImmagineSconosciuta
 									Else
-										Path = "data:image/png;base64,'" + Path
+										Path = "data:image/png;base64," + Path
 									End If
 
 									StampaEventi &= "<tr style=""background-color: " & Colore & ";"">" & vbCrLf
@@ -2570,7 +2644,7 @@ Public Class wsCampionato
 									If Path.Contains(StringaErrore) Then
 										Path = ImmagineSconosciuta
 									Else
-										Path = "data:image/png;base64,'" + Path
+										Path = "data:image/png;base64," + Path
 									End If
 
 									StampaAvversari &= "<tr style=""background-color: " & Colore & ";"">" & vbCrLf
@@ -2623,9 +2697,23 @@ Public Class wsCampionato
 								Ritorno &= "§"
 
 								If Stampa = "S" Then
+									Dim icona As String = Rec("Icona").Value
+									Dim base64String As String = ""
+
+									Try
+										Dim image As Byte() = New WebClient().DownloadData(icona)
+										base64string = "data:image/png;base64," & Convert.ToBase64String(image, 0, image.Length, Base64FormattingOptions.None)
+									Catch ex As Exception
+
+									End Try
+
 									StampaMeteo &= "<tr style=""background-color: " & Colore & ";"">" & vbCrLf
 									If Colore = "#ccc" Then Colore = "#fff" Else Colore = "#ccc"
-									StampaMeteo &= "<td><img src=""" & Rec("Icona").Value & """ width=""50"" height=""50"" /></td>" & vbCrLf
+									If base64String <> "" Then
+										StampaMeteo &= "<td><img src=""" & base64String & """ width=""50"" height=""50"" /></td>" & vbCrLf
+									Else
+										StampaMeteo &= "<td>&nbsp;</td>" & vbCrLf
+									End If
 									StampaMeteo &= "<td>" & Rec("Tempo").Value & "</td>" & vbCrLf
 									StampaMeteo &= "<td style=""text-align: right;"">" & Rec("Quante").Value & "</td>" & vbCrLf
 									StampaMeteo &= "</tr>" & vbCrLf
@@ -2692,7 +2780,7 @@ Public Class wsCampionato
 									If Path.Contains(StringaErrore) Then
 										Path = ImmagineSconosciuta
 									Else
-										Path = "data:image/png;base64,'" + Path
+										Path = "data:image/png;base64," + Path
 									End If
 
 									StampaAmmEsp &= "<tr style=""background-color: " & Colore & ";"">" & vbCrLf
@@ -2724,12 +2812,14 @@ Public Class wsCampionato
 
 				Ritorno &= "|" & RitornoSost
 
+				Ritorno &= "|" & RitornoTitolari
+
 				If Ok Then
 					If Stampa = "S" Then
 						'Dim PathBaseImmagini As String = pathMultimedia
 
 						filetto = gf.LeggeFileIntero(Server.MapPath(".") & "\Scheletri\statistiche_nuove.txt")
-						filetto = filetto.Replace("***SFONDO***", PathBaseImmagini & "/bg.jpg")
+						filetto = filetto.Replace("***SFONDO***", PathBaseImmagini & "\bg.jpg")
 
 						filetto = filetto.Replace("***MARCATORI***", StampaMarcatori)
 						filetto = filetto.Replace("***PRESENZE***", StampaPresenze)
@@ -2742,6 +2832,7 @@ Public Class wsCampionato
 						filetto = filetto.Replace("***METEO***", StampaMeteo)
 						filetto = filetto.Replace("***AMMESP***", StampaAmmEsp)
 						filetto = filetto.Replace("***SOSTITUZIONI***", StampaSostituzioni)
+						filetto = filetto.Replace("***TITOLARI***", StampaTitolari)
 
 						'Dim Altro As String = Now.Year & Format(Now.Month, "00") & Format(Now.Day, "00") ' & Format(Now.Hour, "00") & Format(Now.Minute, "00") & Format(Now.Second, "00")
 						Dim NomeFileFinale As String = pathAllegati & Squadra & "\Statistiche\Statistiche_Giornata_" & idGiornata & ".html"
@@ -2755,16 +2846,12 @@ Public Class wsCampionato
 						gf.CreaAggiornaFile(NomeFileFinale, filetto)
 
 						'Dim pp As New pdfGest
-						'Ritorno = pp.ConverteHTMLInPDF(NomeFileFinale, NomeFileFinalePDF, PathLog, True)
-
-						' Ritorno = ConvertePDF(NomeFileFinale, NomeFileFinalePDF)
-						Dim pp As New pdfGest
-						Ritorno = pp.ConverteHTMLInPDF(NomeFileFinale, NomeFileFinalePDF, NomeFileLog)
+						'Ritorno = pp.ConverteHTMLInPDF(Server.MapPath("."), NomeFileFinale, NomeFileFinalePDF, NomeFileLog)
 
 						If Ritorno = "*" Then
 							Ritorno = NomeFileFinalePDF '.Replace(pathAllegati, pathMultimedia).Replace("Multimedia", "Allegati").Replace("\", "/")
 							gf.EliminaFileFisico(NomeFileFinale)
-							gf.EliminaFileFisico(NomeFileLog)
+							'gf.EliminaFileFisico(NomeFileLog)
 						End If
 						ScriveLog(Server.MapPath("."), Squadra, "Statistiche", "Ritorno statistiche 1: " & Ritorno)
 
@@ -2773,7 +2860,7 @@ Public Class wsCampionato
 			End If
 		End If
 
-		' Marcatori | Presenze | Fasce Goal Fatti | Fasce Goal Subiti | Eventi | Tipologie Partite | Partite | Avversari Incontrati | Meteo | AmmoEspu | Sostituzioni
+		' Marcatori | Presenze | Fasce Goal Fatti | Fasce Goal Subiti | Eventi | Tipologie Partite | Partite | Avversari Incontrati | Meteo | AmmoEspu | Sostituzioni | Titolari
 
 		Return Ritorno
 	End Function
@@ -2825,7 +2912,9 @@ Public Class wsCampionato
 		End If
 		Dim pathMultimedia As String = P(2).Replace(vbCrLf, "")
 		Dim PathBaseImmagini As String = pathMultimedia & "ImmaginiLocali"
-		Dim ImmagineSconosciuta As String = PathBaseImmagini & "/Sconosciuto.png"
+		Dim PathImmagineSconosciuta As String = Server.MapPath(".") & "\ImmaginiLocali\Sconosciuto.png"
+		Dim data() As Byte = IO.File.ReadAllBytes(PathImmagineSconosciuta)
+		Dim ImmagineSconosciuta As String = "data:image/png;base64," + Convert.ToBase64String(data, 0, data.Length, Base64FormattingOptions.None)
 
 		If Connessione = "" Then
 			Ritorno = ErroreConnessioneNonValida
@@ -2896,7 +2985,7 @@ Public Class wsCampionato
 								If imm.Contains(StringaErrore) Then
 									imm = ImmagineSconosciuta
 								Else
-									imm = "data:image/png;base64,'" + imm
+									imm = "data:image/png;base64," + imm
 								End If
 							Else
 								'imm = PathBaseMultimedia & "/" & NomeSquadra & "/Avversari/" & Campi(0) & ".kgb"
@@ -2904,7 +2993,7 @@ Public Class wsCampionato
 								If imm.Contains(StringaErrore) Then
 									imm = ImmagineSconosciuta
 								Else
-									imm = "data:image/png;base64,'" + imm
+									imm = "data:image/png;base64," + imm
 								End If
 							End If
 							'Dim Imm1 As String = DecriptaImmagine(Server.MapPath("."), imm)
@@ -2947,21 +3036,12 @@ Public Class wsCampionato
 					gf.CreaAggiornaFile(NomeFileFinale, filetto)
 
 					'Dim pp As New pdfGest
-					'Ritorno = pp.ConverteHTMLInPDF(NomeFileFinale, NomeFileFinalePDF, PathLog, True)
-
-					'Ritorno = ConvertePDF(NomeFileFinale, NomeFileFinalePDF)
-
-					'If Ritorno = "*" Then
-					'	Ritorno = NomeFileFinalePDF.Replace(pathAllegati, pathMultimedia).Replace("Multimedia", "Allegati").Replace("\", "/")
-					'End If
-
-					Dim pp As New pdfGest
-					Ritorno = pp.ConverteHTMLInPDF(NomeFileFinale, NomeFileFinalePDF, NomeFileLog)
+					'Ritorno = pp.ConverteHTMLInPDF(Server.MapPath("."), NomeFileFinale, NomeFileFinalePDF, NomeFileLog)
 
 					If Ritorno = "*" Then
 						Ritorno = NomeFileFinalePDF '.Replace(pathAllegati, pathMultimedia).Replace("Multimedia", "Allegati").Replace("\", "/")
 						gf.EliminaFileFisico(NomeFileFinale)
-						gf.EliminaFileFisico(NomeFileLog)
+						'gf.EliminaFileFisico(NomeFileLog)
 					End If
 
 				End If
@@ -3030,7 +3110,9 @@ Public Class wsCampionato
 				End If
 				Dim pathMultimedia As String = P(2).Replace(vbCrLf, "")
 				Dim PathBaseImmagini As String = pathMultimedia & "ImmaginiLocali"
-				Dim ImmagineSconosciuta As String = PathBaseImmagini & "/Sconosciuto.png"
+				Dim PathImmagineSconosciuta As String = Server.MapPath(".") & "\ImmaginiLocali\Sconosciuto.png"
+				Dim data() As Byte = IO.File.ReadAllBytes(PathImmagineSconosciuta)
+				Dim ImmagineSconosciuta As String = "data:image/png;base64," + Convert.ToBase64String(data, 0, data.Length, Base64FormattingOptions.None)
 
 				Dim NomeSquadra As String = ""
 				Dim ss() As String = Squadra.Split("_")
@@ -3091,11 +3173,11 @@ Public Class wsCampionato
 								Dim Fuori As String = "" & Rec("Fuori").Value
 
 								If Rec("idSqCasa").Value = -1 Or Rec("idSqCasa").Value = 9999 Then
-									Imm1 = wsImm.RitornaImmagineDB(Squadra, "Categorie", idCategoria, "")
-									If Imm1.Contains(StringaErrore) Then
-										Imm1 = ImmagineSconosciuta
+									imm1 = wsImm.RitornaImmagineDB(Squadra, "Categorie", idCategoria, "")
+									If imm1.Contains(StringaErrore) Then
+										imm1 = ImmagineSconosciuta
 									Else
-										Imm1 = "data:image/png;base64,'" + Imm1
+										imm1 = "data:image/png;base64," + imm1
 									End If
 
 									' imm = PathBaseMultimedia & "/" & NomeSquadra & "/Categorie/" & idAnno & "_" & idCategoria & ".kgb"
@@ -3105,7 +3187,7 @@ Public Class wsCampionato
 									If imm1.Contains(StringaErrore) Then
 										imm1 = ImmagineSconosciuta
 									Else
-										imm1 = "data:image/png;base64,'" + imm1
+										imm1 = "data:image/png;base64," + imm1
 									End If
 
 									' imm = PathBaseMultimedia & "/" & NomeSquadra & "/Avversari/" & Rec("idSqCasa").Value & ".kgb"
@@ -3117,7 +3199,7 @@ Public Class wsCampionato
 									If imm2.Contains(StringaErrore) Then
 										imm2 = ImmagineSconosciuta
 									Else
-										imm2 = "data:image/png;base64,'" + imm2
+										imm2 = "data:image/png;base64," + imm2
 									End If
 
 									' imm = PathBaseMultimedia & "/" & NomeSquadra & "/Categorie/" & idAnno & "_" & idCategoria & ".kgb"
@@ -3127,7 +3209,7 @@ Public Class wsCampionato
 									If imm2.Contains(StringaErrore) Then
 										imm2 = ImmagineSconosciuta
 									Else
-										imm2 = "data:image/png;base64,'" + imm2
+										imm2 = "data:image/png;base64," + imm2
 									End If
 
 									' imm = PathBaseMultimedia & "/" & NomeSquadra & "/Avversari/" & Rec("idSqFuori").Value & ".kgb"
@@ -3136,9 +3218,9 @@ Public Class wsCampionato
 
 								Stampa &= "<tr style=""background-color: " & Colore & ";"">" & vbCrLf
 								If Colore = "#ccc" Then Colore = "#fff" Else Colore = "#ccc"
-								Stampa &= "<td><img src=""" & Imm1 & """ width=""50"" height=""50"" /></td>" & vbCrLf
+								Stampa &= "<td><img src=""" & imm1 & """ width=""50"" height=""50"" /></td>" & vbCrLf
 								Stampa &= "<td>" & Casa & "</td>"
-								Stampa &= "<td><img src=""" & Imm2 & """ width=""50"" height=""50"" /></td>" & vbCrLf
+								Stampa &= "<td><img src=""" & imm2 & """ width=""50"" height=""50"" /></td>" & vbCrLf
 								Stampa &= "<td>" & Fuori & "</td>"
 								Stampa &= "<td style=""text-align: right;"">" & Rec("Risultato").Value & "</td>"
 								Stampa &= "</tr>"
@@ -3165,28 +3247,20 @@ Public Class wsCampionato
 
 							gf.EliminaFileFisico(NomeFileFinale)
 							gf.EliminaFileFisico(NomeFileFinalePDF)
+							gf.EliminaFileFisico(NomeFileLog)
 							gf.CreaAggiornaFile(NomeFileFinale, filetto)
 
 							'Dim pp As New pdfGest
-							'Ritorno = pp.ConverteHTMLInPDF(NomeFileFinale, NomeFileFinalePDF, PathLog, True)
-
-							'Ritorno = ConvertePDF(NomeFileFinale, NomeFileFinalePDF)
-
-							'If Ritorno = "*" Then
-							'	Ritorno = NomeFileFinalePDF.Replace(pathAllegati, pathMultimedia).Replace("Multimedia", "Allegati").Replace("\", "/")
-							'End If
-
-							Dim pp As New pdfGest
-							Ritorno = pp.ConverteHTMLInPDF(NomeFileFinale, NomeFileFinalePDF, NomeFileLog)
+							'Ritorno = pp.ConverteHTMLInPDF(Server.MapPath("."), NomeFileFinale, NomeFileFinalePDF, NomeFileLog)
 
 							If Ritorno = "*" Then
 								Ritorno = NomeFileFinalePDF '.Replace(pathAllegati, pathMultimedia).Replace("Multimedia", "Allegati").Replace("\", "/")
-								gf.EliminaFileFisico(NomeFileFinale)
-								gf.EliminaFileFisico(NomeFileLog)
+								'gf.EliminaFileFisico(NomeFileFinale)
+								'gf.EliminaFileFisico(NomeFileLog)
 							End If
 
 						End If
-                    Catch ex As Exception
+					Catch ex As Exception
 						Ritorno = "ERROR: " & ex.Message
 					End Try
 				End If

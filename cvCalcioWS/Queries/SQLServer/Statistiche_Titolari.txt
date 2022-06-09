@@ -1,0 +1,4 @@
+Select A.idGiocatore, B.cognome, B.nome, B.soprannome, B.Categorie, C.Descrizione As Ruolo, Count(*) As Quante From titolari A
+Left Join giocatori B On A.idgiocatore = B.idGiocatore
+Left Join Generale.ruoli C On B.idRuolo = C.idRuolo
+Group By A.idGiocatore, B.cognome, B.nome, B.soprannome, B.Categorie, C.Descrizione

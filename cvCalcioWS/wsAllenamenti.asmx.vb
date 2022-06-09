@@ -672,7 +672,7 @@ Public Class wsAllenamenti
 									Dim PathLog As String = pathLogG & "Pdf.txt"
 
 									Dim pp2 As New pdfGest
-									Ritorno = pp2.ConverteHTMLInPDF(nomeFileHtml, nomeFilePDF, PathLog, True)
+									Ritorno = pp2.ConverteHTMLInPDF(Server.MapPath("."), nomeFileHtml, nomeFilePDF, PathLog, True)
 									If Ritorno = "*" Then
 										gf.EliminaFileFisico(nomeFileHtml)
 										Ritorno = "Appoggio/" & Esten & ".pdf"

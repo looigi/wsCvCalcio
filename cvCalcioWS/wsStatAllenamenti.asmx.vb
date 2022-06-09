@@ -159,7 +159,7 @@ Public Class wsStatAllenamenti
 								gf.CreaAggiornaFile(nomeFileHtml, filetto)
 
 								Dim pp2 As New pdfGest
-								Ritorno = pp2.ConverteHTMLInPDF(nomeFileHtml, nomeFilePDF, "")
+								Ritorno = pp2.ConverteHTMLInPDF(Server.MapPath("."), nomeFileHtml, nomeFilePDF, "")
 								If Ritorno = "*" Then
 									Ritorno = "Appoggio/" & Esten & ".pdf"
 								End If
@@ -191,7 +191,7 @@ Public Class wsStatAllenamenti
 			If TypeOf (Conn) Is String Then
 				Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
 			Else
-				Dim Rec as object
+				Dim Rec As Object
 				Dim Sql As String = ""
 				Dim sMese As String = "/"
 
@@ -227,7 +227,7 @@ Public Class wsStatAllenamenti
 					Dim Ok As Boolean = True
 
 					Sql = "SELECT * From Giocatori Where idGiocatore=" & idGiocatore
-					Rec = Conn.LeggeQuery(Server.MapPath("."),   Sql, Connessione)
+					Rec = Conn.LeggeQuery(Server.MapPath("."), Sql, Connessione)
 					If TypeOf (Rec) Is String Then
 						Ritorno = Rec
 						Ok = False
@@ -247,7 +247,7 @@ Public Class wsStatAllenamenti
 							"WHERE Allenamenti.idAnno=" & idAnno & " AND Allenamenti.idCategoria=" & idCategoria & " AND Allenamenti.idGiocatore=" & idGiocatore & " And " & IIf(TipoDB = "SQLSERVER", "CharIndex('" & sMese & "', Datella)>0", "Instr(Datella,'" & sMese & "')>0") & " " &
 							"Order By Datella, Orella"
 
-						Rec = Conn.LeggeQuery(Server.MapPath("."),   Sql, Connessione)
+						Rec = Conn.LeggeQuery(Server.MapPath("."), Sql, Connessione)
 						If TypeOf (Rec) Is String Then
 							Ritorno = Rec
 						Else
@@ -313,7 +313,7 @@ Public Class wsStatAllenamenti
 								gf.CreaAggiornaFile(nomeFileHtml, filetto)
 
 								Dim pp2 As New pdfGest
-								Ritorno = pp2.ConverteHTMLInPDF(nomeFileHtml, nomeFilePDF, "")
+								Ritorno = pp2.ConverteHTMLInPDF(Server.MapPath("."), nomeFileHtml, nomeFilePDF, "")
 								If Ritorno = "*" Then
 									Ritorno = "Appoggio/" & Esten & ".pdf"
 								End If

@@ -2,7 +2,7 @@
 Imports SelectPdf
 
 Public Class pdfGest
-	Public Function ConverteHTMLInPDF(NomeHtml As String, pathSalvataggio As String, pathLog As String, Optional noMargini As Boolean = False, Optional Orizzontale As Boolean = False, Optional AltezzaReport As Integer = -1)
+	Public Function ConverteHTMLInPDF(MP As String, NomeHtml As String, pathSalvataggio As String, pathLog As String, Optional noMargini As Boolean = False, Optional Orizzontale As Boolean = False, Optional AltezzaReport As Integer = -1)
 		Dim Ritorno As String = ""
 
 		Dim gf As New GestioneFilesDirectory
@@ -30,6 +30,83 @@ Public Class pdfGest
 			End If
 			Ritorno = StringaErrore & " " & ex.Message
 		End Try
+		If pathLog <> "" Then
+			gf.ChiudeFileDiTestoDopoScrittura()
+		End If
+
+		Return Ritorno
+	End Function
+
+	Public Function ConverteHTMLInPDF_NUOVO(MP As String, NomeHtml As String, pathSalvataggio As String, pathLog As String, Optional noMargini As Boolean = False, Optional Orizzontale As Boolean = False, Optional AltezzaReport As Integer = -1)
+		Dim Ritorno As String = ""
+
+		Dim gf As New GestioneFilesDirectory
+		Try
+			Dim fileHtml As String = gf.LeggeFileIntero(NomeHtml)
+
+			NomeHtml = Replace(NomeHtml, "/", "\")
+			NomeHtml = Replace(NomeHtml, "\\", "\")
+			pathSalvataggio = Replace(pathSalvataggio, "/", "\")
+			pathSalvataggio = Replace(pathSalvataggio, "\\", "\")
+
+			If pathLog <> "" Then
+				gf.ApreFileDiTestoPerScrittura(pathLog)
+				gf.ScriveTestoSuFileAperto("Conversione file " & NomeHtml)
+				gf.ScriveTestoSuFileAperto("Salvataggio su " & pathSalvataggio)
+				'gf.ScriveTestoSuFileAperto("Contenuto " & fileHtml)
+			End If
+			gf.EliminaFileFisico(pathSalvataggio)
+
+			Dim Path As String = gf.LeggeFileIntero(MP & "\Impostazioni\PercorsoPanDoc.txt")
+			Path = Path.Replace(vbCrLf, "")
+			If Strings.Right(Path, 1) <> "\" Then
+				Path &= "\"
+			End If
+			gf.ScriveTestoSuFileAperto("Path pandoc " & Path)
+
+			Try
+				Dim processoConversione As Process = New Process()
+				Dim pi As ProcessStartInfo = New ProcessStartInfo()
+				pi.FileName = Path & "pandoc.exe"
+				gf.ScriveTestoSuFileAperto("File exe: " & pi.FileName)
+				pi.Arguments = NomeHtml & " -o " & pathSalvataggio
+				gf.ScriveTestoSuFileAperto("Argomenti: " & pi.Arguments)
+				pi.WindowStyle = ProcessWindowStyle.Normal
+				pi.WorkingDirectory = Path
+				gf.ScriveTestoSuFileAperto("Working directory: " & pi.WorkingDirectory)
+
+				processoConversione.StartInfo = pi
+				processoConversione.StartInfo.UseShellExecute = False
+				processoConversione.StartInfo.RedirectStandardOutput = True
+				processoConversione.StartInfo.RedirectStandardError = True
+				gf.ScriveTestoSuFileAperto("Start pandoc")
+
+				processoConversione.Start()
+
+				Dim Output As String = processoConversione.StandardOutput.ReadToEnd()
+				gf.ScriveTestoSuFileAperto("--->" & Output & "<---")
+
+				processoConversione.WaitForExit()
+				gf.ScriveTestoSuFileAperto("Wait for exit pandoc")
+
+				Ritorno = "*"
+			Catch ex As Exception
+				Ritorno = StringaErrore & ": " & ex.Message
+				gf.ScriveTestoSuFileAperto("Errore: " & ex.Message)
+			End Try
+
+			If pathLog <> "" Then
+				gf.ScriveTestoSuFileAperto("Elaborazione effettuata")
+			End If
+
+			Ritorno = "*"
+		Catch ex As Exception
+			If pathLog <> "" Then
+				gf.ScriveTestoSuFileAperto("Errore: " & ex.Message)
+			End If
+			Ritorno = StringaErrore & " " & ex.Message
+		End Try
+
 		If pathLog <> "" Then
 			gf.ChiudeFileDiTestoDopoScrittura()
 		End If
