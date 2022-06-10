@@ -860,7 +860,9 @@ Public Class wsGenerale
 				Dim c() As String = Squadra.Split("_")
 				Dim Anno As String = Str(Val(c(0))).Trim
 				Dim codSquadra As String = Str(Val(c(1))).Trim
+
 				Dim Anni As New List(Of Integer)
+				Dim Descrizione As New List(Of String)
 				Dim MeseAttivazione As New List(Of Integer)
 				Dim AnnoAttivazione As New List(Of Integer)
 
@@ -874,6 +876,7 @@ Public Class wsGenerale
 				Else
 					Do Until Rec.Eof()
 						Anni.Add(Rec("idAnno").Value)
+						Descrizione.Add(Rec("Descrizione").Value)
 						MeseAttivazione.Add(Rec("MeseAttivazione").Value)
 						AnnoAttivazione.Add(Rec("AnnoAttivazione").Value)
 
@@ -979,7 +982,8 @@ Public Class wsGenerale
 								End If
 
 								Sql = "Select A.*, B.idAvversario, B.idCampo " &
-									"From [" & Codice & "].[dbo].[Anni] A Left Join [" & Codice & "].[dbo].[SquadreAvversarie] B On A.NomeSquadra = B.Descrizione " &
+									"From [" & Codice & "].[dbo].[Anni] A " &
+									"Left Join [" & Codice & "].[dbo].[SquadreAvversarie] B On A.NomeSquadra = B.Descrizione " &
 									"Order By idAnno Desc"
 								Rec = ConnGen.LeggeQuery(Server.MapPath("."), Sql, ConnessioneGen)
 								If TypeOf (Rec) Is String Then
@@ -988,7 +992,7 @@ Public Class wsGenerale
 									' Ritorno = ""
 									Do Until Rec.Eof()
 										Ritorno &= Rec("idAnno").Value & ";" &
-											Rec("Descrizione").Value & ";" &
+											Descrizione.Item(quale) & ";" &
 											Rec("NomeSquadra").Value & ";" &
 											Rec("Lat").Value & ";" &
 											Rec("Lon").Value & ";" &
@@ -1031,6 +1035,110 @@ Public Class wsGenerale
 						End If
 					End If
 				End If
+			End If
+		End If
+
+		Return Ritorno
+	End Function
+
+	<WebMethod()>
+	Public Function ModificaAnnoCampionato(Squadra As String, idAnno As String, Descrizione As String, Selezionato As String) As String
+		Dim Ritorno As String = ""
+		Dim Connessione As String = LeggeImpostazioniDiBase(Server.MapPath("."), "")
+
+		If Connessione = "" Then
+			Ritorno = ErroreConnessioneNonValida
+		Else
+			Dim Conn As Object = New clsGestioneDB(Squadra)
+
+			If TypeOf (Conn) Is String Then
+				Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
+			Else
+				Dim Sql As String = ""
+				Dim C() As String = Squadra.Split("_")
+				Dim idSquadra As String = Val(C(1))
+
+				Try
+					Sql = "Update SquadraAnni Set Descrizione='" & Replace(Descrizione, "'", "''") & "' Where idSquadra=" & idSquadra & " And idAnno=" & idAnno
+					Ritorno = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
+
+					If Ritorno = "*" Or Ritorno = "OK" Then
+						Dim Rec As Object
+
+						If Selezionato = "S" Then
+							Sql = "Select * From SquadreAnnoSelezionato Where idSquadra=" & idSquadra
+							Rec = Conn.LeggeQuery(Server.MapPath("."), Sql, Connessione)
+							If TypeOf (Rec) Is String Then
+								Ritorno = Rec
+							Else
+								If Rec.Eof() = True Then
+									Sql = "Insert Into SquadreAnnoSelezionato Values (" & idSquadra & ", " & idAnno & ")"
+								Else
+									Sql = "Update SquadreAnnoSelezionato Set idAnno=" & idAnno & " Where idSquadra=" & idSquadra
+								End If
+								Rec.Close
+
+								Ritorno = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
+							End If
+						Else
+							Sql = "Delete From SquadreAnnoSelezionato Where idAnno=" & idAnno & " And idSquadra=" & idSquadra
+							Ritorno = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
+						End If
+					End If
+
+				Catch ex As Exception
+					Ritorno = StringaErrore & " " & ex.Message
+				End Try
+
+				Conn.Close()
+			End If
+		End If
+
+		Return Ritorno
+	End Function
+
+	<WebMethod()>
+	Public Function RitornaAnniCampionato(Squadra As String) As String
+		Dim Ritorno As String = ""
+		Dim Connessione As String = LeggeImpostazioniDiBase(Server.MapPath("."), "")
+
+		If Connessione = "" Then
+			Ritorno = ErroreConnessioneNonValida
+		Else
+			Dim Conn As Object = New clsGestioneDB(Squadra)
+
+			If TypeOf (Conn) Is String Then
+				Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
+			Else
+				Dim Rec As Object
+				Dim Sql As String = ""
+				Dim C() As String = Squadra.Split("_")
+				Dim idSquadra As String = Val(C(1))
+				Try
+					Sql = "SELECT A.*, Coalesce(B.idAnno, '') As Selezionato FROM SquadraAnni A " &
+						"Left Join SquadreAnnoSelezionato B On A.idSquadra = B.idSquadra  And A.idAnno = B.idAnno " &
+						"Where A.idSquadra=" & idSquadra & " And Eliminata='N' Or Eliminata = 'n' Order By Descrizione Desc"
+					Rec = Conn.LeggeQuery(Server.MapPath("."), Sql, Connessione)
+					If TypeOf (Rec) Is String Then
+						Ritorno = Rec
+					Else
+						Ritorno = ""
+						Do Until Rec.Eof()
+							Dim Selezionato As String = IIf(Rec("Selezionato").Value <> "", "true", "false")
+
+							Ritorno &= Rec("idAnno").Value & ";" &
+								Rec("Descrizione").Value & ";" &
+								selezionato & ";" &
+								"§"
+							Rec.MoveNext()
+						Loop
+						Rec.Close()
+					End If
+				Catch ex As Exception
+					Ritorno = StringaErrore & " " & ex.Message
+				End Try
+
+				Conn.Close()
 			End If
 		End If
 
