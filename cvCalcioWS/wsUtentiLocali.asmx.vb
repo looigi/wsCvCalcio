@@ -274,7 +274,7 @@ Public Class wsUtentiLocali
 		If Connessione = "" Then
 			Ritorno = ErroreConnessioneNonValida
 		Else
-			Dim Conn As Object = New clsGestioneDB(CodSquadra)
+			Dim Conn As Object = New clsGestioneDB("")
 
 			If TypeOf (Conn) Is String Then
 				Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
@@ -499,7 +499,7 @@ Public Class wsUtentiLocali
 							Rec.Close()
 
 							If Not Ritorno.Contains(StringaErrore) Then
-								Sql = "Select * From Squadre Where Eliminata = 'N' Order By Descrizione"
+								Sql = "Select *, (Select Max(idAnno) From SquadraAnni Where idSquadra=Squadre.idSquadra) As MaxAnno From Squadre Where Eliminata = 'N' Order By Descrizione"
 								Rec = Conn.LeggeQuery(Server.MapPath("."), Sql, Connessione)
 								If TypeOf (Rec) Is String Then
 									Ritorno = Rec
@@ -528,7 +528,7 @@ Public Class wsUtentiLocali
 													Licenza = "Premium"
 											End Select
 
-											Ritorno &= Rec("idSquadra").Value & ";" & Rec("Descrizione").Value & ";" & Rec("DataScadenza").Value & ";" & Tipologia & ";" & Licenza & ";" & Rec("idTipologia").Value & ";" & Rec("idLicenza").Value & ";§"
+											Ritorno &= Rec("idSquadra").Value & ";" & Rec("Descrizione").Value & ";" & Rec("DataScadenza").Value & ";" & Tipologia & ";" & Licenza & ";" & Rec("idTipologia").Value & ";" & Rec("idLicenza").Value & ";" & Rec("MaxAnno").Value & ";§"
 
 											Rec.MoveNext()
 										Loop

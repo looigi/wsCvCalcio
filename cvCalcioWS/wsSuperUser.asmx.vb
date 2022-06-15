@@ -847,157 +847,39 @@ Public Class wsSuperUser
 								End If
 								ScriveLog(Server.MapPath("."), "Generale", "RitornaSquadre", "Spazio DB: " & SpazioTotale)
 
-								Dim Occupazione As Double = 0
-								Dim DettaglioLunghezze As String = ""
-								Dim OccupazioneOriginale As Double = 0
-								Dim sOccupazione As String = ""
-								Dim giga As Double = 1024L * 1024 * 1024 ' * 1024
+								DettaglioLunghezze = ""
+								OccupazioneOriginale = 0
+								sOccupazione = ""
 
-								Dim ConnessioneSquadra As String = LeggeImpostazioniDiBase(Server.MapPath("."), CodiceSquadra)
-
-								If ConnessioneSquadra = "" Then
-									Ritorno = ErroreConnessioneNonValida
+								' Calcola spazio DB
+								Sql = "Select * From SquadraAnni Where idSquadra=" & Val(id)
+								Rec2 = ConnGen.LeggeQuery(Server.MapPath("."), Sql, ConnessioneGenerale)
+								If TypeOf (Rec2) Is String Then
+									Ritorno = Rec2
 								Else
-									Dim ConnSq As Object = New clsGestioneDB(CodiceSquadra)
-									ScriveLog(Server.MapPath("."), "Generale", "RitornaSquadre", "Connessione squadra: " & CodiceSquadra)
+									Do Until Rec2.Eof
+										Dim Anno As String = Rec2("idAnno").Value.ToString.Trim
+										Dim CS As String = Val(id).ToString.Trim
 
-									If TypeOf (ConnSq) Is String Then
-										Ritorno = ErroreConnessioneDBNonValida & ":" & ConnGen
-										ScriveLog(Server.MapPath("."), "Generale", "RitornaSquadre", Ritorno)
-									Else
-										Sql = " " &
-											"SELECT 'Allegati Allenatori' As Cosa, Coalesce(Sum(Lunghezza),0) As Lunghezza FROM `allegati_allenatori` " &
-											"Union All " &
-											"SELECT 'Allegati Arbitri' As Cosa, Coalesce(Sum(Lunghezza),0) As Lunghezza FROM `allegati_arbitri` " &
-											"Union All " &
-											"SELECT 'Allegati Avversari' As Cosa, Coalesce(Sum(Lunghezza),0) As Lunghezza FROM `allegati_avversari` " &
-											"Union All " &
-											"SELECT'Allegati Categorie' As Cosa,  Coalesce(Sum(Lunghezza),0) As Lunghezza FROM `allegati_categorie` " &
-											"Union All " &
-											"SELECT 'Allegati Certificati' As Cosa, Coalesce(Sum(Lunghezza),0) As Lunghezza FROM `allegati_certificati` " &
-											"Union All " &
-											"SELECT 'Allegati Dirigenti' As Cosa, Coalesce(Sum(Lunghezza),0) As Lunghezza FROM `allegati_dirigenti` " &
-											"Union All " &
-											"SELECT 'Allegati Documenti Giocatori' As Cosa, Coalesce(Sum(Lunghezza),0) As Lunghezza FROM `allegati_giocatoridocumenti` " &
-											"Union All " &
-											"SELECT 'Allegati Iscrizioni' As Cosa, Coalesce(Sum(Lunghezza),0) As Lunghezza FROM `allegati_iscrizioni` " &
-											"Union All " &
-											"SELECT 'Allegati Privacy' As Cosa, Coalesce(Sum(Lunghezza),0) As Lunghezza FROM `allegati_privacy` " &
-											"Union All " &
-											"SELECT 'Allegati Partite' As Cosa, Coalesce(Sum(Lunghezza),0) As Lunghezza FROM `allegati_partite` " &
-											"Union All " &
-											"SELECT 'Allegati Convocazioni' As Cosa, Coalesce(Sum(Lunghezza),0) As Lunghezza FROM `allegati_convocazioni` " &
-											"Union All " &
-											"SELECT 'Allegati Scontrini' As Cosa, Coalesce(Sum(Lunghezza),0) As Lunghezza FROM `allegati_scontrini` " &
-											"Union All " &
-											"SELECT 'Allegati Ricevute' As Cosa, Coalesce(Sum(Lunghezza),0) As Lunghezza FROM `allegati_ricevute` " &
-											"Union All " &
-											"SELECT 'Immagini Allenatori' As Cosa, Coalesce(Sum(Lunghezza),0) As Lunghezza FROM `immagini_allenatori` " &
-											"Union All " &
-											"SELECT 'Immagini Arbitri' As Cosa, Coalesce(Sum(Lunghezza),0) As Lunghezza FROM `immagini_arbitri` " &
-											"Union All " &
-											"SELECT 'Immagini Avversari' As Cosa, Coalesce(Sum(Lunghezza),0) As Lunghezza FROM `immagini_avversari` " &
-											"Union All " &
-											"SELECT 'Immagini Categorie' As Cosa, Coalesce(Sum(Lunghezza),0) As Lunghezza FROM `immagini_categorie` " &
-											"Union All " &
-											"SELECT 'Immagini Dirigenti' As Cosa, Coalesce(Sum(Lunghezza),0) As Lunghezza FROM `immagini_dirigenti` " &
-											"Union All " &
-											"SELECT 'Immagini Firme' As Cosa, Coalesce(Sum(Lunghezza),0) As Lunghezza FROM `immagini_firme` " &
-											"Union All " &
-											"SELECT 'Immagini Giocatori' As Cosa, Coalesce(Sum(Lunghezza),0) As Lunghezza FROM `immagini_giocatori` " &
-											"Union All " &
-											"SELECT 'Immagini Partite' As Cosa, Coalesce(Sum(Lunghezza),0) As Lunghezza FROM `immagini_partite` " &
-											"Union All " &
-											"SELECT 'Immagini Segreteria' As Cosa, Coalesce(Sum(Lunghezza),0) As Lunghezza FROM `immagini_segreteria` " &
-											"Union All " &
-											"SELECT 'Immagini Società' As Cosa, Coalesce(Sum(Lunghezza),0) As Lunghezza FROM `immagini_societa` " &
-											"Union All " &
-											"SELECT 'Immagini Utenti' As Cosa, Coalesce(Sum(Lunghezza),0) As Lunghezza FROM `immagini_utenti` " &
-											"Union All " &
-											"Select 'Immagini Firme Utenti' As Cosa, Coalesce(Sum(Lunghezza), 0) As Lunghezza FROM `immagini_utentifirme`"
-										Rec2 = ConnSq.LeggeQuery(Server.MapPath("."), Sql, ConnessioneSquadra)
-										If TypeOf (Rec2) Is String Then
-											Ritorno = Rec2
-											ScriveLog(Server.MapPath("."), "Generale", "RitornaSquadre", Ritorno)
-										Else
-											If Not Rec2.Eof() Then
-												Dim Cosa As String = ""
-												Dim Tipo As New List(Of String)
-												Dim Dime As New List(Of Double)
+										For i As Integer = Anno.Length To 3
+											Anno = "0" & Anno
+										Next
+										For i As Integer = CS.Length To 4
+											CS = "0" & CS
+										Next
+										Dim CodiceSquadra2 As String = Anno & "_" & CS
 
-												Do Until Rec2.eof
-													ScriveLog(Server.MapPath("."), "Generale", "RitornaSquadre", "Spazio occupato da " & Rec2("Cosa").Value & ": " & Rec2("Lunghezza").Value)
+										Dim Ritorno2 As String = RitornaSpazioDbSquadra(ConnGen, CodiceSquadra2)
 
-													Occupazione += Rec2("Lunghezza").Value
-
-													Tipo.Add(Rec2("Cosa").Value)
-													Dime.Add(Rec2("Lunghezza").Value)
-
-													Rec2.MoveNext
-												Loop
-												Rec2.Close()
-
-
-												'Dim gf As New GestioneFilesDirectory
-												'Dim PathAllegati As String = gf.LeggeFileIntero(Server.MapPath(".") & "\Impostazioni\PathAllegati.txt")
-												'Dim P() As String = PathAllegati.Split(";")
-												'If Strings.Right(P(0), 1) = "\" Then
-												'	P(0) = Mid(P(0), 1, P(0).Length - 1)
-												'End If
-												'Dim pathSquadra As String = P(0) & "\" & CodiceSquadra & "\"
-												'gf.CreaDirectoryDaPercorso(pathSquadra)
-												'gf.ScansionaDirectorySingola(pathSquadra)
-												'Dim Filetti() As String = gf.RitornaFilesRilevati
-												'Dim qFiletti As Long = gf.RitornaQuantiFilesRilevati
-												'Dim TotaleAllegati As Double = 0
-												'For i As Long = 1 To qFiletti
-												'	Dim lungh As Long = gf.TornaDimensioneFile(Filetti(i))
-												'	Dim t As String = Filetti(i).Replace(pathSquadra, "")
-												'	Dim tt() As String = t.Split("\")
-												'	Dim ttt As String = "Cartella " & tt(0)
-
-												'	TotaleAllegati += lungh
-
-												'	Dim ppp As Integer = 0
-												'	Dim ok2 As Boolean = True
-
-												'	For Each tttt As String In Tipo
-												'		If tttt = ttt Then
-												'			Dime.Item(ppp) = Dime.Item(ppp) + lungh
-												'			ok2 = False
-												'		End If
-												'		ppp += 1
-												'	Next
-												'	If (ok2) Then
-												'		Tipo.Add(ttt)
-												'		Dime.Add(lungh)
-												'	End If
-												'Next
-												'Occupazione += TotaleAllegati
-
-												Dim pp As Integer = 0
-												For Each t As String In Tipo
-													Dim v As FormatoByte = ConverteInByte(Dime(pp))
-													ScriveLog(Server.MapPath("."), "Generale", "RitornaSquadre", "Dettaglio occupazione: " & v.Occupazione & " Cosa " & v.Cosa)
-
-													DettaglioLunghezze &= t & ": " & v.Occupazione & " " & v.Cosa & "^" & v.Occupazione & "|"
-
-													pp += 1
-												Next
-
-												OccupazioneOriginale = Occupazione
-
-												Dim Valore As FormatoByte = ConverteInByte(Occupazione)
-
-												sOccupazione = Valore.Occupazione & " " & Valore.Cosa
-											End If
-											Rec2.Close()
-
-											'Return Occupazione & ": " & sOccupazione
-										End If
-										'ConnSq.ChiudeDB(ConnessioneSquadra)
-									End If
+										Rec2.moveNext
+									Loop
+									Rec2.Close()
 								End If
+
+								Dim Valore As FormatoByte = ConverteInByte(OccupazioneOriginale)
+
+								sOccupazione = Valore.Occupazione & " " & Valore.Cosa
+
 								ScriveLog(Server.MapPath("."), "Generale", "RitornaSquadre", "Spazio Totale: " & SpazioTotale)
 
 								Dim st As Double = Val(SpazioTotale) * giga
@@ -1062,6 +944,163 @@ Public Class wsSuperUser
 						Rec.Close()
 					End If
 				End If
+			End If
+		End If
+
+		Return Ritorno
+	End Function
+
+	Public Function RitornaSpazioDbSquadra(ConnGen As Object, CodiceSquadra As String) As String
+		Dim Sql As String = ""
+		Dim Ritorno As String = ""
+		Dim Rec2 As Object
+		Dim c() As String = CodiceSquadra.Split("_")
+		Dim Anno As String = "Anno " & Val(c(0))
+
+		Dim ConnessioneSquadra As String = LeggeImpostazioniDiBase(Server.MapPath("."), CodiceSquadra)
+
+		If ConnessioneSquadra = "" Then
+			Ritorno = ErroreConnessioneNonValida
+		Else
+			Dim ConnSq As Object = New clsGestioneDB(CodiceSquadra)
+			ScriveLog(Server.MapPath("."), "Generale", "RitornaSquadre", "Connessione squadra: " & CodiceSquadra)
+
+			If TypeOf (ConnSq) Is String Then
+				Ritorno = ErroreConnessioneDBNonValida & ":" & ConnGen
+				ScriveLog(Server.MapPath("."), "Generale", "RitornaSquadre", Ritorno)
+			Else
+				Sql = " " &
+					"SELECT 'Allegati Allenatori' As Cosa, Coalesce(Sum(Lunghezza),0) As Lunghezza FROM `allegati_allenatori` " &
+					"Union All " &
+					"SELECT 'Allegati Arbitri' As Cosa, Coalesce(Sum(Lunghezza),0) As Lunghezza FROM `allegati_arbitri` " &
+					"Union All " &
+					"SELECT 'Allegati Avversari' As Cosa, Coalesce(Sum(Lunghezza),0) As Lunghezza FROM `allegati_avversari` " &
+					"Union All " &
+					"SELECT'Allegati Categorie' As Cosa,  Coalesce(Sum(Lunghezza),0) As Lunghezza FROM `allegati_categorie` " &
+					"Union All " &
+					"SELECT 'Allegati Certificati' As Cosa, Coalesce(Sum(Lunghezza),0) As Lunghezza FROM `allegati_certificati` " &
+					"Union All " &
+					"SELECT 'Allegati Dirigenti' As Cosa, Coalesce(Sum(Lunghezza),0) As Lunghezza FROM `allegati_dirigenti` " &
+					"Union All " &
+					"SELECT 'Allegati Documenti Giocatori' As Cosa, Coalesce(Sum(Lunghezza),0) As Lunghezza FROM `allegati_giocatoridocumenti` " &
+					"Union All " &
+					"SELECT 'Allegati Iscrizioni' As Cosa, Coalesce(Sum(Lunghezza),0) As Lunghezza FROM `allegati_iscrizioni` " &
+					"Union All " &
+					"SELECT 'Allegati Privacy' As Cosa, Coalesce(Sum(Lunghezza),0) As Lunghezza FROM `allegati_privacy` " &
+					"Union All " &
+					"SELECT 'Allegati Partite' As Cosa, Coalesce(Sum(Lunghezza),0) As Lunghezza FROM `allegati_partite` " &
+					"Union All " &
+					"SELECT 'Allegati Convocazioni' As Cosa, Coalesce(Sum(Lunghezza),0) As Lunghezza FROM `allegati_convocazioni` " &
+					"Union All " &
+					"SELECT 'Allegati Scontrini' As Cosa, Coalesce(Sum(Lunghezza),0) As Lunghezza FROM `allegati_scontrini` " &
+					"Union All " &
+					"SELECT 'Allegati Ricevute' As Cosa, Coalesce(Sum(Lunghezza),0) As Lunghezza FROM `allegati_ricevute` " &
+					"Union All " &
+					"SELECT 'Immagini Allenatori' As Cosa, Coalesce(Sum(Lunghezza),0) As Lunghezza FROM `immagini_allenatori` " &
+					"Union All " &
+					"SELECT 'Immagini Arbitri' As Cosa, Coalesce(Sum(Lunghezza),0) As Lunghezza FROM `immagini_arbitri` " &
+					"Union All " &
+					"SELECT 'Immagini Avversari' As Cosa, Coalesce(Sum(Lunghezza),0) As Lunghezza FROM `immagini_avversari` " &
+					"Union All " &
+					"SELECT 'Immagini Categorie' As Cosa, Coalesce(Sum(Lunghezza),0) As Lunghezza FROM `immagini_categorie` " &
+					"Union All " &
+					"SELECT 'Immagini Dirigenti' As Cosa, Coalesce(Sum(Lunghezza),0) As Lunghezza FROM `immagini_dirigenti` " &
+					"Union All " &
+					"SELECT 'Immagini Firme' As Cosa, Coalesce(Sum(Lunghezza),0) As Lunghezza FROM `immagini_firme` " &
+					"Union All " &
+					"SELECT 'Immagini Giocatori' As Cosa, Coalesce(Sum(Lunghezza),0) As Lunghezza FROM `immagini_giocatori` " &
+					"Union All " &
+					"SELECT 'Immagini Partite' As Cosa, Coalesce(Sum(Lunghezza),0) As Lunghezza FROM `immagini_partite` " &
+					"Union All " &
+					"SELECT 'Immagini Segreteria' As Cosa, Coalesce(Sum(Lunghezza),0) As Lunghezza FROM `immagini_segreteria` " &
+					"Union All " &
+					"SELECT 'Immagini Società' As Cosa, Coalesce(Sum(Lunghezza),0) As Lunghezza FROM `immagini_societa` " &
+					"Union All " &
+					"SELECT 'Immagini Utenti' As Cosa, Coalesce(Sum(Lunghezza),0) As Lunghezza FROM `immagini_utenti` " &
+					"Union All " &
+					"Select 'Immagini Firme Utenti' As Cosa, Coalesce(Sum(Lunghezza), 0) As Lunghezza FROM `immagini_utentifirme`"
+				Rec2 = ConnSq.LeggeQuery(Server.MapPath("."), Sql, ConnessioneSquadra)
+				If TypeOf (Rec2) Is String Then
+					Ritorno = Rec2
+					ScriveLog(Server.MapPath("."), "Generale", "RitornaSquadre", Ritorno)
+				Else
+					If Not Rec2.Eof() Then
+						Dim Cosa As String = ""
+						Dim Tipo As New List(Of String)
+						Dim Dime As New List(Of Double)
+
+						Occupazione = 0
+
+						Do Until Rec2.eof
+							If Rec2("Lunghezza").Value > 0 Then
+								ScriveLog(Server.MapPath("."), "Generale", "RitornaSquadre", "Spazio occupato da " & Rec2("Cosa").Value & ": " & Rec2("Lunghezza").Value & ". Anno " & Anno)
+
+								Occupazione += Rec2("Lunghezza").Value
+
+								Tipo.Add(Rec2("Cosa").Value & " " & Anno)
+								Dime.Add(Rec2("Lunghezza").Value)
+							End If
+
+							Rec2.MoveNext
+						Loop
+						Rec2.Close()
+
+						Dim gf As New GestioneFilesDirectory
+						Dim PathAllegati As String = gf.LeggeFileIntero(Server.MapPath(".") & "\Impostazioni\PathAllegati.txt")
+						Dim P() As String = PathAllegati.Split(";")
+						If Strings.Right(P(0), 1) = "\" Then
+							P(0) = Mid(P(0), 1, P(0).Length - 1)
+						End If
+						Dim pathSquadra As String = P(0) & "\" & CodiceSquadra & "\"
+						gf.CreaDirectoryDaPercorso(pathSquadra)
+						gf.ScansionaDirectorySingola(pathSquadra)
+						Dim Filetti() As String = gf.RitornaFilesRilevati
+						Dim qFiletti As Long = gf.RitornaQuantiFilesRilevati
+						Dim TotaleAllegati As Double = 0
+						For i As Long = 1 To qFiletti
+							Dim lungh As Long = gf.TornaDimensioneFile(Filetti(i))
+							If lungh > 0 Then
+								Dim t As String = Filetti(i).Replace(pathSquadra, "")
+								Dim tt() As String = t.Split("\")
+								Dim ttt As String = "Cartella " & tt(0) & " " & Anno
+
+								TotaleAllegati += lungh
+
+								Dim ppp As Integer = 0
+								Dim ok2 As Boolean = True
+
+								For Each tttt As String In Tipo
+									If tttt = ttt Then
+										Dime.Item(ppp) = Dime.Item(ppp) + lungh
+										ok2 = False
+									End If
+									ppp += 1
+								Next
+								If (ok2) Then
+									Tipo.Add(ttt)
+									Dime.Add(lungh)
+								End If
+							End If
+						Next
+						Occupazione += TotaleAllegati
+
+						Dim pp As Integer = 0
+						For Each t As String In Tipo
+							Dim v As FormatoByte = ConverteInByte(Dime(pp))
+							ScriveLog(Server.MapPath("."), "Generale", "RitornaSquadre", "Dettaglio occupazione: " & v.Occupazione & " Cosa " & v.Cosa)
+
+							DettaglioLunghezze &= t & ": " & v.Occupazione & " " & v.Cosa & "^" & v.Occupazione & "|"
+
+							pp += 1
+						Next
+
+						OccupazioneOriginale += Occupazione
+					End If
+					Rec2.Close()
+
+					'Return Occupazione & ": " & sOccupazione
+				End If
+				'ConnSq.ChiudeDB(ConnessioneSquadra)
 			End If
 		End If
 
@@ -1488,9 +1527,20 @@ Public Class wsSuperUser
 				End If
 
 				If Ok Then
+					'If Ritorno = "*" Then
 					Sql = "commit"
-					Dim Ritorno2 As String = ConnGen.EsegueSql(Server.MapPath("."), Sql, ConnessioneGenerale)
-					ScriveLog(Server.MapPath("."), Squadra, "CreaNuovoAnno", "Commit")
+						Dim Ritorno2 As String = ConnGen.EsegueSql(Server.MapPath("."), Sql, ConnessioneGenerale)
+						ScriveLog(Server.MapPath("."), Squadra, "CreaNuovoAnno", "Commit")
+					'Else
+					'	Sql = "rollback"
+					'	Dim Ritorno2 As String = ConnGen.EsegueSql(Server.MapPath("."), Sql, ConnessioneGenerale)
+					'	ScriveLog(Server.MapPath("."), Squadra, "CreaNuovoAnno", "Rollback")
+
+					'	Sql = "Drop Database [" & nomeDb & "]"
+					'	Ritorno2 = ConnGen.EsegueSql(Server.MapPath("."), Sql, ConnessioneGenerale)
+					'End If
+
+					Ritorno = CopiaIDatiDalVecchioDBAlNuovo(Server.MapPath("."), Squadra, nomeDb)
 				Else
 					Sql = "rollback"
 					Dim Ritorno2 As String = ConnGen.EsegueSql(Server.MapPath("."), Sql, ConnessioneGenerale)

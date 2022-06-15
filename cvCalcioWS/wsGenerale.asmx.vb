@@ -1117,7 +1117,7 @@ Public Class wsGenerale
 				Try
 					Sql = "SELECT A.*, Coalesce(B.idAnno, '') As Selezionato FROM SquadraAnni A " &
 						"Left Join SquadreAnnoSelezionato B On A.idSquadra = B.idSquadra  And A.idAnno = B.idAnno " &
-						"Where A.idSquadra=" & idSquadra & " And Eliminata='N' Or Eliminata = 'n' Order By Descrizione Desc"
+						"Where A.idSquadra=" & idSquadra & " And (Eliminata='N' Or Eliminata = 'n') Order By Descrizione Desc"
 					Rec = Conn.LeggeQuery(Server.MapPath("."), Sql, Connessione)
 					If TypeOf (Rec) Is String Then
 						Ritorno = Rec

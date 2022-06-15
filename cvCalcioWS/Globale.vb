@@ -65,6 +65,12 @@ Module Globale
 
 	'Public CodicePartitaPerImmagini As String = ""
 
+	Public Occupazione As Double = 0
+	Public DettaglioLunghezze As String = ""
+	Public OccupazioneOriginale As Double = 0
+	Public sOccupazione As String = ""
+	Public giga As Double = 1024L * 1024 * 1024 ' * 1024
+
 	Public Function ConvertePath(Path As String) As String
 		Dim NomeFile As String = Path
 
@@ -3119,6 +3125,260 @@ Module Globale
 				Ritorno = True
 			End If
 			Rec.Close()
+		End If
+
+		Return Ritorno
+	End Function
+
+	Public Function CopiaIDatiDalVecchioDBAlNuovo(MP As String, VecchiaSquadra As String, NuovaSquadra As String) As String
+		Dim Ritorno As String = ""
+		Dim Ok As Boolean = True
+
+		ScriveLog(MP, VecchiaSquadra, "CreaNuovoAnno", "Copia files e tabelle dal vecchio db")
+		ScriveLog(MP, VecchiaSquadra, "CreaNuovoAnno", "Vecchio db: " & VecchiaSquadra)
+		ScriveLog(MP, VecchiaSquadra, "CreaNuovoAnno", "Nuovo db:" & NuovaSquadra)
+
+		Dim ConnGenerale As Object = New clsGestioneDB("")
+		Dim ConnessioneGenerale As String = LeggeImpostazioniDiBase(MP, "")
+
+		Dim ConnVecchia As Object = New clsGestioneDB(VecchiaSquadra)
+		Dim ConnessioneVecchia As String = LeggeImpostazioniDiBase(MP, VecchiaSquadra)
+
+		Dim ConnNuova As Object = New clsGestioneDB(NuovaSquadra)
+		Dim ConnessioneNuova As String = LeggeImpostazioniDiBase(MP, NuovaSquadra)
+
+		If TypeOf (ConnVecchia) Is String Or TypeOf (ConnVecchia) Is String Then
+			Ritorno = ErroreConnessioneDBNonValida & ":" & ConnVecchia
+			Ok = False
+			ScriveLog(MP, VecchiaSquadra, "CreaNuovoAnno", "Errore su apertura vecchio db:" & Ritorno)
+		End If
+
+		If Ok Then
+			If TypeOf (ConnGenerale) Is String Or TypeOf (ConnGenerale) Is String Then
+				Ritorno = ErroreConnessioneDBNonValida & ":" & ConnGenerale
+				Ok = False
+				ScriveLog(MP, VecchiaSquadra, "CreaNuovoAnno", "Errore su apertura db Generale:" & Ritorno)
+			End If
+		End If
+
+		If Ok Then
+			If TypeOf (ConnNuova) Is String Or TypeOf (ConnNuova) Is String Then
+				Ritorno = ErroreConnessioneDBNonValida & ":" & ConnNuova
+				Ok = False
+				ScriveLog(MP, VecchiaSquadra, "CreaNuovoAnno", "Errore su apertura nuovo db:" & Ritorno)
+			End If
+		End If
+
+		If Ok Then
+			Dim Rec As Object
+			Dim Sql As String = ""
+
+			' Immagini societarie
+			ScriveLog(MP, VecchiaSquadra, "CreaNuovoAnno", "Eliminazione immagini società")
+			Sql = "Delete From Immagini_Societa"
+			Ritorno = ConnNuova.EsegueSql(MP, Sql, ConnessioneNuova)
+			If Ritorno.Contains(StringaErrore) Then
+				ScriveLog(MP, VecchiaSquadra, "CreaNuovoAnno", "Eliminazione immagini società: " & Ritorno)
+				Ok = False
+			Else
+				ScriveLog(MP, VecchiaSquadra, "CreaNuovoAnno", "Lettura immagini società")
+				Sql = "Select * from Immagini_Societa"
+				Rec = ConnVecchia.LeggeQuery(MP, Sql, ConnessioneVecchia)
+				If TypeOf (Rec) Is String Then
+					Ritorno = Rec
+					Ok = False
+					ScriveLog(MP, VecchiaSquadra, "CreaNuovoAnno", "Lettura immagini società: " & Ritorno)
+				Else
+					Do Until Rec.Eof()
+						ScriveLog(MP, VecchiaSquadra, "CreaNuovoAnno", "Scrittura immagini società: " & Rec("id").Value)
+						Sql = "Insert Into Immagini_Societa Values (" & Rec("id").Value & ", " & Rec("Lunghezza").Value & ", '" & Rec("Dati").Value & "')"
+						Ritorno = ConnNuova.EsegueSql(MP, Sql, ConnessioneNuova)
+						If Ritorno.Contains(StringaErrore) Then
+							ScriveLog(MP, VecchiaSquadra, "CreaNuovoAnno", "Scrittura immagini società: " & Rec("id").Value & ": " & Ritorno)
+							ScriveLog(MP, VecchiaSquadra, "CreaNuovoAnno", Sql)
+							Ok = False
+							Exit Do
+						End If
+
+						Rec.MoveNext
+					Loop
+					Rec.Close
+				End If
+			End If
+
+			If Ok Then
+				' Dati società
+				ScriveLog(MP, VecchiaSquadra, "CreaNuovoAnno", "Lettura dati società")
+				Sql = "SELECT * FROM anni"
+				Rec = ConnVecchia.LeggeQuery(MP, Sql, ConnessioneVecchia)
+				If TypeOf (Rec) Is String Then
+					Ritorno = Rec
+					Ok = False
+					ScriveLog(MP, VecchiaSquadra, "CreaNuovoAnno", "Lettura dati società: " & Ritorno)
+				Else
+					If Rec.Eof() Then
+						ScriveLog(MP, VecchiaSquadra, "CreaNuovoAnno", "Nessun valore ritornato per i dati della società")
+						Ok = False
+					Else
+						Dim Csc As String = Replace(Rec("CostoScuolaCalcio").Value, "'", "''")
+						If Csc = "" Then Csc = "0"
+
+						Sql = "Update Anni Set " &
+							"NomeSquadra='" & Replace(Rec("NomeSquadra").Value, "'", "''") & "', " &
+							"Lat='" & Rec("Lat").Value & "', " &
+							"Lon='" & Rec("Lon").Value & "', " &
+							"Indirizzo='" & Replace(Rec("Indirizzo").Value, "'", "''") & "' , " &
+							"CampoSquadra='" & Replace(Rec("CampoSquadra").Value, "'", "''") & "', " &
+							"NomePolisportiva='" & Replace(Rec("NomePolisportiva").Value, "'", "''") & "', " &
+							"Mail='" & Replace(Rec("Mail").Value, "'", "''") & "', " &
+							"Pec='" & Replace(Rec("Pec").Value, "'", "''") & "', " &
+							"Telefono='" & Replace(Rec("Telefono").Value, "'", "''") & "', " &
+							"PIva='" & Replace(Rec("PIva").Value, "'", "''") & "', " &
+							"CodiceFiscale='" & Replace(Rec("CodiceFiscale").Value, "'", "''") & "', " &
+							"CodiceUnivoco='" & Replace(Rec("CodiceUnivoco").Value, "'", "''") & "', " &
+							"SitoWeb='" & Replace(Rec("SitoWeb").Value, "'", "''") & "', " &
+							"MittenteMail='" & Replace(Rec("MittenteMail").Value, "'", "''") & "', " &
+							"GestionePagamenti='" & Replace(Rec("GestionePagamenti").Value, "'", "''") & "', " &
+							"CostoScuolaCalcio=" & Csc & ", " &
+							"Suffisso='" & Replace(Rec("Suffisso").Value, "'", "''") & "', " &
+							"IscrFirmaEntrambi='" & Replace(Rec("IscrFirmaEntrambi").Value, "'", "''") & "', " &
+							"ModuloAssociato='" & Replace(Rec("ModuloAssociato").Value, "'", "''") & "', " &
+							"PercCashback='" & Rec("PercCashback").Value.Replace(",", ".") & "', " &
+							"RateManuali='" & Replace(Rec("RateManuali").Value, "'", "''") & "', " &
+							"Cashback='" & Replace(Rec("Cashback").Value, "'", "''") & "' "
+						Ritorno = ConnNuova.EsegueSql(MP, Sql, ConnessioneNuova)
+						If Ritorno.Contains(StringaErrore) Then
+							ScriveLog(MP, VecchiaSquadra, "CreaNuovoAnno", "Lettura dati società: " & Rec("id").Value & ": " & Ritorno)
+							ScriveLog(MP, VecchiaSquadra, "CreaNuovoAnno", Sql)
+							Ok = False
+						End If
+					End If
+				End If
+			End If
+
+			If Ok Then
+				' Tipologia firme
+				ScriveLog(MP, VecchiaSquadra, "CreaNuovoAnno", "Eliminazione tipologia firme")
+				Sql = "Delete From TipologiaFirme"
+				Rec = ConnNuova.LeggeQuery(MP, Sql, ConnessioneNuova)
+				If TypeOf (Rec) Is String Then
+					Ritorno = Rec
+					Ok = False
+					ScriveLog(MP, VecchiaSquadra, "CreaNuovoAnno", "Eliminazione tipologia firme: " & Ritorno)
+				Else
+					ScriveLog(MP, VecchiaSquadra, "CreaNuovoAnno", "Lettura tipologia firme")
+					Sql = "SELECT * FROM TipologiaFirme"
+					Rec = ConnVecchia.LeggeQuery(MP, Sql, ConnessioneVecchia)
+					If TypeOf (Rec) Is String Then
+						Ritorno = Rec
+						Ok = False
+						ScriveLog(MP, VecchiaSquadra, "CreaNuovoAnno", "Lettura tipologia firme: " & Ritorno)
+					Else
+						If Rec.Eof() Then
+							ScriveLog(MP, VecchiaSquadra, "CreaNuovoAnno", "Nessun valore ritornato per la tipologia firme")
+						Else
+							Do Until Rec.Eof()
+								ScriveLog(MP, VecchiaSquadra, "CreaNuovoAnno", "Scrittura tipologia firme: " & Rec("idFirma").Value)
+								Sql = "Insert Into TipologiaFirme Values (" &
+									" " & Rec("idFirma").Value & ", " &
+									"'" & Replace(Rec("Tipologia").Value, "'", "''") & "', " &
+									"'" & Replace(Rec("Descrizione").Value, "'", "''") & "' " &
+									")"
+								Ritorno = ConnNuova.EsegueSql(MP, Sql, ConnessioneNuova)
+								If Ritorno.Contains(StringaErrore) Then
+									ScriveLog(MP, VecchiaSquadra, "CreaNuovoAnno", "Scrittura tipologia firme: " & Rec("id").Value & ": " & Ritorno)
+									ScriveLog(MP, VecchiaSquadra, "CreaNuovoAnno", Sql)
+									Ok = False
+									Exit Do
+								End If
+
+								Rec.MoveNext
+							Loop
+							Rec.Close
+						End If
+					End If
+				End If
+			End If
+
+			If Ok Then
+				' Dettaglio società firme
+				ScriveLog(MP, VecchiaSquadra, "CreaNuovoAnno", "Eliminazione Dettaglio Società")
+				ScriveLog(MP, VecchiaSquadra, "CreaNuovoAnno", "Lettura dettaglio società")
+				Sql = "SELECT * FROM DettaglioSocieta Where CodSquadra='" & VecchiaSquadra & "'"
+				Rec = ConnGenerale.LeggeQuery(MP, Sql, ConnessioneGenerale)
+				If TypeOf (Rec) Is String Then
+					Ritorno = Rec
+					Ok = False
+					ScriveLog(MP, VecchiaSquadra, "CreaNuovoAnno", "Lettura dettaglio società: " & Ritorno)
+				Else
+					If Rec.Eof() Then
+						ScriveLog(MP, VecchiaSquadra, "CreaNuovoAnno", "Nessun valore ritornato per il dettaglio società")
+					Else
+						Sql = "Insert Into DettaglioSocieta Values (" &
+							"'" & NuovaSquadra & "', " &
+							"'" & Replace(Rec("NomeSocieta").Value, "'", "''") & "', " &
+							"'" & Replace(Rec("EmailAmministratore").Value, "'", "''") & "', " &
+							"'" & Replace(Rec("NomeAmministratore").Value, "'", "''") & "', " &
+							"'" & Replace(Rec("CognomeAmministratore").Value, "'", "''") & "', " &
+							"'" & Replace(Rec("Telefono").Value, "'", "''") & "', " &
+							"'" & Replace(Rec("CAP").Value, "'", "''") & "', " &
+							"'" & Replace(Rec("Citta").Value, "'", "''") & "', " &
+							"'" & Replace(Rec("Indirizzo").Value, "'", "''") & "', " &
+							"'" & Replace(Rec("StimaGiocatori").Value, "'", "''") & "', " &
+							"'" & Replace(Rec("PIva").Value, "'", "''") & "', " &
+							"'" & Replace(Rec("CF").Value, "'", "''") & "', " &
+							"'" & Replace(Rec("idLicenza").Value, "'", "''") & "', " &
+							"'" & Replace(Rec("idTipologia").Value, "'", "''") & "', " &
+							"'" & Replace(Rec("Eliminata").Value, "'", "''") & "' " &
+							")"
+						Ritorno = ConnGenerale.EsegueSql(MP, Sql, ConnessioneGenerale)
+						If Ritorno.Contains(StringaErrore) Then
+							ScriveLog(MP, VecchiaSquadra, "CreaNuovoAnno", "Scrittura dettaglio società: " & NuovaSquadra & ": " & Ritorno)
+							ScriveLog(MP, VecchiaSquadra, "CreaNuovoAnno", Sql)
+							Ok = False
+						End If
+						Rec.Close
+					End If
+				End If
+			End If
+
+			If Ok Then
+				' Scheletri
+				' Iscrizione
+				Dim gf As New GestioneFilesDirectory
+				Dim Paths As String = gf.LeggeFileIntero(MP & "\Impostazioni\PathAllegati.txt")
+				Dim P() As String = Paths.Split(";")
+				Dim pathAllegati As String = P(0).Replace(vbCrLf, "")
+				If Strings.Right(pathAllegati, 1) <> "\" Then
+					pathAllegati &= "\"
+				End If
+
+				ScriveLog(MP, VecchiaSquadra, "CreaNuovoAnno", "Path allegati: " & pathAllegati)
+				Dim NomeFileScheletroIscrizione As String = pathAllegati & VecchiaSquadra & "\Scheletri\base_iscrizione_" & VecchiaSquadra & ".txt"
+				ScriveLog(MP, VecchiaSquadra, "CreaNuovoAnno", "Controllo file scheletro iscrizione modificato: " & NomeFIleScheletroIscrizione)
+				If gf.EsisteFile(NomeFIleScheletroIscrizione) Then
+					ScriveLog(MP, VecchiaSquadra, "CreaNuovoAnno", "File scheletro iscrizione modificato esistente")
+				Else
+					NomeFIleScheletroIscrizione = MP & "\Scheletri\base_iscrizione_" & VecchiaSquadra & ".txt"
+					ScriveLog(MP, VecchiaSquadra, "CreaNuovoAnno", "Controllo file scheletro iscrizione originale: " & NomeFIleScheletroIscrizione)
+					If gf.EsisteFile(NomeFIleScheletroIscrizione) Then
+						ScriveLog(MP, VecchiaSquadra, "CreaNuovoAnno", "File scheletro iscrizione modificato esistente")
+					Else
+						ScriveLog(MP, VecchiaSquadra, "CreaNuovoAnno", "File scheletro iscrizione modificato NON esistente")
+						gf.CopiaFileFisico(MP & "\Scheletri\base_iscrizione_.txt", NomeFileScheletroIscrizione, True)
+					End If
+
+					Dim NuovoNomeFileScheletro As String = NomeFileScheletroIscrizione
+					NuovoNomeFileScheletro = Replace(NuovoNomeFileScheletro, VecchiaSquadra, NuovaSquadra)
+					ScriveLog(MP, VecchiaSquadra, "CreaNuovoAnno", "Copia File scheletro iscrizione: " & NomeFileScheletroIscrizione & " -> " & NuovoNomeFileScheletro)
+					gf.CreaDirectoryDaPercorso(NuovoNomeFileScheletro)
+					gf.CopiaFileFisico(NomeFileScheletroIscrizione, NuovoNomeFileScheletro, True)
+				End If
+			End If
+
+			If Ok Then
+				Ritorno = "*"
+			End If
 		End If
 
 		Return Ritorno
