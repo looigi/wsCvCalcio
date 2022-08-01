@@ -3222,6 +3222,7 @@ Module Globale
 					Else
 						Dim Csc As String = Replace(Rec("CostoScuolaCalcio").Value, "'", "''")
 						If Csc = "" Then Csc = "0"
+						Csc = Csc.Replace(",", ".")
 
 						Sql = "Update Anni Set " &
 							"NomeSquadra='" & Replace(Rec("NomeSquadra").Value, "'", "''") & "', " &

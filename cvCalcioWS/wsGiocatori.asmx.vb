@@ -3195,6 +3195,8 @@ Public Class wsGiocatori
 								Else
 									Dim Saldo As String = ""
 
+									' Return Rec(0).Value & ";" & Percentuale & ""
+
 									'If Rec(0).Value Is DBNull.Value Then
 									'	Saldo = "€ 0"
 									'Else
@@ -3204,7 +3206,13 @@ Public Class wsGiocatori
 									Ritorno &= Saldo & ";"
 
 									Ritorno &= Percentuale & ";"
-									Ritorno &= Saldo * Percentuale / 100
+									Dim ss As Single = Rec(0).Value
+									Dim pp As Integer = Val(Percentuale.Replace(",", "."))
+									Dim cb As Single = CInt((ss * pp / 100) * 100) / 100
+
+									'Return ss & ";" & pp & ";" & cb
+
+									Ritorno &= cb
 
 									Rec.Close()
 								End If
@@ -3818,6 +3826,54 @@ Public Class wsGiocatori
 								Ritorno &= QuanteFirmeValidate4 & ";"
 
 								Rec.Close()
+
+
+								Sql = "select * from giocatoritesserenfc where idGiocatore=" & idGiocatore & " And codsquadra='" & Squadra & "'"
+								Rec2 = ConnGen.LeggeQuery(Server.MapPath("."), Sql, ConnessioneGen)
+								Dim CodiceTessera As String = ""
+								If TypeOf (Rec2) Is String Then
+									Ritorno = Rec2
+								Else
+									If Rec2.Eof = False Then
+										CodiceTessera = Rec2("codicetessera").Value
+										Rec2.Close()
+
+										Dim CashbackTotale As Single = 0
+										Dim CashbackUtilizzato As Single = 0
+
+										Sql = "select coalesce(sum(importo),0) As Importo from tesserenfc where numerotessera='" & CodiceTessera & "'"
+										Rec2 = ConnGen.LeggeQuery(Server.MapPath("."), Sql, ConnessioneGen)
+										If TypeOf (Rec2) Is String Then
+											Ritorno = Rec2
+										Else
+											CashbackTotale = Rec2("Importo").Value
+
+											Rec2.Close
+										End If
+
+										Sql = "select coalesce(sum(importo),0) As Importo from cashbackutilizzato where codicetessera='" & CodiceTessera & "'"
+										Rec2 = ConnGen.LeggeQuery(Server.MapPath("."), Sql, ConnessioneGen)
+										If TypeOf (Rec2) Is String Then
+											Ritorno = Rec2
+										Else
+											CashbackUtilizzato = Rec2("Importo").Value
+
+											Rec2.Close
+										End If
+
+										Dim CashbackDisponibile As Single = CashbackTotale - CashbackUtilizzato
+
+										Ritorno &= CashbackTotale & ";"
+										Ritorno &= CashbackDisponibile & ";"
+										Ritorno &= CashbackUtilizzato & ";"
+										Ritorno &= CodiceTessera & ";"
+									Else
+										Ritorno &= "0.00;"
+										Ritorno &= "0.00;"
+										Ritorno &= "0.00;"
+										Ritorno &= ";"
+									End If
+								End If
 							End If
 						End If
 					End If

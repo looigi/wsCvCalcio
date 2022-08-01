@@ -12,6 +12,46 @@ Public Class wsNFC
 	Inherits System.Web.Services.WebService
 
 	<WebMethod()>
+	Public Function ValidaCashback(NumeroTessera As String, Importo As String) As String
+		Dim Ritorno As String = ""
+		Dim Connessione As String = LeggeImpostazioniDiBase(Server.MapPath("."), "")
+
+		If Connessione = "" Then
+			Ritorno = ErroreConnessioneNonValida
+		Else
+			Dim Conn As Object = New clsGestioneDB("Generale")
+
+			If TypeOf (Conn) Is String Then
+				Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
+			Else
+				Dim Rec As Object
+				Dim Sql As String = "Select " & IIf(TipoDB = "SQLSERVER", "IsNull(Max(Progressivo),0)+1", "Coalesce(Max(Progressivo),0)+1") & " From cashbackutilizzato Where codicetessera='" & NumeroTessera & "'"
+				Dim Progressivo As Integer = 0
+
+				Rec = Conn.LeggeQuery(Server.MapPath("."), Sql, Connessione)
+				If TypeOf (Rec) Is String Then
+					Ritorno = Rec
+				Else
+					Progressivo = Rec(0).Value
+
+					Rec.Close
+
+					Dim DataOra As String = Now.Year & Format(Now.Month, "00") & Format(Now.Day, "00") & " " & Format(Now.Hour, "00") & ":" & Format(Now.Minute, "00") & ":" & Format(Now.Second, "00")
+
+					Sql = "Insert Into cashbackutilizzato Values ('" & NumeroTessera & "', " & Progressivo & ", " & Importo & ", '" & DataOra & "')"
+
+					Ritorno = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
+					If Not Ritorno.Contains(StringaErrore) Then
+						Ritorno = "*"
+					End If
+				End If
+			End If
+		End If
+
+		Return Ritorno
+	End Function
+
+	<WebMethod()>
 	Public Function ScriveDatiTessera(NumeroTessera As String, Descrizione As String, Importo As String) As String
 		Dim Ritorno As String = ""
 		Dim Connessione As String = LeggeImpostazioniDiBase(Server.MapPath("."), "")
@@ -130,7 +170,11 @@ Public Class wsNFC
 				If TypeOf (Rec) Is String Then
 					Ritorno = Rec
 				Else
-					Ritorno = Rec("CodSquadra").Value & ";" & Rec("idGiocatore").Value & ";"
+					If Rec.Eof = False Then
+						Ritorno = Rec("CodSquadra").Value & ";" & Rec("idGiocatore").Value & ";"
+					Else
+						Ritorno = "ERROR: Nessuna tessera rilevata con il codice " & CodiceTessera
+					End If
 					Rec.Close()
 				End If
 			End If
