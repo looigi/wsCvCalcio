@@ -1333,7 +1333,33 @@ Public Class wsSuperUser
 				Dim Rec As Object
 				Dim Sql As String = ""
 				Dim idAnno As Integer = 1
+				Dim idAnnoAttuale As Integer = 1
 				Dim NomeSquadra As String = ""
+
+				If TipoDB = "SQLSERVER" Then
+					Sql = "Select IsNull(Max(idAnno),0) From SquadraAnni Where idSquadra=" & idSquadra
+				Else
+					Sql = "Select Coalesce(Max(idAnno),0) From SquadraAnni Where idSquadra=" & idSquadra
+				End If
+				Rec = ConnGen.LeggeQuery(Server.MapPath("."), Sql, ConnessioneGenerale)
+				If TypeOf (Rec) Is String Then
+					Ritorno = Rec
+				Else
+					'If Rec(0).Value Is DBNull.Value Then
+					'	idAnno = 1
+					'Else
+					idAnnoAttuale = Rec(0).Value
+					'End If
+				End If
+
+				Dim sAnno As String = Format(idAnnoAttuale, "0000")
+				Dim sCodSquadra As String = idSquadra.Trim
+				While sCodSquadra.Length <> 5
+					sCodSquadra = "0" & sCodSquadra
+				End While
+				Dim nomeDbPrecedente As String = sAnno & "_" & sCodSquadra
+
+				ScriveLog(Server.MapPath("."), Squadra, "CreaNuovoAnno", "Id Vecchio Anno: " & idAnnoAttuale & " - Codice Vecchia Squadra: " & nomeDbPrecedente)
 
 				If TipoDB = "SQLSERVER" Then
 					Sql = "Select IsNull(Max(idAnno),0)+1 From SquadraAnni Where idSquadra=" & idSquadra
@@ -1367,16 +1393,16 @@ Public Class wsSuperUser
 
 				ScriveLog(Server.MapPath("."), Squadra, "CreaNuovoAnno", "Nome Squadra: " & NomeSquadra)
 
-				Dim sAnno As String = Format(idAnno, "0000")
-				Dim sCodSquadra As String = idSquadra.Trim
+				sAnno = Format(idAnno, "0000")
+				sCodSquadra = idSquadra.Trim
 				While sCodSquadra.Length <> 5
 					sCodSquadra = "0" & sCodSquadra
 				End While
-				Dim nomeDb As String = sAnno & "_" & sCodSquadra
+				Dim nomeDbNuovo As String = sAnno & "_" & sCodSquadra
 
-				ScriveLog(Server.MapPath("."), Squadra, "CreaNuovoAnno", "Nome DB: " & nomeDb)
+				ScriveLog(Server.MapPath("."), Squadra, "CreaNuovoAnno", "Id Nuovo Anno: " & idAnno & " - Codice Nuovo DB: " & nomeDbNuovo)
 
-				Sql = "Create Database [" & nomeDb & "]"
+				Sql = "Create Database [" & nomeDbNuovo & "]"
 				Ritorno = ConnGen.EsegueSql(Server.MapPath("."), Sql, ConnessioneGenerale)
 				If Ritorno.Contains(StringaErrore) Then
 					ScriveLog(Server.MapPath("."), Squadra, "CreaNuovoAnno", "Creazione DB: " & Ritorno)
@@ -1413,9 +1439,9 @@ Public Class wsSuperUser
 							Try
 								' Sql = "Select * Into [" & nomeDb & "].[dbo].[" & Tabelle(i) & "] From " & Tabelle(i)
 								If TipoDB = "SQLSERVER" Then
-									Sql = "Select * Into [" & nomeDb & "].[dbo].[" & Tabelle(i) & "] From " & Tabelle(i)
+									Sql = "Select * Into [" & nomeDbNuovo & "].[dbo].[" & Tabelle(i) & "] From " & Tabelle(i)
 								Else
-									Sql = "CREATE TABLE " & nomeDb & "." & Tabelle(i) & " SELECT * FROM " & Tabelle(i)
+									Sql = "CREATE TABLE " & nomeDbNuovo & "." & Tabelle(i) & " SELECT * FROM " & Tabelle(i)
 								End If
 								Ritorno = ConnDbOrigine.EsegueSql(Server.MapPath("."), Sql, ConnessioneDBOrigine)
 								If Ritorno.Contains(StringaErrore) Then
@@ -1430,7 +1456,7 @@ Public Class wsSuperUser
 						Next
 						ScriveLog(Server.MapPath("."), Squadra, "CreaNuovoAnno", "Creazione tabelle effettuato: " & Ok)
 
-						Dim ConnessioneNuovo As String = LeggeImpostazioniDiBase(Server.MapPath("."), nomeDb)
+						Dim ConnessioneNuovo As String = LeggeImpostazioniDiBase(Server.MapPath("."), nomeDbNuovo)
 						Dim ConnNuovo As Object = New clsGestioneDB(Squadra)
 
 						If Ok Then
@@ -1478,7 +1504,7 @@ Public Class wsSuperUser
 
 						If Ok Then
 							ScriveLog(Server.MapPath("."), Squadra, "CreaNuovoAnno", "Inserimento nuovo recordset su tabella Anni")
-							Sql = "Insert Into [" & nomeDb & "].[dbo].[Anni] Values (" &
+							Sql = "Insert Into [" & nomeDbNuovo & "].[dbo].[Anni] Values (" &
 								" " & idAnno & ", " &
 								"'" & NuovoAnno & "', " &
 								"'" & NomeSquadra.Replace("'", "''") & "', " &
@@ -1528,9 +1554,6 @@ Public Class wsSuperUser
 
 				If Ok Then
 					'If Ritorno = "*" Then
-					Sql = "commit"
-						Dim Ritorno2 As String = ConnGen.EsegueSql(Server.MapPath("."), Sql, ConnessioneGenerale)
-						ScriveLog(Server.MapPath("."), Squadra, "CreaNuovoAnno", "Commit")
 					'Else
 					'	Sql = "rollback"
 					'	Dim Ritorno2 As String = ConnGen.EsegueSql(Server.MapPath("."), Sql, ConnessioneGenerale)
@@ -1540,13 +1563,28 @@ Public Class wsSuperUser
 					'	Ritorno2 = ConnGen.EsegueSql(Server.MapPath("."), Sql, ConnessioneGenerale)
 					'End If
 
-					Ritorno = CopiaIDatiDalVecchioDBAlNuovo(Server.MapPath("."), Squadra, nomeDb)
+					Ritorno = CopiaIDatiDalVecchioDBAlNuovo(Server.MapPath("."), nomeDbPrecedente, nomeDbNuovo)
+
+					Dim Ritorno2 As String = ""
+
+					If Ritorno = "*" Then
+						Sql = "commit"
+						Ritorno2 = ConnGen.EsegueSql(Server.MapPath("."), Sql, ConnessioneGenerale)
+						ScriveLog(Server.MapPath("."), Squadra, "CreaNuovoAnno", "Commit")
+					Else
+						Sql = "rollback"
+						Ritorno2 = ConnGen.EsegueSql(Server.MapPath("."), Sql, ConnessioneGenerale)
+						ScriveLog(Server.MapPath("."), Squadra, "CreaNuovoAnno", "Rollback")
+
+						Sql = "Drop Database [" & nomeDbNuovo & "]"
+						Ritorno2 = ConnGen.EsegueSql(Server.MapPath("."), Sql, ConnessioneGenerale)
+					End If
 				Else
 					Sql = "rollback"
 					Dim Ritorno2 As String = ConnGen.EsegueSql(Server.MapPath("."), Sql, ConnessioneGenerale)
 					ScriveLog(Server.MapPath("."), Squadra, "CreaNuovoAnno", "Rollback")
 
-					Sql = "Drop Database [" & nomeDb & "]"
+					Sql = "Drop Database [" & nomeDbNuovo & "]"
 					Ritorno2 = ConnGen.EsegueSql(Server.MapPath("."), Sql, ConnessioneGenerale)
 				End If
 			End If

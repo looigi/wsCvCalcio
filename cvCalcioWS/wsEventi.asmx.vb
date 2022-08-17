@@ -36,7 +36,7 @@ Public Class wsEventi
 							If TipoDB = "SQLSERVER" Then
 								Sql = "SELECT IsNull(Max(idEvento),0)+1 FROM Eventi"
 							Else
-								Sql = "SELECT Coalesce(Max(idEvento))+1 FROM Eventi"
+								Sql = "SELECT Coalesce(Max(idEvento),0)+1 FROM Eventi"
 							End If
 							Rec = Conn.LeggeQuery(Server.MapPath("."), Sql, Connessione)
 							If TypeOf (Rec) Is String Then

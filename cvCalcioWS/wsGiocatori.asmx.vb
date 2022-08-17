@@ -3867,10 +3867,44 @@ Public Class wsGiocatori
 										Ritorno &= CashbackDisponibile & ";"
 										Ritorno &= CashbackUtilizzato & ";"
 										Ritorno &= CodiceTessera & ";"
+
+										Dim Movimenti As String = ""
+
+										Sql = "select * From (" &
+											"SELECT numerotessera, progressivo, descrizione, importo, dataora FROM tesserenfc " &
+											"Where numerotessera = '" & CodiceTessera & "' " &
+											"Union All " &
+											"Select codicetessera as numerotessera, progressivo, 'Utilizzo Cashback' As descrizione, importo, dataesecuzione as dataora from cashbackutilizzato " &
+											"Where codicetessera = '" & CodiceTessera & "' " &
+											") as a " &
+											"Order by dataora, progressivo"
+										Rec2 = ConnGen.LeggeQuery(Server.MapPath("."), Sql, ConnessioneGen)
+										If TypeOf (Rec2) Is String Then
+											Ritorno = Rec2
+										Else
+											Dim Pro As Integer = 1
+
+											Do Until Rec2.Eof
+												Dim DataOra As String = Rec2("DataOra").Value
+												Dim d() As String = DataOra.Split(" ")
+												DataOra = d(0)
+												DataOra = Mid(DataOra, 7, 2) & "/" & Mid(DataOra, 5, 2) & "/" & Mid(DataOra, 1, 4) & " " & d(1)
+
+												Movimenti &= Pro & "*" & Rec2("Descrizione").Value.replace("*", "_").replace(";", "_") & "*" & Rec2("Importo").Value & "*" & dataora & "§"
+												Pro += 1
+
+												Rec2.MoveNext
+											Loop
+
+											Rec2.Close
+										End If
+
+										Ritorno &= Movimenti & ";"
 									Else
 										Ritorno &= "0.00;"
 										Ritorno &= "0.00;"
 										Ritorno &= "0.00;"
+										Ritorno &= ";"
 										Ritorno &= ";"
 									End If
 								End If

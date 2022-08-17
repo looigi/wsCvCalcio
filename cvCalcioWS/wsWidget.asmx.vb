@@ -842,6 +842,8 @@ Public Class wsWidget
 		Dim Ritorno As String = ""
 		Dim Connessione As String = LeggeImpostazioniDiBase(Server.MapPath("."), Squadra)
 
+		' ScriveLog(Server.MapPath("."), Squadra, "RitornaIndicatori", "Partenza")
+
 		If Connessione = "" Then
 			Ritorno = ErroreConnessioneNonValida
 		Else
@@ -856,6 +858,8 @@ Public Class wsWidget
 
 				Sql = "Delete From WidgetIndicatori"
 				Ritorno = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
+
+				' ScriveLog(Server.MapPath("."), Squadra, "RitornaIndicatori", "Eliminati dati da tabella")
 
 				Dim SenzaQuota As Integer = 0
 				Dim CertificatoScadutoAssente As Integer = 0
@@ -872,6 +876,7 @@ Public Class wsWidget
 				Rec = Conn.LeggeQuery(Server.MapPath("."),   Sql, Connessione)
 				If TypeOf (Rec) Is String Then
 					Ritorno = Rec
+					' ScriveLog(Server.MapPath("."), Squadra, "RitornaIndicatori", "Problema lettura recordset senza quota: " & Ritorno)
 					Return Ritorno
 				Else
 					'If Rec(0).Value Is DBNull.Value Then
@@ -881,6 +886,7 @@ Public Class wsWidget
 					'End If
 					Rec.Close()
 				End If
+				' ScriveLog(Server.MapPath("."), Squadra, "RitornaIndicatori", "Senza quota: " & SenzaQuota)
 
 				' Certificato scaduto / assente
 				Sql = "Select " & IIf(TipoDB = "SQLSERVER", "Isnull(Count(*),0)", "COALESCE(Count(*),0)") & " From Giocatori A " &
@@ -891,6 +897,7 @@ Public Class wsWidget
 				Rec = Conn.LeggeQuery(Server.MapPath("."),   Sql, Connessione)
 				If TypeOf (Rec) Is String Then
 					Ritorno = Rec
+					' ScriveLog(Server.MapPath("."), Squadra, "RitornaIndicatori", "Problema lettura recordset certificato scaduto / assente: " & Ritorno)
 					Return Ritorno
 				Else
 					'If Rec(0).Value Is DBNull.Value Then
@@ -900,6 +907,7 @@ Public Class wsWidget
 					'End If
 					Rec.Close()
 				End If
+				' ScriveLog(Server.MapPath("."), Squadra, "RitornaIndicatori", "Certificati scaduti / assenti: " & CertificatoScadutoAssente)
 
 				' Giocatori senza firma
 				Dim gf As New GestioneFilesDirectory
@@ -926,23 +934,29 @@ Public Class wsWidget
 				Rec = Conn.LeggeQuery(Server.MapPath("."),   Sql, Connessione)
 				If TypeOf (Rec) Is String Then
 					Ritorno = Rec
+					' ScriveLog(Server.MapPath("."), Squadra, "RitornaIndicatori", "Problema lettura recordset anni: " & Ritorno)
 					Return Ritorno
 				Else
 					If Rec.Eof() = False Then
 						IscrFirmaEntrambi = "" & Rec("iscrFirmaEntrambi").Value
 					End If
+					Rec.Close
 				End If
+				' ScriveLog(Server.MapPath("."), Squadra, "RitornaIndicatori", "Iscrizione firma entrambi: " & IscrFirmaEntrambi)
 
 				Sql = "Select * From [Generale].[dbo].[Squadre] Where idSquadra = " & idSquadra
 				Rec = Conn.LeggeQuery(Server.MapPath("."),   Sql, Connessione)
 				If TypeOf (Rec) Is String Then
 					Ritorno = Rec
+					' ScriveLog(Server.MapPath("."), Squadra, "RitornaIndicatori", "Problema lettura recordset dati squadra: " & Ritorno)
 					Return Ritorno
 				Else
 					If Rec.Eof() = False Then
 						NomeSquadra = "" & Rec("Descrizione").Value
 					End If
+					Rec.Close
 				End If
+				' ScriveLog(Server.MapPath("."), Squadra, "RitornaIndicatori", "Nome Squadra: " & NomeSquadra)
 
 				Dim wsImm As New wsImmagini
 
@@ -952,67 +966,100 @@ Public Class wsWidget
 				Rec = Conn.LeggeQuery(Server.MapPath("."),   Sql, Connessione)
 				If TypeOf (Rec) Is String Then
 					Ritorno = Rec
+					' ScriveLog(Server.MapPath("."), Squadra, "RitornaIndicatori", "Problema lettura recordset dettaglio giocatori: " & Ritorno)
 					Return Ritorno
 				Else
 					Do Until Rec.Eof()
 						Dim urlFirma As String = ""
 						Dim CiSonoFirme As Boolean = True
 
+						' ScriveLog(Server.MapPath("."), Squadra, "RitornaIndicatori", "Giocatore " & Rec("idGiocatore").Value & ": " & Rec("Cognome").Value & " " & Rec("Nome").Value)
+
 						If "" & Rec("Maggiorenne").Value = "S" Then
+							' ScriveLog(Server.MapPath("."), Squadra, "RitornaIndicatori", "Maggiorenne")
 							If "" & Rec("AbilitaFirmaGenitore3").Value = "S" Then
+								' ScriveLog(Server.MapPath("."), Squadra, "RitornaIndicatori", "Firma abilitata maggiorenne")
 								urlFirma = pp & "\" & NomeSquadra.Replace(" ", "_") & "\Firme\" & idAnno & "_" & Rec("idGiocatore").Value & "_3.kgb"
 								If wsImm.RitornaImmagineDB(Squadra, "Firme", Rec("idGiocatore").Value, "3_1").Contains(StringaErrore) Then
 									CiSonoFirme = False
+								Else
+									' ScriveLog(Server.MapPath("."), Squadra, "RitornaIndicatori", "Firma presente maggiorenne")
+									CiSonoFirme = True
 								End If
 							Else
 								If "" & Rec("FirmaAnalogicaGenitore3").Value = "N" Then
+									' ScriveLog(Server.MapPath("."), Squadra, "RitornaIndicatori", "Firma NON abilitata maggiorenne")
 									CiSonoFirme = False
 								End If
 							End If
 						Else
 							If "" & Rec("GenitoriSeparati").Value = "S" Then
+								' ScriveLog(Server.MapPath("."), Squadra, "RitornaIndicatori", "Genitori separati")
 								If "" & Rec("AffidamentoCongiunto").Value = "S" Then
+									' ScriveLog(Server.MapPath("."), Squadra, "RitornaIndicatori", "Affidamento congiunto")
 									If "" & Rec("AbilitaFirmaGenitore1").Value = "S" Then
+										' ScriveLog(Server.MapPath("."), Squadra, "RitornaIndicatori", "Firma elettronica abilitata padre")
 										urlFirma = pp & "\" & NomeSquadra.Replace(" ", "_") & "\Firme\" & idAnno & "_" & Rec("idGiocatore").Value & "_1.kgb"
 										If wsImm.RitornaImmagineDB(Squadra, "Firme", Rec("idGiocatore").Value, "1_1").Contains(StringaErrore) Then
 											CiSonoFirme = False
+										Else
+											' ScriveLog(Server.MapPath("."), Squadra, "RitornaIndicatori", "Firma presente padre")
+											CiSonoFirme = True
 										End If
 									Else
 										If "" & Rec("FirmaAnalogicaGenitore1").Value = "N" Then
+											' ScriveLog(Server.MapPath("."), Squadra, "RitornaIndicatori", "Firma analogica padre")
 											CiSonoFirme = False
 										End If
 									End If
 
 									If "" & Rec("AbilitaFirmaGenitore2").Value = "S" Then
+										' ScriveLog(Server.MapPath("."), Squadra, "RitornaIndicatori", "Firma elettronica abilitata madre")
 										urlFirma = pp & "\" & NomeSquadra.Replace(" ", "_") & "\Firme\" & idAnno & "_" & Rec("idGiocatore").Value & "_2.kgb"
 										If wsImm.RitornaImmagineDB(Squadra, "Firme", Rec("idGiocatore").Value, "2_1").Contains(StringaErrore) Then
 											CiSonoFirme = False
+										Else
+											' ScriveLog(Server.MapPath("."), Squadra, "RitornaIndicatori", "Firma presente madre")
+											CiSonoFirme = True
 										End If
 									Else
 										If "" & Rec("FirmaAnalogicaGenitore2").Value = "N" Then
+											' ScriveLog(Server.MapPath("."), Squadra, "RitornaIndicatori", "Firma analogica madre")
 											CiSonoFirme = False
 										End If
 									End If
 								Else
 									If "" & Rec("idTutore").Value = "1" Then
+										' ScriveLog(Server.MapPath("."), Squadra, "RitornaIndicatori", "Tutore padre")
 										If "" & Rec("AbilitaFirmaGenitore1").Value = "S" Then
+											' ScriveLog(Server.MapPath("."), Squadra, "RitornaIndicatori", "Firma elettronica abilitata padre")
 											urlFirma = pp & "\" & NomeSquadra.Replace(" ", "_") & "\Firme\" & idAnno & "_" & Rec("idGiocatore").Value & "_1.kgb"
 											If wsImm.RitornaImmagineDB(Squadra, "Firme", Rec("idGiocatore").Value, "1_1").Contains(StringaErrore) Then
 												CiSonoFirme = False
+											Else
+												' ScriveLog(Server.MapPath("."), Squadra, "RitornaIndicatori", "Firma presente padre")
+												CiSonoFirme = True
 											End If
 										Else
 											If "" & Rec("FirmaAnalogicaGenitore1").Value = "N" Then
+												' ScriveLog(Server.MapPath("."), Squadra, "RitornaIndicatori", "Firma analogica padre")
 												CiSonoFirme = False
 											End If
 										End If
 									Else
+										' ScriveLog(Server.MapPath("."), Squadra, "RitornaIndicatori", "Tutore madre")
 										If "" & Rec("AbilitaFirmaGenitore2").Value = "S" Then
+											' ScriveLog(Server.MapPath("."), Squadra, "RitornaIndicatori", "Firma elettronica abilitata madre")
 											urlFirma = pp & "\" & NomeSquadra.Replace(" ", "_") & "\Firme\" & idAnno & "_" & Rec("idGiocatore").Value & "_2.kgb"
 											If wsImm.RitornaImmagineDB(Squadra, "Firme", Rec("idGiocatore").Value, "2_1").Contains(StringaErrore) Then
 												CiSonoFirme = False
+											Else
+												' ScriveLog(Server.MapPath("."), Squadra, "RitornaIndicatori", "Firma presente madre")
+												CiSonoFirme = True
 											End If
 										Else
 											If "" & Rec("FirmaAnalogicaGenitore2").Value = "N" Then
+												' ScriveLog(Server.MapPath("."), Squadra, "RitornaIndicatori", "Firma analogica madre")
 												CiSonoFirme = False
 											End If
 										End If
@@ -1020,58 +1067,93 @@ Public Class wsWidget
 								End If
 							Else
 								If IscrFirmaEntrambi = "S" Then
+									' ScriveLog(Server.MapPath("."), Squadra, "RitornaIndicatori", "Iscrizione firma entrambi")
 									If "" & Rec("AbilitaFirmaGenitore1").Value = "S" Then
+										' ScriveLog(Server.MapPath("."), Squadra, "RitornaIndicatori", "Firma elettronica padre")
 										urlFirma = pp & "\" & NomeSquadra.Replace(" ", "_") & "\Firme\" & idAnno & "_" & Rec("idGiocatore").Value & "_1.kgb"
 										If wsImm.RitornaImmagineDB(Squadra, "Firme", Rec("idGiocatore").Value, "1_1").Contains(StringaErrore) Then
 											CiSonoFirme = False
+										Else
+											' ScriveLog(Server.MapPath("."), Squadra, "RitornaIndicatori", "Firma presente padre")
+											CiSonoFirme = True
 										End If
 									Else
 										If "" & Rec("FirmaAnalogicaGenitore1").Value = "N" Then
+											' ScriveLog(Server.MapPath("."), Squadra, "RitornaIndicatori", "Firma analogica padre")
 											CiSonoFirme = False
 										End If
 									End If
 
 									If "" & Rec("AbilitaFirmaGenitore2").Value = "S" Then
+										' ScriveLog(Server.MapPath("."), Squadra, "RitornaIndicatori", "Firma elettronica madre")
 										urlFirma = pp & "\" & NomeSquadra.Replace(" ", "_") & "\Firme\" & idAnno & "_" & Rec("idGiocatore").Value & "_2.kgb"
 										If wsImm.RitornaImmagineDB(Squadra, "Firme", Rec("idGiocatore").Value, "2_1").Contains(StringaErrore) Then
 											CiSonoFirme = False
+										Else
+											' ScriveLog(Server.MapPath("."), Squadra, "RitornaIndicatori", "Firma presente madre")
+											CiSonoFirme = True
 										End If
 									Else
 										If "" & Rec("FirmaAnalogicaGenitore2").Value = "N" Then
+											' ScriveLog(Server.MapPath("."), Squadra, "RitornaIndicatori", "Firma analogica madre")
 											CiSonoFirme = False
 										End If
 									End If
 								Else
+									' ScriveLog(Server.MapPath("."), Squadra, "RitornaIndicatori", "Iscrizione singolo genitore")
 									If "" & Rec("Genitore1").Value <> "" Then
+										' ScriveLog(Server.MapPath("."), Squadra, "RitornaIndicatori", "Padre presente")
 										If "" & Rec("AbilitaFirmaGenitore1").Value = "S" Then
+											' ScriveLog(Server.MapPath("."), Squadra, "RitornaIndicatori", "Firma elettronica padre")
 											urlFirma = pp & "\" & NomeSquadra.Replace(" ", "_") & "\Firme\" & idAnno & "_" & Rec("idGiocatore").Value & "_1.kgb"
 											If wsImm.RitornaImmagineDB(Squadra, "Firme", Rec("idGiocatore").Value, "1_1").Contains(StringaErrore) Then
 												CiSonoFirme = False
+											Else
+												' ScriveLog(Server.MapPath("."), Squadra, "RitornaIndicatori", "Firma presente padre")
+												CiSonoFirme = True
 											End If
 										Else
 											If "" & Rec("FirmaAnalogicaGenitore1").Value = "N" Then
+												' ScriveLog(Server.MapPath("."), Squadra, "RitornaIndicatori", "Firma analogica padre")
 												CiSonoFirme = False
 											End If
 										End If
 									Else
-										If "" & Rec("AbilitaFirmaGenitore2").Value = "S" Then
-											urlFirma = pp & "\" & NomeSquadra.Replace(" ", "_") & "\Firme\" & idAnno & "_" & Rec("idGiocatore").Value & "_2.kgb"
-											If wsImm.RitornaImmagineDB(Squadra, "Firme", Rec("idGiocatore").Value, "2_1").Contains(StringaErrore) Then
-												CiSonoFirme = False
+										If "" & Rec("Genitore2").Value <> "" Then
+											' ScriveLog(Server.MapPath("."), Squadra, "RitornaIndicatori", "Madre presente")
+											If "" & Rec("AbilitaFirmaGenitore2").Value = "S" Then
+												' ScriveLog(Server.MapPath("."), Squadra, "RitornaIndicatori", "Firma elettronica madre")
+												urlFirma = pp & "\" & NomeSquadra.Replace(" ", "_") & "\Firme\" & idAnno & "_" & Rec("idGiocatore").Value & "_2.kgb"
+												If wsImm.RitornaImmagineDB(Squadra, "Firme", Rec("idGiocatore").Value, "2_1").Contains(StringaErrore) Then
+													CiSonoFirme = False
+												Else
+													' ScriveLog(Server.MapPath("."), Squadra, "RitornaIndicatori", "Firma presente madre")
+													CiSonoFirme = True
+												End If
+											Else
+												If "" & Rec("FirmaAnalogicaGenitore2").Value = "N" Then
+													' ScriveLog(Server.MapPath("."), Squadra, "RitornaIndicatori", "Firma analogica madre")
+													CiSonoFirme = False
+												Else
+													CiSonoFirme = False
+												End If
 											End If
 										Else
-											If "" & Rec("FirmaAnalogicaGenitore2").Value = "N" Then
-												CiSonoFirme = False
-											End If
+											' ScriveLog(Server.MapPath("."), Squadra, "RitornaIndicatori", "Padre e Madre assenti")
+											CiSonoFirme = False
 										End If
 									End If
+
 								End If
 							End If
 						End If
 
-						If Not CiSonoFirme Then
+						If CiSonoFirme = False Then
+							' ScriveLog(Server.MapPath("."), Squadra, "RitornaIndicatori", "Incremento il senza firma: " & SenzaFirma)
 							SenzaFirma += 1
 						End If
+
+						' ScriveLog(Server.MapPath("."), Squadra, "RitornaIndicatori", "------------------------------------------------------")
 
 						Dim NomeKit As String = ""
 						Dim TagliaKit As String = ""
@@ -1087,12 +1169,14 @@ Public Class wsWidget
 						Rec2 = Conn.LeggeQuery(Server.MapPath("."),Sql, Connessione)
 						If TypeOf (Rec2) Is String Then
 							Ritorno = Rec2
+							' ScriveLog(Server.MapPath("."), Squadra, "RitornaIndicatori", "Problema lettura recordset taglie: " & Ritorno)
 							Return Ritorno
 						Else
 							Dim Tutto As Boolean = True
 							Dim Qualcosa As Boolean = False
 
 							If Rec2.Eof() Then
+								' ScriveLog(Server.MapPath("."), Squadra, "RitornaIndicatori", "Recordset kit: Nessun valore")
 								Tutto = False
 							Else
 								Do Until Rec2.Eof()
@@ -1100,12 +1184,15 @@ Public Class wsWidget
 										NomeKit = "" & Rec2("NomeKit").Value
 										TagliaKit = "" & Rec2("Taglia").Value
 									End If
+									' ScriveLog(Server.MapPath("."), Squadra, "RitornaIndicatori", "Nome Kit: " & NomeKit)
+									' ScriveLog(Server.MapPath("."), Squadra, "RitornaIndicatori", "Taglia Kit: " & TagliaKit)
 
 									'If Val("" & Rec2("QuantitaConsegnata").Value) > 0 Then
 									Qualcosa = True
 									If Val("" & Rec2("QuantitaConsegnata").Value) < Val("" & Rec2("Quantita").Value) Then
 										Tutto = False
 									End If
+									' ScriveLog(Server.MapPath("."), Squadra, "RitornaIndicatori", "Quantità consegnata " & Val("" & Rec2("QuantitaConsegnata").Value) & " Totale " & Val("" & Rec2("Quantita").Value) & " : " & Tutto)
 									'Else
 									'	Tutto = False
 									'End If
@@ -1120,8 +1207,11 @@ Public Class wsWidget
 
 							If Tutto = False Then
 								KitNonConsegnato += 1
+								' ScriveLog(Server.MapPath("."), Squadra, "RitornaIndicatori", "Kit non completo")
 							End If
 						End If
+
+						' ScriveLog(Server.MapPath("."), Squadra, "RitornaIndicatori", "------------------------------------------------------")
 
 						Rec.MoveNext()
 					Loop
@@ -1130,6 +1220,8 @@ Public Class wsWidget
 
 				Sql = "Insert Into WidgetIndicatori Values (" & SenzaQuota & ", " & CertificatoScadutoAssente & ", " & SenzaFirma & ", " & KitNonConsegnato & ")"
 				Ritorno = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
+
+				Ritorno = SenzaQuota & ";" & CertificatoScadutoAssente & ";" & SenzaFirma & ";" & KitNonConsegnato & ";"
 			End If
 		End If
 
@@ -1137,35 +1229,39 @@ Public Class wsWidget
 	End Function
 
 	<WebMethod()>
-	Public Function RitornaIndicatori(Squadra As String) As String
+	Public Function RitornaIndicatori(Squadra As String, Refresh As String) As String
 		Dim Ritorno As String = ""
 		Dim Connessione As String = LeggeImpostazioniDiBase(Server.MapPath("."), Squadra)
 
 		If Connessione = "" Then
 			Ritorno = ErroreConnessioneNonValida
 		Else
-			Dim Conn As Object = New clsGestioneDB(Squadra)
-			Dim Trovato As Boolean = False
+			If Refresh = "" Or Refresh = "N" Then
+				Dim Conn As Object = New clsGestioneDB(Squadra)
+				Dim Trovato As Boolean = False
 
-			If TypeOf (Conn) Is String Then
-				Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
-			Else
-				Dim Rec as object
-				Dim Sql As String = "Select * From WidgetIndicatori"
-				Rec = Conn.LeggeQuery(Server.MapPath("."),   Sql, Connessione)
-				If TypeOf (Rec) Is String Then
-					Ritorno = Rec
+				If TypeOf (Conn) Is String Then
+					Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
 				Else
-					If Not Rec.Eof() Then
-						Trovato = True
-						Ritorno &= Rec("SenzaQuota").Value & ";" & Rec("CertificatoScadutoAssente").Value & ";" & Rec("SenzaFirma").Value & ";" & Rec("KitNonConsegnato").Value
-						Rec.Close()
+					Dim Rec As Object
+					Dim Sql As String = "Select * From WidgetIndicatori"
+					Rec = Conn.LeggeQuery(Server.MapPath("."), Sql, Connessione)
+					If TypeOf (Rec) Is String Then
+						Ritorno = Rec
+					Else
+						If Not Rec.Eof() Then
+							Trovato = True
+							Ritorno &= Rec("SenzaQuota").Value & ";" & Rec("CertificatoScadutoAssente").Value & ";" & Rec("SenzaFirma").Value & ";" & Rec("KitNonConsegnato").Value
+							Rec.Close()
+						End If
 					End If
 				End If
-			End If
 
-			If Not Trovato Then
-				CreaIndicatori(Squadra)
+				If Not Trovato Then
+					Ritorno = CreaIndicatori(Squadra)
+				End If
+			Else
+				Ritorno = CreaIndicatori(Squadra)
 			End If
 		End If
 

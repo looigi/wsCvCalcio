@@ -596,7 +596,7 @@ Public Class wsImmagini
 				Sql = "Select * From immagini_" & Tipologia.ToLower & " Where id=" & Id & Altro
 				Rec = Conn.LeggeQuery(Server.MapPath("."), Sql, Connessione)
 				If TypeOf (Rec) Is String Then
-					Ritorno = Rec
+					Ritorno = StringaErrore & " " & Rec
 				Else
 					If Not Rec.Eof Then
 						Ritorno = Rec("Dati").Value

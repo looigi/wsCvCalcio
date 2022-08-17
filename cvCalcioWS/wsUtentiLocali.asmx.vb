@@ -326,7 +326,7 @@ Public Class wsUtentiLocali
 	End Function
 
 	<WebMethod()>
-	Public Function RitornaUtentePerLoginNuovo(Utente As String) As String
+	Public Function RitornaUtentePerLoginNuovo(Utente As String, AccessoASquadra As String) As String
 		Dim Ritorno As String = ""
 		Dim Connessione As String = LeggeImpostazioniDiBase(Server.MapPath("."), "")
 		Dim Squadra As String = ""
@@ -350,19 +350,35 @@ Public Class wsUtentiLocali
 
 				Try
 					Dim Okk2 As Boolean = True
+					'Dim Tipologia As Integer = -1
 
-					Sql = "SELECT G.idAnno As idAnnoSelezionato, A.idUtente, Utente, Cognome, Nome, " &
-						"Password, EMail, idCategoria, A.idTipologia As idTipologia, A.idSquadra, B.Descrizione As Squadra, PasswordScaduta, Telefono, " &
-						" " & IIf(TipoDB = "SQLSERVER", "ISNULL(B.Eliminata, 'N')", "COALESCE(B.Eliminata, 'N')") & " As Eliminata, B.idTipologia As idTipo2, B.idLicenza, A.idSquadra, A.AmmOriginale, C.Mail, C.PwdMail, D.AggiornaWidgets As AggiornaWidget, " &
-						" " & IIf(TipoDB = "SQLSERVER", "ISNULL(F.idAnno, '')", "COALESCE(F.idAnno, '')") & " As AnnoSelezionato, G.Descrizione As DescAnno " &
-						"FROM Utenti A Left Join Squadre B On A.idSquadra = B.idSquadra " &
-						"Left Join UtentiMails C On A.idUtente = C.idUtente " &
-						"Left Join AggiornamentoWidgets D On A.idSquadra = D.idSquadra " &
-						"Left Join NumeroFirme E On A.idSquadra = E.idSquadra " &
-						"left join squadraanni G on A.idSquadra = G.idSquadra " &
-						"Left Join SquadreAnnoSelezionato F On A.idSquadra = F.idSquadra and G.idAnno = F.idAnno " &
-						"Where Upper(Utente)='" & Utente.ToUpper.Replace("'", "''") & "' And A.Eliminato = 'N'  And COALESCE(F.idAnno, '') <> '' " &
-						"Order By A.idAnno Desc, A.idTipologia"
+					'Sql = "Select * From Utenti Where Upper(Utente)='" & Utente.ToUpper.Replace("'", "''") & "'"
+					'Rec = Conn.LeggeQuery(Server.MapPath("."), Sql, Connessione)
+					'If TypeOf (Rec) Is String Then
+					'	Ritorno = Rec
+					'Else
+					'	If Not Rec.Eof Then
+					'		Tipologia = Rec("idTipologia").Value
+					'	End If
+					'	Rec.Close
+					'End If
+
+					'If Val(Tipologia) = 0 Then
+					'	' Ingresso come amministratore
+					'Else
+					Sql = "Select G.idAnno As idAnnoSelezionato, A.idUtente, Utente, Cognome, Nome, " &
+							"Password, EMail, idCategoria, A.idTipologia As idTipologia, A.idSquadra, B.Descrizione As Squadra, PasswordScaduta, Telefono, " &
+							" " & IIf(TipoDB = "SQLSERVER", "ISNULL(B.Eliminata, 'N')", "COALESCE(B.Eliminata, 'N')") & " As Eliminata, B.idTipologia As idTipo2, B.idLicenza, A.idSquadra, A.AmmOriginale, C.Mail, C.PwdMail, D.AggiornaWidgets As AggiornaWidget, " &
+							" " & IIf(TipoDB = "SQLSERVER", "ISNULL(F.idAnno, '')", "COALESCE(F.idAnno, '')") & " As AnnoSelezionato, G.Descrizione As DescAnno " &
+							"FROM Utenti A Left Join Squadre B On A.idSquadra = B.idSquadra " &
+							"Left Join UtentiMails C On A.idUtente = C.idUtente " &
+							"Left Join AggiornamentoWidgets D On A.idSquadra = D.idSquadra " &
+							"Left Join NumeroFirme E On A.idSquadra = E.idSquadra " &
+							"left join squadraanni G on A.idSquadra = G.idSquadra " &
+							"Left Join SquadreAnnoSelezionato F On A.idSquadra = F.idSquadra and G.idAnno = F.idAnno " &
+							"Where Upper(Utente)='" & Utente.ToUpper.Replace("'", "''") & "' And A.Eliminato = 'N'  And COALESCE(F.idAnno, '') <> '' " &
+							"Order By A.idAnno Desc, A.idTipologia"
+					'End If
 					Rec = Conn.LeggeQuery(Server.MapPath("."), Sql, Connessione)
 					If TypeOf (Rec) Is String Then
 						Ritorno = Rec
@@ -399,6 +415,7 @@ Public Class wsUtentiLocali
 							Dim idAnno As String = ""
 							Dim codSquadra As String = ""
 							Dim idLicenza As String = ""
+							Dim DescrizioneAnno As String = ""
 
 							Ritorno = ""
 
@@ -417,14 +434,52 @@ Public Class wsUtentiLocali
 								'If Ok = True Then
 								Dim ok2 As Boolean = True
 
-								If Rec("idTipologia").Value = 0 Or Rec("idTipologia").Value = "0" Then
-									idLicenza = 1
-									idSquadra = 1
-									idAnno = 1
+								If Val(Rec("idTipologia").Value) = 0 Then
+									If AccessoASquadra <> "" Then
+										Sql = "Select *, (Select Coalesce(Max(idAnno),1) From squadraanni where squadre.idSquadra=squadraanni.idSquadra) As MaxAnno, " &
+											"(select descrizione from squadraanni where idsquadra=squadre.idsquadra and idanno=maxanno) as DescrizioneAnno, " &
+											"Coalesce(squadreannoselezionato.idAnno, -1) As idAnnoSelezionato, squadraanni.descrizione As DescrizioneSelezionato " &
+											"From squadre " &
+											"Left Join squadreannoselezionato on squadre.idsquadra = squadreannoselezionato.idsquadra " &
+											"Left Join squadraanni on squadraanni.idsquadra = squadreannoselezionato.idsquadra And squadreannoselezionato.idanno = squadraanni.idanno " &
+											"where squadre.Descrizione='" & AccessoASquadra & "'"
+										Rec2 = Conn.LeggeQuery(Server.MapPath("."), Sql, Connessione)
+										If TypeOf (Rec2) Is String Then
+											Ritorno = Rec2
+											ok2 = False
+										Else
+											If Not Rec2.Eof() Then
+												idLicenza = Rec2("idLicenza").Value
+												idSquadra = Rec2("idSquadra").Value
+												If (Rec2("idAnnoSelezionato").Value <> -1) Then
+													idAnno = Rec2("idAnnoSelezionato").Value
+													DescrizioneAnno = Rec2("DescrizioneSelezionato").Value
+												Else
+													idAnno = Rec2("MaxAnno").Value
+													DescrizioneAnno = Rec2("DescrizioneAnno").Value
+												End If
+												Squadra = "" & Rec2("Descrizione").Value
+											Else
+												idLicenza = -1
+												idSquadra = -1
+												idAnno = -1
+												DescrizioneAnno = ""
+											End If
+
+											Rec2.Close
+										End If
+									Else
+										idLicenza = -1
+										idSquadra = -1
+										idAnno = -1
+										DescrizioneAnno = ""
+									End If
 								Else
 									idLicenza = "" & Rec("idLicenza").Value
 									idSquadra = Rec("idSquadra").Value.ToString.Trim
-									idAnno = Rec("idAnno").Value.ToString.Trim
+									idAnno = Rec("idAnnoSelezionato").Value.ToString.Trim
+									Squadra = "" & Rec("Squadra").Value.ToString.Trim
+									DescrizioneAnno = Rec("DescAnno").Value
 								End If
 
 								Dim app1 As String = idAnno
@@ -437,10 +492,8 @@ Public Class wsUtentiLocali
 								Next
 								codSquadra = app1 & "_" & app2
 
-								If Rec("idSquadra").Value <> -1 Then
-									Dim AnnoSelezionato As String = Rec("idAnnoSelezionato").Value
-
-									Sql = "Select * From SquadraAnni Where idSquadra=" & Rec("idSquadra").Value & " And idAnno=" & AnnoSelezionato
+								If idSquadra <> -1 Then
+									Sql = "Select * From SquadraAnni Where idSquadra=" & idSquadra & " And idAnno=" & idAnno
 									Rec2 = Conn.LeggeQuery(Server.MapPath("."), Sql, Connessione)
 									If TypeOf (Rec2) Is String Then
 										Ritorno = Rec2
@@ -464,7 +517,7 @@ Public Class wsUtentiLocali
 
 								If ok2 Then
 									If ok2 Then
-										Ritorno &= Rec("idAnnoSelezionato").Value & ";"
+										Ritorno &= idAnno & ";"
 										Ritorno &= Rec("idUtente").Value & ";"
 										Ritorno &= Rec("Utente").Value & ";"
 										Ritorno &= Rec("Cognome").Value & ";"
@@ -482,12 +535,11 @@ Public Class wsUtentiLocali
 										Ritorno &= Rec("AmmOriginale").Value & ";"
 										Ritorno &= Rec("Mail").Value & ";"
 										Ritorno &= Rec("PwdMail").Value & ";"
-										Ritorno &= Rec("DescAnno").Value & ";"
+										Ritorno &= DescrizioneAnno & ";"
 										'Ritorno &= NumeroFirme & ";"
 										'Ritorno &= Firme & ";"
 										Ritorno &= "§"
 
-										Squadra = "" & Rec("Squadra").Value
 										UtenteDaSalvare = Ritorno
 									End If
 								End If
@@ -499,7 +551,7 @@ Public Class wsUtentiLocali
 							Rec.Close()
 
 							If Not Ritorno.Contains(StringaErrore) Then
-								Sql = "Select *, (Select Max(idAnno) From SquadraAnni Where idSquadra=Squadre.idSquadra) As MaxAnno From Squadre Where Eliminata = 'N' Order By Descrizione"
+								Sql = "Select *, (Select Max(idAnno) From SquadraAnni Where idSquadra=Squadre.idSquadra) As MaxAnno From Squadre Where idSquadra=" & idSquadra & " And Eliminata = 'N' Order By Descrizione"
 								Rec = Conn.LeggeQuery(Server.MapPath("."), Sql, Connessione)
 								If TypeOf (Rec) Is String Then
 									Ritorno = Rec
@@ -528,7 +580,7 @@ Public Class wsUtentiLocali
 													Licenza = "Premium"
 											End Select
 
-											Ritorno &= Rec("idSquadra").Value & ";" & Rec("Descrizione").Value & ";" & Rec("DataScadenza").Value & ";" & Tipologia & ";" & Licenza & ";" & Rec("idTipologia").Value & ";" & Rec("idLicenza").Value & ";" & Rec("MaxAnno").Value & ";§"
+											Ritorno &= idSquadra & ";" & Rec("Descrizione").Value & ";" & Rec("DataScadenza").Value & ";" & Tipologia & ";" & Licenza & ";" & Rec("idTipologia").Value & ";" & Rec("idLicenza").Value & ";" & Rec("MaxAnno").Value & ";§"
 
 											Rec.MoveNext()
 										Loop
@@ -830,7 +882,7 @@ Public Class wsUtentiLocali
 					Sql = "SELECT Utenti.idAnno, Utenti.idUtente, Utenti.Utente, Utenti.Cognome, Utenti.Nome, Utenti.EMail, Categorie.Descrizione As Categoria, " &
 						"Utenti.idTipologia, Utenti.Password, Categorie.idCategoria, idSquadra, Utenti.Telefono, Utenti.AmmOriginale " &
 						"FROM (Utenti LEFT JOIN [" & Squadra & "].[dbo].Categorie ON Utenti.idCategoria = Categorie.idCategoria And Utenti.idAnno = Categorie.idAnno) " &
-						"Where Utenti.idAnno=" & Anno & " And Utenti.idTipologia > 0 " & Altro & " And idSquadra=" & idSquadra & " And Utenti.Eliminato='N' Order By 2,1;"
+						"Where Utenti.idTipologia > 0 " & Altro & " And idSquadra=" & idSquadra & " And Utenti.Eliminato='N' Order By 2,1;" ' Utenti.idAnno=" & Anno & " And 
 					' "Where Utenti.idAnno=" & idAnno & " Order By 2,1;"
 					Rec = Conn.LeggeQuery(Server.MapPath("."),   Sql, Connessione)
 					If TypeOf (Rec) Is String Then
@@ -1141,7 +1193,7 @@ Public Class wsUtentiLocali
 				Dim Sql As String = ""
 				Dim Ok As Boolean = True
 
-				Sql = iif(tipodb="SQLSERVER", "Begin transaction", "Start transaction")
+				Sql = IIf(TipoDB = "SQLSERVER", "Begin transaction", "Start transaction")
 				Ritorno = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
 
 				'Sql = "Delete From Utenti Where idUtente=" & idUtente & " And idAnno=" & idAnno
@@ -1175,7 +1227,7 @@ Public Class wsUtentiLocali
 							Ok = False
 						Else
 							Sql = "Select * From [Generale].[dbo].[UtentiMails] Where idUtente = " & idUtente
-							Rec = Conn.LeggeQuery(Server.MapPath("."),   Sql, Connessione)
+							Rec = Conn.LeggeQuery(Server.MapPath("."), Sql, Connessione)
 							If TypeOf (Rec) Is String Then
 								Ritorno = Rec
 								Ok = False
@@ -1211,6 +1263,40 @@ Public Class wsUtentiLocali
 				Conn.Close()
 			End If
 			'		End If
+		End If
+
+		Return Ritorno
+	End Function
+
+	<WebMethod()>
+	Public Function ImpostaAnnoSelezionato(Squadra As String) As String
+		Dim Ritorno As String = ""
+		Dim Connessione As String = LeggeImpostazioniDiBase(Server.MapPath("."), "")
+		Dim idUtente As String = "-1"
+
+		If Connessione = "" Then
+			Ritorno = ErroreConnessioneNonValida
+		Else
+			Dim Conn As Object = New clsGestioneDB("Generale")
+
+			If TypeOf (Conn) Is String Then
+				Ritorno = ErroreConnessioneDBNonValida & ":" & Conn
+			Else
+				Dim Sql As String = ""
+				Dim sq() As String = Squadra.Split("_")
+				Dim idAnno As Integer = Val(sq(0))
+				Dim idSquadra As Integer = Val(sq(1))
+
+				Sql = "Delete From SquadreAnnoSelezionato Where idSquadra=" & idSquadra ' & " And idAnno=" & idanno
+				Ritorno = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
+				If Not Ritorno.Contains(StringaErrore) Then
+					Sql = "Insert Into SquadreAnnoSelezionato Values (" & idSquadra & "," & idAnno & ")"
+					Ritorno = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
+					If Not Ritorno.Contains(StringaErrore) Then
+						Ritorno = "*"
+					End If
+				End If
+			End If
 		End If
 
 		Return Ritorno

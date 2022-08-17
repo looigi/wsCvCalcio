@@ -3173,6 +3173,9 @@ Module Globale
 			Dim Rec As Object
 			Dim Sql As String = ""
 
+			Dim nSquadra() As String = NuovaSquadra.Split("_")
+			Dim vSquadra() As String = VecchiaSquadra.Split("_")
+
 			' Immagini societarie
 			ScriveLog(MP, VecchiaSquadra, "CreaNuovoAnno", "Eliminazione immagini società")
 			Sql = "Delete From Immagini_Societa"
@@ -3339,6 +3342,447 @@ Module Globale
 							Ok = False
 						End If
 						Rec.Close
+					End If
+				End If
+			End If
+
+			Dim q As Integer = 0
+
+			If Ok Then
+				' Gestione Kit - Composizione
+				ScriveLog(MP, VecchiaSquadra, "CreaNuovoAnno", "Eliminazione Gestione KIT - Composizione")
+				Sql = "Delete From KitComposizione"
+				Rec = ConnNuova.LeggeQuery(MP, Sql, ConnessioneNuova)
+				If TypeOf (Rec) Is String Then
+					Ritorno = Rec
+					Ok = False
+					ScriveLog(MP, VecchiaSquadra, "CreaNuovoAnno", "Eliminazione Gestione KIT - Composizione: " & Ritorno)
+				Else
+					ScriveLog(MP, VecchiaSquadra, "CreaNuovoAnno", "Lettura Gestione KIT - Composizione")
+					Sql = "SELECT * FROM KitComposizione Where idAnno=" & Val(vSquadra(0))
+					Rec = ConnVecchia.LeggeQuery(MP, Sql, ConnessioneVecchia)
+					If TypeOf (Rec) Is String Then
+						Ritorno = Rec
+						Ok = False
+						ScriveLog(MP, VecchiaSquadra, "CreaNuovoAnno", "Lettura Gestione KIT - Composizione: " & Ritorno)
+					Else
+						If Rec.Eof() Then
+							ScriveLog(MP, VecchiaSquadra, "CreaNuovoAnno", "Nessun valore ritornato per la composizione dei kit")
+						Else
+							Do Until Rec.Eof
+								Sql = "Insert Into KitComposizione Values (" &
+									"" & Val(nSquadra(0)) & ", " &
+									"'" & Replace(Rec("idTipoKit").Value, "'", "''") & "', " &
+									"'" & Replace(Rec("progressivo").Value, "'", "''") & "', " &
+									"'" & Replace(Rec("idelemento").Value, "'", "''") & "', " &
+									"'" & Replace(Rec("quantita").Value, "'", "''") & "', " &
+									"'" & Replace(Rec("eliminato").Value, "'", "''") & "'" &
+									")"
+								Ritorno = ConnNuova.EsegueSql(MP, Sql, ConnessioneNuova)
+								If Ritorno.Contains(StringaErrore) Then
+									ScriveLog(MP, VecchiaSquadra, "CreaNuovoAnno", "Scrittura composizione kit: " & NuovaSquadra & ": " & Ritorno)
+									ScriveLog(MP, VecchiaSquadra, "CreaNuovoAnno", Sql)
+									Ok = False
+									Exit Do
+								Else
+									q += 1
+								End If
+
+								Rec.MoveNext
+							Loop
+							Rec.Close
+
+							ScriveLog(MP, VecchiaSquadra, "CreaNuovoAnno", "Righe copiate per la composizione dei kit: " & q)
+						End If
+					End If
+				End If
+			End If
+
+			If Ok Then
+				' Gestione Kit - Elementi
+				q = 0
+				ScriveLog(MP, VecchiaSquadra, "CreaNuovoAnno", "Eliminazione Gestione KIT - Elementi")
+				Sql = "Delete From KitElementi"
+				Rec = ConnNuova.LeggeQuery(MP, Sql, ConnessioneNuova)
+				If TypeOf (Rec) Is String Then
+					Ritorno = Rec
+					Ok = False
+					ScriveLog(MP, VecchiaSquadra, "CreaNuovoAnno", "Eliminazione Gestione KIT - Elementi: " & Ritorno)
+				Else
+					ScriveLog(MP, VecchiaSquadra, "CreaNuovoAnno", "Lettura Gestione KIT - Elementi")
+					Sql = "SELECT * FROM KitElementi"
+					Rec = ConnVecchia.LeggeQuery(MP, Sql, ConnessioneVecchia)
+					If TypeOf (Rec) Is String Then
+						Ritorno = Rec
+						Ok = False
+						ScriveLog(MP, VecchiaSquadra, "CreaNuovoAnno", "Lettura Gestione KIT - Elementi: " & Ritorno)
+					Else
+						If Rec.Eof() Then
+							ScriveLog(MP, VecchiaSquadra, "CreaNuovoAnno", "Nessun valore ritornato per gli elementi dei kit")
+						Else
+							Do Until Rec.Eof
+								Sql = "Insert Into KitElementi Values (" &
+									"" & Rec("idElemento").Value & ", " &
+									"'" & Replace(Rec("Descrizione").Value, "'", "''") & "', " &
+									"'" & Replace(Rec("eliminato").Value, "'", "''") & "'" &
+									")"
+								Ritorno = ConnNuova.EsegueSql(MP, Sql, ConnessioneNuova)
+								If Ritorno.Contains(StringaErrore) Then
+									ScriveLog(MP, VecchiaSquadra, "CreaNuovoAnno", "Scrittura elementi kit: " & NuovaSquadra & ": " & Ritorno)
+									ScriveLog(MP, VecchiaSquadra, "CreaNuovoAnno", Sql)
+									Ok = False
+									Exit Do
+								Else
+									q += 1
+								End If
+
+								Rec.MoveNext
+							Loop
+							Rec.Close
+
+							ScriveLog(MP, VecchiaSquadra, "CreaNuovoAnno", "Righe copiate per gli elementi dei kit: " & q)
+						End If
+					End If
+				End If
+			End If
+
+			If Ok Then
+				' Gestione Kit - Giocatori
+				q = 0
+				ScriveLog(MP, VecchiaSquadra, "CreaNuovoAnno", "Eliminazione Gestione KIT - Giocatori")
+				Sql = "Delete From KitGiocatori"
+				Rec = ConnNuova.LeggeQuery(MP, Sql, ConnessioneNuova)
+				If TypeOf (Rec) Is String Then
+					Ritorno = Rec
+					Ok = False
+					ScriveLog(MP, VecchiaSquadra, "CreaNuovoAnno", "Eliminazione Gestione KIT - Giocatori: " & Ritorno)
+				Else
+					ScriveLog(MP, VecchiaSquadra, "CreaNuovoAnno", "Lettura Gestione KIT - Giocatori")
+					Sql = "SELECT * FROM KitGiocatori"
+					Rec = ConnVecchia.LeggeQuery(MP, Sql, ConnessioneVecchia)
+					If TypeOf (Rec) Is String Then
+						Ritorno = Rec
+						Ok = False
+						ScriveLog(MP, VecchiaSquadra, "CreaNuovoAnno", "Lettura Gestione KIT - Giocatori: " & Ritorno)
+					Else
+						If Rec.Eof() Then
+							ScriveLog(MP, VecchiaSquadra, "CreaNuovoAnno", "Nessun valore ritornato per i giocatori dei kit")
+						Else
+							Do Until Rec.Eof
+								Sql = "Insert Into KitGiocatori Values (" &
+									"" & Rec("idgiocatore").Value & ", " &
+									"'" & Replace(Rec("idtipokit").Value, "'", "''") & "', " &
+									"'" & Replace(Rec("progressivo").Value, "'", "''") & "', " &
+									"'" & Replace(Rec("idelemento").Value, "'", "''") & "', " &
+									"'" & Replace(Rec("quantitaconsegnata").Value, "'", "''") & "' " &
+								")"
+								Ritorno = ConnNuova.EsegueSql(MP, Sql, ConnessioneNuova)
+								If Ritorno.Contains(StringaErrore) Then
+									ScriveLog(MP, VecchiaSquadra, "CreaNuovoAnno", "Scrittura Giocatori kit: " & NuovaSquadra & ": " & Ritorno)
+									ScriveLog(MP, VecchiaSquadra, "CreaNuovoAnno", Sql)
+									Ok = False
+									Exit Do
+								Else
+									q += 1
+								End If
+
+								Rec.MoveNext
+							Loop
+							Rec.Close
+
+							ScriveLog(MP, VecchiaSquadra, "CreaNuovoAnno", "Righe copiate per gli elementi dei kit: " & q)
+						End If
+					End If
+				End If
+			End If
+
+			If Ok Then
+				' Gestione Kit - Note
+				q = 0
+				ScriveLog(MP, VecchiaSquadra, "CreaNuovoAnno", "Eliminazione Gestione KIT - Note")
+				Sql = "Delete From KitNote"
+				Rec = ConnNuova.LeggeQuery(MP, Sql, ConnessioneNuova)
+				If TypeOf (Rec) Is String Then
+					Ritorno = Rec
+					Ok = False
+					ScriveLog(MP, VecchiaSquadra, "CreaNuovoAnno", "Eliminazione Gestione KIT - Note: " & Ritorno)
+				Else
+					ScriveLog(MP, VecchiaSquadra, "CreaNuovoAnno", "Lettura Gestione KIT - Note")
+					Sql = "SELECT * FROM KitNote"
+					Rec = ConnVecchia.LeggeQuery(MP, Sql, ConnessioneVecchia)
+					If TypeOf (Rec) Is String Then
+						Ritorno = Rec
+						Ok = False
+						ScriveLog(MP, VecchiaSquadra, "CreaNuovoAnno", "Lettura Gestione KIT - Note: " & Ritorno)
+					Else
+						If Rec.Eof() Then
+							ScriveLog(MP, VecchiaSquadra, "CreaNuovoAnno", "Nessun valore ritornato per le note dei kit")
+						Else
+							Do Until Rec.Eof
+								Sql = "Insert Into KitNote Values (" &
+								"" & Rec("idgiocatore").Value & ", " &
+								"'" & Replace(Rec("note").Value, "'", "''") & "' " &
+								")"
+								Ritorno = ConnNuova.EsegueSql(MP, Sql, ConnessioneNuova)
+								If Ritorno.Contains(StringaErrore) Then
+									ScriveLog(MP, VecchiaSquadra, "CreaNuovoAnno", "Scrittura Note kit: " & NuovaSquadra & ": " & Ritorno)
+									ScriveLog(MP, VecchiaSquadra, "CreaNuovoAnno", Sql)
+									Ok = False
+									Exit Do
+								Else
+									q += 1
+								End If
+
+								Rec.MoveNext
+							Loop
+							Rec.Close
+
+							ScriveLog(MP, VecchiaSquadra, "CreaNuovoAnno", "Righe copiate per le note dei kit: " & q)
+						End If
+					End If
+				End If
+			End If
+
+			If Ok Then
+				' Gestione Kit - Tipologie
+				q = 0
+				ScriveLog(MP, VecchiaSquadra, "CreaNuovoAnno", "Eliminazione Gestione KIT - Tipologie")
+				Sql = "Delete From KitTipologie"
+				Rec = ConnNuova.LeggeQuery(MP, Sql, ConnessioneNuova)
+				If TypeOf (Rec) Is String Then
+					Ritorno = Rec
+					Ok = False
+					ScriveLog(MP, VecchiaSquadra, "CreaNuovoAnno", "Eliminazione Gestione KIT - Tipologie: " & Ritorno)
+				Else
+					ScriveLog(MP, VecchiaSquadra, "CreaNuovoAnno", "Lettura Gestione KIT - Tipologie")
+					Sql = "SELECT * FROM KitTipologie"
+					Rec = ConnVecchia.LeggeQuery(MP, Sql, ConnessioneVecchia)
+					If TypeOf (Rec) Is String Then
+						Ritorno = Rec
+						Ok = False
+						ScriveLog(MP, VecchiaSquadra, "CreaNuovoAnno", "Lettura Gestione KIT - Tipologie: " & Ritorno)
+					Else
+						If Rec.Eof() Then
+							ScriveLog(MP, VecchiaSquadra, "CreaNuovoAnno", "Nessun valore ritornato per le Tipologie dei kit")
+						Else
+							Do Until Rec.Eof
+								Sql = "Insert Into KitTipologie Values (" &
+									"" & Rec("idtipokit").Value & ", " &
+									"'" & Replace(Rec("descrizione").Value, "'", "''") & "', " &
+									"'" & Replace(Rec("eliminato").Value, "'", "''") & "', " &
+									"'" & Replace(Rec("descrizione2").Value, "'", "''") & "' " &
+									")"
+								Ritorno = ConnNuova.EsegueSql(MP, Sql, ConnessioneNuova)
+								If Ritorno.Contains(StringaErrore) Then
+									ScriveLog(MP, VecchiaSquadra, "CreaNuovoAnno", "Scrittura Tipologia Kit: " & NuovaSquadra & ": " & Ritorno)
+									ScriveLog(MP, VecchiaSquadra, "CreaNuovoAnno", Sql)
+									Ok = False
+									Exit Do
+								Else
+									q += 1
+								End If
+
+								Rec.MoveNext
+							Loop
+							Rec.Close
+
+							ScriveLog(MP, VecchiaSquadra, "CreaNuovoAnno", "Righe copiate per le tipologie dei kit: " & q)
+						End If
+					End If
+				End If
+			End If
+
+			If Ok Then
+				' Metodi di pagamento
+				q = 0
+				ScriveLog(MP, VecchiaSquadra, "CreaNuovoAnno", "Eliminazione Metodi di Pagamento")
+				Sql = "Delete From MetodiPagamento"
+				Rec = ConnNuova.LeggeQuery(MP, Sql, ConnessioneNuova)
+				If TypeOf (Rec) Is String Then
+					Ritorno = Rec
+					Ok = False
+					ScriveLog(MP, VecchiaSquadra, "CreaNuovoAnno", "Eliminazione Metodi Pagamento: " & Ritorno)
+				Else
+					ScriveLog(MP, VecchiaSquadra, "CreaNuovoAnno", "Lettura Metodi Pagamento")
+					Sql = "SELECT * FROM MetodiPagamento"
+					Rec = ConnVecchia.LeggeQuery(MP, Sql, ConnessioneVecchia)
+					If TypeOf (Rec) Is String Then
+						Ritorno = Rec
+						Ok = False
+						ScriveLog(MP, VecchiaSquadra, "CreaNuovoAnno", "Lettura Metodi Pagamento: " & Ritorno)
+					Else
+						If Rec.Eof() Then
+							ScriveLog(MP, VecchiaSquadra, "CreaNuovoAnno", "Nessun valore ritornato per i metodi di pagamento")
+						Else
+							Do Until Rec.Eof
+								Sql = "Insert Into MetodiPagamento Values (" &
+									"" & Rec("idmetodopagamento").Value & ", " &
+									"'" & Replace(Rec("metodopagamento").Value, "'", "''") & "', " &
+									"'" & Replace(Rec("eliminato").Value, "'", "''") & "' " &
+									")"
+								Ritorno = ConnNuova.EsegueSql(MP, Sql, ConnessioneNuova)
+								If Ritorno.Contains(StringaErrore) Then
+									ScriveLog(MP, VecchiaSquadra, "CreaNuovoAnno", "Scrittura Metodi Pagamento: " & NuovaSquadra & ": " & Ritorno)
+									ScriveLog(MP, VecchiaSquadra, "CreaNuovoAnno", Sql)
+									Ok = False
+									Exit Do
+								Else
+									q += 1
+								End If
+
+								Rec.MoveNext
+							Loop
+							Rec.Close
+
+							ScriveLog(MP, VecchiaSquadra, "CreaNuovoAnno", "Righe copiate per i metodi di pagamento: " & q)
+						End If
+					End If
+				End If
+			End If
+
+			If Ok Then
+				' Lettori NFC
+				q = 0
+				ScriveLog(MP, VecchiaSquadra, "CreaNuovoAnno", "Eliminazione Lettori NFC")
+				Sql = "Delete From LettoriNFC"
+				Rec = ConnNuova.LeggeQuery(MP, Sql, ConnessioneNuova)
+				If TypeOf (Rec) Is String Then
+					Ritorno = Rec
+					Ok = False
+					ScriveLog(MP, VecchiaSquadra, "CreaNuovoAnno", "Eliminazione Lettori NFC: " & Ritorno)
+				Else
+					ScriveLog(MP, VecchiaSquadra, "CreaNuovoAnno", "Lettura Lettori NFC")
+					Sql = "SELECT * FROM LettoriNFC"
+					Rec = ConnVecchia.LeggeQuery(MP, Sql, ConnessioneVecchia)
+					If TypeOf (Rec) Is String Then
+						Ritorno = Rec
+						Ok = False
+						ScriveLog(MP, VecchiaSquadra, "CreaNuovoAnno", "Lettura Lettori NFC: " & Ritorno)
+					Else
+						If Rec.Eof() Then
+							ScriveLog(MP, VecchiaSquadra, "CreaNuovoAnno", "Nessun valore ritornato per i lettori NFC")
+						Else
+							Do Until Rec.Eof
+								Sql = "Insert Into LettoriNFC Values (" &
+								"" & Rec("idlettore").Value & ", " &
+								"'" & Replace(Rec("descrizione").Value, "'", "''") & "', " &
+								"'" & Replace(Rec("indirizzoip").Value, "'", "''") & "', " &
+								"'" & Replace(Rec("dataultimalettura").Value, "'", "''") & "', " &
+								"'" & Replace(Rec("eliminato").Value, "'", "''") & "' " &
+								")"
+								Ritorno = ConnNuova.EsegueSql(MP, Sql, ConnessioneNuova)
+								If Ritorno.Contains(StringaErrore) Then
+									ScriveLog(MP, VecchiaSquadra, "CreaNuovoAnno", "Scrittura Lettori NFC: " & NuovaSquadra & ": " & Ritorno)
+									ScriveLog(MP, VecchiaSquadra, "CreaNuovoAnno", Sql)
+									Ok = False
+									Exit Do
+								Else
+									q += 1
+								End If
+
+								Rec.MoveNext
+							Loop
+							Rec.Close
+
+							ScriveLog(MP, VecchiaSquadra, "CreaNuovoAnno", "Righe copiate per i lettori NFC: " & q)
+						End If
+					End If
+				End If
+			End If
+
+			If Ok Then
+				' Eventi
+				q = 0
+				ScriveLog(MP, VecchiaSquadra, "CreaNuovoAnno", "Eliminazione Eventi")
+				Sql = "Delete From Eventi"
+				Rec = ConnNuova.LeggeQuery(MP, Sql, ConnessioneNuova)
+				If TypeOf (Rec) Is String Then
+					Ritorno = Rec
+					Ok = False
+					ScriveLog(MP, VecchiaSquadra, "CreaNuovoAnno", "Eliminazione Eventi: " & Ritorno)
+				Else
+					ScriveLog(MP, VecchiaSquadra, "CreaNuovoAnno", "Lettura Eventi")
+					Sql = "SELECT * FROM Eventi"
+					Rec = ConnVecchia.LeggeQuery(MP, Sql, ConnessioneVecchia)
+					If TypeOf (Rec) Is String Then
+						Ritorno = Rec
+						Ok = False
+						ScriveLog(MP, VecchiaSquadra, "CreaNuovoAnno", "Lettura Eventi: " & Ritorno)
+					Else
+						If Rec.Eof() Then
+							ScriveLog(MP, VecchiaSquadra, "CreaNuovoAnno", "Nessun valore ritornato per gli eventi")
+						Else
+							Do Until Rec.Eof
+								Sql = "Insert Into Eventi Values (" &
+								"" & Rec("idevento").Value & ", " &
+								"'" & Replace(Rec("descrizione").Value, "'", "''") & "', " &
+								"'" & Replace(Rec("eliminato").Value, "'", "''") & "', " &
+								"'" & Replace(Rec("soloportiere").Value, "'", "''") & "' " &
+								")"
+								Ritorno = ConnNuova.EsegueSql(MP, Sql, ConnessioneNuova)
+								If Ritorno.Contains(StringaErrore) Then
+									ScriveLog(MP, VecchiaSquadra, "CreaNuovoAnno", "Scrittura Eventi: " & NuovaSquadra & ": " & Ritorno)
+									ScriveLog(MP, VecchiaSquadra, "CreaNuovoAnno", Sql)
+									Ok = False
+									Exit Do
+								Else
+									q += 1
+								End If
+
+								Rec.MoveNext
+							Loop
+							Rec.Close
+
+							ScriveLog(MP, VecchiaSquadra, "CreaNuovoAnno", "Righe copiate per gli eventi: " & q)
+						End If
+					End If
+				End If
+			End If
+
+			If Ok Then
+				' Taglie
+				q = 0
+				ScriveLog(MP, VecchiaSquadra, "CreaNuovoAnno", "Eliminazione Taglie")
+				Sql = "Delete From Taglie"
+				Rec = ConnNuova.LeggeQuery(MP, Sql, ConnessioneNuova)
+				If TypeOf (Rec) Is String Then
+					Ritorno = Rec
+					Ok = False
+					ScriveLog(MP, VecchiaSquadra, "CreaNuovoAnno", "Eliminazione Taglie: " & Ritorno)
+				Else
+					ScriveLog(MP, VecchiaSquadra, "CreaNuovoAnno", "Lettura Taglie")
+					Sql = "SELECT * FROM Taglie"
+					Rec = ConnVecchia.LeggeQuery(MP, Sql, ConnessioneVecchia)
+					If TypeOf (Rec) Is String Then
+						Ritorno = Rec
+						Ok = False
+						ScriveLog(MP, VecchiaSquadra, "CreaNuovoAnno", "Lettura Taglie: " & Ritorno)
+					Else
+						If Rec.Eof() Then
+							ScriveLog(MP, VecchiaSquadra, "CreaNuovoAnno", "Nessun valore ritornato per le Taglie")
+						Else
+							Do Until Rec.Eof
+								Sql = "Insert Into Taglie Values (" &
+									"" & Rec("idtaglia").Value & ", " &
+									"'" & Replace(Rec("descrizione").Value, "'", "''") & "', " &
+									"'" & Replace(Rec("elminato").Value, "'", "''") & "' " &
+									")"
+								Ritorno = ConnNuova.EsegueSql(MP, Sql, ConnessioneNuova)
+								If Ritorno.Contains(StringaErrore) Then
+									ScriveLog(MP, VecchiaSquadra, "CreaNuovoAnno", "Scrittura Taglie: " & NuovaSquadra & ": " & Ritorno)
+									ScriveLog(MP, VecchiaSquadra, "CreaNuovoAnno", Sql)
+									Ok = False
+									Exit Do
+								Else
+									q += 1
+								End If
+
+								Rec.MoveNext
+							Loop
+							Rec.Close
+
+							ScriveLog(MP, VecchiaSquadra, "CreaNuovoAnno", "Righe copiate per le taglie: " & q)
+						End If
 					End If
 				End If
 			End If

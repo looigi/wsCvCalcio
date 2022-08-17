@@ -656,6 +656,7 @@ Public Class wsReports
 											CiSonoFirme = False
 										Else
 											ScriveLog(Server.MapPath("."), Squadra, "Anagrafica", "Firma elettronica giocatore presente")
+											CiSonoFirme = True
 										End If
 									Else
 										ScriveLog(Server.MapPath("."), Squadra, "Anagrafica", "Firma analogica giocatore: " & Rec("FirmaAnalogicaGenitore3").Value)
@@ -801,19 +802,23 @@ Public Class wsReports
 													End If
 												End If
 											Else
-												If "" & Rec("AbilitaFirmaGenitore2").Value = "S" Then
-													urlFirma = pp & "\" & NomeSquadra.Replace(" ", "_") & "\Firme\" & idAnno & "_" & Rec("idGiocatore").Value & "_2.kgb"
-													If wsImm.RitornaImmagineDB(Squadra, "Firme", Rec("idGiocatore").Value, "2_1").Contains(StringaErrore) Then
-														ScriveLog(Server.MapPath("."), Squadra, "Anagrafica", "Firma Elettronica Madre NON presente")
-														CiSonoFirme = False
+												If "" & Rec("Genitore2").Value <> "" Then
+													If "" & Rec("AbilitaFirmaGenitore2").Value = "S" Then
+														urlFirma = pp & "\" & NomeSquadra.Replace(" ", "_") & "\Firme\" & idAnno & "_" & Rec("idGiocatore").Value & "_2.kgb"
+														If wsImm.RitornaImmagineDB(Squadra, "Firme", Rec("idGiocatore").Value, "2_1").Contains(StringaErrore) Then
+															ScriveLog(Server.MapPath("."), Squadra, "Anagrafica", "Firma Elettronica Madre NON presente")
+															CiSonoFirme = False
+														Else
+															ScriveLog(Server.MapPath("."), Squadra, "Anagrafica", "Firma Elettronica Madre presente")
+														End If
 													Else
-														ScriveLog(Server.MapPath("."), Squadra, "Anagrafica", "Firma Elettronica Madre presente")
+														ScriveLog(Server.MapPath("."), Squadra, "Anagrafica", "Firma Analogica Madre: " & Rec("FirmaAnalogicaGenitore2").Value)
+														If "" & Rec("FirmaAnalogicaGenitore2").Value = "N" Then
+															CiSonoFirme = False
+														End If
 													End If
 												Else
-													ScriveLog(Server.MapPath("."), Squadra, "Anagrafica", "Firma Analogica Madre: " & Rec("FirmaAnalogicaGenitore2").Value)
-													If "" & Rec("FirmaAnalogicaGenitore2").Value = "N" Then
-														CiSonoFirme = False
-													End If
+													CiSonoFirme = False
 												End If
 											End If
 										End If
