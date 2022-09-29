@@ -704,7 +704,7 @@ Public Class wsWidget
 					End If
 				End If
 
-				Sql = "Select " & Altro & " * From ( " &
+				Sql = "Select * From (Select " & Altro & " * From ( " &
 					"Select 'Cert. Scad.' As Cosa, A.idGiocatore As Id, 'Certificato medico scaduto' As PrimoCampo, " & IIf(TipoDB = "SQLSERVER", "A.Cognome + ' ' + A.Nome", "Concat(A.Cognome, ' ', A.Nome)") & " As SecondoCampo, B.ScadenzaCertificatoMedico As Data From Giocatori A " &
 					"Left Join GiocatoriDettaglio B On A.idGiocatore = B.idGiocatore " &
 					"Where A.Eliminato='N' And B.ScadenzaCertificatoMedico Is Not Null And B.ScadenzaCertificatoMedico <> '' " &
@@ -719,16 +719,45 @@ Public Class wsWidget
 					"Left Join SquadreAvversarie C On A.idAvversario = C.idAvversario " &
 					"Union All " &
 					"Select 'Evento' As Cosa, idEvento As Id, Titolo As PrimoCampo, '' As SecondoCampo, " & IIf(TipoDB = "SQLSERVER", "CONVERT(date, Inizio)", "CONVERT(Inizio, date)") & " As Data From EventiConvocazioni " &
-					"Where idTipologia = 2) A  " &
+					"Where idTipologia = 2 " &
+					") A  " &
 					"Where Data > " & IIf(TipoDB = "SQLSERVER", "GETDATE()", "CURRENT_DATE()") & " Or Cosa = 'Cert. Scad.' " &
-					"Order By Data " & Altro2
+					"Order By Data " & Altro2 & " " &
+					") As B " &
+					"Union All " &
+					"Select 'Compleanno' As Cosa, '' As Id, " & IIf(TipoDB = "SQLSERVER", "Cognome + ' ' + Nome", "concat(cognome, ' ',  nome)") & " As PrimoCampo, Categorie As SecondoCampo, '' As Data From giocatori " &
+					"where month(current_date()) = month(Convert(datadinascita, DateTime)) and day(current_date()) = day(convert(datadinascita, DateTime))"
 				Rec = Conn.LeggeQuery(Server.MapPath("."), Sql, Connessione)
 				If TypeOf (Rec) Is String Then
 					Ritorno = Rec
 				Else
 					Ritorno = ""
 					Do Until Rec.Eof()
-						Ritorno &= Rec("Cosa").Value & ";" & Rec("Id").Value & ";" & Rec("PrimoCampo").Value & ";" & Rec("SecondoCampo").Value & ";" & ConverteData(Rec("Data").Value) & "§"
+						Dim SecondoCampo As String = ""
+
+						If Rec("Cosa").Value = "Compleanno" Then
+							If Rec("SecondoCampo").Value <> "" Then
+								Dim Categorie() As String = Rec("SecondoCampo").Value.ToString.Split("-")
+
+								For Each c As String In Categorie
+									Sql = "Select * From Categorie Where idCategoria=" & c
+									Rec2 = Conn.LeggeQuery(Server.MapPath("."), Sql, Connessione)
+									If Rec2.Eof = True Then
+										SecondoCampo = ""
+									Else
+										SecondoCampo = Rec2("Descrizione").Value & " / "
+									End If
+									Rec2.Close
+								Next
+
+								If SecondoCampo <> "" Then
+									SecondoCampo = "(" & SecondoCampo.Substring(1, SecondoCampo.Length - 3) & ")"
+								End If
+							End If
+						Else
+							SecondoCampo = Rec("SecondoCampo").Value
+						End If
+						Ritorno &= Rec("Cosa").Value & ";" & Rec("Id").Value & ";" & Rec("PrimoCampo").Value & ";" & SecondoCampo & ";" & ConverteData(Rec("Data").Value) & "§"
 
 						Rec.MoveNext()
 					Loop

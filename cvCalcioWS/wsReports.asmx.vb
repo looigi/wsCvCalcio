@@ -587,7 +587,7 @@ Public Class wsReports
 						End If
 
 						Output = "<table style=""width: 100%;"" cellapadding=""0"" cellspacing=""0"">"
-						Output &= "<tr><th></th><th style=""text-align: left;"">Cognome</th><th style=""text-align: left;"">Nome</th><th style=""text-align: left;"">Data di nascita</th><th style=""text-align: left;"">Numero Maglia</th><th style=""text-align: left;"">Matricola</th>"
+						Output &= "<tr><th></th><th style=""text-align: left;"">Cognome</th><th style=""text-align: left;"">Nome</th><th style=""text-align: left;"">Data di nascita</th><th style=""text-align: left;"">Telefono</th><th style=""text-align: left;"">Matricola</th>"
 						If Val(Certificato) > 0 Then
 							Output &= "<th>Data Scad. Cert.</th>"
 						End If
@@ -939,7 +939,10 @@ Public Class wsReports
 								'	Immagine = "<img src=""" & urlImmagineConvertita & """ style=""width: 50px; height: 50px;"" />"
 								'End If
 
-								Output &= "<tr><td></td><td>" & Rec("Cognome").Value & "</td><td>" & Rec("Nome").Value & "</td><td>" & ddn & "</td><td>" & Rec("NumeroMaglia").Value & "</td><td>" & Rec("Matricola").Value & "</td>"
+								Dim Telefoni As String = ""
+								Telefoni = "" & Rec("Telefono").Value ' & "<br />" & Rec("Telefono2").Value & "<br />" & Rec("Telefono2").Value & "<br />"
+
+								Output &= "<tr><td></td><td>" & Rec("Cognome").Value & "</td><td>" & Rec("Nome").Value & "</td><td>" & ddn & "</td><td>" & telefoni & "</td><td>" & Rec("Matricola").Value & "</td>"
 								If Val(Certificato) > 0 Then
 									Dim d As String = "" & Rec("ScadenzaCertificatoMedico").Value
 									Dim sData As String = ""
@@ -975,9 +978,25 @@ Public Class wsReports
 
 						Output &= "</table>"
 
+						Dim AnnoRiferimento As String = ""
+						Dim ConnessioneGen As String = LeggeImpostazioniDiBase(Server.MapPath("."), "")
+						Dim ConnGen As Object = New clsGestioneDB(Squadra)
+
+						Sql = "Select * From SquadraAnni Where idAnno=" & Val(idAnno) & " And idSquadra=" & Val(idSquadra)
+						Rec2 = ConnGen.LeggeQuery(Server.MapPath("."), Sql, ConnessioneGen)
+						If TypeOf (Rec2) Is String Then
+							Ritorno = Rec2
+							Ok = False
+						Else
+							If Rec2.Eof = False Then
+								AnnoRiferimento = Rec2("Descrizione").Value
+							End If
+							Rec2.Close
+						End If
+
 						Dim filetto As String = gf.LeggeFileIntero(Server.MapPath(".") & "\Scheletri\base_report.txt")
 
-						filetto = filetto.Replace("***TITOLO***", Titolo & Altro & "<br />Rilevati: " & Quanti)
+						filetto = filetto.Replace("***TITOLO***", "Anno " & AnnoRiferimento & "<br />" & Titolo & Altro & "<br />Rilevati: " & Quanti)
 						filetto = filetto.Replace("***DATI***", Output)
 						filetto = filetto.Replace("***NOME SQUADRA***", "<br /><br />" & NomeSquadra)
 

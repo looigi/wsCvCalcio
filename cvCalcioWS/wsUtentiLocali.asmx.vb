@@ -516,32 +516,30 @@ Public Class wsUtentiLocali
 								End If
 
 								If ok2 Then
-									If ok2 Then
-										Ritorno &= idAnno & ";"
-										Ritorno &= Rec("idUtente").Value & ";"
-										Ritorno &= Rec("Utente").Value & ";"
-										Ritorno &= Rec("Cognome").Value & ";"
-										Ritorno &= Rec("Nome").Value & ";"
-										Ritorno &= DecriptaStringa(Rec("Password").Value) & ";"
-										Ritorno &= Rec("EMail").Value & ";"
-										Ritorno &= Rec("idCategoria").Value & ";"
-										Ritorno &= Rec("idTipologia").Value & ";"
-										Ritorno &= Rec("idSquadra").Value & ";"
-										Ritorno &= Rec("Squadra").Value & ";"
-										Ritorno &= Rec("PasswordScaduta").Value & ";"
-										Ritorno &= Rec("Telefono").Value & ";"
-										Ritorno &= Rec("idTipo2").Value & ";"
-										Ritorno &= Rec("idLicenza").Value & ";"
-										Ritorno &= Rec("AmmOriginale").Value & ";"
-										Ritorno &= Rec("Mail").Value & ";"
-										Ritorno &= Rec("PwdMail").Value & ";"
-										Ritorno &= DescrizioneAnno & ";"
-										'Ritorno &= NumeroFirme & ";"
-										'Ritorno &= Firme & ";"
-										Ritorno &= "§"
+									Ritorno &= idAnno & ";"
+									Ritorno &= Rec("idUtente").Value & ";"
+									Ritorno &= Rec("Utente").Value & ";"
+									Ritorno &= Rec("Cognome").Value & ";"
+									Ritorno &= Rec("Nome").Value & ";"
+									Ritorno &= DecriptaStringa(Rec("Password").Value) & ";"
+									Ritorno &= Rec("EMail").Value & ";"
+									Ritorno &= Rec("idCategoria").Value & ";"
+									Ritorno &= Rec("idTipologia").Value & ";"
+									Ritorno &= Rec("idSquadra").Value & ";"
+									Ritorno &= Rec("Squadra").Value & ";"
+									Ritorno &= Rec("PasswordScaduta").Value & ";"
+									Ritorno &= Rec("Telefono").Value & ";"
+									Ritorno &= Rec("idTipo2").Value & ";"
+									Ritorno &= Rec("idLicenza").Value & ";"
+									Ritorno &= Rec("AmmOriginale").Value & ";"
+									Ritorno &= Rec("Mail").Value & ";"
+									Ritorno &= Rec("PwdMail").Value & ";"
+									Ritorno &= DescrizioneAnno & ";"
+									'Ritorno &= NumeroFirme & ";"
+									'Ritorno &= Firme & ";"
+									Ritorno &= "§"
 
-										UtenteDaSalvare = Ritorno
-									End If
+									UtenteDaSalvare = Ritorno
 								End If
 								'End If
 
@@ -588,6 +586,7 @@ Public Class wsUtentiLocali
 									End If
 
 									' Prende lista licenze
+									'If idLicenza = "" Then idLicenza = -1
 									Sql = "Select A.idPermesso, Descrizione, NomePerCodice From Permessi_Composizione A " &
 										"Left Join Permessi_Lista B On A.idPermesso = B.idPermesso " &
 										"Where A.idTipologia = " & idLicenza & " And B.Eliminato = 'N'"

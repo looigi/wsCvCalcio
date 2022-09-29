@@ -131,7 +131,7 @@ Public Class wsAllenatori
 							If Not Ritorno.Contains(StringaErrore) Then
 								If TipologiaOperazione = "INSERIMENTO" Then
 									' Aggiunge Utente
-									Dim idGenitore As Integer = -1
+									Dim idUtente As Integer = -1
 
 									If Tendina = "N" Then
 										If TipoDB = "SQLSERVER" Then
@@ -146,7 +146,7 @@ Public Class wsAllenatori
 											'If Rec(0).Value Is DBNull.Value Then
 											'	idGenitore = 1
 											'Else
-											idGenitore = Rec(0).Value
+											idUtente = Rec(0).Value
 											'End If
 										End If
 									Else
@@ -159,7 +159,7 @@ Public Class wsAllenatori
 												Ritorno = StringaErrore & " Nessun utente rilevato"
 												Ok = False
 											Else
-												idGenitore = Rec("idUtente").Value
+												idUtente = Rec("idUtente").Value
 											End If
 										End If
 									End If
@@ -168,14 +168,14 @@ Public Class wsAllenatori
 									Dim nuovaPass() = pass.Split(";")
 
 									If Tendina = "S" Then
-										Sql = "Update [Generale].[dbo].[Utenti] Set idTipologia=5 Where idUtente=" & idGenitore
+										Sql = "Update [Generale].[dbo].[Utenti] Set idTipologia=5 Where idUtente=" & idUtente
 									Else
 										Dim s() As String = Squadra.Split("_")
 										Dim idSquadra As Integer = Val(s(1))
 
 										Sql = "Insert Into [Generale].[dbo].[Utenti] Values (" &
 											" " & idAnno & ", " &
-											" " & idGenitore & ", " &
+											" " & idUtente & ", " &
 											"'" & EMail.Replace("'", "''") & "', " &
 											"'" & Cognome.Replace("'", "''") & "', " &
 											"'" & Nome.Replace("'", "''") & "', " &
@@ -196,7 +196,7 @@ Public Class wsAllenatori
 									If Ritorno.Contains(StringaErrore) Then
 										Ok = False
 									Else
-										Ritorno = CreaPermessiDiBase(Conn, Connessione, idGenitore, idCategoria, Tendina)
+										Ritorno = CreaPermessiDiBase(Conn, Connessione, idUtente, idCategoria, Tendina)
 										If Ritorno.Contains(StringaErrore) Then
 											Ok = False
 										Else
@@ -237,22 +237,22 @@ Public Class wsAllenatori
 		Return Ritorno
 	End Function
 
-	Private Function CreaPermessiDiBase(Conn As Object, Connessione As String, idGenitore As Integer, idCategoria As Integer, Tendina As String) As String
+	Private Function CreaPermessiDiBase(Conn As Object, Connessione As String, idUtente As Integer, idCategoria As Integer, Tendina As String) As String
 		Dim Ritorno As String = ""
 		Dim Sql As String = ""
 		Dim Ok As Boolean = True
 		Dim Rec As Object
 
 		If Tendina = "S" Then
-			Sql = "Delete From AllenatoriCategorie Where idUtente=" & idGenitore
+			Sql = "Delete From AllenatoriCategorie Where idUtente=" & idUtente
 			Ritorno = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
 
-			Sql = "Delete From PermessiUtente Where idUtente=" & idGenitore
+			Sql = "Delete From PermessiUtente Where idUtente=" & idUtente
 			Ritorno = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
 		End If
 
 		Sql = "Insert Into AllenatoriCategorie Values (" &
-				" " & idGenitore & ", " &
+				" " & idUtente & ", " &
 				"1, " &
 				" " & idCategoria & " " &
 				")"
@@ -260,7 +260,7 @@ Public Class wsAllenatori
 		If Ritorno.Contains(StringaErrore) Then
 			Ok = False
 		Else
-			Sql = "Select * From [Generale].[dbo].[Permessi_Lista] Where NomePerCodice In ('HOME', 'CALENDARIO', 'ROSE', 'DIRIGENTI', 'ALLENAMENTI', 'PARTITE', 'CAMPIONATO', 'STATISTICHE', 'CONTATTI')"
+			Sql = "Select * From [Generale].[dbo].[Permessi_Lista] Where NomePerCodice In ('HOME', 'CALENDARIO', 'ROSE', 'ALLENATORI', 'ALLENAMENTI', 'PARTITE', 'CAMPIONATO', 'STATISTICHE', 'CONTATTI', 'CONVOCAZIONI')"
 			Rec = Conn.LeggeQuery(Server.MapPath("."), Sql, Connessione)
 			If TypeOf (Rec) Is String Then
 				Ritorno = Rec
@@ -278,7 +278,7 @@ Public Class wsAllenatori
 
 				For Each id As Integer In idPermesso
 					Sql = "Insert Into PermessiUtente Values (" &
-						" " & idGenitore & ", " &
+						" " & idUtente & ", " &
 						" " & Progressivo & ", " &
 						" " & id & " " &
 						")"

@@ -798,8 +798,8 @@ Public Class wsGenerale
 					"PercCashBack=" & PercCashBack & ", " &
 					"ModuloAssociato='" & ModuloAssociato & "', " &
 					"RateManuali='" & RateManuali & "', " &
-					"Cashback='" & Cashback & "' " &
-					"Where idAnno = " & idAnno
+					"Cashback='" & Cashback & "' " ' &
+				'"Where idAnno = " & idAnno
 				Ritorno = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
 
 				Sql = "Update [Generale].[dbo].[Utenti] Set Widgets = '" & Widgets & "' Where idUtente=" & idUtente
@@ -952,7 +952,7 @@ Public Class wsGenerale
 								Dim PagamentiPresenti As String = "N"
 
 								Sql = "Select " & IIf(TipoDB = "SQLSERVER", "Isnull(Count(*),0)", "COALESCE(Count(*),0)") & " " &
-									"From [" & Codice & "].[dbo].[GiocatoriPagamenti] Where Eliminato='N'"
+									"From [" & Squadra & "].[dbo].[GiocatoriPagamenti] Where Eliminato='N'"
 								Rec = ConnGen.LeggeQuery(Server.MapPath("."), Sql, ConnessioneGen)
 								If TypeOf (Rec) Is String Then
 									Ritorno = Rec
@@ -982,8 +982,8 @@ Public Class wsGenerale
 								End If
 
 								Sql = "Select A.*, B.idAvversario, B.idCampo " &
-									"From [" & Codice & "].[dbo].[Anni] A " &
-									"Left Join [" & Codice & "].[dbo].[SquadreAvversarie] B On A.NomeSquadra = B.Descrizione " &
+									"From [" & Squadra & "].[dbo].[Anni] A " &
+									"Left Join [" & Squadra & "].[dbo].[SquadreAvversarie] B On A.NomeSquadra = B.Descrizione " &
 									"Order By idAnno Desc"
 								Rec = ConnGen.LeggeQuery(Server.MapPath("."), Sql, ConnessioneGen)
 								If TypeOf (Rec) Is String Then

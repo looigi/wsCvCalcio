@@ -3788,6 +3788,101 @@ Module Globale
 			End If
 
 			If Ok Then
+				' Eventi
+				q = 0
+				ScriveLog(MP, VecchiaSquadra, "CreaNuovoAnno", "Eliminazione Permessi Utente")
+				Sql = "Delete From PermessiUtente"
+				Rec = ConnNuova.LeggeQuery(MP, Sql, ConnessioneNuova)
+				If TypeOf (Rec) Is String Then
+					Ritorno = Rec
+					Ok = False
+					ScriveLog(MP, VecchiaSquadra, "CreaNuovoAnno", "Eliminazione Permessi Utente: " & Ritorno)
+				Else
+					ScriveLog(MP, VecchiaSquadra, "CreaNuovoAnno", "Lettura Permessi Utente")
+					Sql = "SELECT * FROM PermessiUtente"
+					Rec = ConnVecchia.LeggeQuery(MP, Sql, ConnessioneVecchia)
+					If TypeOf (Rec) Is String Then
+						Ritorno = Rec
+						Ok = False
+						ScriveLog(MP, VecchiaSquadra, "CreaNuovoAnno", "Lettura Permessi Utente: " & Ritorno)
+					Else
+						If Rec.Eof() Then
+							ScriveLog(MP, VecchiaSquadra, "CreaNuovoAnno", "Nessun valore ritornato per i Permessi Utente")
+						Else
+							Do Until Rec.Eof
+								Sql = "Insert Into PermessiUtente Values (" &
+								"" & Rec("idutente").Value & ", " &
+								"" & Replace(Rec("progressivo").Value, "'", "''") & ", " &
+								"" & Replace(Rec("idpermesso").Value, "'", "''") & " " &
+								")"
+								Ritorno = ConnNuova.EsegueSql(MP, Sql, ConnessioneNuova)
+								If Ritorno.Contains(StringaErrore) Then
+									ScriveLog(MP, VecchiaSquadra, "CreaNuovoAnno", "Scrittura Permessi Utente: " & NuovaSquadra & ": " & Ritorno)
+									ScriveLog(MP, VecchiaSquadra, "CreaNuovoAnno", Sql)
+									Ok = False
+									Exit Do
+								Else
+									q += 1
+								End If
+
+								Rec.MoveNext
+							Loop
+							Rec.Close
+
+							ScriveLog(MP, VecchiaSquadra, "CreaNuovoAnno", "Righe copiate per i permessi utente: " & q)
+						End If
+					End If
+				End If
+			End If
+
+			If Ok Then
+				' Eventi
+				q = 0
+				ScriveLog(MP, VecchiaSquadra, "CreaNuovoAnno", "Eliminazione Dati Fattura")
+				Sql = "Delete From DatiFattura"
+				Rec = ConnNuova.LeggeQuery(MP, Sql, ConnessioneNuova)
+				If TypeOf (Rec) Is String Then
+					Ritorno = Rec
+					Ok = False
+					ScriveLog(MP, VecchiaSquadra, "CreaNuovoAnno", "Eliminazione Dati Fattura: " & Ritorno)
+				Else
+					ScriveLog(MP, VecchiaSquadra, "CreaNuovoAnno", "Lettura Dati Fattura")
+					Sql = "SELECT * FROM DatiFattura"
+					Rec = ConnVecchia.LeggeQuery(MP, Sql, ConnessioneVecchia)
+					If TypeOf (Rec) Is String Then
+						Ritorno = Rec
+						Ok = False
+						ScriveLog(MP, VecchiaSquadra, "CreaNuovoAnno", "Lettura Dati Fattura: " & Ritorno)
+					Else
+						If Rec.Eof() Then
+							ScriveLog(MP, VecchiaSquadra, "CreaNuovoAnno", "Nessun valore ritornato per i DatiFattura")
+						Else
+							Do Until Rec.Eof
+								Sql = "Insert Into DatiFattura Values (" &
+									"" & Rec("anno").Value & ", " &
+									"" & Replace(Rec("progressivo").Value, "'", "''") & " " &
+									")"
+								Ritorno = ConnNuova.EsegueSql(MP, Sql, ConnessioneNuova)
+								If Ritorno.Contains(StringaErrore) Then
+									ScriveLog(MP, VecchiaSquadra, "CreaNuovoAnno", "Scrittura Dati Fattura: " & NuovaSquadra & ": " & Ritorno)
+									ScriveLog(MP, VecchiaSquadra, "CreaNuovoAnno", Sql)
+									Ok = False
+									Exit Do
+								Else
+									q += 1
+								End If
+
+								Rec.MoveNext
+							Loop
+							Rec.Close
+
+							ScriveLog(MP, VecchiaSquadra, "CreaNuovoAnno", "Righe copiate per i Dati Fattura: " & q)
+						End If
+					End If
+				End If
+			End If
+
+			If Ok Then
 				' Scheletri
 				' Iscrizione
 				Dim gf As New GestioneFilesDirectory

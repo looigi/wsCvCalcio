@@ -259,7 +259,7 @@ Public Class wsDirigenti
 		If Ritorno.Contains(StringaErrore) Then
 			Ok = False
 		Else
-			Sql = "Select * From [Generale].[dbo].[Permessi_LIsta] Where NomePerCodice In ('HOME', 'CALENDARIO', 'ROSE', 'ALLENATORI', 'ALLENAMENTI', 'PARTITE', 'CAMPIONATO', 'STATISTICHE', 'CONTATTI')"
+			Sql = "Select * From [Generale].[dbo].[Permessi_LIsta] Where NomePerCodice In ('HOME', 'CALENDARIO', 'ROSE', 'DIRIGENTI', 'ALLENAMENTI', 'PARTITE', 'CAMPIONATO', 'STATISTICHE', 'CONTATTI', 'CONVOCAZIONI')"
 			Rec = Conn.LeggeQuery(Server.MapPath("."), Sql, Connessione)
 			If TypeOf (Rec) Is String Then
 				Ritorno = Rec

@@ -286,13 +286,13 @@ Public Class wsAllenamenti
 																					" " & idLettore & " " &
 																					")"
 																			Ritorno = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
-																				If Ritorno.Contains(StringaErrore) Then
-																					Ritorno = "12" ' "Errore nella insert"
-																					Sql = "rollback"
-																					Dim Ritorno3 As String = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
-																				End If
-																			Else
-																				Ritorno = "11" ' StringaErrore & " Orario attuale non in fascia con la categoria del giocatore"
+																			If Ritorno.Contains(StringaErrore) Then
+																				Ritorno = "12" ' "Errore nella insert"
+																				Sql = "rollback"
+																				Dim Ritorno3 As String = Conn.EsegueSql(Server.MapPath("."), Sql, Connessione)
+																			End If
+																		Else
+																			Ritorno = "11" ' StringaErrore & " Orario attuale non in fascia con la categoria del giocatore"
 																		End If
 																	End If
 																End If
